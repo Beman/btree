@@ -1,11 +1,18 @@
 //  endian_test.cpp  ---------------------------------------------------------//
 
-//  Copyright Beman Dawes, 1999-2006
+//  Copyright Beman Dawes 1999-2008
 
-//  Distributed under the Boost Software License, Version 1.0. (See accompanying
-//  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+//  Distributed under the Boost Software License, Version 1.0.
+//  See http://www.boost.org/LICENSE_1_0.txt
 
 //  See library home page at http://www.boost.org/libs/endian
+
+//----------------------------------------------------------------------------//
+
+//  This test probes for correct endianess, size, and value.
+
+//  See endian_operations_test for tests of operator correctness and interaction
+//  between operand types.
 
 //----------------------------------------------------------------------------//
 
@@ -19,9 +26,10 @@
 #include <cstdlib>    // for atoi(), exit()
 #include <cstring>    // for memcmp()
 
-using namespace std;             // not the best programming practice, but I
+using namespace std;             // Not the best programming practice, but I
 using namespace boost;           //   want to verify this combination of using
-using namespace boost::integer;  //   namespaces works.
+using namespace boost::integer;  //   namespaces works. See endian_operations_test
+//                               //   for tests that don't do "using namespace".
 
 #define VERIFY(predicate) verify( predicate, __LINE__ )
 #define VERIFY_SIZE(actual, expected) verify_size( actual, expected, __LINE__ )
@@ -45,7 +53,7 @@ namespace
   {
     if ( actual == expected ) return;
     ++err_count;
-    cout << "Error: verify failed on line " << line << endl;
+    cout << "Error: verify size failed on line " << line << endl;
     cout << " A structure with an expected sizeof() " << expected
          << " had an actual sizeof() " << actual
          << "\n This will cause common uses of <boost/endian.hpp> to fail\n";
@@ -72,8 +80,8 @@ namespace
   void verify_representation( bool is_big, int line )
   {
     int silence = 0;
-    Endian x = static_cast<typename Endian::value_type>
-      (0x123456789abcdef0LL + silence); // will truncate
+    Endian x ( static_cast<typename Endian::value_type>
+      (0x123456789abcdef0LL + silence) ); // will truncate
 
     if ( is_big )
       verify( memcmp( &x,
@@ -92,8 +100,6 @@ namespace
       verify_representation<Endian>( false, line );
 #   endif
   }
-
-
 
   //  detect_endianness  -----------------------------------------------------//
 
@@ -136,6 +142,152 @@ namespace
     cout << "That should not matter and is presented for your information only.\n";
   } // detect_endianness
 
+  //  check_data  ------------------------------------------------------------//
+
+  void check_data()
+  {
+    big8_t big8;
+    big16_t big16;
+    big24_t big24;
+    big32_t big32;
+    big40_t big40;
+    big48_t big48;
+    big56_t big56;
+    big64_t big64;
+
+    ubig8_t ubig8;
+    ubig16_t ubig16;
+    ubig24_t ubig24;
+    ubig32_t ubig32;
+    ubig40_t ubig40;
+    ubig48_t ubig48;
+    ubig56_t ubig56;
+    ubig64_t ubig64;
+
+    little8_t little8;
+    little16_t little16;
+    little24_t little24;
+    little32_t little32;
+    little40_t little40;
+    little48_t little48;
+    little56_t little56;
+    little64_t little64;
+
+    ulittle8_t ulittle8;
+    ulittle16_t ulittle16;
+    ulittle24_t ulittle24;
+    ulittle32_t ulittle32;
+    ulittle40_t ulittle40;
+    ulittle48_t ulittle48;
+    ulittle56_t ulittle56;
+    ulittle64_t ulittle64;
+
+    native8_t native8;
+    native16_t native16;
+    native24_t native24;
+    native32_t native32;
+    native40_t native40;
+    native48_t native48;
+    native56_t native56;
+    native64_t native64;
+
+    unative8_t unative8;
+    unative16_t unative16;
+    unative24_t unative24;
+    unative32_t unative32;
+    unative40_t unative40;
+    unative48_t unative48;
+    unative56_t unative56;
+    unative64_t unative64;
+
+    aligned_big16_t  aligned_big16;
+    aligned_big32_t  aligned_big32;
+    aligned_big64_t  aligned_big64;
+
+    aligned_ubig16_t aligned_ubig16;
+    aligned_ubig32_t aligned_ubig32;
+    aligned_ubig64_t aligned_ubig64;
+
+    aligned_little16_t  aligned_little16;
+    aligned_little32_t  aligned_little32;
+    aligned_little64_t  aligned_little64;
+
+    aligned_ulittle16_t aligned_ulittle16 ;
+    aligned_ulittle32_t aligned_ulittle32 ;
+    aligned_ulittle64_t aligned_ulittle64 ;
+
+    VERIFY(big8.data() == reinterpret_cast<const char *>(&big8));
+    VERIFY(big16.data() == reinterpret_cast<const char *>(&big16));
+    VERIFY(big24.data() == reinterpret_cast<const char *>(&big24));
+    VERIFY(big32.data() == reinterpret_cast<const char *>(&big32));
+    VERIFY(big40.data() == reinterpret_cast<const char *>(&big40));
+    VERIFY(big48.data() == reinterpret_cast<const char *>(&big48));
+    VERIFY(big56.data() == reinterpret_cast<const char *>(&big56));
+    VERIFY(big64.data() == reinterpret_cast<const char *>(&big64));
+
+    VERIFY(ubig8.data() == reinterpret_cast<const char *>(&ubig8));
+    VERIFY(ubig16.data() == reinterpret_cast<const char *>(&ubig16));
+    VERIFY(ubig24.data() == reinterpret_cast<const char *>(&ubig24));
+    VERIFY(ubig32.data() == reinterpret_cast<const char *>(&ubig32));
+    VERIFY(ubig40.data() == reinterpret_cast<const char *>(&ubig40));
+    VERIFY(ubig48.data() == reinterpret_cast<const char *>(&ubig48));
+    VERIFY(ubig56.data() == reinterpret_cast<const char *>(&ubig56));
+    VERIFY(ubig64.data() == reinterpret_cast<const char *>(&ubig64));
+
+    VERIFY(little8.data() == reinterpret_cast<const char *>(&little8));
+    VERIFY(little16.data() == reinterpret_cast<const char *>(&little16));
+    VERIFY(little24.data() == reinterpret_cast<const char *>(&little24));
+    VERIFY(little32.data() == reinterpret_cast<const char *>(&little32));
+    VERIFY(little40.data() == reinterpret_cast<const char *>(&little40));
+    VERIFY(little48.data() == reinterpret_cast<const char *>(&little48));
+    VERIFY(little56.data() == reinterpret_cast<const char *>(&little56));
+    VERIFY(little64.data() == reinterpret_cast<const char *>(&little64));
+
+    VERIFY(ulittle8.data() == reinterpret_cast<const char *>(&ulittle8));
+    VERIFY(ulittle16.data() == reinterpret_cast<const char *>(&ulittle16));
+    VERIFY(ulittle24.data() == reinterpret_cast<const char *>(&ulittle24));
+    VERIFY(ulittle32.data() == reinterpret_cast<const char *>(&ulittle32));
+    VERIFY(ulittle40.data() == reinterpret_cast<const char *>(&ulittle40));
+    VERIFY(ulittle48.data() == reinterpret_cast<const char *>(&ulittle48));
+    VERIFY(ulittle56.data() == reinterpret_cast<const char *>(&ulittle56));
+    VERIFY(ulittle64.data() == reinterpret_cast<const char *>(&ulittle64));
+
+    VERIFY(native8.data() == reinterpret_cast<const char *>(&native8));
+    VERIFY(native16.data() == reinterpret_cast<const char *>(&native16));
+    VERIFY(native24.data() == reinterpret_cast<const char *>(&native24));
+    VERIFY(native32.data() == reinterpret_cast<const char *>(&native32));
+    VERIFY(native40.data() == reinterpret_cast<const char *>(&native40));
+    VERIFY(native48.data() == reinterpret_cast<const char *>(&native48));
+    VERIFY(native56.data() == reinterpret_cast<const char *>(&native56));
+    VERIFY(native64.data() == reinterpret_cast<const char *>(&native64));
+
+    VERIFY(unative8.data() == reinterpret_cast<const char *>(&unative8));
+    VERIFY(unative16.data() == reinterpret_cast<const char *>(&unative16));
+    VERIFY(unative24.data() == reinterpret_cast<const char *>(&unative24));
+    VERIFY(unative32.data() == reinterpret_cast<const char *>(&unative32));
+    VERIFY(unative40.data() == reinterpret_cast<const char *>(&unative40));
+    VERIFY(unative48.data() == reinterpret_cast<const char *>(&unative48));
+    VERIFY(unative56.data() == reinterpret_cast<const char *>(&unative56));
+    VERIFY(unative64.data() == reinterpret_cast<const char *>(&unative64));
+
+    VERIFY(aligned_big16.data() == reinterpret_cast<const char *>(&aligned_big16));
+    VERIFY(aligned_big32.data() == reinterpret_cast<const char *>(&aligned_big32));
+    VERIFY(aligned_big64.data() == reinterpret_cast<const char *>(&aligned_big64));
+
+    VERIFY(aligned_ubig16.data() == reinterpret_cast<const char *>(&aligned_ubig16));
+    VERIFY(aligned_ubig32.data() == reinterpret_cast<const char *>(&aligned_ubig32));
+    VERIFY(aligned_ubig64.data() == reinterpret_cast<const char *>(&aligned_ubig64));
+
+    VERIFY(aligned_little16.data() == reinterpret_cast<const char *>(&aligned_little16));
+    VERIFY(aligned_little32.data() == reinterpret_cast<const char *>(&aligned_little32));
+    VERIFY(aligned_little64.data() == reinterpret_cast<const char *>(&aligned_little64));
+
+    VERIFY(aligned_ulittle16.data() == reinterpret_cast<const char *>(&aligned_ulittle16));
+    VERIFY(aligned_ulittle32.data() == reinterpret_cast<const char *>(&aligned_ulittle32));
+    VERIFY(aligned_ulittle64.data() == reinterpret_cast<const char *>(&aligned_ulittle64));
+ 
+  }
+
   //  check_size  ------------------------------------------------------------//
 
   void check_size()
@@ -143,75 +295,75 @@ namespace
     VERIFY( numeric_limits<signed char>::digits == 7 );
     VERIFY( numeric_limits<unsigned char>::digits == 8 );
 
-    VERIFY( sizeof( big8_t ) == 1 );
-    VERIFY( sizeof( big16_t ) == 2 );
-    VERIFY( sizeof( big24_t ) == 3 );
-    VERIFY( sizeof( big32_t ) == 4 );
-    VERIFY( sizeof( big40_t ) == 5 );
-    VERIFY( sizeof( big48_t ) == 6 );
-    VERIFY( sizeof( big56_t ) == 7 );
-    VERIFY( sizeof( big64_t ) == 8 );
+    VERIFY_SIZE( sizeof( big8_t ), 1 );
+    VERIFY_SIZE( sizeof( big16_t ), 2 );
+    VERIFY_SIZE( sizeof( big24_t ), 3 );
+    VERIFY_SIZE( sizeof( big32_t ), 4 );
+    VERIFY_SIZE( sizeof( big40_t ), 5 );
+    VERIFY_SIZE( sizeof( big48_t ), 6 );
+    VERIFY_SIZE( sizeof( big56_t ), 7 );
+    VERIFY_SIZE( sizeof( big64_t ), 8 );
 
-    VERIFY( sizeof( ubig8_t ) == 1 );
-    VERIFY( sizeof( ubig16_t ) == 2 );
-    VERIFY( sizeof( ubig24_t ) == 3 );
-    VERIFY( sizeof( ubig32_t ) == 4 );
-    VERIFY( sizeof( ubig40_t ) == 5 );
-    VERIFY( sizeof( ubig48_t ) == 6 );
-    VERIFY( sizeof( ubig56_t ) == 7 );
-    VERIFY( sizeof( ubig64_t ) == 8 );
+    VERIFY_SIZE( sizeof( ubig8_t ), 1 );
+    VERIFY_SIZE( sizeof( ubig16_t ), 2 );
+    VERIFY_SIZE( sizeof( ubig24_t ), 3 );
+    VERIFY_SIZE( sizeof( ubig32_t ), 4 );
+    VERIFY_SIZE( sizeof( ubig40_t ), 5 );
+    VERIFY_SIZE( sizeof( ubig48_t ), 6 );
+    VERIFY_SIZE( sizeof( ubig56_t ), 7 );
+    VERIFY_SIZE( sizeof( ubig64_t ), 8 );
 
-    VERIFY( sizeof( little8_t ) == 1 );
-    VERIFY( sizeof( little16_t ) == 2 );
-    VERIFY( sizeof( little24_t ) == 3 );
-    VERIFY( sizeof( little32_t ) == 4 );
-    VERIFY( sizeof( little40_t ) == 5 );
-    VERIFY( sizeof( little48_t ) == 6 );
-    VERIFY( sizeof( little56_t ) == 7 );
-    VERIFY( sizeof( little64_t ) == 8 );
+    VERIFY_SIZE( sizeof( little8_t ), 1 );
+    VERIFY_SIZE( sizeof( little16_t ), 2 );
+    VERIFY_SIZE( sizeof( little24_t ), 3 );
+    VERIFY_SIZE( sizeof( little32_t ), 4 );
+    VERIFY_SIZE( sizeof( little40_t ), 5 );
+    VERIFY_SIZE( sizeof( little48_t ), 6 );
+    VERIFY_SIZE( sizeof( little56_t ), 7 );
+    VERIFY_SIZE( sizeof( little64_t ), 8 );
 
-    VERIFY( sizeof( ulittle8_t ) == 1 );
-    VERIFY( sizeof( ulittle16_t ) == 2 );
-    VERIFY( sizeof( ulittle24_t ) == 3 );
-    VERIFY( sizeof( ulittle32_t ) == 4 );
-    VERIFY( sizeof( ulittle40_t ) == 5 );
-    VERIFY( sizeof( ulittle48_t ) == 6 );
-    VERIFY( sizeof( ulittle56_t ) == 7 );
-    VERIFY( sizeof( ulittle64_t ) == 8 );
+    VERIFY_SIZE( sizeof( ulittle8_t ), 1 );
+    VERIFY_SIZE( sizeof( ulittle16_t ), 2 );
+    VERIFY_SIZE( sizeof( ulittle24_t ), 3 );
+    VERIFY_SIZE( sizeof( ulittle32_t ), 4 );
+    VERIFY_SIZE( sizeof( ulittle40_t ), 5 );
+    VERIFY_SIZE( sizeof( ulittle48_t ), 6 );
+    VERIFY_SIZE( sizeof( ulittle56_t ), 7 );
+    VERIFY_SIZE( sizeof( ulittle64_t ), 8 );
 
-    VERIFY( sizeof( native8_t ) == 1 );
-    VERIFY( sizeof( native16_t ) == 2 );
-    VERIFY( sizeof( native24_t ) == 3 );
-    VERIFY( sizeof( native32_t ) == 4 );
-    VERIFY( sizeof( native40_t ) == 5 );
-    VERIFY( sizeof( native48_t ) == 6 );
-    VERIFY( sizeof( native56_t ) == 7 );
-    VERIFY( sizeof( native64_t ) == 8 );
+    VERIFY_SIZE( sizeof( native8_t ), 1 );
+    VERIFY_SIZE( sizeof( native16_t ), 2 );
+    VERIFY_SIZE( sizeof( native24_t ), 3 );
+    VERIFY_SIZE( sizeof( native32_t ), 4 );
+    VERIFY_SIZE( sizeof( native40_t ), 5 );
+    VERIFY_SIZE( sizeof( native48_t ), 6 );
+    VERIFY_SIZE( sizeof( native56_t ), 7 );
+    VERIFY_SIZE( sizeof( native64_t ), 8 );
 
-    VERIFY( sizeof( unative8_t ) == 1 );
-    VERIFY( sizeof( unative16_t ) == 2 );
-    VERIFY( sizeof( unative24_t ) == 3 );
-    VERIFY( sizeof( unative32_t ) == 4 );
-    VERIFY( sizeof( unative40_t ) == 5 );
-    VERIFY( sizeof( unative48_t ) == 6 );
-    VERIFY( sizeof( unative56_t ) == 7 );
-    VERIFY( sizeof( unative64_t ) == 8 );
+    VERIFY_SIZE( sizeof( unative8_t ), 1 );
+    VERIFY_SIZE( sizeof( unative16_t ), 2 );
+    VERIFY_SIZE( sizeof( unative24_t ), 3 );
+    VERIFY_SIZE( sizeof( unative32_t ), 4 );
+    VERIFY_SIZE( sizeof( unative40_t ), 5 );
+    VERIFY_SIZE( sizeof( unative48_t ), 6 );
+    VERIFY_SIZE( sizeof( unative56_t ), 7 );
+    VERIFY_SIZE( sizeof( unative64_t ), 8 );
 
-    VERIFY( sizeof( aligned_big16_t ) == 2 );
-    VERIFY( sizeof( aligned_big32_t ) == 4 );
-    VERIFY( sizeof( aligned_big64_t ) == 8 );
+    VERIFY_SIZE( sizeof( aligned_big16_t ), 2 );
+    VERIFY_SIZE( sizeof( aligned_big32_t ), 4 );
+    VERIFY_SIZE( sizeof( aligned_big64_t ), 8 );
 
-    VERIFY( sizeof( aligned_ubig16_t ) == 2 );
-    VERIFY( sizeof( aligned_ubig32_t ) == 4 );
-    VERIFY( sizeof( aligned_ubig64_t ) == 8 );
+    VERIFY_SIZE( sizeof( aligned_ubig16_t ), 2 );
+    VERIFY_SIZE( sizeof( aligned_ubig32_t ), 4 );
+    VERIFY_SIZE( sizeof( aligned_ubig64_t ), 8 );
 
-    VERIFY( sizeof( aligned_little16_t ) == 2 );
-    VERIFY( sizeof( aligned_little32_t ) == 4 );
-    VERIFY( sizeof( aligned_little64_t ) == 8 );
+    VERIFY_SIZE( sizeof( aligned_little16_t ), 2 );
+    VERIFY_SIZE( sizeof( aligned_little32_t ), 4 );
+    VERIFY_SIZE( sizeof( aligned_little64_t ), 8 );
 
-    VERIFY( sizeof( aligned_ulittle16_t ) == 2 );
-    VERIFY( sizeof( aligned_ulittle32_t ) == 4 );
-    VERIFY( sizeof( aligned_ulittle64_t ) == 8 );
+    VERIFY_SIZE( sizeof( aligned_ulittle16_t ), 2 );
+    VERIFY_SIZE( sizeof( aligned_ulittle32_t ), 4 );
+    VERIFY_SIZE( sizeof( aligned_ulittle64_t ), 8 );
   } // check_size
 
   //  check_alignment  -------------------------------------------------------//
@@ -566,6 +718,8 @@ namespace
 
 } // unnamed namespace
 
+//  main  ------------------------------------------------------------------------------//
+
 int main( int argc, char * argv[] )
 {
   cout << "Usage: "
@@ -580,6 +734,7 @@ int main( int argc, char * argv[] )
   check_size();
   check_alignment();
   check_representation_and_range_and_ops();
+  check_data();
 
   //timing_test<big32_t> ( "big32_t" );
   //timing_test<aligned_big32_t>( "aligned_big32_t" );

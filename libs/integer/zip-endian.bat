@@ -2,26 +2,37 @@ echo create zip file...
 
 if $%1 == $ goto error
 
-rmdir /s \tmp\%1 2>nul
+rmdir /s \temp\%1 2>nul
 pushd .
-mkdir \tmp\%1
-cd \tmp\%1
+mkdir \temp\%1
+cd \temp\%1
+md doc\html
 md boost\integer
 md libs\integer\doc
 md libs\integer\example
 md libs\integer\test
 popd
-copy ..\..\boost\integer\endian.hpp \tmp\%1\boost\integer
-copy ..\..\boost\integer\cover_operators.hpp \tmp\%1\boost\integer
-copy ..\..\libs\integer\doc\endian.html \tmp\%1\libs\integer\doc
-copy ..\..\libs\integer\example\endian_example.cpp \tmp\%1\libs\integer\example
-copy ..\..\libs\integer\test\endian_test.cpp \tmp\%1\libs\integer\test
-copy ..\..\libs\integer\test\Jamfile.* \tmp\%1\libs\integer\test
+copy ..\..\boost.png \temp\%1
+copy ..\..\doc\html\minimal.css \temp\%1\doc\html
+copy ..\..\boost\binary_stream.hpp \temp\%1\boost
+copy ..\..\boost\integer\endian.hpp \temp\%1\boost\integer
+copy ..\..\boost\integer\endian_binary_stream.hpp \temp\%1\boost\integer
+copy ..\..\boost\integer\cover_operators.hpp \temp\%1\boost\integer
+copy ..\..\libs\integer\doc\endian.html \temp\%1\libs\integer\doc
+copy ..\..\libs\integer\example\endian_example.cpp \temp\%1\libs\integer\example
+copy ..\..\libs\integer\example\endian_hello_world.cpp \temp\%1\libs\integer\example
+copy ..\..\libs\integer\test\endian_test.cpp \temp\%1\libs\integer\test
+copy ..\..\libs\integer\test\binary_stream_test.cpp \temp\%1\libs\integer\test
+copy ..\..\libs\integer\test\endian_binary_stream_test.cpp \temp\%1\libs\integer\test
+copy ..\..\libs\integer\test\endian_in_union_test.cpp \temp\%1\libs\integer\test
+copy ..\..\libs\integer\test\endian_operations_test.cpp \temp\%1\libs\integer\test
+copy ..\..\libs\integer\test\scoped_enum_emulation_test.cpp \temp\%1\libs\integer\test
+copy ..\..\libs\integer\test\Jamfile.* \temp\%1\libs\integer\test
 
-pushd \tmp
+pushd \temp
 zip -r %1.zip %1
 popd
-move \tmp\%1.zip .
+move \temp\%1.zip .
 
 goto done
 

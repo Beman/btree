@@ -2,8 +2,8 @@
 
 //  Copyright Beman Dawes, 2006
 
-//  Distributed under the Boost Software License, Version 1.0. (See accompanying
-//  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+//  Distributed under the Boost Software License, Version 1.0.
+//  See http://www.boost.org/LICENSE_1_0.txt
 
 //  See library home page at http://www.boost.org/libs/endian
 
@@ -16,14 +16,13 @@
 #include <cstdio>
 #include <boost/integer/endian.hpp>
 
-using boost::integer::big32_t;
-using boost::integer::little32_t;
+using namespace boost::integer;
 
 namespace 
 {
   //  This is an extract from a very widely used GIS file format. I have no idea
   //  why a designer would mix big and little endians in the same file - but
-  //  this is a real format and users wishing to write low level code
+  //  this is a real-world format and users wishing to write low level code
   //  manipulating these files have to deal with the mixed endianness.
 
   struct header
@@ -39,7 +38,7 @@ namespace
 
 int main()
 {
-  assert( sizeof( header ) == 16 );
+  assert( sizeof( header ) == 16 );  // requirement for interoperability
   
   header h;
 
@@ -48,15 +47,15 @@ int main()
   h.version     = -1;
   h.shape_type  = 0x04030201;
 
-  //  Low-level I/O such as POSIX read/write or <cstdio> fread/fwrite is
-  //  typically used for binary file operations. Such I/O is often performed in
-  //  some C++ wrapper class, but to drive home the point that endian integers
-  //  are usually used in fairly low-level code, <cstdio> fopen/fwrite is used
-  //  for I/O in this example.
+  //  Low-level I/O such as POSIX read/write or <cstdio> fread/fwrite is sometimes
+  //  used for binary file operations when ultimate efficiency is important.
+  //  Such I/O is often performed in some C++ wrapper class, but to drive home the
+  //  point that endian integers are often used in fairly low-level code that
+  //  does bulk I/O operations, <cstdio> fopen/fwrite is used for I/O in this example.
 
   std::FILE * fi;
   
-  if ( !(fi = std::fopen( filename, "wb" )) )
+  if ( !(fi = std::fopen( filename, "wb" )) )  // MUST BE BINARY
   {
     std::cout << "could not open " << filename << '\n';
     return 1;

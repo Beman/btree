@@ -6,34 +6,77 @@
 <meta name="ProgId" content="FrontPage.Editor.Document">
 <meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
 <title>Boost Endian Integers</title>
+<link rel="stylesheet" type="text/css" href="../../../doc/html/minimal.css">
 </head>
 
 <body>
 
-<h1>Boost Endian Integers (<a href="../../../boost/integer/endian.hpp">boost/integer/endian.hpp</a>)</h1>
 
-<p><a href="#Introduction">Introduction</a><br>
-<a href="#Limitations">Limitations</a><br>
-<a href="#Feature-set">Feature set</a><br>
-<a href="#Types">Typedefs</a><br>
-&nbsp;&nbsp;&nbsp; <a href="#Comment-on-naming">Comment on naming</a><br>
-<a href="#Class_template_endian">Class template <code>endian</code></a><br>
-&nbsp;&nbsp;&nbsp;
-<a href="#Synopsis">Synopsis</a><br>
-&nbsp;&nbsp;&nbsp; <a href="#Members">Members</a><br>
-<a href="#FAQ">FAQ</a><br>
-<a href="#Example">Example</a><br>
-<a href="#Design">Design</a><br>
-<a href="#Experience">Experience</a><br>
-<a href="#Acknowledgements">Acknowledgements</a></p>
+<table border="0" cellpadding="5" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111" width="710">
+  <tr>
+    <td width="277">
+<a href="../../../index.html">
+<img src="../../../boost.png" alt="boost.png (6897 bytes)" align="middle" width="277" height="86" border="0"></a></td>
+    <td width="413" align="middle">
+    <font size="7">Endian Integers</font>
+    </td>
+  </tr>
+</table>
+
+<table border="0" cellpadding="5" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111" bgcolor="#D7EEFF" width="100%">
+  <tr>
+    <td><a href="../../../index.htm">Boost Home</a>&nbsp; Tutorial</td>
+  </tr>
+</table>
+
+<table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111" align="right">
+  <tr>
+    <td width="100%" bgcolor="#D7EEFF" align="center">
+      <i><b>Contents</b></i></td>
+  </tr>
+  <tr>
+    <td width="100%" bgcolor="#E8F5FF">
+      <a href="#Introduction">Introduction</a><br>
+      <a href="#Hello-endian-world">Hello endian world</a><br>
+      <a href="#Limitations">Limitations</a><br>
+      <a href="#Feature-set">Feature set</a><br>
+      <a href="#Types">Typedefs</a><br>
+      &nbsp;&nbsp;&nbsp; <a href="#Comment-on-naming">Comment on naming</a><br>
+      <a href="#Class_template_endian">Class template <code>endian</code></a><br>
+      &nbsp;&nbsp;&nbsp;
+      <a href="#Synopsis">Synopsis</a><br>
+      &nbsp;&nbsp;&nbsp; <a href="#Members">Members</a><br>
+      <a href="#FAQ">FAQ</a><br>
+      <a href="#Binary-I-O-cautions">Binary I/O warnings and cautions</a><br>
+      <a href="#Example">Example</a><br>
+      <a href="#Design">Design</a><br>
+      <a href="#Experience">Experience</a><br>
+      <a href="#Motivating-use-cases">Motivating use cases</a><br>
+      <a href="#C++0x">C++0x</a><br>
+      <a href="#Compilation">Compilation</a><br>
+      <a href="#Acknowledgements">Acknowledgements</a>
+    </td>
+  </tr>
+  <tr>
+    <td width="100%" bgcolor="#D7EEFF" align="center">
+      <b><i>Headers</i></b></td>
+  </tr>
+  <tr>
+    <td width="100%" bgcolor="#E8F5FF">
+      <a href="../../../boost/integer/endian.hpp">&lt;boost/integer/endian.hpp&gt;</a><br>
+      <a href="../../../boost/integer/endian_binary_stream.hpp">&lt;boost/integer/endian_binary_stream.hpp&gt;</a><br>
+      <a href="../../../boost/binary_stream.hpp">&lt;boost/binary_stream.hpp&gt;</a></td>
+  </tr>
+</table>
 <h2><a name="Introduction">Introduction</a></h2>
-<p>The <a href="../../../boost/integer/endian.hpp">boost/integer/endian.hpp</a> header provides 
+<p>Header
+      <a href="../../../boost/integer/endian.hpp">&lt;boost/integer/endian.hpp&gt;</a> provides 
 integer-like byte-holder binary types with explicit control over 
 byte order, value type, size, and alignment. Typedefs provide easy-to-use names 
 for common configurations.</p>
 <p>These types provide portable byte-holders for integer data, independent of 
 particular computer architectures. Use cases almost always involve I/O, either via files or 
-network connections. Although portability is the primary motivation, these 
+network connections. Although data portability is the primary motivation, these 
 integer byte-holders may 
 also be used to reduce memory use, file size, or network activity since they 
 provide binary integer sizes not otherwise available.</p>
@@ -44,8 +87,7 @@ exploration of <b><i>endianness</i></b>, including definitions of <i><b>big
 endian</b></i> and <i><b>little endian</b></i>.</p>
 <p>Boost endian integers provide the same full set of C++ assignment, 
 arithmetic, and relational operators&nbsp;as C++ standard integral types, with 
-the standard semantics, plus operators <code>&lt;&lt;</code> and <code>&gt;&gt;</code> for 
-stream insertion and extraction.</p>
+the standard semantics.</p>
 <p>Unary arithmetic operators are <code>+</code>, <code>-</code>, <code>~</code>,
 <code>!</code>, prefix and postfix <code>--</code> and <code>++</code>. Binary 
 arithmetic operators are <code>+</code>, <code>+=</code>, <code>-</code>, <code>
@@ -54,7 +96,44 @@ arithmetic operators are <code>+</code>, <code>+=</code>, <code>-</code>, <code>
 <code>^</code>, <code>^=</code>, <code>&lt;&lt;</code>, <code>&lt;&lt;=</code>, <code>&gt;&gt;</code>,
 <code>&gt;&gt;=</code>. Binary relational operators are <code>==</code>, <code>!=</code>,
 <code>&lt;</code>, <code>&lt;=</code>, <code>&gt;</code>, <code>&gt;=</code>.</p>
-<p>Automatic conversion are provided to and from the underlying integer value type.</p>
+<p>Automatic conversion is provided to the underlying integer value type.</p>
+<p>Header <a href="../../../boost/integer/endian_binary_stream.hpp">&lt;boost/integer/endian_binary_stream.hpp&gt;</a> 
+provides operators &lt;= and <code>=&gt;</code> for unformatted binary (as opposed to 
+formatted character) stream insertion and extraction of endian types.</p>
+<p>Header <a href="../../../boost/binary_stream.hpp">&lt;boost/binary_stream.hpp&gt;</a> 
+provides operators &lt;= and <code>=&gt;</code> for unformatted binary (as opposed to 
+formatted character) stream insertion and extraction of built-in and std::string 
+types.</p>
+<h2><a name="Hello-endian-world">Hello endian world</a></h2>
+<blockquote>
+  <pre>#include &lt;boost/integer/endian.hpp&gt;
+#include &lt;boost/integer/endian_binary_stream.hpp&gt;
+#include &lt;boost/binary_stream.hpp&gt;
+#include &lt;iostream&gt;
+
+using namespace boost;
+using namespace boost::integer;
+
+int main()
+{
+  int_least32_t v = 0x31323334L;  // = ASCII { '1', '2', '3', '4' }
+                                  // value chosen to work on text stream
+  big32_t    b(v);
+  little32_t l(v);
+
+  std::cout &lt;&lt; &quot;Hello, endian world!\n\n&quot;;
+
+  std::cout &lt;&lt; v &lt;&lt; ' ' &lt;&lt; b &lt;&lt; ' ' &lt;&lt; l &lt;&lt; '\n';
+  std::cout &lt;= v &lt;= ' ' &lt;= b &lt;= ' ' &lt;= l &lt;= '\n';
+}</pre>
+</blockquote>
+<p>On a little-endian CPU, this program outputs:</p>
+<blockquote>
+  <pre>Hello, endian world!
+
+825373492 825373492 825373492
+4321 1234 4321</pre>
+</blockquote>
 <h2><a name="Limitations">Limitations</a></h2>
 <p>Requires <code>&lt;climits&gt;</code> <code>CHAR_BIT == 8</code>. If <code>CHAR_BIT</code> 
 is some other value, compilation will result in an <code>#error</code>. This 
@@ -203,19 +282,24 @@ usual operations on integers are supplied.</p>
   namespace integer
   {
      
-    namespace <a name="endianness">endianness</a> { enum enum_t { big, little, native }; } // simulate C++0x scoped enum
-    namespace <a name="alignment">alignment</a>  { enum enum_t { unaligned, aligned }; }  // simulate C++0x scoped enum
+    enum class <a name="endianness">endianness</a> { big, little, native };  // scoped enum emulated on C++03
+    enum class <a name="alignment">alignment</a>  { unaligned, aligned };   // scoped enum emulated on C++03
 
-    template &lt;endianness::enum_t E, typename T, std::size_t n_bits,
-      alignment::enum_t A = alignment::unaligned&gt;
+    template &lt;endianness E, typename T, std::size_t n_bits,
+      alignment A = alignment::unaligned&gt;
     class endian : <a href="../../../boost/integer/cover_operators.hpp">integer_cover_operators</a>&lt; endian&lt;E, T, n_bits, A&gt;, T &gt;
     {
     public:
       typedef T value_type;
-      endian(){}
-      endian(T v);
-      endian &amp; operator=(T v);
-      operator T() const;
+
+      // if BOOST_ENDIAN_FORCE_PODNESS is defined &amp;&amp; C++0x POD's are not
+      // available then these two constructors will not be present
+      <a href="#endian">endian</a>() = default;       // = default replaced by {} on C++03
+      explicit <a href="#explicit-endian">endian</a>(T v);
+
+      endian &amp; <a href="#operator-eq">operator=</a>(T v);
+      <a href="#operator-T">operator T</a>() const;
+      const char* <a href="#data">data</a>() const;
     };
 
     // unaligned big endian signed integer types
@@ -307,29 +391,34 @@ usual operations on integers are supplied.</p>
   } // namespace integer
 } // namespace boost</pre>
 <h3><a name="Members">Members</a></h3>
-<p><code>endian(){}</code></p>
+<p><code><a name="endian">endian</a>() = default;&nbsp; // C++03: endian(){}</code></p>
 <blockquote>
 <p><i>Effects:</i> Constructs an object of type <code>endian&lt;E, T, n_bits, A&gt;</code>.</p>
 </blockquote>
-<p><code>endian(T v);</code></p>
+<p><code><a name="explicit-endian">explicit endian</a>(T v);</code></p>
 <blockquote>
 <p><i>Effects:</i> Constructs an object of type <code>endian&lt;E, T, n_bits, A&gt;</code>.</p>
 <p><i>Postcondition:</i> <code>x == v,</code> where <code>x</code> is the 
 constructed object.</p>
 </blockquote>
-<p><code>endian &amp; operator=(T v);</code></p>
+<p><code>endian &amp; <a name="operator-eq">operator=</a>(T v);</code></p>
 <blockquote>
   <p><i>Postcondition:</i> <code>x == v,</code> where <code>x</code> is the 
   constructed object.</p>
   <p><i>Returns:</i> <code>*this</code>.</p>
 </blockquote>
-<p><code>operator T() const;</code></p>
+<p><code><a name="operator-T">operator T</a>() const;</code></p>
 <blockquote>
 <p><i>Returns:</i> The current value stored in <code>*this</code>, converted to
 <code>value_type</code>.</p>
 </blockquote>
+<p><code>const char* <a name="data">data</a>() const;</code></p>
+<blockquote>
+<p><i>Returns:</i> A pointer to the first byte of the endian binary value stored 
+in <code>*this</code>.</p>
+</blockquote>
 <h3>Other operators</h3>
-<p>All other operators on endian objects are forwarded to the equivalent 
+<p>Other operators on endian objects are forwarded to the equivalent 
 operator on <code>value_type</code>.</p>
 <h2><a name="FAQ">FAQ</a></h2>
 <p><b>Why bother with endian types?</b> External data portability and both speed 
@@ -356,14 +445,14 @@ alignment.</p>
 compared to arithmetic operations on native integer types. However, these types 
 are usually be faster, and sometimes much faster, for I/O compared to stream 
 inserters and extractors, or to serialization.</p>
-<p><b>Are endian types POD's?</b> In C++03, no. For C++0x, yes, after applying
-<code>
-<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2346.htm">= 
-default</a></code> to the default constructor.</p>
-<p><b>What are the implications of C++03 endian types not being POD's?</b> They 
-can't be used in unions. In theory, compilers aren't required to align or lay 
-out storage in portable ways, although this problem has never been observed in a 
-real compiler.</p>
+<p><b>Are endian types POD's?</b> Yes for C++0x. No for C++03, although several
+<a href="#Compilation">macros</a> are available to force PODness in all cases.</p>
+<p><b>What are the implications endian types not being POD's with C++03 
+compilers?</b> They 
+can't be used in unions. Also, compilers aren't required to align or lay 
+out storage in portable ways, although this potential problem hasn't prevented 
+use of Boost.Endian with 
+real compilers.</p>
 <p><b>Which is better, big-endian or little-endian?</b> Big-endian tends to be a 
 bit more of an industry standard, but little-endian may be preferred for 
 applications that run primarily on x86 (Intel/AMD) and other little-endian 
@@ -389,6 +478,27 @@ incrementing a variable in a record. It is very convenient to write:</p>
 <pre wrap>    int temp( record.foo);
     ++temp;
     record.foo = temp;</pre>
+<p wrap><b>Why do binary stream insertion and extraction use operators &lt;= and &gt;= 
+rather than &lt;&lt;= and &gt;&gt;=?</b> &lt;&lt;= and &gt;&gt;= associate right-to-left, which is the 
+opposite of &lt;&lt; and &gt;&gt;, so would be very confusing and error prone. &lt;= and &gt;= 
+associate left-to-right. </p>
+<h2><a name="Binary-I-O-cautions">Binary I/O warnings and cautions</a></h2>
+<p><font color="#FF0000"><b><i><span style="background-color: #FFFFFF">Warning:</span></i></b></font><span style="background-color: #FFFFFF"> </span>&nbsp;Use 
+only on streams opened with filemode <code>std::ios_base::binary</code>. Thus 
+unformatted binary I/O should not be with the standard streams (cout, cin, etc.) 
+since they are opened in text mode. Use on text streams may produce incorrect 
+results, such as insertion of unwanted characters or premature end-of-file. For 
+example, on Windows 0x0D would become 0x0D, 0x0A.</p>
+<p><i><b><font color="#FF0000">Caution:</font><font color="#FFFF00"> </font></b>
+</i>When mixing formatted (i.e. operator &lt;&lt; or &gt;&gt;) and unformatted (i.e. 
+operator &lt;= or &gt;=) stream I/O, be aware that &lt;&lt; and &gt;&gt; take precedence over &lt;= 
+and &gt;=. Use parentheses to force correct order of evaluation. For example:</p>
+<blockquote>
+  <pre>my_stream &lt;&lt; foo &lt;= bar;    // no parentheses needed
+(my_stream &lt;= foo) &lt;&lt; bar;  // parentheses required </pre>
+</blockquote>
+<p>As a practical matter, it may be easier and safer to never mix the character 
+and binary insertion or extraction operators in the same statement.</p>
 <h2><a name="Example">Example</a></h2>
 <p>The <a href="../example/endian_example.cpp">endian_example.cpp</a> program writes a 
 binary file containing four byte big-endian and little-endian integers:</p>
@@ -398,15 +508,14 @@ binary file containing four byte big-endian and little-endian integers:</p>
 #include &lt;cstdio&gt;
 #include &lt;boost/integer/endian.hpp&gt;
 
-using boost::integer::big32_t;
-using boost::integer::little32_t;
+using namespace boost::integer;
 
 namespace 
 {
-  // This is a portion of a widely used GIS file format. I have no idea why
-  // anyone would mix big and little endians in the same format - but it is
-  // a real format and users wishing to write code manipulating files in that
-  // format have to deal with it.
+  // This is an extract from a very widely used GIS file format. I have no idea
+  // why a designer would mix big and little endians in the same file - but
+  // this is a real-world format and users wishing to write low level code
+  // manipulating these files have to deal with the mixed endianness.
 
   struct header
   {
@@ -421,7 +530,7 @@ namespace
 
 int main()
 {
-  assert( sizeof( header ) == 16 );
+  assert( sizeof( header ) == 16 );  // requirement for interoperability
 
   header h;
 
@@ -430,15 +539,15 @@ int main()
   h.version     = -1;
   h.shape_type  = 0x04030201;
 
-  // Low-level I/O such as POSIX read/write or &lt;cstdio&gt; fread/fwrite is
-  // typically used for binary file operations. Such I/O is often performed in
-  // some C++ wrapper class, but to drive home the point that endian integers
-  // are usually used in fairly low-level code, &lt;cstdio&gt; fopen/fwrite is used
-  // for I/O in this example.
+  // Low-level I/O such as POSIX read/write or &lt;cstdio&gt; fread/fwrite is sometimes
+  // used for binary file operations when ultimate efficiency is important.
+  // Such I/O is often performed in some C++ wrapper class, but to drive home the
+  // point that endian integers are often used in fairly low-level code that
+  // does bulk I/O operations, &lt;cstdio&gt; fopen/fwrite is used for I/O in this example.
 
   std::FILE * fi;
 
-  if ( !(fi = std::fopen( filename, &quot;wb&quot; )) )
+  if ( !(fi = std::fopen( filename, &quot;wb&quot; )) )  // MUST BE BINARY
   {
     std::cout &lt;&lt; &quot;could not open &quot; &lt;&lt; filename &lt;&lt; '\n';
     return 1;
@@ -451,6 +560,7 @@ int main()
   }
 
   std::fclose( fi );
+
   std::cout &lt;&lt; &quot;created file &quot; &lt;&lt; filename &lt;&lt; '\n';
   return 0;
 }</pre>
@@ -488,6 +598,35 @@ several Boost programmers and used very successful in high-value, high-use
 applications for many years. These independently developed endian libraries 
 often evolved from C libraries that were also widely used. Endian integers have proven widely useful across a wide 
 range of computer architectures and applications.</p>
+<h2><a name="Motivating-use-cases">Motivating use cases</a></h2>
+<p>Neil Mayhew writes: &quot;I can also provide a meaningful use-case for this 
+library: reading TrueType font files from disk and processing the contents. The 
+data format has fixed endianness (big) and has unaligned values in various 
+places. Using Boost.Endian simplifies and cleans the code wonderfully.&quot;</p>
+<h2><a name="C++0x">C++0x</a></h2>
+<p>The availability of the C++0x
+<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2346.htm">
+Defaulted Functions</a> feature is detected automatically, and will be used if 
+present to ensure that objects of <code>class endian</code> are trivial, and 
+thus POD's.</p>
+<h2><a name="Compilation">Compilation</a></h2>
+<p>Boost.Endian is implemented entirely within headers, with no need to link to 
+any Boost object libraries.</p>
+<p>Several macros allow user control over features:</p>
+<ul>
+  <li>BOOST_ENDIAN_NO_CTORS causes <code>class endian</code> to have no 
+  constructors. The intended use is for compiling user code that must be 
+  portable between compilers regardless of C++0x
+  <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2346.htm">
+  Defaulted Functions</a> support. Use of constructors will always fail, <br>
+&nbsp;</li>
+  <li>BOOST_ENDIAN_FORCE_PODNESS causes BOOST_ENDIAN_NO_CTORS to be defined if 
+  the compiler does not support C++0x
+  <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2346.htm">
+  Defaulted Functions</a>. This is ensures that , and so can be used in unions. 
+  In C++0x, <code>class endian</code> objects are POD's even though they have 
+  constructors.</li>
+</ul>
 <h2><a name="Acknowledgements">Acknowledgements</a></h2>
 <p>Original design developed by Darin Adler based on classes developed by Mark 
 Borgerding. Four original class templates combined into a single <code>endian</code> 
@@ -501,21 +640,21 @@ Benaka Moorthi,
 Christopher Kohlhoff,
 Cliff Green, 
 Gennaro Proto,
-Jeff Flinn,
+Giovanni Piero Deretta, dizzy, Jeff Flinn,
 John Maddock,
 Kim Barrett,
 Marsh Ray,
 Martin Bonner,
 Matias Capeletto,
-Rene Rivera,
-Scott McMurray, 
+Neil Mayhew, Phil Endecott, Rene Rivera,
+Roland Schwarz, Scott McMurray, 
 Sebastian Redl, 
-Tomas Puverle, and
+Tomas Puverle, Vincente Botet, and
 Yuval Ronen.</p>
 <hr>
 <p>Last revised:
-<!--webbot bot="Timestamp" s-type="EDITED" s-format="%d %B, %Y" startspan -->26 May, 2008<!--webbot bot="Timestamp" endspan i-checksum="14024" --></p>
-<p>© Copyright Beman Dawes, 2006</p>
+<!--webbot bot="Timestamp" s-type="EDITED" s-format="%d %B, %Y" startspan -->25 March, 2009<!--webbot bot="Timestamp" endspan i-checksum="29032" --></p>
+<p>© Copyright Beman Dawes, 2006-2009</p>
 <p>Distributed under the Boost Software License, Version 1.0. (See accompanying 
 file <a href="../../../LICENSE_1_0.txt">LICENSE_1_0.txt</a> or copy at
 <a href="http://www.boost.org/LICENSE_1_0.txt">www.boost.org/ LICENSE_1_0.txt</a>)</p>
