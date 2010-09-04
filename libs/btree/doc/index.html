@@ -1,0 +1,183 @@
+<html>
+<head>
+  <meta name="generator" content=
+  "Microsoft FrontPage 5.0">
+  <meta name="GENERATOR" content="Microsoft FrontPage 5.0">
+  <meta name="ProgId" content="FrontPage.Editor.Document">
+  <meta http-equiv="Content-Type" content=
+  "text/html; charset=us-ascii">
+
+  <title>B-Tree Home</title>
+  <link rel="stylesheet" type="text/css" href=
+  "../../../../../boost/trunk/doc/src/minimal.css">
+</head>
+
+<body>
+  <table border="0" cellpadding="5" cellspacing="0" style=
+  "border-collapse: collapse" bordercolor="#111111">
+    <tr>
+      <td width="277"><a href="../../../../index.htm"><img src=
+      "../../../../boost.png" alt="boost.png (6897 bytes)" align=
+      "middle" width="300" height="86" border="0"></a></td>
+
+      <td align="middle"><font size="7">B-Tree Library</font></td>
+    </tr>
+  </table>
+
+  <table border="0" cellpadding="5" cellspacing="0" style=
+  "border-collapse: collapse" bordercolor="#111111" bgcolor=
+  "#D7EEFF" width="100%">
+    <tr>
+      <td><a href="../../../../index.htm">Boost Home</a>
+      &nbsp;&nbsp; <a href="index.html">Library Home</a>
+      &nbsp;&nbsp; <a href="reference.html">Reference</a>
+      &nbsp;&nbsp; <a href="tutorial.html">Tutorial</a>
+      &nbsp;&nbsp; <a href="faq.html">FAQ</a> &nbsp;&nbsp; <a href=
+      "portability_guide.htm">Portability</a></td>
+    </tr>
+  </table>
+
+  <table border="1" cellpadding="10" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111" width="100%">
+    <tr>
+      <td>
+      <p align="center">
+      <img border="0" src="../../../doc/html/images/warning.png" width="24" height="24"> 
+      Warning: The implementation code is still immature and has not been 
+      thoroughly tested. <b>The library is not yet ready for production use.</b></td>
+    </tr>
+  </table>
+
+  <h2>Introduction</h2>
+
+  <p>The Boost B-tree library provides disk-based associative
+  containers that scale all the way from really, really, small to
+  really, really, large. B-trees perform well on hardware ranging
+  from ancient floppy disk drives on up to humongous disk arrays.
+  They are the technology behind most high-performance disk file
+  systems and databases.</p>
+
+  <table border="1" cellpadding="10" cellspacing="0" style=
+  "border-collapse: collapse" bordercolor="#111111" width="100%">
+    <tr>
+      <td width="100%">
+        <p align="center"><b><font size="3">The B in "B-tree" does
+        not stand for "Binary"</font></b></p>
+
+        <p>The origin of "B-tree" has never been explained by the
+        authors [<a href=
+        "http://en.wikipedia.org/wiki/Rudolf_Bayer" title=
+        "Rudolf Bayer">Rudolf Bayer</a> and Edward McCreight]. As
+        we shall see, "balanced," "broad," or "bushy" might apply.
+        Others suggest that the "B" stands for Boeing. Because of
+        his contributions, however, it seems appropriate to think
+        of B-trees as "Bayer"-trees.</p>
+
+        <p align="right">Douglas Comer, <i>The Ubiquitous B-Tree</i>,
+        Computing Surveys, Vol. 11, No. 2, June 1979</p>
+      </td>
+    </tr>
+  </table>
+
+  <h2>Library Characteristics</h2>
+
+  <ul>
+    <li>Public interface similar but not identical to the C++
+    Standard Library's Associative Container requirements:<br>
+&nbsp;<ul>
+      <li>All iterator returning functions return
+        <code>const_iterator</code>. The <code>writeable()</code>
+        function turns <code>const_iterator</code> into
+        <code>iterator</code>.</li>
+      <li><code>insert()</code> and <code>erase()</code>
+        invalidate iterators.</li>
+      <li>Types supplied by the <code>Key</code> and
+        <code>T</code> template parameters must be memcpyable.</li>
+      <li>Maps, multimaps, sets, and multisets are each supported.<br>
+&nbsp;</li>
+    </ul>
+    </li>
+    <li>B<sup>+</sup>-tree disk structure with bidirectional page
+    sequence list. Modifications to the classic B<sup>+</sup>-tree
+    include: <br>
+&nbsp;<ul>
+      <li>New-page-on-full (i.e. lazy) rather than split-on-full
+        when inserts are ordered.</li>
+      <li>Free-at-empty (i.e. lazy) rather than merge-at-half for
+        erases.<br>
+&nbsp;</li>
+    </ul>
+    </li>
+    <li>Disk file format includes header information about the
+      tree, and includes space for user supplied information.<br>
+&nbsp;</li>
+    <li>Runtime options allow performance tuning:<br>
+&nbsp;<ul>
+    <li>Page size allows hardware specific tuning.</li>
+    <li>Cache size allows control over speed versus program memory tradeoff.</li>
+    <li>Preload allows control over speed versus operating system disk cache 
+    memory tradeoff.<br>
+&nbsp;</li>
+  </ul>
+
+    </li>
+    <li>Traits allow user to specify implementation types:<br>
+&nbsp;<ul>
+      <li>Default is to native types, for maximum efficiency.</li>
+      <li>Endian types can be used to ensure data file portable. Prepackaged big 
+      and little endian traits supplied.</li>
+      <li>Larger or smaller types can be used for
+          very large or very small trees. Prepackaged compact tree traits 
+      supplied.<br>
+&nbsp;</li>
+    </ul>
+    </li>
+    <li>Command line utilities <code>btpack</code>,
+    <code>btinfo</code>, and <code>btrecover</code> meet
+    administrative needs.</li>
+  </ul>
+
+  <h2>Library Limitations</h2>
+
+  <ul>
+    <li>Efficient variable length data, such as strings, is not currently 
+    supported. A simple string type that always uses its maximum length is 
+    provided as a workaround. Efficient variable length data is a high priority 
+    for the future.<br>
+&nbsp;</li>
+    <li>Concurrent use is not supported. Concurrent use by other processes is a 
+    high priority for the future.</li>
+  </ul>
+
+  <h2>Bibliography</h2>
+
+  <p>Rudolf Bayer and Edward M. McCreight, <i><a href=
+  "http://www.minet.uni-jena.de/dbis/lehre/ws2005/dbs1/Bayer_hist.pdf">
+  Organization and Maintenance of Large Ordered Indices</a></i>,
+  Acta Informatica, 1:173-189, 1972. The original publication is
+  still a good starting point to understand the B-tree.</p>
+
+  <p>Douglas Comer, <i>
+  <a href="http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.96.6637&rep=rep1&type=pdf">
+  The
+  Ubiquitous B-Tree</a></i>, ACM Computing Surveys, Vol. 11, No. 2,
+  June, 1979. Covers many variations and implementation techniques,
+  with their trade-offs.</p>
+
+  <p>Siddhartha Sen and Robert E. Tarjan, <i><a href=
+  "http://www.cs.princeton.edu/~sssix/papers/b-trees.pdf">Deletion
+  Without Rebalancing in Multiway Search Trees</a></i>, Proc. 20th
+  International Symposium on Algorithms and Computation (ISAAC),
+  December 2009<i>.</i> Explanation of why free-at-empty is better
+  than merge-at-half,</p>
+  <hr>
+
+  <p>&#169; Copyright Beman Dawes, 2010</p>
+
+  <p>Distributed under the Boost Software License, Version 1.0. See
+  <a href=
+  "http://www.boost.org/LICENSE_1_0.txt">www.boost.org/LICENSE_1_0.txt</a></p>
+
+  <p>Revised 
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->02 September 2010<!--webbot bot="Timestamp" endspan i-checksum="39617" --></p>
+</body>
+</html>
