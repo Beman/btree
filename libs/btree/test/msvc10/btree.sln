@@ -7,12 +7,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "filesystem_dll", "filesyste
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "btree_unit_test", "btree_unit_test\btree_unit_test.vcxproj", "{E66A140A-A833-49FA-BBC7-56E4034F8543}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "page_manager_test", "page_manager_test\page_manager_test.vcxproj", "{FD4F5C0D-3832-4FD3-BC60-7748C75CB3D7}"
-	ProjectSection(ProjectDependencies) = postProject
-		{2AAD90AC-4FD3-422F-9E99-1CEA3EF092ED} = {2AAD90AC-4FD3-422F-9E99-1CEA3EF092ED}
-		{2558C6E2-046F-441D-9515-0FAB44F5A22E} = {2558C6E2-046F-441D-9515-0FAB44F5A22E}
-	EndProjectSection
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "stl_equivalence_test", "stl_equivalence_test\stl_equivalence_test.vcxproj", "{3E0D6A30-14DC-42D2-8626-A35793DF26CA}"
 	ProjectSection(ProjectDependencies) = postProject
 		{2AAD90AC-4FD3-422F-9E99-1CEA3EF092ED} = {2AAD90AC-4FD3-422F-9E99-1CEA3EF092ED}
@@ -43,10 +37,6 @@ Global
 		{E66A140A-A833-49FA-BBC7-56E4034F8543}.Debug|Win32.Build.0 = Debug|Win32
 		{E66A140A-A833-49FA-BBC7-56E4034F8543}.Release|Win32.ActiveCfg = Release|Win32
 		{E66A140A-A833-49FA-BBC7-56E4034F8543}.Release|Win32.Build.0 = Release|Win32
-		{FD4F5C0D-3832-4FD3-BC60-7748C75CB3D7}.Debug|Win32.ActiveCfg = Debug|Win32
-		{FD4F5C0D-3832-4FD3-BC60-7748C75CB3D7}.Debug|Win32.Build.0 = Debug|Win32
-		{FD4F5C0D-3832-4FD3-BC60-7748C75CB3D7}.Release|Win32.ActiveCfg = Release|Win32
-		{FD4F5C0D-3832-4FD3-BC60-7748C75CB3D7}.Release|Win32.Build.0 = Release|Win32
 		{3E0D6A30-14DC-42D2-8626-A35793DF26CA}.Debug|Win32.ActiveCfg = Debug|Win32
 		{3E0D6A30-14DC-42D2-8626-A35793DF26CA}.Debug|Win32.Build.0 = Debug|Win32
 		{3E0D6A30-14DC-42D2-8626-A35793DF26CA}.Release|Win32.ActiveCfg = Release|Win32
