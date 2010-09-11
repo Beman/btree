@@ -12,7 +12,7 @@
 
 #include <boost/iterator/iterator_facade.hpp>
 #include <boost/noncopyable.hpp>
-#include <boost/file_io/buffer_manager.hpp>
+#include <boost/filesystem/detail/buffer_manager.hpp>
 #include <boost/assert.hpp>
 #include <boost/static_assert.hpp>
 #include <cstddef>     // for size_t, offsetof

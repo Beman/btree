@@ -11,7 +11,7 @@
 // the library is being built (possibly exporting rather than importing code)
 #define BOOST_FILESYSTEM_SOURCE 
 
-#include <boost/file_io/buffer_manager.hpp>
+#include <boost/filesystem/detail/buffer_manager.hpp>
 #include <ostream>
 
 namespace boost

@@ -13,7 +13,7 @@
 // the library is being built (possibly exporting rather than importing code)
 #define BOOST_FILESYSTEM_SOURCE 
 
-#include <boost/file_io/binary_file.hpp>
+#include <boost/filesystem/detail/binary_file.hpp>
 #include <boost/filesystem/v3/operations.hpp>
 #include <boost/system/error_code.hpp>
 #include <boost/assert.hpp>

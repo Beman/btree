@@ -12,7 +12,7 @@
 #ifndef BOOST_BUFFER_MANAGER_HPP
 #define BOOST_BUFFER_MANAGER_HPP
 
-#include <boost/file_io/binary_file.hpp>
+#include <boost/filesystem/detail/binary_file.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <boost/intrusive/set.hpp>
 #include <boost/intrusive/list.hpp>
