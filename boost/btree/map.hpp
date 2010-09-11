@@ -47,28 +47,40 @@ namespace boost
             flags::user(flgs), pg_sz, comp) {}
 
       template <class InputIterator>
-        btree_map(InputIterator first, InputIterator last,
-          const boost::filesystem::path& p,
-          flags::bitmask flgs = flags::read_only,
-          std::size_t pg_sz = default_page_size,  // ignored if existing file
-          const Comp& comp = Comp())
-        : btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>(p,
-            flags::user(flgs), pg_sz, comp)
-          { for (; first != last; ++first) m_insert_unique(*first); }
+      btree_map(InputIterator first, InputIterator last,
+        const boost::filesystem::path& p,
+        flags::bitmask flgs = flags::read_only,
+        std::size_t pg_sz = default_page_size,  // ignored if existing file
+        const Comp& comp = Comp())
+      : btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>(p,
+          flags::user(flgs), pg_sz, comp)
+      {
+        for (; first != last; ++first)
+          btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>::m_insert_unique(*first);
+      }
  
       void open(const boost::filesystem::path& p,
         flags::bitmask flgs = flags::read_only,
         std::size_t pg_sz = default_page_size) // pg_sz ignored if existing file
-          { m_open(p, flags::user(flgs), pg_sz); }
+      {
+        btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>::m_open(p,
+          flags::user(flgs), pg_sz);
+      }
 
       // typename btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>:: is required by GCC but not VC++
       std::pair<typename btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>::const_iterator, bool>
-        insert(const typename btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>::value_type& value)
-          {return m_insert_unique(value);}
+      insert(const typename btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>::value_type& value)
+      {
+        return btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>::m_insert_unique(
+          value);
+      }
 
       template <class InputIterator>
-        void insert(InputIterator first, InputIterator last)
-          { for (; first != last; ++first) m_insert_unique(*first); }
+      void insert(InputIterator first, InputIterator last)
+      { 
+        for (; first != last; ++first) 
+          btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>::m_insert_unique(*first);
+      }
     };
 
 //--------------------------------------------------------------------------------------//
@@ -95,28 +107,42 @@ namespace boost
             flags::user(flgs) | flags::multi, pg_sz, comp) {}
 
       template <class InputIterator>
-        btree_multimap(InputIterator first, InputIterator last,
+      btree_multimap(InputIterator first, InputIterator last,
           const boost::filesystem::path& p,
           flags::bitmask flgs = flags::read_only,
           std::size_t pg_sz = default_page_size,  // ignored if existing file
           const Comp& comp = Comp())
         : btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>(p,
             flags::user(flgs) | flags::multi, pg_sz, comp)
-          { for (; first != last; ++first) m_insert_non_unique(*first); }
+      {
+        for (; first != last; ++first)
+          btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>::m_insert_non_unique(
+            *first);
+      }
 
       void open(const boost::filesystem::path& p,
-        flags::bitmask flgs = flags::read_only,
-        std::size_t pg_sz = default_page_size) // pg_sz ignored if existing file
-          { m_open(p, flgs | flags::multi, pg_sz); }
+      flags::bitmask flgs = flags::read_only,
+      std::size_t pg_sz = default_page_size) // pg_sz ignored if existing file
+      {
+        btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>::m_open(p,
+          flgs | flags::multi, pg_sz);
+      }
 
       // typename btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>:: is required by GCC but not VC++
       typename btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>::const_iterator
-        insert(const typename btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>::value_type& value)
-          {return m_insert_non_unique(value);}
+      insert(const typename btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>::value_type& value)
+      {
+        return btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>::m_insert_non_unique(
+          value);
+      }
 
       template <class InputIterator>
-        void insert(InputIterator first, InputIterator last)
-          { for (; first != last; ++first) m_insert_non_unique(*first); }
+      void insert(InputIterator first, InputIterator last)
+      {
+        for (; first != last; ++first)
+          btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>::m_insert_non_unique(
+            *first);
+      }
     };
 
 

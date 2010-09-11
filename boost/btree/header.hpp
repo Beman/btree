@@ -176,13 +176,16 @@ namespace boost
       void  key_size(std::size_t sz)                 { m_key_size = sz; }
       void  mapped_size(std::size_t sz)              { m_mapped_size = sz; }
       void  flags(flags::bitmask flgs)               { m_flags = flgs; }
+      void  element_count(boost::uint64_t value)     { m_element_count = value; }
       void  increment_element_count()                { ++m_element_count; }
       void  decrement_element_count()                { --m_element_count; }
       void  root_page_id(boost::uint32_t id)         { m_root_page_id = id; }
       void  first_page_id(boost::uint32_t id)        { m_first_page_id = id; }
       void  last_page_id(boost::uint32_t id)         { m_last_page_id = id; }
+      void  page_count(boost::uint32_t value)        { m_page_count = value; }
       void  increment_page_count()                   { ++m_page_count; }
       void  free_page_list_head_id(boost::uint32_t id){ m_free_page_list_head_id = id; }
+      void  root_level(uint16_t value)               { m_root_level = value; }
       boost::uint16_t  increment_root_level()        { return ++m_root_level; }
       void  decrement_root_level()                   { --m_root_level; }
 

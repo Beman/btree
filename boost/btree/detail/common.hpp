@@ -3,7 +3,7 @@
 //  Copyright Beman Dawes 2000, 2006, 2010
 
 //  Distributed under the Boost Software License, Version 1.0.
-//  http://www.boost.org/LICENSE_1_0.txt
+//  See http://www.boost.org/LICENSE_1_0.txt
 
 //  See http://www.boost.org/libs/btree for documentation.
 
@@ -15,7 +15,7 @@
 #include <boost/filesystem/detail/buffer_manager.hpp>
 #include <boost/assert.hpp>
 #include <boost/static_assert.hpp>
-#include <cstddef>     // for size_t, offsetof
+#include <cstddef>     // for size_t
 #include <cstring>
 #include <cassert>
 #include <utility>
@@ -129,7 +129,7 @@ template  <class Key,
 
 class btree_base : public Base, private noncopyable
 {
-protected:
+private:
   class btree_page;
   class btree_page_ptr;
   class btree_data;
@@ -284,8 +284,9 @@ public:
 private:
   typedef filesystem::buffer          buffer;
   typedef filesystem::buffer_ptr      buffer_ptr;
+  typedef filesystem::buffer_manager  buffer_manager;
 
-  mutable filesystem::buffer_manager  m_mgr;
+  mutable buffer_manager  m_mgr;
 
   btree_page_ptr     m_root;  // invariant: there is always at least one leaf,
                               // possibly empty, in the tree, and thus there is
@@ -334,6 +335,16 @@ private:
     void             next_page_id(page_id_type id)   {m_next_page_id = id;}
     value_type*      begin()                         {return m_value;}
     value_type*      end()                           {return &m_value[size()];}
+
+    //  offsetof() macro won't work for all value_type's, so compute by hand
+    static std::size_t offset()
+    {
+      static leaf_data dummy;
+      static std::size_t off
+        = reinterpret_cast<char*>(&dummy.m_value) - reinterpret_cast<char*>(&dummy);
+      return off;
+    }
+
 //  private:
     page_id_type     m_prior_page_id;  // page sequence list; 0 for end
     page_id_type     m_next_page_id;   // page sequence list; 0 for end
@@ -351,6 +362,16 @@ private:
   public:
     branch_value_type* begin()                       {return m_value;}
     branch_value_type* end()                         {return &m_value[size()];}
+
+    //  offsetof() macro won't work for all branch_value_type's, so compute by hand
+    static std::size_t offset()
+    {
+      static branch_data dummy;
+      static std::size_t off
+        = reinterpret_cast<char*>(&dummy.m_value) - reinterpret_cast<char*>(&dummy);
+      return off;
+    }
+
 //  private:
     page_id_type P0;  // the initial pseudo-element, which has no key;
                       // this is often called P sub 0 in the literature
@@ -475,7 +496,7 @@ private:
 
   private:
     friend class boost::iterator_core_access;
-    friend btree_base;
+    friend class btree_base;
    
     typename btree_base::btree_page_ptr  m_page; 
     IterValue*                           m_element;  // 0 for the end iterator
@@ -729,9 +750,9 @@ btree_base<Key,Base,Traits,Comp>::m_open(const boost::filesystem::path& p,
       BOOST_BTREE_THROW(std::runtime_error(file_path().string()+" isn't a btree"));
     if (m_hdr.big_endian() != (Traits::header_endianness == integer::endianness::big))
       BOOST_BTREE_THROW(std::runtime_error(file_path().string()+" has wrong endianness"));
-    if (m_hdr.key_size() != key_size())
+    if (m_hdr.key_size() != Base::key_size())
       BOOST_BTREE_THROW(std::runtime_error(file_path().string()+" has wrong key_type size"));
-    if (m_hdr.mapped_size() != mapped_size())
+    if (m_hdr.mapped_size() != Base::mapped_size())
       BOOST_BTREE_THROW(std::runtime_error(file_path().string()+" has wrong mapped_type size"));
     m_mgr.data_size(m_hdr.page_size());
     m_root = m_mgr.read(m_hdr.root_page_id());
@@ -743,10 +764,10 @@ btree_base<Key,Base,Traits,Comp>::m_open(const boost::filesystem::path& p,
     m_hdr.splash_c_str("boost.org btree");
     m_hdr.user_c_str("");
     m_hdr.page_size(pg_sz);
-    m_hdr.key_size(key_size());
-    BOOST_ASSERT(m_hdr.key_size() == key_size());  // fails if key_type too large
-    m_hdr.mapped_size(mapped_size());
-    BOOST_ASSERT(m_hdr.mapped_size() == mapped_size());  // fails if mapped_type too large
+    m_hdr.key_size(Base::key_size());
+    BOOST_ASSERT(m_hdr.key_size() == Base::key_size());  // fails if key_type too large
+    m_hdr.mapped_size(Base::mapped_size());
+    BOOST_ASSERT(m_hdr.mapped_size() == Base::mapped_size());  // fails if mapped_type too large
     m_hdr.increment_page_count();  // i.e. the header itself
     m_mgr.new_buffer();  // force a buffer write, thus zeroing the header for its full size
     flush();
@@ -764,9 +785,9 @@ btree_base<Key,Base,Traits,Comp>::m_open(const boost::filesystem::path& p,
     m_root->size(0);
   }
   m_set_max_cache_pages();
-  m_max_leaf_size = (m_mgr.data_size() - offsetof(leaf_data, m_value)) / sizeof(value_type);
+  m_max_leaf_size = (m_mgr.data_size() - leaf_data::offset()) / sizeof(value_type);
   m_max_branch_size =
-    (m_mgr.data_size() - offsetof(branch_data, m_value)) / sizeof(branch_value_type);
+    (m_mgr.data_size() - branch_data::offset()) / sizeof(branch_value_type);
 }
 
 //------------------------------------- clear() ----------------------------------------//
@@ -775,8 +796,8 @@ template <class Key, class Base, class Traits, class Comp>
 void
 btree_base<Key,Base,Traits,Comp>::clear()
 {
-  for (page_manager::page_set_type::iterator itr = m_mgr.page_set.begin();
-    itr != m_mgr.page_set.end();
+  for (buffer_manager::buffer_set_type::iterator itr = m_mgr.buffer_set.begin();
+    itr != m_mgr.buffer_set.end();
     ++itr)
   {
     itr->needs_write(false);

@@ -256,19 +256,19 @@ namespace boost
       typedef boost::intrusive::set<buffer>  buffer_set_type;
       typedef boost::intrusive::list<buffer> buffer_list_type;
 
-      buffer_set_type   buffer_set;             // all buffers in memory that have been
-                                            // allocated by this buffer manager
+      buffer_set_type   buffer_set;           // all buffers in memory that have been
+                                              // allocated by this buffer manager
 
-      buffer_list_type  buffer_available_list;  // buffers in memory with use_count() == 0;
-                                            // in effect this is a LRU list with
-                                            // begin() being the least recently used buffer
+      buffer_list_type  buffer_available_list;// buffers in memory with use_count() == 0;
+                                              // in effect this is a LRU list with
+                                              // begin() being the least recently used buffer
 
     private:
 
-      buffer_count_type   m_buffer_count;       // number of buffers in the file
-      data_size_type    m_data_size;        // number of bytes per disk buffer
-      std::size_t       m_max_cache_buffers;  // maximum number of buffers to cache; may be 0
-      void*             m_owner;            // not used by buffer_manager itself
+      buffer_count_type   m_buffer_count;     // number of buffers in the file
+      data_size_type      m_data_size;        // number of bytes per disk buffer
+      std::size_t         m_max_cache_buffers;// maximum number of buffers to cache; may be 0
+      void*               m_owner;            // not used by buffer_manager itself
       buffer_alloc        m_alloc;            // memory allocation function pointer
 
       //  activity counts
