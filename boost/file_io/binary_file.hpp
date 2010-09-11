@@ -25,7 +25,7 @@
 
 #include <boost/filesystem/v3/config.hpp>  // use filesystem's config mechanism for now
 #include <boost/filesystem/v3/path.hpp>
-#include <boost/bitmask.hpp>
+#include <boost/detail/bitmask.hpp>
 #include <ios>
 #include <cstddef>  // for size_t
 
