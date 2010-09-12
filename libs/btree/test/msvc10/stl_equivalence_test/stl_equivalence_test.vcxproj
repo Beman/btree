@@ -90,6 +90,10 @@
     <ClCompile Include="..\..\stl_equivalence_test.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\btree_dll\btree_dll.vcxproj">
+      <Project>{61954631-3857-4C20-9E7C-1DA7BAAFF426}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
     <ProjectReference Include="..\filesystem_dll\filesystem_dll.vcxproj">
       <Project>{2aad90ac-4fd3-422f-9e99-1cea3ef092ed}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>

@@ -1,6 +1,6 @@
 //  btree_unit_test.cpp  ---------------------------------------------------------------//
 
-//  Copyright Beman Dawes 2006
+//  Copyright Beman Dawes 2006, 2010
 
 //  Distributed under the Boost Software License, Version 1.0.
 //  See http://www.boost.org/LICENSE_1_0.txt
@@ -14,9 +14,6 @@
 //  See stl_equivalence_test.cpp for large scale stress testing.                        //
 //                                                                                      //
 //--------------------------------------------------------------------------------------//
-
-
-#define BOOST_FILESYSTEM_VERSION 3
 
 #include <iostream>
 #include <iomanip>

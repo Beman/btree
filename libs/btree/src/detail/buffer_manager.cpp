@@ -7,16 +7,16 @@
 
 //--------------------------------------------------------------------------------------//
 
-// define BOOST_FILESYSTEM_SOURCE so that <boost/filesystem/config.hpp> knows
+// define BOOST_BTREE_SOURCE so that <boost/filesystem/config.hpp> knows
 // the library is being built (possibly exporting rather than importing code)
-#define BOOST_FILESYSTEM_SOURCE 
+#define BOOST_BTREE_SOURCE 
 
-#include <boost/filesystem/detail/buffer_manager.hpp>
+#include <boost/btree/detail/buffer_manager.hpp>
 #include <ostream>
 
 namespace boost
 {
-namespace filesystem3
+namespace btree
 {
  
 //-------------------------------- ~buffer_manager() -----------------------------------//
@@ -62,7 +62,7 @@ buffer_manager::~buffer_manager()
  
 //------------------------------------- open() -----------------------------------------//
 
-bool buffer_manager::open(const boost::filesystem3::path& p, oflag::bitmask flags,
+bool buffer_manager::open(const boost::filesystem::path& p, oflag::bitmask flags,
   std::size_t max_cache_pgs, data_size_type data_sz)
 //  Returns: true if existing non-trucated file.
 //  NOTE: IF true IS RETURNED, IT IS REQUIRED THAT data_size() BE CALLED WITH
@@ -83,7 +83,7 @@ bool buffer_manager::open(const boost::filesystem3::path& p, oflag::bitmask flag
   if (flags & oflag::out)
     flags |= oflag::in;
 
-  if (boost::filesystem3::exists(p) && !(flags & oflag::truncate)) // existing file
+  if (boost::filesystem::exists(p) && !(flags & oflag::truncate)) // existing file
     m_data_size = 0;  // as yet unknown
 
   binary_file::open(p, flags);
@@ -211,7 +211,7 @@ void buffer_manager::flush()
   
 //------------------------------------ operator<<() ------------------------------------//
 
-BOOST_FILESYSTEM_DECL
+BOOST_BTREE_DECL
 std::ostream& operator<<(std::ostream& os, const buffer_manager& pm)
 // aid for debugging, tuning
 {
@@ -235,5 +235,5 @@ std::ostream& operator<<(std::ostream& os, const buffer_manager& pm)
   return os;
 }
 
-}  // namespace filesystem3
+}  // namespace btree
 }  // namespace boost

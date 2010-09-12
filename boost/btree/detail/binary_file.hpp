@@ -23,7 +23,7 @@
 #ifndef BOOST_BINARY_FILE_HPP
 #define BOOST_BINARY_FILE_HPP
 
-#include <boost/filesystem/v3/config.hpp>  // use filesystem's config mechanism for now
+#include <boost/btree/detail/config.hpp>
 #include <boost/filesystem/v3/path.hpp>
 #include <boost/detail/bitmask.hpp>
 #include <ios>
@@ -33,7 +33,7 @@
 
 namespace boost
 {
-  namespace filesystem3
+  namespace btree
   {
     namespace oflag
     {
@@ -66,7 +66,7 @@ namespace boost
 
     //  class binary_file  -------------------------------------------------------------//
     
-    class BOOST_FILESYSTEM_DECL binary_file // noncopyable
+    class BOOST_BTREE_DECL binary_file // noncopyable
     {
     private:
       binary_file(const binary_file&);
@@ -87,17 +87,17 @@ namespace boost
       binary_file()
         : m_handle(invalid_handle) {}
 
-      explicit binary_file(const path& p, oflag::bitmask flags=oflag::in)
+      explicit binary_file(const filesystem::path& p, oflag::bitmask flags=oflag::in)
         : m_handle(invalid_handle) { open(p, flags); }
 
-      binary_file(const path& p, oflag::bitmask flags, system::error_code& ec)
+      binary_file(const filesystem::path& p, oflag::bitmask flags, system::error_code& ec)
         : m_handle(invalid_handle) { open(p, flags, ec); }
 
      ~binary_file();
 
-      void open(const path& p, oflag::bitmask flags=oflag::in);
+      void open(const filesystem::path& p, oflag::bitmask flags=oflag::in);
       // Requires: !is_open()
-      bool open(const path& p, oflag::bitmask flags, system::error_code& ec);
+      bool open(const filesystem::path& p, oflag::bitmask flags, system::error_code& ec);
       // Requires: !is_open()
       // Returns: true if successful.
 
@@ -114,7 +114,7 @@ namespace boost
 
       handle_type handle() const  { return m_handle; }
 
-      const path& file_path() const            { return m_path; }
+      const filesystem::path& file_path() const  { return m_path; }
 
       // -------------------------------------------------------------------------------//
  
@@ -234,35 +234,8 @@ namespace boost
 
     }; // binary_file
 
-  } // namespace filesystem3
+  } // namespace btree
 } // namespace boost
-
-//--------------------------------------------------------------------------------------//
-
-namespace boost
-{
-  namespace filesystem
-  {
-    namespace oflag
-    {
-      using filesystem3::oflag::bitmask;
-      using filesystem3::oflag::in;
-      using filesystem3::oflag::out;
-      using filesystem3::oflag::truncate;
-      using filesystem3::oflag::seek_end;
-      using filesystem3::oflag::random;
-      using filesystem3::oflag::sequential;
-      using filesystem3::oflag::preload;
-    }
-    namespace seekdir
-    {
-      using filesystem3::seekdir::begin;
-      using filesystem3::seekdir::current;
-      using filesystem3::seekdir::end;
-    }
-    using filesystem3::binary_file;
-  }
-}
 
 //--------------------------------------------------------------------------------------//
 

@@ -12,7 +12,7 @@
 
 #include <boost/iterator/iterator_facade.hpp>
 #include <boost/noncopyable.hpp>
-#include <boost/filesystem/detail/buffer_manager.hpp>
+#include <boost/btree/detail/buffer_manager.hpp>
 #include <boost/assert.hpp>
 #include <boost/static_assert.hpp>
 #include <cstddef>     // for size_t
@@ -23,8 +23,6 @@
 #include <functional>  // for less, binary_function
 #include <ostream>
 #include <stdexcept>
-
-#define BOOST_BTREE_THROW(ex) throw ex
 
 namespace boost
 {
@@ -46,7 +44,7 @@ public:
   static std::size_t key_size() { return sizeof(Key); }
   static std::size_t mapped_size() { return sizeof(T); }
 
-  //---------------------------- value_compare -----------------------------------------//
+  //------------------------------- value_compare --------------------------------------//
 
   class value_compare
     : public std::binary_function<value_type, value_type, bool>
@@ -116,6 +114,7 @@ public:
 };
 
 //--------------------------------------------------------------------------------------//
+//                                                                                      //
 //                                 class btree_base                                     //
 //                                                                                      //
 //                  a B+ tree with leaf-sequence doubly-linked list                     //
@@ -207,7 +206,7 @@ public:
 
   // observers:
 
-  const filesystem::buffer_manager&
+  const buffer_manager&
                      manager() const        { return m_mgr; }
   bool               is_open() const        { return m_mgr.is_open(); }
   const filesystem::path&
@@ -282,11 +281,9 @@ public:
 //--------------------------------------------------------------------------------------//
 
 private:
-  typedef filesystem::buffer          buffer;
-  typedef filesystem::buffer_ptr      buffer_ptr;
-  typedef filesystem::buffer_manager  buffer_manager;
 
-  mutable buffer_manager  m_mgr;
+  mutable
+    buffer_manager   m_mgr;
 
   btree_page_ptr     m_root;  // invariant: there is always at least one leaf,
                               // possibly empty, in the tree, and thus there is
@@ -294,7 +291,7 @@ private:
                               // page, that page is the root
 
   //  end iterator mechanism: needed so that decrement of end() is implementable
-  filesystem::buffer m_end_page;  // end iterators point to this page, providing
+  buffer             m_end_page;  // end iterators point to this page, providing
                                   // access to "this" via buffer::manager() 
   const_iterator     m_end_iterator;
 
@@ -380,11 +377,11 @@ private:
 
   class branch_page;
 
-  class btree_page : public filesystem::buffer
+  class btree_page : public buffer
   {
   public:
     btree_page() : buffer() {}
-    btree_page(buffer::buffer_id_type id, filesystem::buffer_manager& mgr)
+    btree_page(buffer::buffer_id_type id, buffer_manager& mgr)
       : buffer(id, mgr) {}
 
     page_id_type       page_id() const                 {return page_id_type(buffer_id());}
@@ -447,7 +444,7 @@ private:
 # endif
   };
 
-  class btree_page_ptr : public boost::filesystem::buffer_ptr
+  class btree_page_ptr : public buffer_ptr
   {
   public:
 
@@ -490,7 +487,7 @@ private:
   {
   public:
     iterator_type(): m_element(0) {}
-    iterator_type(boost::filesystem::buffer_ptr p, IterValue* e)
+    iterator_type(buffer_ptr p, IterValue* e)
       : m_page(static_cast<typename btree_base::btree_page_ptr>(p)), m_element(e) {}
 
 
@@ -532,8 +529,7 @@ protected:
 //--------------------------------------------------------------------------------------//
 private:
 
-  static filesystem::buffer* m_page_alloc(
-    buffer::buffer_id_type pg_id, filesystem::buffer_manager& mgr)
+  static buffer* m_page_alloc(buffer::buffer_id_type pg_id, buffer_manager& mgr)
   { return new btree_page(pg_id, mgr); }
 
   void m_read_header()
@@ -678,7 +674,7 @@ btree_base<Key,Base,Traits,Comp>::btree_base(const Comp& comp)
 
   // set up the end iterator
   m_end_page.manager(&m_mgr);
-  m_end_iterator = const_iterator(boost::filesystem::buffer_ptr(m_end_page),0);
+  m_end_iterator = const_iterator(buffer_ptr(m_end_page),0);
 }
 
 //------------------------------- construct with open ----------------------------------//
@@ -694,7 +690,7 @@ btree_base<Key,Base,Traits,Comp>::btree_base(const boost::filesystem::path& p,
 
   // set up the end iterator
   m_end_page.manager(&m_mgr);
-  m_end_iterator = const_iterator(boost::filesystem::buffer_ptr(m_end_page),0);
+  m_end_iterator = const_iterator(buffer_ptr(m_end_page),0);
 
   // open the file and set up data members
   m_open(p, flgs, pg_sz);
@@ -732,15 +728,15 @@ btree_base<Key,Base,Traits,Comp>::m_open(const boost::filesystem::path& p,
   BOOST_ASSERT(pg_sz / sizeof(value_type) >= 3);
   BOOST_ASSERT(pg_sz / sizeof(branch_value_type) >= 3);
 
-  boost::filesystem::oflag::bitmask open_flags = boost::filesystem::oflag::in;
+  oflag::bitmask open_flags = oflag::in;
   if (flgs & flags::read_write)
-    open_flags |= boost::filesystem::oflag::out;
+    open_flags |= oflag::out;
   if (flgs & flags::truncate)
-    open_flags |= boost::filesystem::oflag::out | boost::filesystem::oflag::truncate;
+    open_flags |= oflag::out | oflag::truncate;
   if (flgs & flags::preload)
-    open_flags |= boost::filesystem::oflag::preload;
+    open_flags |= oflag::preload;
 
-  m_read_only = (open_flags & boost::filesystem::oflag::out) == 0;
+  m_read_only = (open_flags & oflag::out) == 0;
   m_ok_to_pack = true;
 
   if (m_mgr.open(p, open_flags, btree::default_max_cache_pages, pg_sz))

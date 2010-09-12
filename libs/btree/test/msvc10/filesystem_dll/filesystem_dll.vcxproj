@@ -93,8 +93,6 @@
     <ClCompile Include="..\..\..\..\..\..\..\boost\trunk\libs\filesystem\v3\src\unique_path.cpp" />
     <ClCompile Include="..\..\..\..\..\..\..\boost\trunk\libs\filesystem\v3\src\utf8_codecvt_facet.cpp" />
     <ClCompile Include="..\..\..\..\..\..\..\boost\trunk\libs\filesystem\v3\src\windows_file_codecvt.cpp" />
-    <ClCompile Include="..\..\..\..\filesystem\src\detail\binary_file.cpp" />
-    <ClCompile Include="..\..\..\..\filesystem\src\detail\buffer_manager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\system_dll\system_dll.vcxproj">

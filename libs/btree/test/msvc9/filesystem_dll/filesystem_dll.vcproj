@@ -173,10 +173,6 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\..\..\..\file_io\src\binary_file.cpp"
-				>
-			</File>
-			<File
 				RelativePath="..\..\..\..\..\..\..\boost\trunk\libs\filesystem\v3\src\codecvt_error_category.cpp"
 				>
 			</File>

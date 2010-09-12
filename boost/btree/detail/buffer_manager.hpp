@@ -12,7 +12,7 @@
 #ifndef BOOST_BUFFER_MANAGER_HPP
 #define BOOST_BUFFER_MANAGER_HPP
 
-#include <boost/filesystem/detail/binary_file.hpp>
+#include <boost/btree/detail/binary_file.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <boost/intrusive/set.hpp>
 #include <boost/intrusive/list.hpp>
@@ -38,12 +38,12 @@
 
 namespace boost
 {
-  namespace filesystem3
+  namespace btree
   {
     class buffer_manager_error : public std::runtime_error
     {
     public:
-      buffer_manager_error(const std::string& what, const path& p)
+      buffer_manager_error(const std::string& what, const boost::filesystem::path& p)
         : runtime_error(what + p.string()) {}
     };
 
@@ -187,7 +187,7 @@ namespace boost
     inline buffer* default_buffer_alloc(buffer::buffer_id_type pg_id, buffer_manager& mgr)
       { return new buffer(pg_id, mgr); }
 
-    class BOOST_FILESYSTEM_DECL buffer_manager : public binary_file
+    class BOOST_BTREE_DECL buffer_manager : public binary_file
     {
       // buffer_manager is a non-copyable type
       buffer_manager(const buffer_manager&);
@@ -206,7 +206,7 @@ namespace boost
 
       ~buffer_manager();
 
-      bool open(const boost::filesystem3::path& p,
+      bool open(const boost::filesystem::path& p,
         oflag::bitmask flags,
         std::size_t max_cache_pgs=16,
         data_size_type data_sz=512);  // data size for new or truncated files
@@ -282,7 +282,7 @@ namespace boost
       buffer* m_prepare_buffer(buffer_id_type pg_id);
     };
 
-    BOOST_FILESYSTEM_DECL
+    BOOST_BTREE_DECL
     std::ostream& operator<<(std::ostream& os, const buffer_manager& pm);
     // aid for debugging, tuning
 
@@ -315,7 +315,7 @@ namespace boost
       }
     }
 
-    inline buffer::buffer(buffer_id_type id, boost::filesystem3::buffer_manager& pm)
+    inline buffer::buffer(buffer_id_type id, boost::btree::buffer_manager& pm)
       : m_buffer_id(id), m_use_count(0), m_manager(&pm), m_needs_write(false),
         m_data(new char[pm.data_size()]) {}
 
@@ -329,22 +329,8 @@ namespace boost
     }
 
 
-  }  // namespace filesystem3
+  }  // namespace btree
 }  // namespace boost
-
-//--------------------------------------------------------------------------------------//
-
-namespace boost
-{
-  namespace filesystem
-  {
-    using filesystem3::buffer;
-    using filesystem3::buffer_ptr;
-    using filesystem3::buffer_manager;
-  }
-}
-
-//--------------------------------------------------------------------------------------//
 
 #ifdef BOOST_MSVC
 #  pragma warning(pop)

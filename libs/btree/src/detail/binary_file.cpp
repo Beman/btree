@@ -9,11 +9,11 @@
 
 //--------------------------------------------------------------------------------------// 
 
-// define BOOST_FILESYSTEM_SOURCE so that <boost/filesystem/config.hpp> knows
+// define BOOST_BTREE_SOURCE so that <boost/filesystem/config.hpp> knows
 // the library is being built (possibly exporting rather than importing code)
-#define BOOST_FILESYSTEM_SOURCE 
+#define BOOST_BTREE_SOURCE 
 
-#include <boost/filesystem/detail/binary_file.hpp>
+#include <boost/btree/detail/binary_file.hpp>
 #include <boost/filesystem/v3/operations.hpp>
 #include <boost/system/error_code.hpp>
 #include <boost/assert.hpp>
@@ -43,12 +43,10 @@ using boost::system::system_category;
 # endif
 // #include <iostream>    // for debugging only; comment out when not in use
 
-#define BOOST_THROW(x) throw x;
-
 namespace
 {
   const size_t BUF_SIZE = 32768;
-  void preloader(const boost::filesystem3::path& p)
+  void preloader(const boost::filesystem::path& p)
   {
   //  preload is just a hint, so ignore errors
 
@@ -65,16 +63,16 @@ namespace
 
 namespace boost
 {
-  namespace filesystem3
+  namespace btree
   {
-    BOOST_FILESYSTEM_DECL const binary_file::handle_type binary_file::invalid_handle
+    BOOST_BTREE_DECL const binary_file::handle_type binary_file::invalid_handle
       = reinterpret_cast<binary_file::handle_type>(-1);
 
 //  -----------------------------------  open  ----------------------------------------  //
 
     const oflag::bitmask omask(oflag::in | oflag::out | oflag::truncate);
 
-    bool binary_file::open(const boost::filesystem3::path& p,
+    bool binary_file::open(const boost::filesystem::path& p,
       oflag::bitmask flags, system::error_code& ec)
       // Returns: true if successful.
     {
@@ -160,12 +158,13 @@ namespace boost
       return true;
     }
 
-    void binary_file::open(const boost::filesystem3::path& p, oflag::bitmask flags)
+    void binary_file::open(const boost::filesystem::path& p, oflag::bitmask flags)
     {
       error_code ec;
       open(p, flags, ec);
       if (ec)
-        BOOST_THROW(filesystem_error("binary_file::open", file_path(), ec));
+        BOOST_BTREE_THROW(filesystem::filesystem_error("binary_file::open",
+          file_path(), ec));
     }
 
 //  -----------------------------------  close  ----------------------------------------  //
@@ -202,7 +201,8 @@ namespace boost
       error_code ec;
       close(ec);
       if (ec)
-        BOOST_THROW(filesystem_error("binary_file::close", file_path(), ec));
+        BOOST_BTREE_THROW(filesystem::filesystem_error("binary_file::close",
+          file_path(), ec));
     }
 
 //  --------------------------------  destructor  ------------------------------------  //
@@ -250,7 +250,8 @@ namespace boost
       error_code ec;
       std::size_t sz_read(raw_read(target, sz, ec));
       if (ec)
-        BOOST_THROW(filesystem_error("binary_file::raw_read", file_path(), ec));
+        BOOST_BTREE_THROW(filesystem::filesystem_error("binary_file::raw_read",
+          file_path(), ec));
       return sz_read;
     }
 
@@ -307,7 +308,8 @@ namespace boost
       error_code ec;
       bool result(m_read(target, sz, ec));
       if (ec)
-        BOOST_THROW(filesystem_error("binary_file::read", file_path(), ec));
+        BOOST_BTREE_THROW(filesystem::filesystem_error("binary_file::read",
+          file_path(), ec));
       return result;
     }
 
@@ -344,7 +346,7 @@ namespace boost
       error_code ec;
       std::size_t sz_written(raw_write(source, sz, ec));
       if (ec)
-        BOOST_THROW(filesystem_error("binary_file::raw_write", file_path(), ec));
+        BOOST_BTREE_THROW(filesystem::filesystem_error("binary_file::raw_write", file_path(), ec));
       return sz_written;
     }
 
@@ -388,7 +390,7 @@ namespace boost
       error_code ec;
       m_write(source, sz, ec);
       if (ec)
-        BOOST_THROW(filesystem_error("binary_file::write", file_path(), ec));
+        BOOST_BTREE_THROW(filesystem::filesystem_error("binary_file::write", file_path(), ec));
     }
 
 //  -----------------------------------  seek  ---------------------------------------  //
@@ -442,8 +444,8 @@ namespace boost
       error_code ec;
       offset_type result = seek(offset, from, ec);
       if (ec)
-        BOOST_THROW(filesystem_error("binary_file::seek", file_path(), ec));
+        BOOST_BTREE_THROW(filesystem::filesystem_error("binary_file::seek", file_path(), ec));
       return result;
     }
-  } // namespace filesystem3
+  } // namespace btree
 } // namespace boost
