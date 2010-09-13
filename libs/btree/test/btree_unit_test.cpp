@@ -51,7 +51,7 @@ template <class BT>
 void instantiate_test(BT& bt)
 { 
   BOOST_TEST(!bt.is_open());
-  BOOST_TEST(bt.size() == 0);
+  BOOST_TEST(bt.size() == 0U);
   BOOST_TEST(bt.empty());
 }
 
@@ -99,7 +99,7 @@ template <class BT>
 void construct_new_test(BT& bt, const fs::path& p)
 { 
   BOOST_TEST(bt.is_open());
-  BOOST_TEST_EQ(bt.size(), 0);
+  BOOST_TEST_EQ(bt.size(), 0U);
   BOOST_TEST(bt.empty());
   BOOST_TEST(!bt.read_only());
   BOOST_TEST(bt.page_size() == btree::default_page_size);  // the default
@@ -135,10 +135,10 @@ void open_existing()
   btree::btree_map<fat, int> bt2(p);
   BOOST_TEST(bt2.is_open());
   BOOST_TEST(!bt2.empty());
-  BOOST_TEST_EQ(bt2.size(), 3);
-  BOOST_TEST_EQ(bt2.page_size(), 128);
-  BOOST_TEST_EQ(bt2.header().element_count(), 3);
-  BOOST_TEST_EQ(bt2.header().page_size(), 128);
+  BOOST_TEST_EQ(bt2.size(), 3U);
+  BOOST_TEST_EQ(bt2.page_size(), 128U);
+  BOOST_TEST_EQ(bt2.header().element_count(), 3U);
+  BOOST_TEST_EQ(bt2.header().page_size(), 128U);
 
   // TODO: test each header value
 
@@ -203,7 +203,7 @@ void insert_tests(BTree& bt)
   cout << "  testing \"" << bt.file_path().string() << "\" ..." << endl;
   cout << '\n' << bt.manager() << '\n';
 
-  BOOST_TEST(bt.size() == 0);
+  BOOST_TEST(bt.size() == 0U);
   BOOST_TEST(bt.empty());
   BOOST_TEST(!bt.read_only());
   BOOST_TEST(bt.page_size() == 128);
@@ -226,7 +226,7 @@ void insert_tests(BTree& bt)
   BOOST_TEST(result.second);
   BOOST_TEST_EQ(result.first->first.x, element.first.x);
   BOOST_TEST_EQ(result.first->second, element.second);
-  BOOST_TEST(bt.size() == 1);
+  BOOST_TEST(bt.size() == 1U);
   BOOST_TEST(!bt.empty());
   BOOST_TEST(bt.begin() != bt.end());
   cur = bt.find(element.first);
@@ -279,7 +279,7 @@ void insert_tests(BTree& bt)
   BOOST_TEST_EQ(bt.find(0x0C)->first.x, 0x0C);
   bt.flush();
 
-  BOOST_TEST_EQ(bt.size(), 5);
+  BOOST_TEST_EQ(bt.size(), 5U);
 
   BOOST_TEST_EQ(bt.find(0x0A)->first.x, 0x0A);
   BOOST_TEST_EQ(bt.find(0x0B)->first.x, 0x0B);
@@ -322,20 +322,20 @@ void insert_tests(BTree& bt)
   cur = bt.erase(cur);
 
   BOOST_TEST_EQ(cur->first.x, 0x0D);
-  BOOST_TEST_EQ(bt.size(), 4);
+  BOOST_TEST_EQ(bt.size(), 4U);
 
   cur = bt.find(0x0B);
   cur = bt.erase(cur);
 
   BOOST_TEST_EQ(cur->first.x, 0x0D);
-  BOOST_TEST_EQ(bt.size(), 3);
+  BOOST_TEST_EQ(bt.size(), 3U);
 
   cur = bt.find(0x0E);
   cur = bt.erase(cur);
 
   BOOST_TEST(cur == bt.end());
-  BOOST_TEST_EQ(bt.size(), 2);
-  BOOST_TEST_EQ(bt.header().root_page_id(), 2);
+  BOOST_TEST_EQ(bt.size(), 2U);
+  BOOST_TEST_EQ(bt.header().root_page_id(), 2U);
   BOOST_TEST_EQ(bt.header().root_level(), 1);
 
   cur = bt.find(0x0A);
@@ -344,8 +344,8 @@ void insert_tests(BTree& bt)
   BOOST_TEST(cur != bt.end());
   BOOST_TEST_EQ(cur->first.x, 0x0D);
   BOOST_TEST(bt.begin() == cur);
-  BOOST_TEST_EQ(bt.size(), 1);
-  BOOST_TEST_EQ(bt.header().root_page_id(), 4);
+  BOOST_TEST_EQ(bt.size(), 1U);
+  BOOST_TEST_EQ(bt.header().root_page_id(), 4U);
   BOOST_TEST_EQ(bt.header().root_level(), 0);
  
 
@@ -354,8 +354,8 @@ void insert_tests(BTree& bt)
 
   BOOST_TEST(cur == bt.end());
   BOOST_TEST(bt.begin() == bt.end());
-  BOOST_TEST_EQ(bt.size(), 0);
-  BOOST_TEST_EQ(bt.header().root_page_id(), 4);
+  BOOST_TEST_EQ(bt.size(), 0U);
+  BOOST_TEST_EQ(bt.header().root_page_id(), 4U);
   BOOST_TEST_EQ(bt.header().root_level(), 0);
 
 
@@ -365,14 +365,14 @@ void insert_tests(BTree& bt)
     element.second = i;
     bt.insert(element);
   }
-  BOOST_TEST_EQ(bt.size(), 21);
+  BOOST_TEST_EQ(bt.size(), 21U);
 
   for (int i = 0xff01; i <= 0xff01+20; i += 2 )
   {
-    BOOST_TEST_EQ(bt.erase(i), 1);
-    BOOST_TEST_EQ(bt.erase(i), 0);
+    BOOST_TEST_EQ(bt.erase(i), 1U);
+    BOOST_TEST_EQ(bt.erase(i), 0U);
   }
-  BOOST_TEST_EQ(bt.size(), 10);
+  BOOST_TEST_EQ(bt.size(), 10U);
 
   for (int i = 0xff01; i <= 0xff01+30; ++i )  // many of these won't exist
   {
@@ -380,7 +380,7 @@ void insert_tests(BTree& bt)
   }
   BOOST_TEST_EQ(bt.size(), 0);
 
-   bt.flush();
+  bt.flush();
   cout << '\n' << bt << '\n';
 
   cout << "  testing \"" << bt.file_path().string() << "\" complete" << endl;
@@ -456,7 +456,8 @@ void find_and_bounds_tests(BTree& bt)
   const int  lwr[] = { 1, 1, 3, 3, 5, 5, 7, 7, 9, 9, 11, 11, 13, 13, 15, 15, 17, 17, -1};
   const int  upr[] = { 1, 3, 3, 5, 5, 7, 7, 9, 9,11, 11, 13, 13, 15, 15, 17, 17, -1, -1};
   const int  fnd[] = {-1, 1,-1, 3,-1, 5,-1, 7,-1, 9, -1, 11, -1, 13, -1, 15, -1, 17, -1};
-  const int  cnt[] = { 0, 1, 0, 2, 0, 1, 0, 3, 0, 1,  0,  1,  0,  1,  0, 11,  0,  1,  0};
+  const unsigned
+             cnt[] = { 0, 1, 0, 2, 0, 1, 0, 3, 0, 1,  0,  1,  0,  1,  0, 11,  0,  1,  0};
 
   for (int i = 0; i <= 18; ++i)
   {
@@ -629,13 +630,13 @@ void pack_optimization()
   for (int i=n; i > 0; --i)
     np.insert(std::make_pair(i, 0xffffff00+i));
 
-  BOOST_TEST_EQ(np.header().page_count(), 5);
+  BOOST_TEST_EQ(np.header().page_count(), 5U);
 
   btree::btree_map<int, int> p("packed.btr", btree::flags::truncate, page_sz);
   for (int i=1; i <= n; ++i)
     p.insert(std::make_pair(i, 0xffffff00+i));
 
-  BOOST_TEST_EQ(p.header().page_count(), 4);
+  BOOST_TEST_EQ(p.header().page_count(), 4U);
 
   cout << "    pack_optimization complete" << endl;
 }

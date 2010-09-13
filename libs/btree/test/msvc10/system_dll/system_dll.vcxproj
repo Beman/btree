@@ -85,7 +85,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\..\..\..\boost\trunk\libs\system\src\error_code.cpp" />
+    <ClCompile Include="..\..\..\..\system\src\error_code.cpp" />
     <ClCompile Include="..\..\..\..\system\src\run_timer.cpp" />
     <ClCompile Include="..\..\..\..\system\src\run_timer_ctors.cpp" />
     <ClCompile Include="..\..\..\..\system\src\timer.cpp" />

@@ -1,0 +1,21 @@
+# Boost Btree Library test Jamfile
+
+# (C) Copyright Beman Dawes 2010
+# Distributed under the Boost Software License, Version 1.0.
+# See www.boost.org/LICENSE_1_0.txt
+
+project 
+    : requirements
+      <library>/boost/btree//boost_btree
+      <library>/boost/filesystem//boost_filesystem
+      <library>/boost/system//boost_system
+      <toolset>msvc:<asynch-exceptions>on
+    ;
+    
+   test-suite "btree" :
+       [ run detail/binary_file_test.cpp :  :  :  : ]                  
+       [ run detail/buffer_manager_test.cpp :  :  :  : ]                  
+       [ run btree_unit_test.cpp :  :  :  : ]                  
+       [ run stl_equivalence_test.cpp :  :  :  : ]                  
+
+       ;

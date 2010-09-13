@@ -11,9 +11,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{1B1C18E5-6433-427D-A27D-A9471D640A5B}</ProjectGuid>
+    <ProjectGuid>{8BBA1500-915B-43EB-8689-60E6C9D5C994}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>buffer_manager_test</RootNamespace>
+    <RootNamespace>binary_file_test</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -76,7 +76,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\detail\buffer_manager_test.cpp" />
+    <ClCompile Include="..\..\detail\binary_file_test.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\btree_dll\btree_dll.vcxproj">

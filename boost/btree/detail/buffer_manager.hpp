@@ -123,13 +123,13 @@ namespace boost
       typedef buffer_manager*    buffer_manager_pointer;
 
       buffer()
-        : m_buffer_id(-1), m_use_count(0), m_manager(0), m_needs_write(false),
-          m_data(0) {}
+        : m_buffer_id(-1), m_use_count(0), m_manager(0),
+          m_data(0), m_needs_write(false) {}
 
       //  construct a dummy buffer w/ id only
       explicit buffer(buffer_id_type id)
-        : m_buffer_id(id), m_use_count(0), m_manager(0), m_needs_write(false),
-          m_data(0) {}
+        : m_buffer_id(id), m_use_count(0), m_manager(0),
+          m_data(0), m_needs_write(false) {}
 
       //  construct a complete fully-managed buffer
       buffer(buffer_id_type id, buffer_manager& pm);
@@ -316,14 +316,14 @@ namespace boost
     }
 
     inline buffer::buffer(buffer_id_type id, boost::btree::buffer_manager& pm)
-      : m_buffer_id(id), m_use_count(0), m_manager(&pm), m_needs_write(false),
-        m_data(new char[pm.data_size()]) {}
+      : m_buffer_id(id), m_use_count(0), m_manager(&pm),
+        m_data(new char[pm.data_size()]), m_needs_write(false) {}
 
     inline void buffer::dec_use_count()
     {
       BOOST_ASSERT(use_count() != 0);
       if ( --m_use_count == 0
-        && buffer_id() != -1  // dummy buffers have id -1
+        && buffer_id() != static_cast<buffer_id_type>(-1)  // dummy buffers have id -1
         && m_manager)  // TODO: should m_manager be removed after initial testing? 
         manager().buffer_available_list.push_back(*this);
     }

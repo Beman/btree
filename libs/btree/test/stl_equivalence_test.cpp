@@ -133,7 +133,7 @@ int main(int argc, char *argv[])
       long k = key();
   //    cout << i << ',' << element.first << ';';
 
-      stl_type::const_iterator stl_itr(stl.find(k));
+      stl_type::iterator stl_itr(stl.find(k));
       if (stl_itr == stl.end())
       {
         bt_type::const_iterator bt_itr(bt.find(k));

@@ -13,7 +13,7 @@
 
 #define BOOST_FILESYSTEM_VERSION 3
 
-#include <boost/file_io/buffer_manager.hpp>
+#include <boost/btree/detail/buffer_manager.hpp>
 #include <boost/filesystem/v3/operations.hpp>
 #include <boost/detail/lightweight_test.hpp>
 
@@ -22,7 +22,9 @@
 #include <string>
 #include <cstring>
 
-using namespace boost::filesystem;
+using namespace boost::btree;
+namespace fs = boost::filesystem;
+
 using std::cout;
 using std::endl;
 
@@ -144,8 +146,8 @@ namespace
   {
     cout << "open_new_file_test..." << endl;
 
-    path test_path("buffer_manager");
-    boost::filesystem::remove(test_path);
+    fs::path test_path("buffer_manager");
+    fs::remove(test_path);
 
     buffer_manager f;
 
@@ -159,11 +161,11 @@ namespace
       oflag::truncate);  // implies oflag::in|oflag::out|oflag::truncate
     BOOST_TEST(!existing_file);
     BOOST_TEST(f.is_open());
-    BOOST_TEST(file_size(test_path) == 0);
+    BOOST_TEST(fs::file_size(test_path) == 0);
     f.close();
     BOOST_TEST(!f.is_open());
-    BOOST_TEST(exists(test_path));
-    BOOST_TEST(file_size(test_path) == 0);
+    BOOST_TEST(fs::exists(test_path));
+    BOOST_TEST(fs::file_size(test_path) == 0);
 
     // case: file exists, but oflag::truncate is present so effect is that of a new file
     existing_file = f.open(test_path,
@@ -172,8 +174,8 @@ namespace
     BOOST_TEST(f.is_open());
     f.close();
     BOOST_TEST(!f.is_open());
-    BOOST_TEST(exists(test_path));
-    BOOST_TEST(file_size(test_path) == 0);
+    BOOST_TEST(fs::exists(test_path));
+    BOOST_TEST(fs::file_size(test_path) == 0);
   }
 
 //  open_existing_file_test  ----------------------------------------------------------------//
@@ -182,8 +184,8 @@ namespace
   {
     cout << "open_existing_file_test..." << endl;
 
-    path test_path("buffer_manager");
-    boost::filesystem::remove(test_path);
+    fs::path test_path("buffer_manager");
+    fs::remove(test_path);
 
     buffer_manager f;
 
@@ -191,8 +193,8 @@ namespace
     f.open(test_path, oflag::out);
     f.close();
     BOOST_TEST(!f.is_open());
-    BOOST_TEST(exists(test_path));
-    BOOST_TEST(file_size(test_path) == 0);
+    BOOST_TEST(fs::exists(test_path));
+    BOOST_TEST(fs::file_size(test_path) == 0);
 
     // open the existing test file 
     bool existing_file = f.open(test_path, oflag::out);
@@ -209,8 +211,8 @@ namespace
   {
     cout << "new_buffer_test..." << endl;
 
-    path test_path("buffer_manager");
-    boost::filesystem::remove(test_path);
+    fs::path test_path("buffer_manager");
+    fs::remove(test_path);
     buffer_manager f;
     
     f.open(test_path, oflag::out);  // create the test file
@@ -239,8 +241,8 @@ namespace
   {
     cout << "existing_buffer_test..." << endl;
 
-    path test_path("buffer_manager");
-    boost::filesystem::remove(test_path);
+    fs::path test_path("buffer_manager");
+    fs::remove(test_path);
     buffer_manager f;
     
     f.open(test_path, oflag::out, 3, 256);  // create the test file
