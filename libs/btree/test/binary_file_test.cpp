@@ -53,20 +53,20 @@ namespace
       bt::binary_file f(p, bt::oflag::out, ec);
       BOOST_TEST(!ec);
       BOOST_TEST(fs::exists(p));
-      BOOST_TEST_EQ(fs::file_size(p), 0U);
+      BOOST_TEST_EQ(fs::file_size(p), 0);
       f.write("foo", 3, ec);
       BOOST_TEST(!ec);
-      BOOST_TEST_EQ(fs::file_size(p), 3);
+      BOOST_TEST_EQ(fs::file_size(p), 3U);
     }
     {
       bt::binary_file f(p, bt::oflag::in, ec);
       BOOST_TEST(!ec);
-      BOOST_TEST_EQ(fs::file_size(p), 3);
+      BOOST_TEST_EQ(fs::file_size(p), 3U);
     }
     {
       bt::binary_file f(p, bt::oflag::in | bt::oflag::out, ec);
       BOOST_TEST(!ec);
-      BOOST_TEST_EQ(fs::file_size(p), 3);
+      BOOST_TEST_EQ(fs::file_size(p), 3U);
     }
     {
       bt::binary_file f(p, bt::oflag::in | bt::oflag::out | bt::oflag::truncate, ec);
@@ -144,7 +144,7 @@ int main(int argc, char * argv[])
   f.close();
   BOOST_TEST(!f.is_open());
 
-  BOOST_TEST(fs::file_size(filename) == gap + 17U);
+  BOOST_TEST(fs::file_size(filename) == static_cast<boost::uintmax_t>(gap + 17));
 
   open_flag_tests();
 

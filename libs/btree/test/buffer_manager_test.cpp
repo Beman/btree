@@ -67,7 +67,7 @@ namespace
     buffer pg, pg1(1), pg2(2);
 
     BOOST_TEST(!pg.use_count());
-    BOOST_TEST(pg.buffer_id() == -1);
+    BOOST_TEST(pg.buffer_id() == static_cast<buffer::buffer_id_type>(-1));
     BOOST_TEST(!pg1.use_count());
     BOOST_TEST(pg1.buffer_id() == 1);
 
@@ -248,8 +248,8 @@ namespace
     f.open(test_path, oflag::out, 3, 256);  // create the test file
     BOOST_TEST(f.is_open());
     BOOST_TEST(f.buffer_count() == 0);
-    BOOST_TEST_EQ(f.max_cache_buffers(), 3);
-    BOOST_TEST_EQ(f.data_size(), 256);
+    BOOST_TEST_EQ(f.max_cache_buffers(), 3U);
+    BOOST_TEST_EQ(f.data_size(), 256U);
 
     //  create three buffers to test with
     buffer_ptr pp0 = f.new_buffer();  // buffer_id 0

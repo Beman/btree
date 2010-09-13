@@ -49,7 +49,6 @@
     <ClCompile>
       <PrecompiledHeader>
       </PrecompiledHeader>
-      <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
@@ -76,7 +75,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\detail\binary_file_test.cpp" />
+    <ClCompile Include="..\..\binary_file_test.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\btree_dll\btree_dll.vcxproj">

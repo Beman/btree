@@ -378,7 +378,7 @@ void insert_tests(BTree& bt)
   {
     bt.erase(i);
   }
-  BOOST_TEST_EQ(bt.size(), 0);
+  BOOST_TEST_EQ(bt.size(), 0U);
 
   bt.flush();
   cout << '\n' << bt << '\n';
@@ -439,7 +439,7 @@ void find_and_bounds_tests(BTree& bt)
     bt.insert(v);
   }
 
-  BOOST_TEST_EQ(bt.size(), 9);
+  BOOST_TEST_EQ(bt.size(), 9U);
 
   if (bt.header().flags() & btree::flags::multi)
   {
@@ -449,7 +449,7 @@ void find_and_bounds_tests(BTree& bt)
     for (int i = 0; i < 10; ++i)
       bt.insert(make_value<typename BTree::value_type>(15));
 
-    BOOST_TEST_EQ(bt.size(), 22);
+    BOOST_TEST_EQ(bt.size(), 22U);
   }
 
   //             i =   0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18

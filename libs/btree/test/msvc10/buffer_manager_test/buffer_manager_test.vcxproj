@@ -76,7 +76,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\detail\buffer_manager_test.cpp" />
+    <ClCompile Include="..\..\buffer_manager_test.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\btree_dll\btree_dll.vcxproj">

@@ -13,8 +13,8 @@ project
     ;
     
    test-suite "btree" :
-       [ run detail/binary_file_test.cpp :  :  :  : ]                  
-       [ run detail/buffer_manager_test.cpp :  :  :  : ]                  
+       [ run binary_file_test.cpp :  :  :  : ]                  
+       [ run buffer_manager_test.cpp :  :  :  : ]                  
        [ run btree_unit_test.cpp :  :  :  : ]                  
        [ run stl_equivalence_test.cpp :  :  :  : ]                  
 
