@@ -22,9 +22,9 @@ int main()
 
   i64 = 0xfefdfcfbfaf9f8f7;
   bi::endian_flip(i64);
-  BOOST_TEST_EQ(i64, 0xf7f8f9fafbfcfdfe);
+  BOOST_TEST_EQ(i64, static_cast<boost::int64_t>(0xf7f8f9fafbfcfdfe));
   bi::endian_flip(i64);
-  BOOST_TEST_EQ(i64, 0xfefdfcfbfaf9f8f7);
+  BOOST_TEST_EQ(i64, static_cast<boost::int64_t>(0xfefdfcfbfaf9f8f7));
 
   boost::int32_t i32 = 0x01020304;
   bi::endian_flip(i32);
@@ -34,9 +34,9 @@ int main()
 
   i32 = 0xfefdfcfb;
   bi::endian_flip(i32);
-  BOOST_TEST_EQ(i32, 0xfbfcfdfe);
+  BOOST_TEST_EQ(i32, static_cast<boost::int32_t>(0xfbfcfdfe));
   bi::endian_flip(i32);
-  BOOST_TEST_EQ(i32, 0xfefdfcfb);
+  BOOST_TEST_EQ(i32, static_cast<boost::int32_t>(0xfefdfcfb));
 
   boost::int16_t i16 = 0x0102;
   bi::endian_flip(i16);
@@ -44,23 +44,23 @@ int main()
   bi::endian_flip(i16);
   BOOST_TEST_EQ(i16, 0x0102);
 
-  i16 = (boost::int16_t)0xfefd;
+  i16 = static_cast<boost::int16_t>(static_cast<boost::uint16_t>(0xfefd));
   bi::endian_flip(i16);
-  BOOST_TEST_EQ(i16, (boost::int16_t)0xfdfe);
+  BOOST_TEST_EQ(i16, static_cast<boost::int16_t>(static_cast<boost::uint16_t>(0xfdfe)));
   bi::endian_flip(i16);
-  BOOST_TEST_EQ(i16, (boost::int16_t)0xfefd);
+  BOOST_TEST_EQ(i16, static_cast<boost::int16_t>(static_cast<boost::uint16_t>(0xfefd)));
 
   boost::uint64_t ui64 = 0x0102030405060708;
   bi::endian_flip(ui64);
-  BOOST_TEST_EQ(ui64, 0x0807060504030201);
+  BOOST_TEST_EQ(ui64, static_cast<boost::uint64_t>(0x0807060504030201));
   bi::endian_flip(ui64);
-  BOOST_TEST_EQ(ui64, 0x0102030405060708);
+  BOOST_TEST_EQ(ui64, static_cast<boost::uint64_t>(0x0102030405060708));
 
   boost::uint32_t ui32 = 0x01020304;
   bi::endian_flip(ui32);
-  BOOST_TEST_EQ(ui32, 0x04030201);
+  BOOST_TEST_EQ(ui32, static_cast<boost::uint32_t>(0x04030201));
   bi::endian_flip(ui32);
-  BOOST_TEST_EQ(ui32, 0x01020304);
+  BOOST_TEST_EQ(ui32, static_cast<boost::uint32_t>(0x01020304));
 
   boost::uint16_t ui16 = 0x0102;
   bi::endian_flip(ui16);

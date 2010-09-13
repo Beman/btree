@@ -7,8 +7,8 @@
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
-      <AdditionalIncludeDirectories>$(BOOST_SANDBOX)\endian;$(BOOST_TRUNK);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <WarningLevel>EnableAllWarnings</WarningLevel>
+      <AdditionalIncludeDirectories>..\..\..\..\..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <WarningLevel>Level4</WarningLevel>
     </ClCompile>
     <PostBuildEvent>
       <Message>Executing test $(TargetName).exe...</Message>
