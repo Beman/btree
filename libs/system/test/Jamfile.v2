@@ -10,9 +10,15 @@
 project
     : requirements
       <library>/boost/system//boost_system
-      <define>BOOST_ALL_NO_LIB
+#      <define>BOOST_ALL_NO_LIB
       <toolset>msvc:<asynch-exceptions>on
     ;
+    
+   lib throw_test
+     : throw_test.cpp
+     : <link>shared:<define>BOOST_SYSTEM_DYN_LINK=1
+     ;
+   
 
    test-suite "system"
        : [ run error_code_test.cpp
@@ -24,7 +30,7 @@ project
          ]
          [ run error_code_test.cpp
            :  :  : <define>BOOST_SYSTEM_DYN_LINK 
-                 : error_code_test_dll
+                 : error_code_test_shared
          ]
          [ run error_code_user_test.cpp
            :  :  : <define>BOOST_SYSTEM_STATIC_LINK 
@@ -32,18 +38,23 @@ project
          ]
          [ run error_code_user_test.cpp
            :  :  : <define>BOOST_SYSTEM_DYN_LINK 
-                 : error_code_user_test_dll
+                 : error_code_user_test_shared
          ]
          [ run system_error_test.cpp
            :  :  : <define>BOOST_SYSTEM_STATIC_LINK 
                    <link>static
          ]
          [ run system_error_test.cpp
-            :  :  : <define>BOOST_SYSTEM_DYN_LINK 
-                  : system_error_test_dll
+           :  :  : <define>BOOST_SYSTEM_DYN_LINK 
+                 : system_error_test_shared
+         ]
+         [ run dynamic_link_test.cpp throw_test
+           :  :  : <define>BOOST_SYSTEM_DYN_LINK
+	         : throw_test_shared
          ]
          [ run initialization_test.cpp
-            :  :  : <define>BOOST_SYSTEM_DYN_LINK 
+           :  :  : <define>BOOST_SYSTEM_DYN_LINK
+	         : initialization_test_shared 
          ]
          [ run header_only_test.cpp
            :  :  : <link>static
@@ -53,7 +64,7 @@ project
                    <link>static
          ]
          [ run timer_test.cpp
-            :  :  : <define>BOOST_SYSTEM_DYN_LINK 
-                  : timer_test_dll
+           :  :  : <define>BOOST_SYSTEM_DYN_LINK 
+                 : timer_test_shared
          ]
          ;
