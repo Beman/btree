@@ -141,11 +141,46 @@
   <ul>
     <li>Efficient variable length data, such as strings, is not currently 
     supported. A simple string type that always uses its maximum length is 
-    provided as a workaround. Efficient variable length data is a high priority 
+    provided as a workaround. Efficient variable length data is a very high priority 
     for the future.<br>
 &nbsp;</li>
     <li>Concurrent use is not supported. Concurrent use by other processes is a 
     high priority for the future.</li>
+  </ul>
+
+  <h2>History</h2>
+
+  <p>A PL/1 language B-tree library was developed by the author about 1982. It 
+  was redone in C in 1984, and has been in continuous use in industrial 
+  applications since then. It was based on a single cursor model rather than an 
+  iterator model. Although the Boost library is a new design and is implemented 
+  with all new code, the predecessor library provided the experience that taught 
+  me about B-trees in general, and the specifics of what is needed and what 
+  isn't.</p>
+
+  <h2>Designs paths not taken</h2>
+
+  <p>Based on prior experience including actual implementation and use, several 
+  features described in the literature are not included:</p>
+
+  <ul>
+    <li><b>Key prefix compression.</b> All the keys on a page may have the same 
+    value for their initial bytes. Particularly on branches, this prefix could 
+    be stored only once, saving space and allowing more entries per page, and in 
+    turn that could speed searches. The added complexity is considerable, and 
+    the increased computational burden tends to result in slower rather than 
+    faster operations. Might be worth considering in the future for variable 
+    length keys only; they already have to provide some of the needed machinery. 
+    The C predecessor library abandoned this approach early on because it didn't 
+    actually speed up applications in practice.<br>
+&nbsp;</li>
+    <li>Key computation on branch pages. The keys stored on branch pages need 
+    not be full length, as long as the ordering is maintained. Thus for a branch 
+    key separating pointers to pages with last key &quot;ALPHA&quot; and first key &quot;BETA&quot;, 
+    respectively, it is sufficient to store &quot;B&quot; as the branch key rather than 
+    &quot;BETA&quot;. Although the C predecessor library still uses computed branch keys 
+    if keys are variable length, it has been a source of hard to track down 
+    bugs, and doesn't support deletion properly to this day in that library.</li>
   </ul>
 
   <h2>Bibliography</h2>
@@ -178,6 +213,6 @@
   "http://www.boost.org/LICENSE_1_0.txt">www.boost.org/LICENSE_1_0.txt</a></p>
 
   <p>Revised 
-  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->02 September 2010<!--webbot bot="Timestamp" endspan i-checksum="39617" --></p>
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->14 September 2010<!--webbot bot="Timestamp" endspan i-checksum="39622" --></p>
 </body>
 </html>
