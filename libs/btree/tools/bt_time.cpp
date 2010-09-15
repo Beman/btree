@@ -106,7 +106,7 @@ int main(int argc, char * argv[])
       "   -xf    No find\n"
       "   -xe    No erase; use to save file intact\n"
       "   -stl   Also run the tests against std::map\n"
-      "   -r     Read entire file to preload operating system disk cache;"
+      "   -r     Read entire file to preload operating system disk cache;\n"
       "          only applicable if -xc option is active\n"
       ;
     return 1;
