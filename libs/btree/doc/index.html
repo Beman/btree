@@ -82,7 +82,8 @@
 
   <ul>
     <li>Public interface similar but not identical to the C++
-    Standard Library's Associative Container requirements:<br>
+    Standard Library's <code>map</code>, <code>multimap</code>, <code>set</code>, 
+    and <code>multiset</code>. Differences include:<br>
 &nbsp;<ul>
       <li>All iterator returning functions return
         <code>const_iterator</code>. The <code>writeable()</code>
@@ -92,7 +93,9 @@
         invalidate iterators.</li>
       <li>Types supplied by the <code>Key</code> and
         <code>T</code> template parameters must be memcpyable.</li>
-      <li>Maps, multimaps, sets, and multisets are each supported.<br>
+      <li>No <code>operator[]</code> or <code>at</code> functions supplied. 
+      Returning references to data that can be swapped out, even by const 
+      functions, is far too dangerous.<br>
 &nbsp;</li>
     </ul>
     </li>
@@ -108,13 +111,13 @@
     </ul>
     </li>
     <li>Disk file format includes header information about the
-      tree, and includes space for user supplied information.<br>
+      tree. The header format includes space for user supplied information.<br>
 &nbsp;</li>
     <li>Runtime options allow performance tuning:<br>
 &nbsp;<ul>
-    <li>Page size allows hardware specific tuning.</li>
+    <li>Page size allows hardware specific tuning at file creation time.</li>
     <li>Cache size allows control over speed versus program memory tradeoff.</li>
-    <li>Preload allows control over speed versus operating system disk cache 
+    <li>Preload option allows control over speed versus operating system disk cache 
     memory tradeoff.<br>
 &nbsp;</li>
   </ul>
@@ -174,7 +177,7 @@
     The C predecessor library abandoned this approach early on because it didn't 
     actually speed up applications in practice.<br>
 &nbsp;</li>
-    <li>Key computation on branch pages. The keys stored on branch pages need 
+    <li><b>Key computation on branch pages.</b> The keys stored on branch pages need 
     not be full length, as long as the ordering is maintained. Thus for a branch 
     key separating pointers to pages with last key &quot;ALPHA&quot; and first key &quot;BETA&quot;, 
     respectively, it is sufficient to store &quot;B&quot; as the branch key rather than 
