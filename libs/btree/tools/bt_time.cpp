@@ -34,6 +34,7 @@ namespace
   bool do_insert (true);
   bool do_find (true);
   bool do_erase (true);
+  bool verbose (false);
   bool stl_tests (false);
   std::string path("bt_time.btree");
 
@@ -46,6 +47,9 @@ namespace
 
 int main(int argc, char * argv[]) 
 {
+  for (int a = 0; a < argc; ++a)
+    cout << argv[a] << ' ';
+  cout << '\n';
 
   if (argc >=2)
     n = std::atol(argv[1]);
@@ -81,6 +85,8 @@ int main(int argc, char * argv[])
         lg = atol( argv[2]+2 );
       else if ( *(argv[2]+1) == 'r' )
         do_preload = true;
+      else if ( *(argv[2]+1) == 'v' )
+        verbose = true;
       else
       {
         cout << "Error - unknown option: " << argv[2] << "\n\n";
@@ -105,8 +111,9 @@ int main(int argc, char * argv[])
       "   -xi    No insert; forces -xc and doesn't do inserts\n"
       "   -xf    No find\n"
       "   -xe    No erase; use to save file intact\n"
+      "   -v     Verbose output statistics\n"
       "   -stl   Also run the tests against std::map\n"
-      "   -r     Read entire file to preload operating system disk cache;"
+      "   -r     Read entire file to preload operating system disk cache;\n"
       "          only applicable if -xc option is active\n"
       ;
     return 1;
@@ -145,7 +152,6 @@ int main(int argc, char * argv[])
       }
       insert_tm = t.stop();
       t.report();
-      cout << "  btree insertion complete" << endl;
     }
 
     if (do_find)
@@ -168,7 +174,6 @@ int main(int argc, char * argv[])
       }
       find_tm = t.stop();
       t.report();
-      cout << "  btree finds complete" << endl;
     }
 
     if (do_erase)
@@ -193,12 +198,16 @@ int main(int argc, char * argv[])
       }
       erase_tm = t.stop();
       t.report();
-      cout << "  btree erases complete" << endl;
     }
 
-    bt.flush();
-    cout << '\n' << bt << endl;
-    cout << bt.manager() << endl;
+    cout << "B-tree timing complete" << endl;
+
+    if (verbose)
+    {
+      bt.flush();
+      cout << '\n' << bt << endl;
+      cout << bt.manager() << endl;
+    }
   }
 
   typedef std::map<long, long>  stl_type;
@@ -226,7 +235,6 @@ int main(int argc, char * argv[])
       cout << "  ratio of btree to stl cpu time: "
            << ((insert_tm.system + insert_tm.user) * 1.0)
               / (this_tm.system + this_tm.user) << '\n';
-    cout << "  std::map insertion complete" << endl;
 
     cout << "\nfinding " << n << " std::map elements..." << endl;
     stl_type::const_iterator itr;
@@ -253,7 +261,6 @@ int main(int argc, char * argv[])
       cout << "  ratio of btree to stl cpu time: "
            << ((find_tm.system + find_tm.user) * 1.0)
               / (this_tm.system + this_tm.user) << '\n';
-    cout << "  std::map finds complete" << endl;
 
     cout << "\nerasing " << n << " std::map elements..." << endl;
     rng.seed(seed);
@@ -273,7 +280,7 @@ int main(int argc, char * argv[])
       cout << "  ratio of btree to stl cpu time: "
            << ((erase_tm.system + erase_tm.user) * 1.0)
               / (this_tm.system + this_tm.user) << '\n';
-    cout << "  std::map erases complete" << endl;
+    cout << "STL timing complete" << endl;
   }
 
   return 0;
