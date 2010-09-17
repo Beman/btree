@@ -726,6 +726,7 @@ void
 btree_base<Key,Base,Traits,Comp>::m_open(const boost::filesystem::path& p,
   flags::bitmask flgs, std::size_t pg_sz) 
 {
+  BOOST_ASSERT(!is_open());
   BOOST_ASSERT(pg_sz >= sizeof(btree::header_page));
   BOOST_ASSERT(pg_sz / sizeof(value_type) >= 3);
   BOOST_ASSERT(pg_sz / sizeof(branch_value_type) >= 3);
@@ -794,6 +795,7 @@ template <class Key, class Base, class Traits, class Comp>
 void
 btree_base<Key,Base,Traits,Comp>::clear()
 {
+  BOOST_ASSERT(is_open());
   for (buffer_manager::buffer_set_type::iterator itr = m_mgr.buffer_set.begin();
     itr != m_mgr.buffer_set.end();
     ++itr)
@@ -820,6 +822,7 @@ template <class Key, class Base, class Traits, class Comp>
 typename btree_base<Key,Base,Traits,Comp>::const_iterator
 btree_base<Key,Base,Traits,Comp>::begin() const
 {
+  BOOST_ASSERT(is_open());
   if (empty())
     return end();
   BOOST_ASSERT(header().first_page_id());                     
@@ -834,6 +837,7 @@ template <class Key, class Base, class Traits, class Comp>
 typename btree_base<Key,Base,Traits,Comp>::const_iterator
 btree_base<Key,Base,Traits,Comp>::last() const
 {
+  BOOST_ASSERT(is_open());
   if (empty())
     return end();
   BOOST_ASSERT(header().last_page_id());
@@ -1129,6 +1133,7 @@ template <class Key, class Base, class Traits, class Comp>
 typename btree_base<Key,Base,Traits,Comp>::const_iterator
 btree_base<Key,Base,Traits,Comp>::erase(const_iterator pos)
 {
+  BOOST_ASSERT(is_open());
   BOOST_ASSERT(pos != end());  // attempt to erase end iterator
   BOOST_ASSERT(pos.m_page);
   BOOST_ASSERT(pos.m_page->is_leaf());
@@ -1215,6 +1220,7 @@ template <class Key, class Base, class Traits, class Comp>
 typename btree_base<Key,Base,Traits,Comp>::size_type
 btree_base<Key,Base,Traits,Comp>::erase(const key_type& k)
 {
+  BOOST_ASSERT(is_open());
   size_type count = 0;
   const_iterator it = lower_bound(k);
     
@@ -1230,6 +1236,7 @@ template <class Key, class Base, class Traits, class Comp>
 typename btree_base<Key,Base,Traits,Comp>::const_iterator 
 btree_base<Key,Base,Traits,Comp>::erase(const_iterator first, const_iterator last)
 {
+  BOOST_ASSERT(is_open());
   // caution: last must be revalidated when on the same page as first
   while (first != last)
   {
@@ -1249,6 +1256,7 @@ template <class Key, class Base, class Traits, class Comp>
 std::pair<typename btree_base<Key,Base,Traits,Comp>::const_iterator, bool>
 btree_base<Key,Base,Traits,Comp>::m_insert_unique(const value_type& value)
 {
+  BOOST_ASSERT(is_open());
   iterator insert_point = m_lower_page_bound(key(value));
 
   bool unique = insert_point.m_element == insert_point.m_page->leaf_end()
@@ -1268,6 +1276,7 @@ template <class Key, class Base, class Traits, class Comp>
 inline typename btree_base<Key,Base,Traits,Comp>::const_iterator
 btree_base<Key,Base,Traits,Comp>::m_insert_non_unique(const value_type& value)
 {
+  BOOST_ASSERT(is_open());
   iterator insert_point = m_upper_page_bound(key(value));
   return m_leaf_insert(insert_point, value);
 }
@@ -1321,6 +1330,7 @@ template <class Key, class Base, class Traits, class Comp>
 typename btree_base<Key,Base,Traits,Comp>::const_iterator
 btree_base<Key,Base,Traits,Comp>::lower_bound(const key_type& k) const
 {
+  BOOST_ASSERT(is_open());
   btree_page_ptr pg = m_root;
 
   // search branches down the tree until a leaf is reached
@@ -1400,6 +1410,7 @@ template <class Key, class Base, class Traits, class Comp>
 typename btree_base<Key,Base,Traits,Comp>::const_iterator
 btree_base<Key,Base,Traits,Comp>::upper_bound(const key_type& k) const
 {
+  BOOST_ASSERT(is_open());
   btree_page_ptr pg = m_root;
 
   // search branches down the tree until a leaf is reached
@@ -1434,6 +1445,7 @@ template <class Key, class Base, class Traits, class Comp>
 typename btree_base<Key,Base,Traits,Comp>::const_iterator
 btree_base<Key,Base,Traits,Comp>::find(const key_type& k) const
 {
+  BOOST_ASSERT(is_open());
   const_iterator low = lower_bound(k);
   return (low != end() && !key_comp()(k, key(*low)))
     ? low
@@ -1446,6 +1458,7 @@ template <class Key, class Base, class Traits, class Comp>
 typename btree_base<Key,Base,Traits,Comp>::size_type
 btree_base<Key,Base,Traits,Comp>::count(const key_type& k) const
 {
+  BOOST_ASSERT(is_open());
   size_type count = 0;
 
   for (const_iterator it = lower_bound(k);
