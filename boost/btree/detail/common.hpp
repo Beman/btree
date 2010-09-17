@@ -701,7 +701,8 @@ btree_base<Key,Base,Traits,Comp>::btree_base(const boost::filesystem::path& p,
 template <class Key, class Base, class Traits, class Comp>
 btree_base<Key,Base,Traits,Comp>::~btree_base()
 {
-  close();
+  try { close(); }
+  catch (...) {}
 }
 
 //------------------------------------- close ------------------------------------------//
@@ -714,6 +715,7 @@ void btree_base<Key,Base,Traits,Comp>::close()
     flush();
     if (m_mgr.file_buffers_written())
       m_write_header();
+    m_mgr.close();
   }
 }
 
