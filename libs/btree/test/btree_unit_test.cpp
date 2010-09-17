@@ -104,6 +104,9 @@ void construct_new_test(BT& bt, const fs::path& p)
   BOOST_TEST(!bt.read_only());
   BOOST_TEST(bt.page_size() == btree::default_page_size);  // the default
   BOOST_TEST(bt.file_path() == p);
+
+  bt.close();
+  BOOST_TEST(!bt.is_open());
 }
 
 void construct_new()
