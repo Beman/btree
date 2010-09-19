@@ -82,8 +82,8 @@ namespace boost
     static const boost::uint8_t major_version = 0;  // version identification
     static const boost::uint8_t minor_version = 1;
 
-    static const std::size_t default_page_size = 512;
-    static const std::size_t default_max_cache_pages = 16;
+    static const std::size_t default_page_size = 4096;
+    static const std::size_t default_max_cache_pages = 128;
 
     namespace flags
     {
