@@ -209,9 +209,13 @@ namespace boost
       bool open(const boost::filesystem::path& p,
         oflag::bitmask flags,
         std::size_t max_cache_pgs=16,
-        data_size_type data_sz=512);  // data size for new or truncated files
+        data_size_type data_sz=4096);  // data size for new or truncated files
+      //  Note: 4096 is choosen as the default data (I.E. disk page) size based on
+      //  2010 timing tests on a current 3.5" 1.0 TB hard drive in a fairly powerful
+      //  Windows 7 desktop machine, and a current 2.5" 80 GB hard drive in an
+      //  underpowered Windows XP netbook machine.
       //  Returns: true if existing non-trucated file.
-      //  NOTE: IF true IS RETURNED, IT IS REQUIRED THAT data_size() BE CALLED WITH
+      //  Remark: IF true IS RETURNED, IT IS REQUIRED THAT data_size() BE CALLED WITH
       //  AN ARGUMENT OF THE ACTUAL DATA SIZE BEFORE ANY BUFFER RELATED OPERATIONS ARE
       //  PERFORMED.
 
