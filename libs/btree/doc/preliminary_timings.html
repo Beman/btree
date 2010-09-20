@@ -1,0 +1,171 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Language" content="en-us">
+<meta name="GENERATOR" content="Microsoft FrontPage 5.0">
+<meta name="ProgId" content="FrontPage.Editor.Document">
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<title>Boost B</title>
+</head>
+
+<body>
+
+<h1><span style="font-weight: 400">Boost B-Tree Library</span></h1>
+<p>Revised:
+<!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->20 September 2010<!--webbot bot="Timestamp" endspan i-checksum="39615" --></p>
+<h2>Some preliminary timings</h2>
+<p>Timings were done with <code>bt_time.cpp</code>; see <code>libs/btree/tools</code>. 
+The system was an Intel Core i7 CPU at 2.80 GHz with 8 gigabytes of main memory, 
+running Windows 7 64-bit. The processor has 32K bytes of L1 data cache, 256K 
+bytes of L2 cache, and 8M bytes of L3 cache. Line size of all caches is 64 
+bytes. The disk is a 1 TB Seagate ST31000340AS hard drive.</p>
+<p><code>value_type</code> was <code>std::pair&lt;const long, long&gt;</code>. 5 
+million keys were produced by the Boost <code>rand48</code> random number 
+generator using the <code>uniform_int</code> <code>variate_generator</code>, 
+with a range of 0 to 5 million - 1. That range produced 3.16 million unique 
+keys, reflecting use cases where inserts do not always succeed.</p>
+<p>CPU utilization was 100% for all tests. The operating system's disk cache is
+<b>not cleared</b> after the inserts.</p>
+<p>For each of the Insert, Find, Iterate, and Erase tests, two numbers are 
+reported: seconds to complete the test and the ratio of that time to the time 
+taken by <code>std::map</code> for the identical test with the same set of 
+random numbers. Thus when the ratio is less that 1.00, the B-tree implementation 
+is actually faster than the <code>std::map</code> implementation.</p>
+<p>The high-lighted tests are cases where the B-tree was faster than <code>
+std::map</code>.</p>
+<table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111">
+  <tr>
+    <td colspan="10">
+    <p align="center"><b>GCC/MinGW 4.5</b></td>
+  </tr>
+<tr><td><b>#</b></td>
+    <td><b><code>bt_time</code> command line</b></td>
+    <td colspan="2" align="center"><b>Insert</b></td>
+    <td colspan="2" align="center"><b>Find</b></td>
+    <td colspan="2" align="center"><b>Iterate</b></td>
+    <td colspan="2" align="center"><b>Erase</b></td>
+</tr>
+<tr>
+  <td>1</td>
+  <td><code>bt_time 5000000 -stl -p4096 -c32 -native -html</code></td>
+  <td align="right">38.41s</td>  <td align="right">10.99</td>
+  <td align="right">32.93s</td>  <td align="right">10.15</td>
+  <td align="right" bgcolor="#99FF66">0.06s</td>  <td align="right" bgcolor="#99FF66">0.24</td>
+  <td align="right">48.16s</td>  <td align="right">15.21</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><code>bt_time 5000000 -stl -p4096 -c1000 -native -html</code></td>
+  <td align="right">30.62s</td>  <td align="right">8.76</td>
+  <td align="right">23.43s</td>  <td align="right">7.19</td>
+  <td align="right" bgcolor="#99FF66">0.08s</td>  <td align="right" bgcolor="#99FF66">0.31</td>
+  <td align="right">38.86s</td>  <td align="right">12.27</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><code>bt_time 5000000 -stl -p4096 -c10000 -native -html</code></td>
+  <td align="right">4.66s</td>  <td align="right">1.32</td>
+  <td align="right">3.62s</td>  <td align="right">1.10</td>
+  <td align="right" bgcolor="#99FF66">0.03s</td>  <td align="right" bgcolor="#99FF66">0.12</td>
+  <td align="right">4.41s</td>  <td align="right">1.39</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><code>bt_time 5000000 -stl -p4096 -c10000 -big -html</code></td>
+  <td align="right">4.74s</td>  <td align="right">1.36</td>
+  <td align="right">3.67s</td>  <td align="right">1.12</td>
+  <td align="right" bgcolor="#99FF66">0.03s</td>  <td align="right" bgcolor="#99FF66">0.12</td>
+  <td align="right">4.40s</td>  <td align="right">1.40</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><code>bt_time 5000000 -stl -p4096 -c10000 -little -html</code></td>
+  <td align="right">4.66s</td>  <td align="right">1.33</td>
+  <td align="right">3.70s</td>  <td align="right">1.13</td>
+  <td align="right" bgcolor="#99FF66">0.05s</td>  <td align="right" bgcolor="#99FF66">0.17</td>
+  <td align="right">4.46s</td>  <td align="right">1.41</td>
+</tr>
+<tr>
+    <td colspan="10">
+    <p align="center"><b>VC++ 10.0 Express</b></td>
+</tr>
+<tr><td><b>#</b></td>
+    <td><b><code>bt_time</code> command line</b></td>
+    <td colspan="2" align="center"><b>Insert</b></td>
+    <td colspan="2" align="center"><b>Find</b></td>
+    <td colspan="2" align="center"><b>Iterate</b></td>
+    <td colspan="2" align="center"><b>Erase</b></td>
+</tr>
+<tr>
+  <td>1</td>
+  <td><code>bt_time 5000000 -stl -p4096 -c32 -native -html</code></td>
+  <td align="right">38.34s</td>  <td align="right">10.24</td>
+  <td align="right">32.32s</td>  <td align="right">9.29</td>
+  <td align="right" bgcolor="#99FF66">0.09s</td>  <td align="right" bgcolor="#99FF66">0.46</td>
+  <td align="right">46.66s</td>  <td align="right">11.12</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><code>bt_time 5000000 -stl -p4096 -c1000 -native -html</code></td>
+  <td align="right">29.36s</td>  <td align="right">7.56</td>
+  <td align="right">22.98s</td>  <td align="right">6.64</td>
+  <td align="right" bgcolor="#99FF66">0.06s</td>  <td align="right" bgcolor="#99FF66">0.33</td>
+  <td align="right">37.61s</td>  <td align="right">8.93</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><code>bt_time 5000000 -stl -p4096 -c10000 -native -html</code></td>
+  <td align="right">3.99s</td>  <td align="right">1.06</td>
+  <td align="right" bgcolor="#99FF66">3.24s</td>  <td align="right" bgcolor="#99FF66">0.93</td>
+  <td align="right" bgcolor="#99FF66">0.05s</td>  <td align="right" bgcolor="#99FF66">0.25</td>
+  <td align="right" bgcolor="#99FF66">3.76s</td>  <td align="right" bgcolor="#99FF66">0.90</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><code>bt_time 5000000 -stl -p4096 -c10000 -big -html</code></td>
+  <td align="right">4.06s</td>  <td align="right">1.08</td>
+  <td align="right" bgcolor="#99FF66">3.29s</td>  <td align="right" bgcolor="#99FF66">0.94</td>
+  <td align="right" bgcolor="#99FF66">0.06s</td>  <td align="right" bgcolor="#99FF66">0.33</td>
+  <td align="right" bgcolor="#99FF66">3.78s</td>  <td align="right" bgcolor="#99FF66">0.90</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><code>bt_time 5000000 -stl -p4096 -c10000 -little -html</code></td>
+  <td align="right">4.07s</td>  <td align="right">1.08</td>
+  <td align="right" bgcolor="#99FF66">3.29s</td>  <td align="right" bgcolor="#99FF66">0.95</td>
+  <td align="right" bgcolor="#99FF66">0.06s</td>  <td align="right" bgcolor="#99FF66">0.33</td>
+  <td align="right" bgcolor="#99FF66">3.76s</td>  <td align="right" bgcolor="#99FF66">0.89</td>
+</tr>
+</table>
+</pre><h2>Conclusions</h2><h3>Program cache matters a lot</h3><p>The only difference between tests 1, 2, and 3 is that 1 caches a maximum of 32 pages,  2 caches 1000 pages (about 1/8 of the total file), while test 3 uses a cache large 
+enough to hold the entire file. Yet test 3 ran nearly an order of magnitude faster than test 1 for inserts, finds, and erases.</p>
+<h3>Hardware cache matters a lot</h3><p>Why is iteration over the entire B-tree so fast relative to the other operations, and relative to <code>std::map</code>? A B-tree orders entries sequentially in blocks of memory, and that takes maximum advantage of hardware cache-lines.</p>
+<h3>Endianess doesn't matter much at all</h3><p>The only difference between test 3, 4, and 5 is that 3 used native integers as the implementation infrastructure 
+data type while 4 and 5 used big and little endian integers, respectively. The high cost of endian (rather than native) operations is almost completely buried by the cost of other operations, as reflected in the relatively little difference in times between these tests.</p>
+<h2>bt_test command line arguments</h2><p>Here is the explanation of the command line arguments:</p>
+<blockquote>
+  <pre>Usage: bt_time n [Options]
+  &nbsp; &nbsp; &nbsp; &nbsp;The argument n specifies the number of test cases to run
+  &nbsp; &nbsp; &nbsp; &nbsp;Options:
+  &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; path&nbsp;&nbsp;&nbsp;&nbsp; Specifies the test file path; default test.btree
+  &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -s#&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Seed for random number generator; default 1
+  &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -p#&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Page size (>=128); default 512
+  &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Small page sizes are useful for stress testing
+  &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -c#&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Cache size; default 16 pages
+  &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -l#&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; log progress every # actions; default is to not log
+  &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -xc&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; No create; use file from prior -xe run
+  &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -xi&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; No insert test; forces -xc and doesn't do inserts
+  &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -xf&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; No find test
+  &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -xi&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; No iterate test
+  &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -xe&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; No erase test; use to save file intact
+  &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -v&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Verbose output statistics
+  &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -stl&nbsp;&nbsp;&nbsp;&nbsp; Also run the tests against std::map
+  &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -r&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Read entire file to preload operating system disk cache;
+  &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; only applicable if -xc option is active
+  &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -big&nbsp;&nbsp;&nbsp;&nbsp; Use btree::default_big_endian_traits
+  &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -little&nbsp; Use btree::default_little_endian_traits
+  &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -native&nbsp; Use btree::default_native_traits; this is the default
+  &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -html&nbsp;&nbsp;&nbsp; Output html table of results to cerr</blockquote>
+</body>
+
+</html>
