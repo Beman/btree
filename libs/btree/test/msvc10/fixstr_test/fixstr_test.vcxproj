@@ -11,9 +11,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{8BBA1500-915B-43EB-8689-60E6C9D5C994}</ProjectGuid>
+    <ProjectGuid>{CEF69AC7-31D6-4E02-A2DC-DBEBB2960465}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>binary_file_test</RootNamespace>
+    <RootNamespace>fixstr_test</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -63,7 +63,6 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
       <PrecompiledHeader>
       </PrecompiledHeader>
       <Optimization>MaxSpeed</Optimization>
@@ -83,21 +82,7 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\binary_file_test.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\btree_dll\btree_dll.vcxproj">
-      <Project>{61954631-3857-4C20-9E7C-1DA7BAAFF426}</Project>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
-    <ProjectReference Include="..\filesystem_dll\filesystem_dll.vcxproj">
-      <Project>{2aad90ac-4fd3-422f-9e99-1cea3ef092ed}</Project>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
-    <ProjectReference Include="..\system_dll\system_dll.vcxproj">
-      <Project>{2558c6e2-046f-441d-9515-0fab44f5a22e}</Project>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
+    <ClCompile Include="..\..\fixstr_test.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

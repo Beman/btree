@@ -29,6 +29,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "binary_file_test", "binary_
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "buffer_manager_test", "buffer_manager_test\buffer_manager_test.vcxproj", "{1B1C18E5-6433-427D-A27D-A9471D640A5B}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "fixstr_test", "fixstr_test\fixstr_test.vcxproj", "{CEF69AC7-31D6-4E02-A2DC-DBEBB2960465}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -67,6 +69,10 @@ Global
 		{1B1C18E5-6433-427D-A27D-A9471D640A5B}.Debug|Win32.Build.0 = Debug|Win32
 		{1B1C18E5-6433-427D-A27D-A9471D640A5B}.Release|Win32.ActiveCfg = Release|Win32
 		{1B1C18E5-6433-427D-A27D-A9471D640A5B}.Release|Win32.Build.0 = Release|Win32
+		{CEF69AC7-31D6-4E02-A2DC-DBEBB2960465}.Debug|Win32.ActiveCfg = Debug|Win32
+		{CEF69AC7-31D6-4E02-A2DC-DBEBB2960465}.Debug|Win32.Build.0 = Debug|Win32
+		{CEF69AC7-31D6-4E02-A2DC-DBEBB2960465}.Release|Win32.ActiveCfg = Release|Win32
+		{CEF69AC7-31D6-4E02-A2DC-DBEBB2960465}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
