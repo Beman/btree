@@ -49,8 +49,10 @@ namespace
   uint64_t iterate_backward_count = 0;
   uint64_t find_success_count = 0;
   uint64_t find_fail_count = 0;
-  uint64_t lower_bound_count = 0;
-  uint64_t upper_bound_count = 0;
+  uint64_t lower_bound_exist_count = 0;
+  uint64_t lower_bound_may_exist_count = 0;
+  uint64_t upper_bound_exist_count = 0;
+  uint64_t upper_bound_may_exist_count = 0;
   uint32_t cycles_complete = 0;
 
   typedef boost::btree::btree_map<int32_t, int32_t> bt_type;
@@ -74,12 +76,16 @@ namespace
          << "  iterate backward            " << iterate_backward_count << '\n'
          << "  find, return iterator       " << find_success_count << '\n'
          << "  find, return end iterator   " << find_fail_count << '\n'
-         << "  lower_bound                 " << lower_bound_count << '\n'
-         << "  upper_bound                 " << upper_bound_count << '\n'
+         << "  lower_bound, key exists     " << lower_bound_exist_count << '\n'
+         << "  lower_bound, key may exist  " << lower_bound_may_exist_count << '\n'
+         << "  lower_bound, key exists     " << lower_bound_exist_count << '\n'
+         << "  lower_bound, key may exist  " << lower_bound_may_exist_count << '\n'
          << "  total (i.e. sum the above)  " << insert_success_count
            +insert_fail_count+erase_success_count+erase_fail_count+iterate_forward_count
-           +iterate_backward_count+find_success_count+find_fail_count+lower_bound_count
-           +upper_bound_count+insert_success_count << '\n' 
+           +iterate_backward_count+find_success_count+find_fail_count
+           +lower_bound_exist_count+lower_bound_may_exist_count
+           +upper_bound_exist_count+upper_bound_may_exist_count
+         << '\n' 
          << "  cycles complete             " << cycles_complete  << '\n'
          << "  current size()              " << stl.size()
          << endl
@@ -229,7 +235,7 @@ namespace
 
     for (stl_itr = stl.begin(); stl_itr != stl.end(); ++stl_itr)
     {
-      //  test with key that must be found
+      //  test with key that exists
       stl_result = stl.find(stl_itr->first);
       bt_result = bt.find(stl_itr->first);
 
@@ -253,7 +259,7 @@ namespace
       }
       ++find_success_count;
 
-      //  test with key that may or may no be found  
+      //  test with key that may or may not exist  
       find_rng.seed(stl_result->first);
       int32_t k = find_key();
 
@@ -284,12 +290,177 @@ namespace
     cout << "  find test complete" << endl;
   }
 
+  //  lower_bound test  ----------------------------------------------------------------//
+
   void lower_bound_test()
   {
+    cout << "lower_bound test..." << endl;
+
+    boost::minstd_rand lower_bound_rng;
+    boost::uniform_int<int32_t> n_dist(low, high);
+    boost::variate_generator<boost::minstd_rand&, boost::uniform_int<int32_t> >
+      lower_bound_key(lower_bound_rng, n_dist);
+
+    stl_type::const_iterator stl_itr, stl_result;
+    bt_type::const_iterator bt_result;
+
+    for (stl_itr = stl.begin(); stl_itr != stl.end(); ++stl_itr)
+    {
+      //  test with key that exists
+      stl_result = stl.lower_bound(stl_itr->first);
+      bt_result = bt.lower_bound(stl_itr->first);
+
+      if (stl_result == stl.end())
+      {
+        cout << "for key " << stl_itr->first << ", stl.lower_bound() return stl.end()" << endl;
+        throw runtime_error("lower_bound: unexpected stl.end()");
+      }
+
+      if (bt_result == bt.end())
+      {
+        cout << "for key " << stl_itr->first << ", bt.lower_bound() return bt.end()" << endl;
+        throw runtime_error("lower_bound: unexpected bt.end()");
+      }
+
+      if (stl_result->first != bt_result->first)
+      {
+        cout << "stl_result->first " << stl_result->first << " != "
+              << "bt_result->first " << bt_result->first << endl;
+        throw runtime_error("lower_bound: first check failure");
+      }
+      if (stl_result->second != bt_result->second)
+      {
+        cout << "stl_result->second " << stl_result->second << " != "
+              << "bt_result->second " << bt_result->second << endl;
+        throw runtime_error("lower_bound: second check failure");
+      }
+      ++lower_bound_exist_count;
+
+      //  test with key that may or may not exist  
+      lower_bound_rng.seed(stl_result->first);
+      int32_t k = lower_bound_key();
+
+      stl_result = stl.lower_bound(k);
+      bt_result = bt.lower_bound(k);
+
+      if (stl_result == stl.end() && bt_result != bt.end())
+      {
+        cout << "stl lower_bound()==end(), but bt lower_bounds " << k << endl;
+        throw runtime_error("lower_bound: results inconsistent");
+      }
+      if (stl_result != stl.end() && bt_result == bt.end())
+      {
+        cout << "bt lower_bound()==end(), but stl lower_bounds " << k << endl;
+        throw runtime_error("lower_bound: results inconsistent");
+      }
+      if (stl_result != stl.end() && bt_result != bt.end())
+      {
+        if (stl_result->first != bt_result->first)
+        {
+          cout << "stl_result->first " << stl_result->first << " != "
+                << "bt_result->first " << bt_result->first << endl;
+          throw runtime_error("lower_bound may exist: first check failure");
+        }
+        if (stl_result->second != bt_result->second)
+        {
+          cout << "stl_result->second " << stl_result->second << " != "
+                << "bt_result->second " << bt_result->second << endl;
+          throw runtime_error("lower_bound may exist: second check failure");
+        }
+      }
+      ++lower_bound_may_exist_count;
+    }
+
+    cout << "  lower_bound test complete" << endl;
   }
   
+  //  upper_bound test  ----------------------------------------------------------------//
+
   void upper_bound_test()
   {
+    cout << "upper_bound test..." << endl;
+
+    boost::minstd_rand upper_bound_rng;
+    boost::uniform_int<int32_t> n_dist(low, high);
+    boost::variate_generator<boost::minstd_rand&, boost::uniform_int<int32_t> >
+      upper_bound_key(upper_bound_rng, n_dist);
+
+    stl_type::const_iterator stl_itr, stl_result;
+    bt_type::const_iterator bt_result;
+
+    for (stl_itr = stl.begin(); stl_itr != stl.end(); ++stl_itr)
+    {
+      //  test with key that exists
+      stl_result = stl.upper_bound(stl_itr->first);
+      bt_result = bt.upper_bound(stl_itr->first);
+
+      if (stl_result == stl.end() && bt_result != bt.end())
+      {
+        cout << "stl upper_bound()==end(), but bt upper_bounds " << bt_result->first
+             << " for key " << stl_itr->first << endl;
+        throw runtime_error("upper_bound: results inconsistent");
+      }
+      if (stl_result != stl.end() && bt_result == bt.end())
+      {
+        cout << "bt upper_bound()==end(), but stl upper_bounds " << stl_result->first
+             << " for key " << stl_itr->first << endl;
+        throw runtime_error("upper_bound: results inconsistent");
+      }
+      if (stl_result != stl.end() && bt_result != bt.end())
+      {
+        if (stl_result->first != bt_result->first)
+        {
+          cout << "stl_result->first " << stl_result->first << " != "
+                << "bt_result->first " << bt_result->first << endl;
+          throw runtime_error("upper_bound key exists: first check failure");
+        }
+        if (stl_result->second != bt_result->second)
+        {
+          cout << "stl_result->second " << stl_result->second << " != "
+                << "bt_result->second " << bt_result->second << endl;
+          throw runtime_error("upper_bound key exists: second check failure");
+        }
+      }
+      ++upper_bound_exist_count;
+
+      //  test with key that may or may not exist  
+      upper_bound_rng.seed(stl_result->first);
+      int32_t k = upper_bound_key();
+
+      stl_result = stl.upper_bound(k);
+      bt_result = bt.upper_bound(k);
+
+      if (stl_result == stl.end() && bt_result != bt.end())
+      {
+        cout << "stl upper_bound()==end(), but bt upper_bounds " << bt_result->first
+             << " for k " << k << endl;
+        throw runtime_error("upper_bound: results inconsistent");
+      }
+      if (stl_result != stl.end() && bt_result == bt.end())
+      {
+        cout << "bt upper_bound()==end(), but stl upper_bounds " << stl_result->first
+             << " for k " << k << endl;
+        throw runtime_error("upper_bound: results inconsistent");
+      }
+      if (stl_result != stl.end() && bt_result != bt.end())
+      {
+        if (stl_result->first != bt_result->first)
+        {
+          cout << "stl_result->first " << stl_result->first << " != "
+                << "bt_result->first " << bt_result->first << endl;
+          throw runtime_error("upper_bound may exist: first check failure");
+        }
+        if (stl_result->second != bt_result->second)
+        {
+          cout << "stl_result->second " << stl_result->second << " != "
+                << "bt_result->second " << bt_result->second << endl;
+          throw runtime_error("upper_bound may exist: second check failure");
+        }
+      }
+      ++upper_bound_may_exist_count;
+    }
+
+    cout << "  upper_bound test complete" << endl;
   }
 
 
@@ -331,17 +502,14 @@ namespace
       upper_bound_test();
 
       cycle_times.stop();
+      ++cycles_complete;
       report_counts();
       cout << "  ";
       cycle_times.report();
       cout << "  cycle " << cycle << " complete" << endl;
-      ++cycles_complete;
     }
 
-
-  //  cout << "all tests complete" << endl;
-
-  //  cout << bt.manager();
+    //  cout << bt.manager();
     cout << "\n total time: ";
   }
 
@@ -376,10 +544,10 @@ int main(int argc, char *argv[])
         cycles = atol(argv[1]+8);
       else if (strncmp(argv[1]+1, "seed=", 5) == 0)
         seed = atol(argv[1]+6);
-      else if (strncmp(argv[1]+1, "page_sz=", 8) == 0)
-        page_sz = atol(argv[1]+9);
-      else if (strncmp(argv[1]+1, "cache_sz=", 9) == 0)
-        cache_sz = atol(argv[1]+10);
+      else if (strncmp(argv[1]+1, "page=", 5) == 0)
+        page_sz = atol(argv[1]+6);
+      else if (strncmp(argv[1]+1, "cache=", 6) == 0)
+        cache_sz = atol(argv[1]+7);
       else if (strcmp(argv[1]+1, "restart") == 0)
         restart = true;
       else if (strcmp(argv[1]+1, "v") == 0)
