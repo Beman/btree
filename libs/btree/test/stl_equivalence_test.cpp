@@ -11,7 +11,7 @@
 #include <map>
 #include <boost/random.hpp>
 #include <boost/cstdint.hpp>
-#include <boost/system/timer.hpp>
+#include <boost/btree/detail/timer.hpp>
 #include <iostream>
 #include <cstdlib>  // for atol()
 #include <cstring>  // for strcmp(), strncmp()
@@ -480,8 +480,8 @@ namespace
     bt.open(path_prefix + ".btr", boost::btree::flags::truncate, page_sz);
     bt.max_cache_pages(cache_sz);  // small cache to incease stress
 
-    boost::system::run_timer total_times(3);
-    boost::system::run_timer cycle_times(3);
+    boost::btree::run_timer total_times(3);
+    boost::btree::run_timer cycle_times(3);
 
     for (int32_t cycle = 1; cycle <= cycles; ++cycle)
     {

@@ -2,18 +2,18 @@
 
 //  Copyright Beman Dawes 1994-2006
 
-//  Distributed under the Boost Software License, Version 1.0. (See accompanying
-//  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+//  Distributed under the Boost Software License, Version 1.0.
+//  See http://www.boost.org/LICENSE_1_0.txt)
 
 //  See http://www.boost.org/libs/system for documentation.
 
 //----------------------------------------------------------------------------//
 
-// define BOOST_SYSTEM_SOURCE so that <boost/system/config.hpp> knows
+// define BOOST_BTREE_SOURCE so that <boost/btree/detail/config.hpp> knows
 // the library is being built (possibly exporting rather than importing code)
-#define BOOST_SYSTEM_SOURCE 
+#define BOOST_BTREE_SOURCE 
 
-#include <boost/system/timer.hpp>
+#include <boost/btree/detail/timer.hpp>
 #include <boost/system/system_error.hpp>
 #include <boost/io/ios_state.hpp>
 #include <boost/throw_exception.hpp>
@@ -21,8 +21,9 @@
 #include <cstring>
 #include <cassert>
 
-using boost::system::microsecond_t;
-using boost::system::times_t;
+using boost::btree::microsecond_t;
+using boost::btree::times_t;
+using boost::system::error_code;
 
 # if defined(BOOST_WINDOWS_API)
 #   include <windows.h>
@@ -114,7 +115,7 @@ void show_time( const char * format, int places, std::ostream & os,
 
 namespace boost
 {
-  namespace system
+  namespace btree
   {
     //  run_timer:: report  --------------------------------------//
 
@@ -136,11 +137,11 @@ namespace boost
 
       catch (...) // eat any exceptions
       {
-        ec = error_code( EIO, generic_category() );
+        ec = error_code( EIO, system::generic_category() );
       } 
       
       return ec;
     }
 
-  } // namespace system
+  } // namespace btree
 } // namespace boost

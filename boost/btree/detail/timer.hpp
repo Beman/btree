@@ -2,17 +2,17 @@
 
 //  Copyright Beman Dawes 1994-2007
 
-//  Distributed under the Boost Software License, Version 1.0. (See accompanying
-//  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+//  Distributed under the Boost Software License, Version 1.0.
+//  See http://www.boost.org/LICENSE_1_0.txt
 
 //  See http://www.boost.org/libs/system for documentation.
 
-#ifndef BOOST_SYSTEM_TIMER_HPP                  
-#define BOOST_SYSTEM_TIMER_HPP
+#ifndef BOOST_BTREE_TIMER_HPP                  
+#define BOOST_BTREE_TIMER_HPP
 
 #include <boost/config/warning_disable.hpp>
 
-#include <boost/system/config.hpp>
+#include <boost/btree/detail/config.hpp>
 #include <boost/system/error_code.hpp>
 #include <boost/cstdint.hpp>
 #include <string>
@@ -23,7 +23,7 @@
 
 namespace boost
 {
-  namespace system
+  namespace btree
   {
     typedef boost::int_least64_t microsecond_t;
 
@@ -38,17 +38,17 @@ namespace boost
 
     //  low-level functions  -------------------------------------------------//
 
-    BOOST_SYSTEM_DECL
+    BOOST_BTREE_DECL
     void         times( times_t & result ); // throws on error
 
-    BOOST_SYSTEM_DECL
-    error_code & times( times_t & result, error_code & ec ); // never throws
+    BOOST_BTREE_DECL
+    system::error_code & times( times_t & result, system::error_code & ec ); // never throws
 
     //  timer  ---------------------------------------------------------------//
 
     //  unless otherwise specified, all functions throw on error
 
-    class BOOST_SYSTEM_DECL timer
+    class BOOST_BTREE_DECL timer
     {
     public:
 
@@ -72,7 +72,7 @@ namespace boost
 
     //  unless otherwise specified, all functions throw on error
 
-    class BOOST_SYSTEM_DECL run_timer : public timer
+    class BOOST_BTREE_DECL run_timer : public timer
     {
     public:
 
@@ -93,14 +93,15 @@ namespace boost
 
      ~run_timer()  // never throws
       { 
-        error_code ec;
+        system::error_code ec;
         if ( !stopped() )
           report( ec );
         delete [] m_format;
       }
 
       void        report();
-      error_code  report( error_code & ec ); // never throws
+      system::error_code
+                  report( system::error_code & ec ); // never throws
 
     private:
       int             m_places;
@@ -109,9 +110,9 @@ namespace boost
                                  // across DLL boundaries due to warning C4251
     };
 
-  } // namespace system
+  } // namespace btree
 } // namespace boost
 
 #include <boost/config/abi_suffix.hpp> // pops abi_prefix.hpp pragmas
 
-#endif  // BOOST_SYSTEM_TIMER_HPP
+#endif  // BOOST_BTREE_TIMER_HPP

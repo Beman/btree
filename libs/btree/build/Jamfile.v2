@@ -14,7 +14,7 @@ project boost/btree
     ;
 
 SOURCES =
-    binary_file buffer_manager ;
+    binary_file buffer_manager timer run_timer run_timer_ctors ;
 
 lib boost_btree
     :
