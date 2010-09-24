@@ -20,6 +20,7 @@
 
 #include <boost/btree/map.hpp>
 #include <boost/btree/set.hpp>
+#include <boost/btree/detail/fixstr.hpp>
 #include <boost/detail/lightweight_test.hpp>
 #include <utility>
 
@@ -27,6 +28,7 @@ using namespace boost;
 namespace fs = boost::filesystem;
 using std::cout;
 using std::endl;
+using std::make_pair;
 
 namespace
 {
@@ -644,6 +646,32 @@ void pack_optimization()
   cout << "    pack_optimization complete" << endl;
 }
 
+//-------------------------------------  fixstr ----------------------------------------//
+
+void  fixstr()
+{
+  cout << "  fixstr..." << endl;
+
+  typedef boost::detail::fixstr<15>       str_t;
+  typedef btree::btree_map<str_t, str_t>  map_t;
+
+  map_t bt("fixstr.btr", btree::flags::truncate);
+
+  bt.insert(make_pair(str_t("Tyler"), str_t("jet black")));
+  bt.insert(make_pair(str_t("Harry"), str_t("black & white")));
+
+  map_t::const_iterator it = bt.begin();
+  BOOST_TEST(it->first == "Harry");
+  BOOST_TEST(it->second == "black & white");
+  ++it;
+  BOOST_TEST(it->first == "Tyler");
+  BOOST_TEST(it->second == "jet black");
+  ++it;
+  BOOST_TEST(it == bt.end());
+
+  cout << "     fixstr complete" << endl;
+}
+
 }  // unnamed namespace
 
 //-------------------------------------- main ------------------------------------------//
@@ -664,6 +692,7 @@ int main()
   parent_pointer_to_split_page();
   parent_pointer_lifetime();
   pack_optimization();
+  fixstr();
   
 
   //{
