@@ -9,11 +9,11 @@
 
 //----------------------------------------------------------------------------//
 
-// define BOOST_SYSTEM_SOURCE so that <boost/system/config.hpp> knows
+// define BOOST_BTREE_SOURCE so that <boost/system/config.hpp> knows
 // the library is being built (possibly exporting rather than importing code)
-#define BOOST_SYSTEM_SOURCE 
+#define BOOST_BTREE_SOURCE 
 
-#include <boost/system/timer.hpp>
+#include <boost/btree/detail/timer.hpp>
 #include <boost/system/system_error.hpp>
 #include <boost/io/ios_state.hpp>
 #include <boost/throw_exception.hpp>
@@ -29,20 +29,22 @@
 # error unknown API
 # endif
 
+using boost::system::error_code;
+
 namespace boost
 {
-  namespace system
+  namespace btree
   {
 
-    BOOST_SYSTEM_DECL
+    BOOST_BTREE_DECL
     void times( times_t & current )
     {
       error_code ec;
       if ( times( current, ec ) )
-        boost::throw_exception( system_error( ec, "boost::system::times" ) );
+        boost::throw_exception( system::system_error( ec, "boost::btree::times" ) );
     }
 
-    BOOST_SYSTEM_DECL
+    BOOST_BTREE_DECL
     error_code & times( times_t & current, error_code & ec )
     {
       ec = error_code();
@@ -58,7 +60,7 @@ namespace boost
       }
       else
       {
-        ec = error_code( ::GetLastError(), system_category() );
+        ec = error_code( ::GetLastError(), system::system_category() );
         current.wall = current.system = current.user = microsecond_t(-1);
       }
 #   else
@@ -137,5 +139,5 @@ namespace boost
       }
     }
 
-  } // namespace system
+  } // namespace btree
 } // namespace boost

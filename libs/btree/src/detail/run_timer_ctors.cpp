@@ -2,8 +2,8 @@
 
 //  Copyright Beman Dawes 2007
 
-//  Distributed under the Boost Software License, Version 1.0. (See accompanying
-//  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+//  Distributed under the Boost Software License, Version 1.0.
+//  See http://www.boost.org/LICENSE_1_0.txt)
 
 //  See http://www.boost.org/libs/system for documentation.
 
@@ -16,16 +16,16 @@
 
 //----------------------------------------------------------------------------//
 
-// define BOOST_SYSTEM_SOURCE so that <boost/system/config.hpp> knows
+// define BOOST_BTREE_SOURCE so that <boost/btree/detail/config.hpp> knows
 // the library is being built (possibly exporting rather than importing code)
-#define BOOST_SYSTEM_SOURCE 
+#define BOOST_BTREE_SOURCE 
 
-#include <boost/system/timer.hpp>
+#include <boost/btree/detail/timer.hpp>
 #include <iostream>
 
 namespace boost
 {
-  namespace system
+  namespace btree
   {
     run_timer::run_timer( int places )
       : m_places(places), m_os(std::cout), m_format(0) {}
@@ -34,5 +34,5 @@ namespace boost
       : m_places(places), m_os(std::cout), m_format(new char[format.size()+1])
         { std::strcpy(m_format, format.c_str()); }
 
-  } // namespace system
+  } // namespace btree
 } // namespace boost

@@ -78,6 +78,9 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\src\detail\binary_file.cpp" />
     <ClCompile Include="..\..\..\src\detail\buffer_manager.cpp" />
+    <ClCompile Include="..\..\..\src\detail\run_timer.cpp" />
+    <ClCompile Include="..\..\..\src\detail\run_timer_ctors.cpp" />
+    <ClCompile Include="..\..\..\src\detail\timer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\filesystem_dll\filesystem_dll.vcxproj">

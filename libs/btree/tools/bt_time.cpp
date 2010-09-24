@@ -10,7 +10,7 @@
 #include <boost/btree/map.hpp>
 #include <boost/random.hpp>
 #include <boost/detail/lightweight_test.hpp>
-#include <boost/system/timer.hpp>
+#include <boost/btree/detail/timer.hpp>
 #include <iostream>
 #include <string>
 #include <cstring>
@@ -45,16 +45,16 @@ namespace
   std::string path("bt_time.btree");
   BOOST_SCOPED_ENUM(integer::endianness) whichaway = integer::endianness::native;
 
-  system::times_t insert_tm;
-  system::times_t find_tm;
-  system::times_t iterate_tm;
-  system::times_t erase_tm;
+  btree::times_t insert_tm;
+  btree::times_t find_tm;
+  btree::times_t iterate_tm;
+  btree::times_t erase_tm;
   const long double sec = 1000000.0L;
 
   template <class BT>
   void test()
   {
-    system::run_timer t(3);
+    btree::run_timer t(3);
     rand48  rng;
     uniform_int<long> n_dist(0, n-1);
     variate_generator<rand48&, uniform_int<long> > key(rng, n_dist);
@@ -176,7 +176,7 @@ namespace
     {
       cout << "\ninserting " << n << " std::map elements..." << endl;
       rng.seed(seed);
-      system::times_t this_tm;
+      btree::times_t this_tm;
       t.start();
       for (long i = 1; i <= n; ++i)
       {
