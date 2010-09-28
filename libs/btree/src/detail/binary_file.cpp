@@ -50,11 +50,15 @@ namespace
   {
   //  preload is just a hint, so ignore errors
 
-  int f = ::open(p.string().c_str(), O_BINARY | O_SEQUENTIAL | O_RDONLY, 0);
+  int f = ::open(p.string().c_str(), O_BINARY
+# ifdef O_SEQUENTIAL
+                                     | O_SEQUENTIAL
+# endif
+                                     | O_RDONLY, 0);
   if ( f == -1 )
     return;
-  void* buf = new char [BUF_SIZE];
-  while (::read(f, buf, BUF_SIZE) == BUF_SIZE )
+  char* buf = new char [BUF_SIZE];
+  while (::read(f, buf, BUF_SIZE) == static_cast<int>(BUF_SIZE))
     {}
   delete [] buf;
   ::close(f);

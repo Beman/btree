@@ -543,7 +543,7 @@ void insert_non_unique_tests(BTree& bt)
   for (int i = 1; i <= n; ++i)
   {
     result = bt.insert(std::make_pair(3, i));
-    BOOST_TEST_EQ(bt.size(), i);
+    BOOST_TEST_EQ(bt.size(), static_cast<unsigned>(i));
     BOOST_TEST_EQ(result->first.x, 3);
     BOOST_TEST_EQ(result->second, i);
     
