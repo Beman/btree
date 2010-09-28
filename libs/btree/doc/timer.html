@@ -326,8 +326,7 @@ timer</a></code>. For the description of inherited functions, see
   <p><i>Postconditions:<br>
   </i><code>&nbsp; m_places == places,<br>
 &nbsp; m_os == std::cout,<br>
-&nbsp; m_format == &quot;\nwall %w s, user %u s + system %s s = total cpu %t s, %p% 
-  util\n&quot;</code></p>
+&nbsp; m_format == &quot; %ws wall, %us user + %ss system = %ts cpu (%p%)\n&quot;</code></p>
 </blockquote>
 <pre>run_timer( int places, std::ostream &amp; os );</pre>
 <blockquote>
@@ -335,8 +334,7 @@ timer</a></code>. For the description of inherited functions, see
   <p><i>Postconditions:<br>
   </i><code>&nbsp; m_places == places,<br>
 &nbsp; m_os == os,<br>
-&nbsp; m_format == &quot;\nwall %w s, user %u s + system %s s = total cpu %t s, %p% 
-  util\n&quot;</code></p>
+&nbsp; m_format == &quot; %ws wall, %us user + %ss system = %ts cpu (%p%)\n&quot;</code></p>
 </blockquote>
 <pre>explicit run_timer( const std::string &amp; format, int places = 2 );</pre>
 <blockquote>
@@ -420,7 +418,7 @@ timer</a></code>. For the description of inherited functions, see
 
 <hr>
 <p>Last revised:
-<!--webbot bot="Timestamp" s-type="EDITED" s-format="%d %B, %Y" startspan -->19 January, 2008<!--webbot bot="Timestamp" endspan i-checksum="39223" --></p>
+<!--webbot bot="Timestamp" s-type="EDITED" s-format="%d %B, %Y" startspan -->17 September, 2010<!--webbot bot="Timestamp" endspan i-checksum="39341" --></p>
 <p>© Copyright Beman Dawes, 2006</p>
 <p>Distributed under the Boost Software License, Version 1.0. (See accompanying 
 file <a href="../../../../LICENSE_1_0.txt">LICENSE_1_0.txt</a> or copy at

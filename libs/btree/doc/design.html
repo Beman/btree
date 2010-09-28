@@ -26,12 +26,15 @@ Library.</p>
   <li>Modern C++ meeting Boost and C++ Standard Library requirements.</li>
   <li>Standard Library associative container-like interface, based on iterators.</li>
   <li>Safe concurrent operation by multiple processes; i.e. multi-user.</li>
-  <li>Variable length keys and data supported.</li>
+  <li>Variable length key and data support.</li>
   <li>Runtime polymorphism easy to support., at least for packing and similar 
   utility programs.</li>
-  <li>Packing automatic via the usual &quot;insert is append&quot; optimization.</li>
+  <li>New-page-on-full (i.e. lazy) rather than split-on-full
+        when inserts are ordered.</li>
+  <li>Free-at-empty (i.e. lazy) rather than merge-at-half for
+        erases.</li>
 </ul>
-<p>The requirements are derived from over twenty years of experience with an 
+<p>The requirements are derived from almost thirty years of experience with an 
 industrial B+tree implementation.</p>
 <h2>Design decisions</h2>
 <ul>
@@ -91,7 +94,7 @@ industrial B+tree implementation.</p>
   </tr>
   <tr>
     <td width="25%">Supports bidirectional iteration?</td>
-    <td width="25%">Yes, trivial. (Page info keeps par</td>
+    <td width="25%">Yes, trivial.</td>
     <td width="25%">Yes, implementation is more complex.</td>
   </tr>
 </table>
@@ -137,7 +140,7 @@ implications!</b></i></p>
 <p>[<a name="3">3</a>] Explicit update() provided.</p>
 <hr>
 <p>Last revised:
-<!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->26 June, 2006<!--webbot bot="Timestamp" endspan i-checksum="19938" --></p>
+<!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->14 September, 2010<!--webbot bot="Timestamp" endspan i-checksum="39335" --></p>
 <p>© Copyright Beman Dawes, 2006</p>
 <p>Distributed under the Boost Software License, Version 1.0. (See accompanying 
 file <a href="../../../LICENSE_1_0.txt">LICENSE_1_0.txt</a> or copy at

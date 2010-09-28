@@ -81,7 +81,8 @@
 
   <ul>
     <li>Public interface similar but not identical to the C++
-    Standard Library's Associative Container requirements:<br>
+    Standard Library's <code>map</code>, <code>multimap</code>, <code>set</code>, 
+    and <code>multiset</code>. Differences include:<br>
 &nbsp;<ul>
       <li>All iterator returning functions return
         <code>const_iterator</code>. The <code>writeable()</code>
@@ -90,8 +91,11 @@
       <li><code>insert()</code> and <code>erase()</code>
         invalidate iterators.</li>
       <li>Types supplied by the <code>Key</code> and
-        <code>T</code> template parameters must be memcpyable.</li>
-      <li>Maps, multimaps, sets, and multisets are each supported.<br>
+        <code>T</code> template parameters must be trivially copyable; i.e. via
+      <code>std::memcpy</code>.</li>
+      <li>No <code>operator[]</code> or <code>at</code> functions supplied. 
+      Returning references to data that can be swapped out, even by const 
+      functions, is far too dangerous.<br>
 &nbsp;</li>
     </ul>
     </li>
@@ -106,13 +110,13 @@
     </ul>
     </li>
     <li>Disk file format includes header information about the
-      tree, and includes space for user supplied information.<br>
+      tree. The header format includes space for user supplied information.<br>
 &nbsp;</li>
     <li>Runtime options allow performance tuning:<br>
 &nbsp;<ul>
-    <li>Page size allows hardware specific tuning.</li>
+    <li>Page size allows hardware specific tuning at file creation time.</li>
     <li>Cache size allows control over speed versus program memory tradeoff.</li>
-    <li>Preload allows control over speed versus operating system disk cache 
+    <li>Preload option allows control over speed versus operating system disk cache 
     memory tradeoff.<br>
 &nbsp;</li>
   </ul>
@@ -134,16 +138,64 @@
     administrative needs.</li>
   </ul>
 
-  <h2>Library Limitations</h2>
+  <h2>Wish List</h2>
 
   <ul>
-    <li>Efficient variable length data, such as strings, is not currently 
-    supported. A simple string type that always uses its maximum length is 
-    provided as a workaround. Efficient variable length data is a high priority 
+    <li>Efficient variable length data, such as strings. A simple string type that always uses its maximum length is 
+    provided as a workaround. Efficient variable length data is a very high priority 
     for the future.<br>
 &nbsp;</li>
-    <li>Concurrent use is not supported. Concurrent use by other processes is a 
-    high priority for the future.</li>
+    <li>Concurrent use by other processes is a 
+    high priority for the future.<br>
+&nbsp;</li>
+    <li>Multiple B-trees in one file. Requested by Cory Nelson. Possible design: 
+    Initial btree_map in the file is an index of its children. Key: name, Data: 
+    page id of the child's header page. Recursion allowed; the header page 
+    pointed could itself be an index header. Current interface might gain 
+    additional constructor and open() overload taking a ref to the parent index 
+    and the desired name.<br>
+&nbsp;</li>
+    <li>Memory mapped I/O. Requested by Cory Nelson &quot;for small B-trees or large 
+    address spaces&quot;. Beman comments that the interface might differ, since 
+    functions specified by the standard to return <code>iterator</code> could do 
+    so, rather than returning <code>const_iterator</code>.<br>
+&nbsp;</li>
+    <li>Add C++0x signatures.</li>
+  </ul>
+
+  <h2>History</h2>
+
+  <p>A PL/1 language B-tree library was developed by the author about 1982. It 
+  was redone in C in 1984, and has been in continuous use in industrial 
+  applications since then. It was based on a single cursor model rather than an 
+  iterator model. Although the Boost library is a new design and is implemented 
+  with all new code, the predecessor library provided the experience that taught 
+  me about B-trees in general, and the specifics of what is needed and what 
+  isn't.</p>
+
+  <h2>Designs paths not taken</h2>
+
+  <p>Based on prior experience including actual implementation and use, several 
+  features described in the literature are not included:</p>
+
+  <ul>
+    <li><b>Key prefix compression.</b> All the keys on a page may have the same 
+    value for their initial bytes. Particularly on branches, this prefix could 
+    be stored only once, saving space and allowing more entries per page, and in 
+    turn that could speed searches. The added complexity is considerable, and 
+    the increased computational burden tends to result in slower rather than 
+    faster operations. Might be worth considering in the future for variable 
+    length keys only; they already have to provide some of the needed machinery. 
+    The C predecessor library abandoned this approach early on because it didn't 
+    actually speed up applications in practice.<br>
+&nbsp;</li>
+    <li><b>Key computation on branch pages.</b> The keys stored on branch pages need 
+    not be full length, as long as the ordering is maintained. Thus for a branch 
+    key separating pointers to pages with last key &quot;ALPHA&quot; and first key &quot;BETA&quot;, 
+    respectively, it is sufficient to store &quot;B&quot; as the branch key rather than 
+    &quot;BETA&quot;. Although the C predecessor library still uses computed branch keys 
+    if keys are variable length, it has been a source of hard to track down 
+    bugs, and doesn't support deletion properly to this day in that library.</li>
   </ul>
 
   <h2>Bibliography</h2>
