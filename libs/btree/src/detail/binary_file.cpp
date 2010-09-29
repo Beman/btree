@@ -249,7 +249,7 @@ namespace boost
 
 #   else  // BOOST_POSIX_API
       std::size_t sz_read = ::read(handle(), target, sz);
-      if (sz_read == -1)
+      if (sz_read == static_cast<std::size_t>(-1))
         ec.assign(errno, system_category());
       else
         ec.clear();
@@ -299,13 +299,13 @@ namespace boost
         }
         if (sz_read == 0)
         {
-          if (sz_to_read == sz) // no bytes read, so it is a normal eof
+          if (sz_to_read == static_cast<ssize_t>(sz)) // no bytes read, so it is a normal eof
             ec.clear();
           else  // premature eof
             ec.assign(EIO, system_category());
           return false;
         }
-        target += sz_read;
+        target = static_cast<char*>(target) + sz_read;
         sz_to_read -= sz_read;
 
       } while (sz_to_read); // more to read
@@ -386,14 +386,14 @@ namespace boost
       ssize_t sz_written = 0;
       do
       {
-        if ((sz_write = ::write(handle(), source + sz_written,
+        if ((sz_write = ::write(handle(), static_cast<const char*>(source) + sz_written,
           sz - sz_written)) < 0)
         {
           ec.assign(errno, system_category());
           return;
         }
         sz_written += sz_write;
-      } while (sz_written < sz);
+      } while (sz_written < static_cast<ssize_t>(sz));
       ec.clear();
 
 #   endif

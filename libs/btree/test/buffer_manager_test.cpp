@@ -276,31 +276,31 @@ namespace
     BOOST_TEST(f.read(2) == pp2);
     BOOST_TEST(f.read(2) != pp0);
     BOOST_TEST(f.read(2) != pp1);
-    BOOST_TEST_EQ(f.active_buffers_read(), 9);
+    BOOST_TEST_EQ(f.active_buffers_read(), 9U);
 
     pp0.reset();
     pp1.reset();
     pp2.reset();
-    BOOST_TEST_EQ(f.buffers_in_memory(), 3);
-    BOOST_TEST_EQ(f.buffers_available(), 3);
+    BOOST_TEST_EQ(f.buffers_in_memory(), 3U);
+    BOOST_TEST_EQ(f.buffers_available(), 3U);
 
     pp0 = f.read(0);
     pp1 = f.read(1);
     pp2 = f.read(2);
-    BOOST_TEST_EQ(f.buffers_in_memory(), 3);
-    BOOST_TEST_EQ(f.buffers_available(), 0);
+    BOOST_TEST_EQ(f.buffers_in_memory(), 3U);
+    BOOST_TEST_EQ(f.buffers_available(), 0U);
     pp0.reset();
     pp1.reset();
     pp2.reset();
-    BOOST_TEST_EQ(f.buffers_available(), 3);
+    BOOST_TEST_EQ(f.buffers_available(), 3U);
     f.new_buffer();  // buffer_id 3
-    BOOST_TEST_EQ(f.buffers_in_memory(), 3);
-    BOOST_TEST_EQ(f.buffers_available(), 3);
-    BOOST_TEST_EQ(f.file_buffers_read(), 0);
+    BOOST_TEST_EQ(f.buffers_in_memory(), 3U);
+    BOOST_TEST_EQ(f.buffers_available(), 3U);
+    BOOST_TEST_EQ(f.file_buffers_read(), 0U);
     buffer_ptr pp3 = f.read(0);  // least recently used
-    BOOST_TEST_EQ(f.file_buffers_read(), 1);
-    BOOST_TEST_EQ(f.buffers_in_memory(), 3);
-    BOOST_TEST_EQ(f.buffers_available(), 2);
+    BOOST_TEST_EQ(f.file_buffers_read(), 1U);
+    BOOST_TEST_EQ(f.buffers_in_memory(), 3U);
+    BOOST_TEST_EQ(f.buffers_available(), 2U);
 
     f.flush();
     cout << f;

@@ -55,7 +55,7 @@ namespace
       bt::binary_file f(p, bt::oflag::out, ec);
       BOOST_TEST(!ec);
       BOOST_TEST(fs::exists(p));
-      BOOST_TEST_EQ(fs::file_size(p), 0);
+      BOOST_TEST_EQ(fs::file_size(p), 0U);
       f.write("foo", 3, ec);
       BOOST_TEST(!ec);
       BOOST_TEST_EQ(fs::file_size(p), 3U);
@@ -78,7 +78,7 @@ namespace
       ", file exists..." << std::endl;   
       BOOST_TEST(fs::exists(p));
       bt::binary_file f(p, bt::oflag::in | bt::oflag::out | bt::oflag::truncate);
-      BOOST_TEST_EQ(fs::file_size(p), 0);
+      BOOST_TEST_EQ(fs::file_size(p), 0U);
     }
 
     fs::remove(p);
