@@ -1,17 +1,13 @@
-# Boost Integer Library test Jamfile
-
 #~ Copyright Rene Rivera 2008
-#  Copyright Beman Dawes 2006
+#~ Distributed under the Boost Software License, Version 1.0.
+#~ (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-# Distributed under the Boost Software License, Version 1.0.
-# See http://www.boost.org/LICENSE_1_0.txt
+import testing ;
 
+project : requirements <warnings>all <toolset>gcc:<cxxflags>-Wextra ;
 
-   import testing ;
-   
-   project : requirements <warnings>all <toolset>gcc:<cxxflags>-Wextra ;
-   test-suite integer
-       :
+test-suite integer
+    : 
         [ run cstdint_test.cpp : : : <toolset>gcc:<cxxflags>-Wno-long-long <toolset>darwin:<cxxflags>-Wno-long-long ]
         [ run cstdint_test2.cpp : : : <toolset>gcc:<cxxflags>-Wno-long-long <toolset>darwin:<cxxflags>-Wno-long-long ]
         [ run integer_traits_test.cpp ]
@@ -26,12 +22,4 @@
         [ compile static_log2_include_test.cpp ]
         [ compile static_min_max_include_test.cpp ]
         [ compile integer_fwd_include_test.cpp ]
-        [ run binary_stream_test.cpp ]
-        [ run endian_binary_stream_test.cpp ]
-        [ run endian_test.cpp ]
-        [ run endian_operations_test.cpp
-          :  :  : <toolset>gcc:<cxxflags>-Wno-sign-compare ]
-        [ run endian_in_union_test.cpp ]
-        [ run scoped_enum_emulation_test.cpp ]
-        [ run endian_flip_test.cpp ]
-      ;
+    ;

@@ -109,7 +109,7 @@ namespace boost
       char*           m_format;  // doesn't use std::string as VC++ too painful
                                  // across DLL boundaries due to warning C4251
     };
-
+    
   } // namespace btree
 } // namespace boost
 

@@ -34,7 +34,7 @@ using boost::system::system_category;
 
 #   ifdef BOOST_MSVC
 #     pragma warning(disable: 4996)  //The POSIX name for this item is deprecated
-#endif
+#   endif
 
 # else // BOOST_POSIX_API
 #   include <sys/types.h>
@@ -50,11 +50,14 @@ namespace
   {
   //  preload is just a hint, so ignore errors
 
-  int f = ::open(p.string().c_str(), O_BINARY
+  int f = ::open(p.string().c_str(), O_RDONLY
+# ifdef O_BINARY
+                                     | O_BINARY
+# endif
 # ifdef O_SEQUENTIAL
                                      | O_SEQUENTIAL
 # endif
-                                     | O_RDONLY, 0);
+                                     , 0);
   if ( f == -1 )
     return;
   char* buf = new char [BUF_SIZE];
@@ -69,8 +72,10 @@ namespace boost
 {
   namespace btree
   {
+# ifdef BOOST_WINDOWS_API
     BOOST_BTREE_DECL const binary_file::handle_type binary_file::invalid_handle
       = reinterpret_cast<binary_file::handle_type>(-1);
+#   endif
 
 //  -----------------------------------  open  ----------------------------------------  //
 
@@ -133,17 +138,22 @@ namespace boost
 #   else  // BOOST_POSIX_API
       int openflag;
 
-      if ((flags & omask) == (oflag::in | oflag::out))
+      if ((flags & oflag::in) && (flags & oflag::out))
         openflag = O_RDWR;
-      else if ((flags & omask) == oflag::out)
+      else if (flags & oflag::out)
         openflag = O_WRONLY;
       else
         openflag = O_RDONLY;
 
+      if (flags & oflag::out)
+        openflag |= O_CREAT;
+
       if (flags & oflag::truncate)
         openflag |= O_TRUNC;
 
-       m_handle = ::open(p.c_str(), openflag);
+      ::mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
+
+      m_handle = ::open(p.c_str(), openflag, mode);
 
       if (m_handle < 0)
       {
@@ -430,13 +440,13 @@ namespace boost
       else if (from == seekdir::current)
         whence = SEEK_CUR;
       else
-        whence = FILE_SET;
+        whence = SEEK_SET;
       
       off_t new_offset = ::lseek(handle(), offset, whence);
       if (new_offset == -1)
         ec.assign(errno, system_category());
       else
-        ec.clear
+        ec.clear();
       return new_offset;
 
 #   endif

@@ -24,12 +24,36 @@
 # if defined(BOOST_WINDOWS_API)
 #   include <windows.h>
 # elif defined(BOOST_POSIX_API)
+#   include <unistd.h>
 #   include <sys/times.h>
 # else
 # error unknown API
 # endif
 
 using boost::system::error_code;
+
+# if defined(BOOST_POSIX_API)
+namespace
+{
+  long tick_factor()        // multiplier to convert ticks
+                            //  to microseconds; -1 if unknown
+  {
+    static long tick_factor = 0;
+    if ( !tick_factor )
+    {
+      if ( (tick_factor = ::sysconf( _SC_CLK_TCK )) <= 0 )
+        tick_factor = -1;
+      else
+      {
+        assert( tick_factor <= 1000000L ); // doesn't handle large ticks
+        tick_factor = 1000000L / tick_factor;  // compute factor
+        if ( !tick_factor ) tick_factor = -1;
+      }
+    }
+    return tick_factor;
+  }
+} // unnamed namespace
+# endif
 
 namespace boost
 {
@@ -68,7 +92,7 @@ namespace boost
       clock_t c = ::times( &tm );
       if ( c == -1 ) // error
       {
-        ec = error_code( errno, native_ecat );
+        ec = error_code( errno, system::system_category() );
         current.wall = current.system = current.user = microsecond_t(-1);
       }
       else
@@ -84,7 +108,7 @@ namespace boost
         }
         else
         {
-          ec = error_code( errno, native_ecat );
+          ec = error_code( errno, system::system_category() );
           current.wall = current.user = current.system = microsecond_t(-1);
         }
       }

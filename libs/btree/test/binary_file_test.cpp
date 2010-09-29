@@ -29,7 +29,7 @@ namespace bt = boost::btree;
 # include <winerror.h>
 # define BOOST_BAD_SEEK ERROR_NEGATIVE_SEEK
 #else
-# include <errnoh>
+# include <errno.h>
 # define BOOST_BAD_SEEK EINVAL
 #endif
 
@@ -46,10 +46,12 @@ namespace
     boost::system::error_code ec;
 
     {
+      std::cout << "  oflag::in test, file doesn't exist..." << std::endl;   
       bt::binary_file f(p, bt::oflag::in, ec);
       BOOST_TEST(ec);
     }
     {
+      std::cout << "  oflag::out test, file doesn't exist..." << std::endl;   
       bt::binary_file f(p, bt::oflag::out, ec);
       BOOST_TEST(!ec);
       BOOST_TEST(fs::exists(p));
@@ -59,18 +61,23 @@ namespace
       BOOST_TEST_EQ(fs::file_size(p), 3U);
     }
     {
-      bt::binary_file f(p, bt::oflag::in, ec);
-      BOOST_TEST(!ec);
+      std::cout << "  oflag::in test, file exists..." << std::endl;   
+      BOOST_TEST(fs::exists(p));
+      bt::binary_file f(p, bt::oflag::in);
+      std::cout << " handle() returns " << f.handle() << std::endl;
       BOOST_TEST_EQ(fs::file_size(p), 3U);
     }
     {
-      bt::binary_file f(p, bt::oflag::in | bt::oflag::out, ec);
-      BOOST_TEST(!ec);
+      std::cout << "  oflag::in test | bt::oflag::out, file exists..." << std::endl;   
+      BOOST_TEST(fs::exists(p));
+      bt::binary_file f(p, bt::oflag::in | bt::oflag::out);
       BOOST_TEST_EQ(fs::file_size(p), 3U);
     }
     {
-      bt::binary_file f(p, bt::oflag::in | bt::oflag::out | bt::oflag::truncate, ec);
-      BOOST_TEST(!ec);
+      std::cout << "  oflag::in test bt::oflag::in | bt::oflag::out | bt::oflag::truncate\n"
+      ", file exists..." << std::endl;   
+      BOOST_TEST(fs::exists(p));
+      bt::binary_file f(p, bt::oflag::in | bt::oflag::out | bt::oflag::truncate);
       BOOST_TEST_EQ(fs::file_size(p), 0);
     }
 
@@ -88,8 +95,7 @@ int main(int argc, char * argv[])
   if (argc > 1) gap =
     static_cast<bt::binary_file::offset_type>(std::atol(argv[1])) * 1024;
 
-  /// TODO:
-  ///   * Test open modes
+  open_flag_tests();
 
   char buf[128] = "0123456789abcdef";
 
@@ -145,8 +151,6 @@ int main(int argc, char * argv[])
   BOOST_TEST(!f.is_open());
 
   BOOST_TEST(fs::file_size(filename) == static_cast<boost::uintmax_t>(gap + 17));
-
-  open_flag_tests();
 
   return boost::report_errors();
 }
