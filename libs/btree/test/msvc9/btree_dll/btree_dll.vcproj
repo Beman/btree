@@ -180,6 +180,18 @@
 				RelativePath="..\..\..\src\detail\buffer_manager.cpp"
 				>
 			</File>
+			<File
+				RelativePath="..\..\..\src\detail\run_timer.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\detail\run_timer_ctors.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\detail\timer.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"

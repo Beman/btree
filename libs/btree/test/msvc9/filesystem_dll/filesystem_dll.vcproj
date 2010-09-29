@@ -173,35 +173,35 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\..\..\..\..\..\..\boost\trunk\libs\filesystem\v3\src\codecvt_error_category.cpp"
+				RelativePath="..\..\..\..\filesystem\v3\src\codecvt_error_category.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\..\..\..\boost\trunk\libs\filesystem\v3\src\operations.cpp"
+				RelativePath="..\..\..\..\filesystem\v3\src\operations.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\..\..\..\boost\trunk\libs\filesystem\v3\src\path.cpp"
+				RelativePath="..\..\..\..\filesystem\v3\src\path.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\..\..\..\boost\trunk\libs\filesystem\v3\src\path_traits.cpp"
+				RelativePath="..\..\..\..\filesystem\v3\src\path_traits.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\..\..\..\boost\trunk\libs\filesystem\v3\src\portability.cpp"
+				RelativePath="..\..\..\..\filesystem\v3\src\portability.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\..\..\..\boost\trunk\libs\filesystem\v3\src\unique_path.cpp"
+				RelativePath="..\..\..\..\filesystem\v3\src\unique_path.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\..\..\..\boost\trunk\libs\filesystem\v3\src\utf8_codecvt_facet.cpp"
+				RelativePath="..\..\..\..\filesystem\v3\src\utf8_codecvt_facet.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\..\..\..\boost\trunk\libs\filesystem\v3\src\windows_file_codecvt.cpp"
+				RelativePath="..\..\..\..\filesystem\v3\src\windows_file_codecvt.cpp"
 				>
 			</File>
 		</Filter>
