@@ -44,50 +44,19 @@ public:
   static std::size_t key_size() { return sizeof(Key); }
   static std::size_t mapped_size() { return sizeof(T); }
 
-  //------------------------------- value_compare --------------------------------------//
+  //--------------------------------- value_compare ------------------------------------//
 
   class value_compare
-    : public std::binary_function<value_type, value_type, bool>
   {
   public:
     value_compare() {}
     value_compare(Comp comp) : m_comp(comp) {}
-    bool operator()(const value_type& x, const value_type& y)
-    {
-      return m_comp(x.first, y.first);
-    }
-  private:
-    Comp    m_comp;
-  };
-
-  //------------------------------- value_key_compare ----------------------------------//
-
-  class value_key_compare
-    : public std::binary_function<value_type, Key, bool>
-  {
-  public:
-    value_key_compare() {}
-    value_key_compare(Comp comp) : m_comp(comp) {}
-    bool operator()(const value_type& x, const Key& y)
-    {
-      return m_comp(x.first, y);
-    }
-  private:
-    Comp    m_comp;
-  };
-
-  //------------------------------- key_value_compare ----------------------------------//
-
-  class key_value_compare
-    : public std::binary_function<Key, value_type, bool>
-  {
-  public:
-    key_value_compare() {}
-    key_value_compare(Comp comp) : m_comp(comp) {}
-    bool operator()(const Key& x, const value_type& y)
-    {
-      return m_comp(x, y.first);
-    }
+    bool operator()(const value_type& x, const value_type& y) const
+      { return m_comp(x.first, y.first); }
+    bool operator()(const value_type& x, const Key& y) const
+      { return m_comp(x.first, y); }
+    bool operator()(const Key& x, const value_type& y) const
+      { return m_comp(x, y.first); }
   private:
     Comp    m_comp;
   };
@@ -97,15 +66,12 @@ public:
 //                               class btree_set_base                                   //
 //--------------------------------------------------------------------------------------//
 
-
 template <class Key, class Comp>
 class btree_set_base
 {
 public:
   typedef Key       value_type;
   typedef Comp      value_compare;
-  typedef Comp      value_key_compare;
-  typedef Comp      key_value_compare;
 
   const Key& key(const value_type& v) const {return v;}  // really handy, so expose
 
@@ -150,8 +116,8 @@ public:
   typedef typename Base::value_type             value_type;
   typedef Comp                                  key_compare;
   typedef typename Base::value_compare          value_compare; 
-  typedef typename Base::value_key_compare      value_key_compare; 
-  typedef typename Base::key_value_compare      key_value_compare; 
+  //typedef typename Base::value_key_compare      value_key_compare; 
+  //typedef typename Base::value_compare      value_compare; 
   typedef value_type&                           reference;
   typedef const value_type&                     const_reference;
   typedef boost::uint64_t                       size_type;
@@ -262,8 +228,6 @@ public:
 
   key_compare        key_comp() const       { return m_comp; }
   value_compare      value_comp() const     { return m_value_comp; }
-  value_key_compare  value_key_comp() const { return m_value_key_comp; }
-  key_value_compare  key_value_comp() const { return m_key_value_comp; }
 
   // operations:
 
@@ -587,34 +551,23 @@ private:
       m_mgr.max_cache_buffers(minimum_cache_pages);
   }
 
-  //---------------------- compare branch_value_type to key_type -----------------------//
+  //-------------------------------- branch_compare ------------------------------------//
 
-  class branch_value_key_compare
-    : public std::binary_function<branch_value_type, key_type, bool>
+  class branch_compare
+//    : public std::binary_function<branch_value_type, key_type, bool>
   {
     friend class btree_base;
   protected:
     Comp    m_comp;
-    branch_value_key_compare() {}
-    branch_value_key_compare(Comp comp) : m_comp(comp) {}
+    branch_compare() {}
+    branch_compare(Comp comp) : m_comp(comp) {}
   public:
-    bool operator()(const branch_value_type& x, const key_type& y)
-      {return m_comp(x.key, y);}
-  };
-
-  //---------------------- compare key_type to branch_value_type -----------------------//
-
-  class key_branch_value_compare
-    : public std::binary_function<key_type, branch_value_type, bool>
-  {
-    friend class btree_base;
-  protected:
-    Comp    m_comp;
-    key_branch_value_compare() {}
-    key_branch_value_compare(Comp comp) : m_comp(comp) {}
-  public:
-    bool operator()(const key_type& x, const branch_value_type& y)
+   bool operator()(const branch_value_type& x, const branch_value_type& y) const
+      {return m_comp(x.key, y.key);}
+   bool operator()(const Key& x, const branch_value_type& y) const
       {return m_comp(x, y.key);}
+   bool operator()(const branch_value_type& x, const Key& y) const
+      {return m_comp(x.key, y);}
   };
 
   //------------------------ comparison function objects -------------------------------//
@@ -625,15 +578,10 @@ private:
 
   key_compare               m_comp;
   value_compare             m_value_comp;
-  value_key_compare         m_value_key_comp;
-  key_value_compare         m_key_value_comp;
-  branch_value_key_compare  m_branch_value_key_comp;
-  key_branch_value_compare  m_key_branch_value_comp;
+  branch_compare            m_branch_comp;
 
-  branch_value_key_compare
-    branch_value_key_comp() const { return m_branch_value_key_comp; }
-  key_branch_value_compare
-    key_branch_value_comp() const { return m_key_branch_value_comp; }
+  branch_compare
+    branch_comp() const { return m_branch_comp; }
 
 };  // class btree_base
 
@@ -665,10 +613,7 @@ std::ostream& operator<<(std::ostream& os,
 
 template <class Key, class Base, class Traits, class Comp>
 btree_base<Key,Base,Traits,Comp>::btree_base(const Comp& comp)
-  : m_mgr(m_page_alloc),
-    m_comp(comp),
-    m_value_comp(comp), m_value_key_comp(comp), m_key_value_comp(comp),
-    m_branch_value_key_comp(comp), m_key_branch_value_comp(comp)
+  : m_mgr(m_page_alloc), m_comp(comp), m_value_comp(comp), m_branch_comp(comp)
 { 
   m_mgr.owner(this);
 
@@ -682,9 +627,7 @@ btree_base<Key,Base,Traits,Comp>::btree_base(const Comp& comp)
 template <class Key, class Base, class Traits, class Comp>
 btree_base<Key,Base,Traits,Comp>::btree_base(const boost::filesystem::path& p,
   flags::bitmask flgs, std::size_t pg_sz, const Comp& comp)
-  : m_mgr(m_page_alloc),
-    m_value_comp(comp), m_value_key_comp(comp), m_key_value_comp(comp),
-    m_branch_value_key_comp(comp), m_key_branch_value_comp(comp)
+  : m_mgr(m_page_alloc), m_comp(comp), m_value_comp(comp), m_branch_comp(comp)
 { 
   m_mgr.owner(this);
 
@@ -1300,7 +1243,7 @@ btree_base<Key,Base,Traits,Comp>::m_lower_page_bound(const key_type& k)
   while (pg->is_branch())
   {
     branch_value_type* low
-      = std::lower_bound(pg->branch_begin(), pg->branch_end(), k, branch_value_key_comp());
+      = std::lower_bound(pg->branch_begin(), pg->branch_end(), k, branch_comp());
     if (low == pg->branch_end()        // all keys on page < search key, so low
                                        // must point to last value on page
       || key_comp()(k, low->key))      // search key < low key, so low
@@ -1319,7 +1262,7 @@ btree_base<Key,Base,Traits,Comp>::m_lower_page_bound(const key_type& k)
 
   //  search leaf
   value_type* low
-    = std::lower_bound(pg->leaf_begin(), pg->leaf_end(), k, value_key_comp());
+    = std::lower_bound(pg->leaf_begin(), pg->leaf_end(), k, value_comp());
 
   return iterator(pg, low);
 }
@@ -1337,7 +1280,7 @@ btree_base<Key,Base,Traits,Comp>::lower_bound(const key_type& k) const
   while (pg->is_branch())
   {
     branch_value_type* low
-      = std::lower_bound(pg->branch_begin(), pg->branch_end(), k, branch_value_key_comp());
+      = std::lower_bound(pg->branch_begin(), pg->branch_end(), k, branch_comp());
 
     pg = (low == pg->branch_end()        // all keys on page < search key
           || key_comp()(k, low->key)   // search key < low key
@@ -1349,7 +1292,7 @@ btree_base<Key,Base,Traits,Comp>::lower_bound(const key_type& k) const
 
   //  search leaf
   value_type* low
-    = std::lower_bound(pg->leaf_begin(), pg->leaf_end(), k, value_key_comp());
+    = std::lower_bound(pg->leaf_begin(), pg->leaf_end(), k, value_comp());
 
   if (low != pg->leaf_end())
     return const_iterator(pg, low);
@@ -1380,7 +1323,7 @@ btree_base<Key,Base,Traits,Comp>::m_upper_page_bound(const key_type& k)
   while (pg->is_branch())
   {
     branch_value_type* up
-      = std::upper_bound(pg->branch_begin(), pg->branch_end(), k, key_branch_value_comp());
+      = std::upper_bound(pg->branch_begin(), pg->branch_end(), k, branch_comp());
     if (up == pg->branch_end()        // all keys on page < search key, so up
                                       // must point to last value on page
       || key_comp()(k, up->key))      // search key < up key, so up
@@ -1399,7 +1342,7 @@ btree_base<Key,Base,Traits,Comp>::m_upper_page_bound(const key_type& k)
 
   //  search leaf
   value_type* up
-    = std::upper_bound(pg->leaf_begin(), pg->leaf_end(), k, key_value_comp());
+    = std::upper_bound(pg->leaf_begin(), pg->leaf_end(), k, value_comp());
 
   return iterator(pg, up);
 }
@@ -1417,7 +1360,7 @@ btree_base<Key,Base,Traits,Comp>::upper_bound(const key_type& k) const
   while (pg->is_branch())
   {
     branch_value_type* up
-      = std::upper_bound(pg->branch_begin(), pg->branch_end(), k, key_branch_value_comp());
+      = std::upper_bound(pg->branch_begin(), pg->branch_end(), k, branch_comp());
 
     pg = (up == pg->branch_end()        // all keys on page < search key
           || key_comp()(k, up->key))    // search key < up key
@@ -1427,7 +1370,7 @@ btree_base<Key,Base,Traits,Comp>::upper_bound(const key_type& k) const
 
   //  search leaf
   value_type* up
-    = std::upper_bound(pg->leaf_begin(), pg->leaf_end(), k, key_value_comp());
+    = std::upper_bound(pg->leaf_begin(), pg->leaf_end(), k, value_comp());
 
   if (up != pg->leaf_end())
     return const_iterator(pg, up);

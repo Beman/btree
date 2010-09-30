@@ -21,6 +21,13 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "btree_dll", "btree_dll\btre
 		{2558C6E2-046F-441D-9515-0FAB44F5A22E} = {2558C6E2-046F-441D-9515-0FAB44F5A22E}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "stl_equivalent_test", "stl_equivalent_test\stl_equivalent_test.vcproj", "{9A5E98F7-51F6-47A0-A0BC-04C9CF104552}"
+	ProjectSection(ProjectDependencies) = postProject
+		{E3F9EF62-94E9-4668-92C2-C5220CD0E8E8} = {E3F9EF62-94E9-4668-92C2-C5220CD0E8E8}
+		{2AAD90AC-4FD3-422F-9E99-1CEA3EF092ED} = {2AAD90AC-4FD3-422F-9E99-1CEA3EF092ED}
+		{2558C6E2-046F-441D-9515-0FAB44F5A22E} = {2558C6E2-046F-441D-9515-0FAB44F5A22E}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -43,6 +50,10 @@ Global
 		{E3F9EF62-94E9-4668-92C2-C5220CD0E8E8}.Debug|Win32.Build.0 = Debug|Win32
 		{E3F9EF62-94E9-4668-92C2-C5220CD0E8E8}.Release|Win32.ActiveCfg = Release|Win32
 		{E3F9EF62-94E9-4668-92C2-C5220CD0E8E8}.Release|Win32.Build.0 = Release|Win32
+		{9A5E98F7-51F6-47A0-A0BC-04C9CF104552}.Debug|Win32.ActiveCfg = Debug|Win32
+		{9A5E98F7-51F6-47A0-A0BC-04C9CF104552}.Debug|Win32.Build.0 = Debug|Win32
+		{9A5E98F7-51F6-47A0-A0BC-04C9CF104552}.Release|Win32.ActiveCfg = Release|Win32
+		{9A5E98F7-51F6-47A0-A0BC-04C9CF104552}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

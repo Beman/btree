@@ -30,40 +30,40 @@ namespace
 {
   std::string command_args;
   std::string path_prefix("stl_equivalence");
-  int32_t max = 10000;
-  int32_t min = 10;
-  int32_t low = 0;
-  int32_t high = 0;
-  int32_t cycles = 3;
-  int32_t seed = 1;
-  int32_t page_sz = 128;
-  int32_t cache_sz = 2;
+  boost::int32_t max = 10000;
+  boost::int32_t min = 10;
+  boost::int32_t low = 0;
+  boost::int32_t high = 0;
+  boost::int32_t cycles = 3;
+  boost::int32_t seed = 1;
+  boost::int32_t page_sz = 128;
+  boost::int32_t cache_sz = 2;
   bool restart = false;
   bool verbose = false;
 
-  uint64_t insert_success_count = 0;
-  uint64_t insert_fail_count = 0;
-  uint64_t erase_success_count = 0;
-  uint64_t erase_fail_count = 0;
-  uint64_t iterate_forward_count = 0;
-  uint64_t iterate_backward_count = 0;
-  uint64_t find_success_count = 0;
-  uint64_t find_fail_count = 0;
-  uint64_t lower_bound_exist_count = 0;
-  uint64_t lower_bound_may_exist_count = 0;
-  uint64_t upper_bound_exist_count = 0;
-  uint64_t upper_bound_may_exist_count = 0;
-  uint32_t cycles_complete = 0;
+  boost::uint64_t insert_success_count = 0;
+  boost::uint64_t insert_fail_count = 0;
+  boost::uint64_t erase_success_count = 0;
+  boost::uint64_t erase_fail_count = 0;
+  boost::uint64_t iterate_forward_count = 0;
+  boost::uint64_t iterate_backward_count = 0;
+  boost::uint64_t find_success_count = 0;
+  boost::uint64_t find_fail_count = 0;
+  boost::uint64_t lower_bound_exist_count = 0;
+  boost::uint64_t lower_bound_may_exist_count = 0;
+  boost::uint64_t upper_bound_exist_count = 0;
+  boost::uint64_t upper_bound_may_exist_count = 0;
+  boost::uint32_t cycles_complete = 0;
 
-  typedef boost::btree::btree_map<int32_t, int32_t> bt_type;
+  typedef boost::btree::btree_map<boost::int32_t, boost::int32_t> bt_type;
   bt_type bt;
 
-  typedef std::map<int32_t, int32_t>  stl_type;
+  typedef std::map<boost::int32_t, boost::int32_t>  stl_type;
   stl_type stl;
 
   typedef stl_type::value_type value_type;
 
-  typedef boost::variate_generator<boost::rand48&, boost::uniform_int<int32_t> > keygen_t;
+  typedef boost::variate_generator<boost::rand48&, boost::uniform_int<boost::int32_t> > keygen_t;
 
   void report_counts()
   {
@@ -196,7 +196,7 @@ namespace
     cout << "erase test..." << endl;
     while (stl.size() > static_cast<stl_type::size_type>(min))
     {
-      int32_t k = erase_key();
+      boost::int32_t k = erase_key();
       stl_type::size_type stl_result = stl.erase(k);
       bt_type::size_type bt_result = bt.erase(k);
 
@@ -226,8 +226,8 @@ namespace
     cout << "find test..." << endl;
 
     boost::minstd_rand find_rng;
-    boost::uniform_int<int32_t> n_dist(low, high);
-    boost::variate_generator<boost::minstd_rand&, boost::uniform_int<int32_t> >
+    boost::uniform_int<boost::int32_t> n_dist(low, high);
+    boost::variate_generator<boost::minstd_rand&, boost::uniform_int<boost::int32_t> >
       find_key(find_rng, n_dist);
 
     stl_type::const_iterator stl_itr, stl_result;
@@ -261,7 +261,7 @@ namespace
 
       //  test with key that may or may not exist  
       find_rng.seed(stl_result->first);
-      int32_t k = find_key();
+      boost::int32_t k = find_key();
 
       stl_result = stl.find(k);
       bt_result = bt.find(k);
@@ -297,8 +297,8 @@ namespace
     cout << "lower_bound test..." << endl;
 
     boost::minstd_rand lower_bound_rng;
-    boost::uniform_int<int32_t> n_dist(low, high);
-    boost::variate_generator<boost::minstd_rand&, boost::uniform_int<int32_t> >
+    boost::uniform_int<boost::int32_t> n_dist(low, high);
+    boost::variate_generator<boost::minstd_rand&, boost::uniform_int<boost::int32_t> >
       lower_bound_key(lower_bound_rng, n_dist);
 
     stl_type::const_iterator stl_itr, stl_result;
@@ -338,7 +338,7 @@ namespace
 
       //  test with key that may or may not exist  
       lower_bound_rng.seed(stl_result->first);
-      int32_t k = lower_bound_key();
+      boost::int32_t k = lower_bound_key();
 
       stl_result = stl.lower_bound(k);
       bt_result = bt.lower_bound(k);
@@ -381,8 +381,8 @@ namespace
     cout << "upper_bound test..." << endl;
 
     boost::minstd_rand upper_bound_rng;
-    boost::uniform_int<int32_t> n_dist(low, high);
-    boost::variate_generator<boost::minstd_rand&, boost::uniform_int<int32_t> >
+    boost::uniform_int<boost::int32_t> n_dist(low, high);
+    boost::variate_generator<boost::minstd_rand&, boost::uniform_int<boost::int32_t> >
       upper_bound_key(upper_bound_rng, n_dist);
 
     stl_type::const_iterator stl_itr, stl_result;
@@ -423,9 +423,12 @@ namespace
       }
       ++upper_bound_exist_count;
 
+      if (stl_result == stl.end())  // upper_bound of last element is end()
+        continue;
+
       //  test with key that may or may not exist  
       upper_bound_rng.seed(stl_result->first);
-      int32_t k = upper_bound_key();
+      boost::int32_t k = upper_bound_key();
 
       stl_result = stl.upper_bound(k);
       bt_result = bt.upper_bound(k);
@@ -473,7 +476,7 @@ namespace
     insert_rng.seed(seed);
     boost::rand48  erase_rng;
     erase_rng.seed(seed);
-    boost::uniform_int<int32_t> n_dist(low, high);
+    boost::uniform_int<boost::int32_t> n_dist(low, high);
     keygen_t insert_keygen(insert_rng, n_dist);
     keygen_t erase_keygen(erase_rng, n_dist);
 
@@ -483,7 +486,7 @@ namespace
     boost::btree::run_timer total_times(3);
     boost::btree::run_timer cycle_times(3);
 
-    for (int32_t cycle = 1; cycle <= cycles; ++cycle)
+    for (boost::int32_t cycle = 1; cycle <= cycles; ++cycle)
     {
       cout << "\nBeginning cycle " << cycle << " ..." << endl;
       cycle_times.start();

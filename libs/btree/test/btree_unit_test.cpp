@@ -175,9 +175,6 @@ void compare_function_objects()
     BOOST_TEST(bt.key_comp()(i1, i2));
     BOOST_TEST(!bt.key_comp()(i1, i1));
     BOOST_TEST(!bt.key_comp()(i2, i1));
-    BOOST_TEST(bt.value_key_comp()(p1, i2));
-    BOOST_TEST(!bt.value_key_comp()(p1, i1));
-    BOOST_TEST(!bt.value_key_comp()(p2, i1));
   }
 
   //{
