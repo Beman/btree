@@ -231,7 +231,8 @@ namespace boost
 
       void write(buffer& pg);
 
-      void flush();
+      bool flush();
+      //  Returns: true iff any buffers written to disk;
 
       // modifiers
       void             max_cache_buffers(std::size_t m) {m_max_cache_buffers = m;}

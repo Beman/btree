@@ -198,15 +198,20 @@ void buffer_manager::write(buffer& pg)
   
 //-------------------------------------- flush() ---------------------------------------//
 
-void buffer_manager::flush()
+bool buffer_manager::flush()
 {
+  bool buffer_written = false;
   for (buffer_set_type::iterator itr = buffer_set.begin();
     itr != buffer_set.end();
     ++itr)
   {
     if (itr->needs_write())
+    {
       write(*itr);
+      buffer_written = true;
+    }
   }
+  return buffer_written;
 }
   
 //------------------------------------ operator<<() ------------------------------------//

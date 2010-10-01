@@ -144,15 +144,16 @@ public:
 
   //  file operations:
 
-  void flush()  { m_mgr.flush(); }
+  void flush()                              { if (m_mgr.flush())
+                                                m_write_header();
+                                            }
   void close();
 
   // TODO: operator unspecified-bool-type, operator!
   
   // iterators:
 
-  iterator  writable(const_iterator& iter)  {
-                                              iter.m_page->m_needs_write(true);
+  iterator  writable(const_iterator& iter)  {iter.m_page->m_needs_write(true);
                                               return iterator(iter.m_page, iter.m_element);
                                             }
   const_iterator     begin() const;
@@ -178,8 +179,7 @@ public:
   const filesystem::path&
                      file_path() const      { return m_mgr.file_path(); }
   bool               read_only() const      { return m_read_only; }
-  const header_page& header() const         {
-                                              BOOST_ASSERT(is_open());
+  const header_page& header() const         {BOOST_ASSERT(is_open());
                                               return m_hdr;
                                             }
 
@@ -656,8 +656,6 @@ void btree_base<Key,Base,Traits,Comp>::close()
   if (is_open())
   {
     flush();
-    if (m_mgr.file_buffers_written())
-      m_write_header();
     m_mgr.close();
   }
 }
