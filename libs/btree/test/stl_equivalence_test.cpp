@@ -20,7 +20,6 @@
 #include <fstream>
 #include <cstdlib>  // for atol()
 #include <cstring>  // for strcmp(), strncmp()
-#include <ctime>    // for time()
 #include <stdexcept>
 #include <utility>
 
@@ -44,16 +43,12 @@ namespace
   boost::int32_t min = 10;
   boost::int32_t low = 0;
   boost::int32_t high = 0;
-  boost::int32_t cycles = 3;
+  boost::int32_t cycles = 1;
   boost::int32_t seed = 1;
-  boost::int32_t erase_seed = 0;
-  boost::int32_t insert_seed = 0;
-  boost::int32_t page_sz = 128;
-  boost::int32_t cache_sz = 2;
-  string restart;
+  boost::int32_t page_sz = 128; // smaller than usual default to increase stress
+  boost::int32_t cache_sz = 2;  // ditto
+  bool restart = false;
   bool verbose = false;
-
-  string dump_id(boost::lexical_cast<string>(std::time(0))); 
 
   boost::rand48  insert_rng;
   boost::rand48  erase_rng;
@@ -117,35 +112,37 @@ namespace
     cout << "\nwriting state files...\n";
 
     //  program state
-    fs::path p = dump_id + ".state";
+    fs::path p = "restart.state";
     cout << "  dumping program state to " << p << '\n';
     std::ofstream stateout(p.c_str());
     if (!stateout)
       throw runtime_error(string("Could not open ") + p.string());
 
-    stateout << max << '\n'
-             << min << '\n'
-             << low << '\n'
-             << high << '\n'
-             << cache_sz << '\n'
-             << insert_rng << '\n'
-             << erase_rng << '\n'
+    stateout << min << ' '
+             << max << ' '
+             << low << ' '
+             << high << ' '
+             << cache_sz << ' '
+             << insert_rng << ' '
+             << erase_rng << ' '
              ;
     stateout.close();
 
     //  bt state
-    p = dump_id + ".btr"; 
+    p = "restart.btr";
+    bt.flush();
     cout << "  copying " << path_str << " to " << p << '\n';
-    fs::copy_file(p, path_str, fs::copy_option::overwrite_if_exists);
+    fs::copy_file(path_str, p, fs::copy_option::overwrite_if_exists);
 
     //  stl state
-    p = dump_id + ".stl";
+    p = "restart.stl";
     cout << "  dumping stl::map data to " << p << '\n';
     std::ofstream stlout(p.c_str());
     if (!stlout)
       throw runtime_error(string("Could not open ") + p.string());
     for (stl_type::const_iterator it = stl.begin(); it != stl.end(); ++it)
-      stlout << it->first << ',' << it->second << '\n';
+      stlout << it->first << '\n';
+    stlout.close();
 
     cout << "  writing state files complete\n";
   }
@@ -157,29 +154,29 @@ namespace
     cout << "\nreading state files...\n";
 
     //  program state
-    fs::path p = restart + ".state";
+    fs::path p = "restart.state";
     cout << "  loading program state from " << p << '\n';
     std::ifstream statein(p.c_str());
     if (!statein)
       throw runtime_error(string("Could not open ") + p.string());
 
-    statein >> max
-            >> min
-            >> low
-            >> high
-            >> cache_sz
-            >> insert_rng
-            >> erase_rng
+    statein >> std::ws >> min
+            >> std::ws >> max
+            >> std::ws >> low
+            >> std::ws >> high
+            >> std::ws >> cache_sz
+            >> std::ws >> insert_rng
+            >> std::ws >> erase_rng
             ;
     statein.close();
 
     //  bt state
-    p = restart + ".btr"; 
+    p = "restart.btr"; 
     cout << "  copying " << p << " to " << path_str << '\n';
     fs::copy_file(p, path_str, fs::copy_option::overwrite_if_exists);
 
     //  stl state
-    p = restart + ".stl";
+    p = "restart.stl";
     cout << "  loading stl::map data from " << p << '\n';
     std::ifstream stlin(p.c_str());
     if (!stlin)
@@ -202,10 +199,16 @@ namespace
   void insert_test(keygen_t& insert_key)
   {
     cout << "insert test..." << endl;
+    if (verbose)
+      cout << "inserting: ";
+
     while (stl.size() < static_cast<stl_type::size_type>(max))
     {
       value_type element(insert_key(),0);
       element.second = element.first;
+
+      if (verbose)
+        cout << element.first << ',';
 
       pair<stl_type::iterator, bool> stl_result = stl.insert(element);
       pair<bt_type::const_iterator, bool> bt_result = bt.insert(element);
@@ -233,11 +236,16 @@ namespace
   void iteration_test()
   {
     cout << "iteration test..." << endl;
+    if (verbose)
+      cout << "  keys: ";
     stl_type::const_iterator stl_itr = stl.begin();
     bt_type::const_iterator bt_itr = bt.begin();
 
     for (; stl_itr != stl.end() && bt_itr != bt.end(); ++stl_itr, ++bt_itr)
     {
+      if (verbose)
+        cout << stl_itr->first << ',';
+
       if (stl_itr->first != bt_itr->first)
       {
         cout << "stl_itr->first " << stl_itr->first << " != "
@@ -299,9 +307,15 @@ namespace
   void erase_test(keygen_t& erase_key)
   {
     cout << "erase test..." << endl;
+    if (verbose)
+      cout << "erasing: ";
     while (stl.size() > static_cast<stl_type::size_type>(min))
     {
       boost::int32_t k = erase_key();
+
+      if (verbose)
+        cout << k << ',';
+
       stl_type::size_type stl_result = stl.erase(k);
       bt_type::size_type bt_result = bt.erase(k);
 
@@ -571,23 +585,62 @@ namespace
     cout << "  upper_bound test complete" << endl;
   }
 
+  //  verify_restart  ------------------------------------------------------------------//
+
+  void verify_restart()
+  {
+    cout << "Verifying restart integrity..." << endl;
+
+    if (stl.size() != bt.size())
+    {
+      cout << "stl.size() " << stl.size() << " != bt.size() " << bt.size() << endl;
+      throw runtime_error("restart: size check failure");
+    }
+
+    iteration_test();
+    backward_iteration_test();
+
+    cout << "  verifying restart integrity complete\n";
+  }
+
 
   //  run test cycles  -----------------------------------------------------------------//
 
   void tests()
   {
 
-    insert_rng.seed(insert_seed);
-    erase_rng.seed(erase_seed);
-
-    boost::uniform_int<boost::int32_t> n_dist(low, high);
-    keygen_t insert_keygen(insert_rng, n_dist);
-    keygen_t erase_keygen(erase_rng, n_dist);
+    insert_rng.seed(seed);   // on restart seed will get overwritten by load_state()
+    erase_rng.seed(seed);    // ditto
 
     path_str = path_prefix + ".btr";
 
-    bt.open(path_str, boost::btree::flags::truncate, page_sz);
-    bt.max_cache_pages(cache_sz);  // small cache to incease stress
+    if (restart)
+      load_state();  // this has the effect of reloading rng and distribution state,
+                     // as well as bt, stl, and some additional program state.
+
+    static boost::uniform_int<boost::int32_t> n_dist(low, high);
+
+    keygen_t insert_keygen(insert_rng, n_dist);
+    keygen_t erase_keygen(erase_rng, n_dist);
+
+    bt.open(path_str,
+      restart ? boost::btree::flags::read_write : boost::btree::flags::truncate,
+      page_sz);
+    bt.max_cache_pages(cache_sz);
+
+    if (restart)
+      verify_restart();
+
+    cout << "\nStarting tests with:\n"
+         << "  path_prefix = " << path_prefix << '\n'
+         << "  min = " << min << '\n'
+         << "  max = " << max << '\n'
+         << "  low = " << low  << '\n'
+         << "  high = " << high  << '\n'
+         << "  cycles = " << cycles << '\n'
+         << "  seed = " << seed << '\n'
+         << "  page size = " << page_sz << '\n'
+         << "  max cache pages = " << cache_sz << "\n";
 
     boost::btree::run_timer total_times(3);
     boost::btree::run_timer cycle_times(3);
@@ -612,7 +665,8 @@ namespace
 
       ++cycles_complete;
       report_counts();
-      dump_state();
+      if (!restart)
+        dump_state();
       cout << "cycle " << cycle << " complete" << endl;
       cout << " ";
       cycle_times.stop();
@@ -658,8 +712,8 @@ int main(int argc, char *argv[])
         page_sz = atol(argv[1]+6);
       else if (strncmp(argv[1]+1, "cache=", 6) == 0)
         cache_sz = atol(argv[1]+7);
-      else if (strncmp(argv[1]+1, "restart=", 8) == 0)
-        restart = argv[1]+9;
+      else if (strncmp(argv[1]+1, "restart", 7) == 0)
+        restart = true;
       else if (strcmp(argv[1]+1, "v") == 0)
         verbose = true;
       else
@@ -689,7 +743,8 @@ int main(int argc, char *argv[])
       "   -page=#      Page size (>=128); default " << page_sz << "\n"
       "                Small page sizes increase stress\n"
       "   -cache=#     Cache size; default " << cache_sz << " pages\n"
-      "   -restart=dump-id  Restart using dump files identified by dump-id\n"
+      "   -restart     Restart using restart files from previous run, and\n"
+      "                do not create restart files for this run\n"
       "   -v           Verbose output statistics\n"
       "\n    Each test cycle inserts the same random values into both a btree_map\n"
       "and a std::map until the maximum number of elements is reached.\n"
@@ -701,7 +756,7 @@ int main(int argc, char *argv[])
       "against both containers. If results are not identical, the program\n"
       "issues an error message and returns 1.\n"
       "    The -restart argument causes the btree, std::map, and program to be\n"
-      "initialized to the state save in the dump files from the prior run.\n"
+      "initialized to the state saved in the restart files from the prior run.\n"
       ;
   }
 
@@ -716,21 +771,6 @@ int main(int argc, char *argv[])
     cout << "Error: (high-low) must be greater than max\n";
     return 1;
   }
-
-  insert_seed = seed;
-  erase_seed = seed;
-
-  cout << "starting tests with:\n"
-       << "  path_prefix = " << path_prefix << '\n'
-       << "  max = " << max << '\n'
-       << "  min = " << min << '\n'
-       << "  lo = " << low  << '\n'
-       << "  hi = " << high  << '\n'
-       << "  cycles = " << cycles << '\n'
-       << "  insert seed = " << insert_seed << '\n'
-       << "  erase seed = " << erase_seed << '\n'
-       << "  page size = " << page_sz << '\n'
-       << "  max cache pages = " << cache_sz << "\n";
 
   try
   {
