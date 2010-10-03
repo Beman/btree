@@ -116,8 +116,6 @@ public:
   typedef typename Base::value_type             value_type;
   typedef Comp                                  key_compare;
   typedef typename Base::value_compare          value_compare; 
-  //typedef typename Base::value_key_compare      value_key_compare; 
-  //typedef typename Base::value_compare      value_compare; 
   typedef value_type&                           reference;
   typedef const value_type&                     const_reference;
   typedef boost::uint64_t                       size_type;

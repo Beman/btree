@@ -47,11 +47,13 @@ namespace
   boost::int32_t seed = 1;
   boost::int32_t page_sz = 128; // smaller than usual default to increase stress
   boost::int32_t cache_sz = 2;  // ditto
+  boost::int32_t dump = 0;
   bool restart = false;
   bool verbose = false;
 
   boost::rand48  insert_rng;
   boost::rand48  erase_rng;
+  boost::int32_t cycle = 1;
 
   boost::uint64_t insert_success_count = 0;
   boost::uint64_t insert_fail_count = 0;
@@ -109,6 +111,11 @@ namespace
 
   void dump_state()
   {
+    if (dump == 0
+      || (dump < 0 && cycle != cycles)
+      || cycle % dump != 0)
+      return;
+
     cout << "\nwriting state files...\n";
 
     //  program state
@@ -118,21 +125,38 @@ namespace
     if (!stateout)
       throw runtime_error(string("Could not open ") + p.string());
 
-    stateout << min << ' '
+    stateout << (cycle != cycles) << ' '  // copying btree file?
+             << min << ' '
              << max << ' '
              << low << ' '
              << high << ' '
              << cache_sz << ' '
              << insert_rng << ' '
              << erase_rng << ' '
+             << insert_success_count << ' '
+             << insert_fail_count << ' '
+             << erase_success_count << ' '
+             << erase_fail_count << ' '
+             << iterate_forward_count << ' '
+             << iterate_backward_count << ' '
+             << find_success_count << ' '
+             << find_fail_count << ' '
+             << lower_bound_exist_count << ' '
+             << lower_bound_may_exist_count << ' '
+             << upper_bound_exist_count << ' '
+             << upper_bound_may_exist_count << ' '
+             << cycles_complete << ' '
              ;
     stateout.close();
 
     //  bt state
-    p = "restart.btr";
-    bt.flush();
-    cout << "  copying " << path_str << " to " << p << '\n';
-    fs::copy_file(path_str, p, fs::copy_option::overwrite_if_exists);
+    if (cycle != cycles)
+    {
+      p = "restart.btr";
+      bt.flush();
+      cout << "  copying " << path_str << " to " << p << '\n';
+      fs::copy_file(path_str, p, fs::copy_option::overwrite_if_exists);
+    }
 
     //  stl state
     p = "restart.stl";
@@ -160,20 +184,39 @@ namespace
     if (!statein)
       throw runtime_error(string("Could not open ") + p.string());
 
-    statein >> std::ws >> min
+    bool copy_btree_file;
+
+    statein >> std::ws >> copy_btree_file 
+            >> std::ws >> min
             >> std::ws >> max
             >> std::ws >> low
             >> std::ws >> high
             >> std::ws >> cache_sz
             >> std::ws >> insert_rng
             >> std::ws >> erase_rng
+            >> std::ws >> insert_success_count
+            >> std::ws >> insert_fail_count
+            >> std::ws >> erase_success_count
+            >> std::ws >> erase_fail_count
+            >> std::ws >> iterate_forward_count
+            >> std::ws >> iterate_backward_count
+            >> std::ws >> find_success_count
+            >> std::ws >> find_fail_count
+            >> std::ws >> lower_bound_exist_count
+            >> std::ws >> lower_bound_may_exist_count
+            >> std::ws >> upper_bound_exist_count
+            >> std::ws >> upper_bound_may_exist_count
+            >> std::ws >> cycles_complete
             ;
     statein.close();
 
     //  bt state
-    p = "restart.btr"; 
-    cout << "  copying " << p << " to " << path_str << '\n';
-    fs::copy_file(p, path_str, fs::copy_option::overwrite_if_exists);
+    if (copy_btree_file)
+    {
+      p = "restart.btr"; 
+      cout << "  copying " << p << " to " << path_str << '\n';
+      fs::copy_file(p, path_str, fs::copy_option::overwrite_if_exists);
+    }
 
     //  stl state
     p = "restart.stl";
@@ -639,13 +682,14 @@ namespace
          << "  high = " << high  << '\n'
          << "  cycles = " << cycles << '\n'
          << "  seed = " << seed << '\n'
+         << "  dump = " << dump << '\n'
          << "  page size = " << page_sz << '\n'
          << "  max cache pages = " << cache_sz << "\n";
 
     boost::btree::run_timer total_times(3);
     boost::btree::run_timer cycle_times(3);
 
-    for (boost::int32_t cycle = 1; cycle <= cycles; ++cycle)
+    for (; cycle <= cycles; ++cycle)
     {
       cout << "\nBeginning cycle " << cycle << " ..." << endl;
       cycle_times.start();
@@ -665,8 +709,7 @@ namespace
 
       ++cycles_complete;
       report_counts();
-      if (!restart)
-        dump_state();
+      dump_state();
       cout << "cycle " << cycle << " complete" << endl;
       cout << " ";
       cycle_times.stop();
@@ -712,6 +755,8 @@ int main(int argc, char *argv[])
         page_sz = atol(argv[1]+6);
       else if (strncmp(argv[1]+1, "cache=", 6) == 0)
         cache_sz = atol(argv[1]+7);
+      else if (strncmp(argv[1]+1, "dump=", 5) == 0)
+        dump = atol(argv[1]+6);
       else if (strncmp(argv[1]+1, "restart", 7) == 0)
         restart = true;
       else if (strcmp(argv[1]+1, "v") == 0)
@@ -739,12 +784,14 @@ int main(int argc, char *argv[])
       "                (high-low) must be >max, so that max is reached\n"
       "   -cycles=#    Cycle tests specified number of times; default " << cycles << "\n"
       "                -cycles=0 causes tests to cycle forever\n"
-      "   -seed=#      Seed for random number generator; default"  << seed << "\n"
+      "   -seed=#      Seed for random number generator; default "  << seed << "\n"
       "   -page=#      Page size (>=128); default " << page_sz << "\n"
       "                Small page sizes increase stress\n"
       "   -cache=#     Cache size; default " << cache_sz << " pages\n"
-      "   -restart     Restart using restart files from previous run, and\n"
-      "                do not create restart files for this run\n"
+      "   -dump=#      Dump restart files when cycles run mod dump # == 0, except \n"
+      "                dump # -1 means dump at end only, 0 means never dump;\n"
+      "                default " << dump << "\n"
+      "   -restart     Restart using restart files from previous run\n"
       "   -v           Verbose output statistics\n"
       "\n    Each test cycle inserts the same random values into both a btree_map\n"
       "and a std::map until the maximum number of elements is reached.\n"
