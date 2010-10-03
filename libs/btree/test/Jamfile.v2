@@ -17,5 +17,7 @@ project
        [ run buffer_manager_test.cpp :  :  :  : ]                  
        [ run btree_unit_test.cpp :  :  :  : ]                  
        [ run stl_equivalence_test.cpp :  :  :  : ]                  
-
        ;
+       
+   exe large_file_test : large_file_test.cpp ;
+       

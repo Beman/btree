@@ -6,8 +6,10 @@
 //  See http://www.boost.org/LICENSE_1_0.txt
 
 #include <boost/btree/detail/binary_file.hpp>
+#include <boost/cstdint.hpp>
 #include <boost/filesystem.hpp>
 #include <iostream>
+#include <cstdlib>
 
 using namespace boost::filesystem;
 using std::cout;
@@ -17,8 +19,16 @@ int main(int argc, char* argv[])
 {
   if (argc < 2)
   {
-    cout << "Usage large_file_test <path>\n";
+    cout << "Usage large_file_test <path> [size-in-megabytes]\n";
     return 1;
+  }
+  
+  boost::btree::binary_file::offset_type sz = 5000000000LL;
+  
+  if (argc > 2)
+  {
+    sz = atol(argv[2]);
+    sz *= 1000000;
   }
 
   cout << "sizeof(boost::btree::binary_file::offset_type) is "
@@ -31,12 +41,11 @@ int main(int argc, char* argv[])
     | boost::btree::oflag::truncate);
 
   boost::btree::binary_file::offset_type result;
-  const boost::btree::binary_file::offset_type five_billion = 5000000000LL;
 
   cout << "seeking" << endl;
-  result = lft.seek(five_billion);
+  result = lft.seek(sz);
 
-  cout << "seek(" << five_billion << ") returned " << result << endl;
+  cout << "seek(" << sz << ") returned " << result << endl;
 
   cout << "writing 1 byte" << endl;
   lft.write(" ", 1);

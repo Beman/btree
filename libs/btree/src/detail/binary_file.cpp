@@ -13,6 +13,8 @@
 // the library is being built (possibly exporting rather than importing code)
 #define BOOST_BTREE_SOURCE 
 
+#define _LARGEFILE64_SOURCE
+
 #include <boost/btree/detail/binary_file.hpp>
 #include <boost/filesystem/v3/operations.hpp>
 #include <boost/system/error_code.hpp>
@@ -37,6 +39,8 @@ using boost::system::system_category;
 #   endif
 
 # else // BOOST_POSIX_API
+#   include<boost/iostreams/detail/config/rtl.hpp>  // for BOOST_IOSTREAMS_FD_SEEK,
+                                                    //  BOOST_IOSTREAMS_FD_OFFSET 
 #   include <sys/types.h>
 #   include "unistd.h"
 #   include "fcntl.h"
@@ -442,7 +446,7 @@ namespace boost
       else
         whence = SEEK_SET;
       
-      off_t new_offset = ::lseek(handle(), offset, whence);
+      BOOST_IOSTREAMS_FD_OFFSET new_offset = ::BOOST_IOSTREAMS_FD_SEEK(handle(), offset, whence);
       if (new_offset == -1)
         ec.assign(errno, system_category());
       else
