@@ -37,7 +37,7 @@ namespace fs = boost::filesystem;
 namespace
 {
   string command_args;
-  string path_prefix("stl_equivalence");
+  string path_prefix("stl_test");
   string path_str;
   boost::int32_t max = 10000;
   boost::int32_t min = 10;
@@ -119,11 +119,11 @@ namespace
     cout << "\nwriting state files...\n";
 
     //  program state
-    fs::path p = "restart.state";
+    string p = "restart.state";
     cout << "  dumping program state to " << p << '\n';
     std::ofstream stateout(p.c_str());
     if (!stateout)
-      throw runtime_error(string("Could not open ") + p.string());
+      throw runtime_error(string("Could not open ") + p);
 
     stateout << (cycle != cycles) << ' '  // copying btree file?
              << min << ' '
@@ -163,7 +163,7 @@ namespace
     cout << "  dumping stl::map data to " << p << '\n';
     std::ofstream stlout(p.c_str());
     if (!stlout)
-      throw runtime_error(string("Could not open ") + p.string());
+      throw runtime_error(string("Could not open ") + p);
     for (stl_type::const_iterator it = stl.begin(); it != stl.end(); ++it)
       stlout << it->first << '\n';
     stlout.close();
@@ -178,11 +178,11 @@ namespace
     cout << "\nreading state files...\n";
 
     //  program state
-    fs::path p = "restart.state";
+    string p = "restart.state";
     cout << "  loading program state from " << p << '\n';
     std::ifstream statein(p.c_str());
     if (!statein)
-      throw runtime_error(string("Could not open ") + p.string());
+      throw runtime_error(string("Could not open ") + p);
 
     bool copy_btree_file;
 
@@ -223,7 +223,7 @@ namespace
     cout << "  loading stl::map data from " << p << '\n';
     std::ifstream stlin(p.c_str());
     if (!stlin)
-      throw runtime_error(string("Could not open ") + p.string());
+      throw runtime_error(string("Could not open ") + p);
 
     while (!stlin.eof())
     {
@@ -772,7 +772,7 @@ int main(int argc, char *argv[])
 
   if (argc < 2) 
   {
-    cout << "Usage: stl_equivalence_test [Options]\n"
+    cout << "Usage: stl_test [Options]\n"
       "The argument n specifies the number of test cases to run\n"
       "Options:\n"
       "   path-prefix  Test files path-prefix; default '" << path_prefix << "'\n"

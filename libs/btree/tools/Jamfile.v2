@@ -15,5 +15,7 @@ project
     ;
     
 exe bt_time : bt_time.cpp : <variant>release <link>static ;
+exe large_file_test : ../test/large_file_test.cpp : <variant>release <link>static ;
+exe stl_test : ../test/stl_test.cpp : <variant>release <link>static ;
 
-install bin : bt_time ;
+install bin : bt_time large_file_test stl_test ;

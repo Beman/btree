@@ -196,7 +196,7 @@ namespace boost
       {
         m_write(source, sz);
       }
-      void write(char* source, std::size_t sz)
+      void write(const char* source, std::size_t sz)
       // Effects: As if, POSIX write(), except will finish partial write.
       // Length of write is n* sizeof(boost::remove_extent<T>::type).
       // Throws: On error.

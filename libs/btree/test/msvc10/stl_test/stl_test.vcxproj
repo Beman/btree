@@ -13,7 +13,8 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{3E0D6A30-14DC-42D2-8626-A35793DF26CA}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>stl_equivalence_test</RootNamespace>
+    <RootNamespace>stl_test</RootNamespace>
+    <ProjectName>stl_test</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -87,9 +88,6 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\stl_equivalence_test.cpp" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\btree_dll\btree_dll.vcxproj">
       <Project>{61954631-3857-4C20-9E7C-1DA7BAAFF426}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
@@ -102,6 +100,9 @@
       <Project>{2558c6e2-046f-441d-9515-0fab44f5a22e}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\stl_test.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
