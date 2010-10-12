@@ -96,6 +96,8 @@ namespace boost
 
     class header_page
     {
+    public:
+      typedef boost::uint32_t page_id_type;
     private:
       // stuff often looked at in dumps comes first, subject to alignment requirements
 
@@ -109,11 +111,11 @@ namespace boost
 
       boost::uint32_t     m_page_size;           // disk page size in bytes
       boost::uint32_t     m_flags;
-      boost::uint32_t     m_root_page_id;
-      boost::uint32_t     m_first_page_id;
-      boost::uint32_t     m_last_page_id;
-      boost::uint32_t     m_page_count;
-      boost::uint32_t     m_free_page_list_head_id;  // list of recycleable pages
+      page_id_type        m_root_page_id;
+      page_id_type        m_first_page_id;
+      page_id_type        m_last_page_id;
+      page_id_type        m_page_count;
+      page_id_type        m_free_page_list_head_id;  // list of recycleable pages
 
       boost::uint16_t     m_root_level;
       boost::uint16_t     m_key_size;            // sizeof(key_type)
@@ -159,11 +161,11 @@ namespace boost
 
       //  "updated" members that change as the file changes
       boost::uint64_t  element_count() const         { return m_element_count; }
-      boost::uint32_t  root_page_id() const          { return m_root_page_id; }
-      boost::uint32_t  first_page_id() const         { return m_first_page_id; }
-      boost::uint32_t  last_page_id() const          { return m_last_page_id; }
-      boost::uint32_t  page_count() const            { return m_page_count; }
-      boost::uint32_t  free_page_list_head_id() const{ return m_free_page_list_head_id; }
+      page_id_type     root_page_id() const          { return m_root_page_id; }
+      page_id_type     first_page_id() const         { return m_first_page_id; }
+      page_id_type     last_page_id() const          { return m_last_page_id; }
+      page_id_type     page_count() const            { return m_page_count; }
+      page_id_type     free_page_list_head_id() const{ return m_free_page_list_head_id; }
       int              root_level() const            { return m_root_level; }
       int              levels() const                { return m_root_level+1; }
 
@@ -190,12 +192,12 @@ namespace boost
       void  element_count(boost::uint64_t value)     { m_element_count = value; }
       void  increment_element_count()                { ++m_element_count; }
       void  decrement_element_count()                { --m_element_count; }
-      void  root_page_id(boost::uint32_t id)         { m_root_page_id = id; }
-      void  first_page_id(boost::uint32_t id)        { m_first_page_id = id; }
-      void  last_page_id(boost::uint32_t id)         { m_last_page_id = id; }
-      void  page_count(boost::uint32_t value)        { m_page_count = value; }
+      void  root_page_id(page_id_type id)            { m_root_page_id = id; }
+      void  first_page_id(page_id_type id)           { m_first_page_id = id; }
+      void  last_page_id(page_id_type id)            { m_last_page_id = id; }
+      void  page_count(page_id_type value)           { m_page_count = value; }
       void  increment_page_count()                   { ++m_page_count; }
-      void  free_page_list_head_id(boost::uint32_t id){ m_free_page_list_head_id = id; }
+      void  free_page_list_head_id(page_id_type id)  { m_free_page_list_head_id = id; }
       void  root_level(uint16_t value)               { m_root_level = value; }
       boost::uint16_t  increment_root_level()        { return ++m_root_level; }
       void  decrement_root_level()                   { --m_root_level; }

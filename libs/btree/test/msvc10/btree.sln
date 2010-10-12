@@ -38,6 +38,13 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "large_file_test", "large_fi
 		{2558C6E2-046F-441D-9515-0FAB44F5A22E} = {2558C6E2-046F-441D-9515-0FAB44F5A22E}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "directory_test", "directory_test\directory_test.vcxproj", "{5E1606BF-5D43-4BED-B0E2-B49DA639206D}"
+	ProjectSection(ProjectDependencies) = postProject
+		{61954631-3857-4C20-9E7C-1DA7BAAFF426} = {61954631-3857-4C20-9E7C-1DA7BAAFF426}
+		{2AAD90AC-4FD3-422F-9E99-1CEA3EF092ED} = {2AAD90AC-4FD3-422F-9E99-1CEA3EF092ED}
+		{2558C6E2-046F-441D-9515-0FAB44F5A22E} = {2558C6E2-046F-441D-9515-0FAB44F5A22E}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -84,6 +91,10 @@ Global
 		{188F048F-5414-4D2C-81F4-2D6CBFC284DA}.Debug|Win32.Build.0 = Debug|Win32
 		{188F048F-5414-4D2C-81F4-2D6CBFC284DA}.Release|Win32.ActiveCfg = Release|Win32
 		{188F048F-5414-4D2C-81F4-2D6CBFC284DA}.Release|Win32.Build.0 = Release|Win32
+		{5E1606BF-5D43-4BED-B0E2-B49DA639206D}.Debug|Win32.ActiveCfg = Debug|Win32
+		{5E1606BF-5D43-4BED-B0E2-B49DA639206D}.Debug|Win32.Build.0 = Debug|Win32
+		{5E1606BF-5D43-4BED-B0E2-B49DA639206D}.Release|Win32.ActiveCfg = Release|Win32
+		{5E1606BF-5D43-4BED-B0E2-B49DA639206D}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

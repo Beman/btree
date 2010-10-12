@@ -238,12 +238,12 @@ namespace boost
       void             max_cache_buffers(std::size_t m) {m_max_cache_buffers = m;}
 
       // observers
-      buffer_count_type  buffer_count() const         {return m_buffer_count;}
+      buffer_count_type  buffer_count() const       {return m_buffer_count;}
       std::size_t      max_cache_buffers() const    {return m_max_cache_buffers;}
-      data_size_type   data_size() const          {return m_data_size;}  // on disk
+      data_size_type   data_size() const            {return m_data_size;}  // on disk
 
-      void*            owner() const              {return m_owner;}
-      void             owner(void* p)             {m_owner = p;}
+      void*            owner() const                {return m_owner;}
+      void             owner(void* p)               {m_owner = p;}
 
       boost::uint32_t  active_buffers_read() const  {return m_active_buffers_read;}
       boost::uint32_t  cached_buffers_read() const  {return m_cached_buffers_read;}
