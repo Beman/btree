@@ -26,21 +26,29 @@ Rationale for plan-of-attack:
   * Fear of complexifying code.
   * Fear of complexifying testing.
 
-    By pushing as many changes as possible to the lowest level, the binary_file object,
-    it is hoped that these fears will be avoided.
+  By minimizing change, and limiting operationsal differences, it is hoped that these fears
+  will not turn into realities.
 
 Plan-of-attack:
 
-  * Change buffer manager to contain a shared_ptr to a binary_file_manager, instead of
-    being derived from binary_file.
-  * Push all disk page allocation and free list management into the binary_file_manager.
-  * Add open() overloads to each btree class and base class that just copy the root's
-    binary_file_manager shared_ptr.
+  * Change buffer_manager to contain a shared_ptr to a binary_file, instead of being
+    derived from binary_file. In a directory_tree and its sub-trees, the shared_ptr will
+    point to the same instance of binary_file.
+
+  * btree_base will have an additional header pointer. For all children of a
+    btree_directory, it will point to the root btree_directory's header. For independent
+    btrees, it will point to the independent btree's header. All disk page allocation,
+    deallocation, and free list management will use that header pointer. All other uses
+    will continue to use m_hdr.
+
+  * Add open() overloads to each btree class and base class that copy the root's
+    binary_file shared_ptr and set up the header pointer.
+
   * It is a precondition on directory close() that all children are closed. Can be checked
     by testing the shared_ptr count is 1. Assert on count for debug builds, throw for
     release builds.
-  * Document free list head in header only applies to root directory, not sub-directories
-    or data.
+
+  * Document in header which values are shared and which are unique.
 
 //--------------------------------------------------------------------------------------*/
 
