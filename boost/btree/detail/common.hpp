@@ -281,7 +281,8 @@ private:
     boost::uint16_t  size() const                    {return m_size;}
     void             size(boost::uint16_t sz)        {m_size = sz;}
   private:
-    page_level_type  m_level;  // leaf: 0, branches: distance from leaf, header: 0xFFFF 
+    page_level_type  m_level;  // leaf: 0, branches: distance from leaf, header: 0xFFFF,
+                               // free page list entry: 0xFFFFE
     page_size_type   m_size;   // # of elements; excludes P0 pseudo-element on branches
   };
   
@@ -295,7 +296,7 @@ private:
     value_type*      begin()                         {return m_value;}
     value_type*      end()                           {return &m_value[size()];}
 
-    //  offsetof() macro won't work for all value_type's, so compute by hand
+    //  offsetof() macro won't work for all value types, so compute by hand
     static std::size_t offset()
     {
       static leaf_data dummy;
@@ -528,7 +529,11 @@ private:
   void  m_free_page(btree_page* pg)
   {
     pg->needs_write(true);
-    // TODO: needs real implementation. Should add page to head of free page list.
+    pg->level(0xFFFE);
+    pg->size(0);
+    pg->prior_page_id(page_id_type());
+    pg->next_page_id(page_id_type(m_hdr.free_page_list_head_id()));
+    m_hdr.free_page_list_head_id(pg->page_id());
   }
 
   void m_set_max_cache_pages()
@@ -791,10 +796,21 @@ template <class Key, class Base, class Traits, class Comp>
 typename btree_base<Key,Base,Traits,Comp>::btree_page_ptr 
 btree_base<Key,Base,Traits,Comp>::m_new_page(boost::uint16_t lv)
 {
-  btree_page_ptr pg(m_mgr.new_buffer());
+  btree_page_ptr pg;
+  if (m_hdr.free_page_list_head_id())
+  {
+    pg = m_mgr.read(m_hdr.free_page_list_head_id());
+    BOOST_ASSERT(pg->level() == 0xFFFE);  // free page list entry
+    m_hdr.free_page_list_head_id(pg->next_page_id());
+  }
+  else
+  {
+    pg = m_mgr.new_buffer();
+    m_hdr.increment_page_count();
+    BOOST_ASSERT(m_hdr.page_count() == m_mgr.buffer_count());
+  }
+
   pg->needs_write(true);
-  m_hdr.increment_page_count();
-  BOOST_ASSERT(m_hdr.page_count() == m_mgr.buffer_count());
   pg->level(lv);
   pg->size(0);
   return pg;
