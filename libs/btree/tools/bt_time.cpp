@@ -25,7 +25,6 @@ using std::endl;
 namespace
 {
   std::string command_args;
-  long count;
   long n;
   long initial_n;
   long seed = 1;
@@ -117,7 +116,7 @@ namespace
       if (do_iterate)
       {
         cout << "\niterating over " << bt.size() << " btree elements..." << endl;
-        long count = 0;
+        unsigned long count = 0;
         long prior_key = -1L;
         t.start();
         for (typename BT::const_iterator itr = bt.begin();
@@ -247,7 +246,7 @@ namespace
                 / (this_tm.system + this_tm.user) << '\n';
 
       cout << "\niterating over " << stl.size() << " stl elements..." << endl;
-      long count = 0;
+      unsigned long count = 0;
       long prior_key = -1L;
       t.start();
       for (stl_type::const_iterator itr = stl.begin();
