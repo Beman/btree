@@ -11,6 +11,7 @@
 #include <boost/random.hpp>
 #include <boost/detail/lightweight_test.hpp>
 #include <boost/btree/detail/timer.hpp>
+#include <boost/detail/main.hpp>
 #include <iostream>
 #include <string>
 #include <cstring>
@@ -315,9 +316,9 @@ namespace
 
 }
 
-//-------------------------------------- main()  ---------------------------------------//
+//------------------------------------ cpp_main()  -------------------------------------//
 
-int main(int argc, char * argv[]) 
+int cppp_main(int argc, char * argv[]) 
 {
   for (int a = 0; a < argc; ++a)
   {

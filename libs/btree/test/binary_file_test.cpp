@@ -16,6 +16,7 @@
 #include <boost/btree/detail/binary_file.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <boost/detail/lightweight_test.hpp>
+#include <boost/detail/main.hpp>
 
 namespace fs = boost::filesystem;
 namespace bt = boost::btree;
@@ -86,9 +87,9 @@ namespace
   }
 }
 
-//  main  ------------------------------------------------------------------------------//
+//  cpp_main  --------------------------------------------------------------------------//
 
-int main(int argc, char * argv[])
+int cpp_main(int argc, char * argv[])
 {
   bt::binary_file::offset_type gap(32);
 

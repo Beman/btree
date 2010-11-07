@@ -15,6 +15,7 @@
 #include <boost/btree/directory.hpp>
 #include <boost/btree/set.hpp>
 #include <boost/detail/lightweight_test.hpp>
+#include <boost/detail/main.hpp>
 #include <boost/filesystem/operations.hpp>
 namespace fs = boost::filesystem;
 #include <utility>
@@ -61,7 +62,7 @@ void open_and_close_level_1_data()
   cout << "  open_and_close_level_1_data complete" << endl;
 }
 
-int main()
+int cpp_main(int, char *[])
 {
 
   open_and_close_level_1_data();
