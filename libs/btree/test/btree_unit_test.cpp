@@ -15,13 +15,13 @@
 //                                                                                      //
 //--------------------------------------------------------------------------------------//
 
-#include <iostream>
-#include <iomanip>
-
 #include <boost/btree/map.hpp>
 #include <boost/btree/set.hpp>
 #include <boost/btree/detail/fixstr.hpp>
 #include <boost/detail/lightweight_test.hpp>
+#include <boost/detail/main.hpp>
+#include <iostream>
+#include <iomanip>
 #include <utility>
 
 using namespace boost;
@@ -671,9 +671,9 @@ void  fixstr()
 
 }  // unnamed namespace
 
-//-------------------------------------- main ------------------------------------------//
+//------------------------------------ cpp_main ----------------------------------------//
 
-int main()
+int cpp_main(int, char*[])
 {
   instantiate();
   construct_new();
