@@ -15,7 +15,7 @@
 #include <boost/btree/detail/fixstr.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/filesystem.hpp>
-#include <boost/detail/main.hpp>
+#include <boost/detail/lightweight_main.hpp>
 #include <string>
 #include <iostream>
 #include <fstream>

@@ -16,7 +16,7 @@
 #include <boost/btree/detail/binary_file.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <boost/detail/lightweight_test.hpp>
-#include <boost/detail/main.hpp>
+#include <boost/detail/lightweight_main.hpp>
 
 namespace fs = boost::filesystem;
 namespace bt = boost::btree;

@@ -19,7 +19,7 @@
 #include <boost/btree/set.hpp>
 #include <boost/btree/detail/fixstr.hpp>
 #include <boost/detail/lightweight_test.hpp>
-#include <boost/detail/main.hpp>
+#include <boost/detail/lightweight_main.hpp>
 #include <iostream>
 #include <iomanip>
 #include <utility>
