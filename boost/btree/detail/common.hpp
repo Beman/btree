@@ -16,7 +16,7 @@
 #include <boost/assert.hpp>
 #include <boost/static_assert.hpp>
 #include <cstddef>     // for size_t
-#include <cstring>
+#include <cstring>     // for strlen, etc.
 #include <cassert>
 #include <utility>
 #include <iterator>
@@ -28,6 +28,8 @@ namespace boost
 {
 namespace btree
 {
+
+#include <boost/btree/varies.hpp>
 
 //--------------------------------------------------------------------------------------//
 //                               class btree_map_base                                   //
@@ -256,7 +258,7 @@ private:
   buffer             m_end_page;  // end iterators point to this page, providing
                                   // access to "this" via buffer::manager() 
   const_iterator     m_end_iterator;
-
+                                                                  
   btree::header_page m_hdr;
 
   std::size_t        m_max_leaf_size;
@@ -1212,6 +1214,9 @@ std::pair<typename btree_base<Key,Base,Traits,Comp>::const_iterator, bool>
 btree_base<Key,Base,Traits,Comp>::m_insert_unique(const value_type& value)
 {
   BOOST_ASSERT(is_open());
+
+  std::cout << "  m_insert_unique; size returns: " << boost::btree::size(value) << std::endl;
+
   iterator insert_point = m_lower_page_bound(key(value));
 
   bool unique = insert_point.m_element == insert_point.m_page->leaf_end()
