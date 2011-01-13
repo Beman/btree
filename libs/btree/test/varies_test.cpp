@@ -124,6 +124,12 @@ void set_c_string_test()
 
 int cpp_main(int, char*[])
 {
+  btree::btree_set<const char*> bta("a", btree::flags::truncate);
+  BOOST_TEST(bta.f<btree::btree_set<const char*>::key_type>());
+  btree::btree_set<char> btb("b", btree::flags::truncate);
+  BOOST_TEST(!btb.f<btree::btree_set<char>::key_type>());
+
+
   // Should fail to link: unresolved external symbol: size
   //btree::btree_set<const int*> bt2("btree_set_int_star.btree", btree::flags::truncate);
   //int i;

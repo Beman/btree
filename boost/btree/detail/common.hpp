@@ -240,6 +240,12 @@ public:
   const_iterator_range  equal_range(const key_type& k) const
                             { return std::make_pair(lower_bound(k), upper_bound(k)); }
 
+  template <class T>
+  typename boost::disable_if<boost::is_pointer<T>, bool>::type f() {return false;}
+
+  template <class T>
+  typename boost::enable_if<boost::is_pointer<T>, bool>::type f() {return true;}
+
 //--------------------------------------------------------------------------------------//
 //                                private data members                                  //
 //--------------------------------------------------------------------------------------//
