@@ -107,7 +107,7 @@
     <ClInclude Include="..\..\..\..\..\boost\btree\header.hpp" />
     <ClInclude Include="..\..\..\..\..\boost\btree\map.hpp" />
     <ClInclude Include="..\..\..\..\..\boost\btree\set.hpp" />
-    <ClInclude Include="..\..\..\..\..\boost\btree\vary.hpp" />
+    <ClInclude Include="..\..\..\..\..\boost\btree\varies.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

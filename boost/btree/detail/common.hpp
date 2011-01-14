@@ -14,7 +14,7 @@
 #include <boost/noncopyable.hpp>
 #include <boost/btree/detail/buffer_manager.hpp>
 #include <boost/assert.hpp>
-#include <boost/static_assert.hpp>
+#include <boost/type_traits/is_pointer.hpp>
 #include <cstddef>     // for size_t
 #include <cstring>     // for strlen, etc.
 #include <cassert>
@@ -40,11 +40,18 @@ class btree_map_base
 {
 public:
   typedef std::pair<const Key, T>    value_type;
-
+protected:
+  typedef value_type iterator_type_parm;  // maps: iterator can modify
+public:
   const Key& key(const value_type& v) const {return v.first;}  // really handy, so expose
 
   static std::size_t key_size() { return sizeof(Key); }
   static std::size_t mapped_size() { return sizeof(T); }
+
+# ifndef BOOST_NO_STATIC_ASSERT
+  static_assert(boost::is_pointer<Key>::value == boost::is_pointer<T>::value,
+    "Key and T must both be pointers or neither may be a pointer");
+# endif
 
   //--------------------------------- value_compare ------------------------------------//
 
@@ -73,6 +80,9 @@ class btree_set_base
 {
 public:
   typedef Key       value_type;
+protected:
+  typedef const value_type iterator_type_parm;    // sets: iterator can not modify
+public:
   typedef Comp      value_compare;
 
   const Key& key(const value_type& v) const {return v;}  // really handy, so expose
@@ -123,8 +133,9 @@ public:
   typedef boost::uint64_t                       size_type;
   typedef value_type*                           pointer;
   typedef const value_type*                     const_pointer;
-  typedef iterator_type<value_type>             iterator;
-  typedef iterator_type<value_type const>       const_iterator;
+//  typedef iterator_type<value_type>             iterator;
+  typedef iterator_type<typename Base::iterator_type_parm> iterator;
+  typedef iterator_type<const value_type>       const_iterator;
   typedef std::reverse_iterator<iterator>       reverse_iterator;
   typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
   typedef std::pair<const_iterator, const_iterator>
@@ -313,7 +324,7 @@ private:
       return off;
     }
 
-//  private:
+  protected:
     page_id_type     m_prior_page_id;  // page sequence list; 0 for end
     page_id_type     m_next_page_id;   // page sequence list; 0 for end
     value_type       m_value[1];
@@ -340,7 +351,7 @@ private:
       return off;
     }
 
-//  private:
+//  private:    // need getters and setters for P0
     page_id_type P0;  // the initial pseudo-element, which has no key;
                       // this is often called P sub 0 in the literature
     branch_value_type  m_value[1];
@@ -451,14 +462,14 @@ private:
   //                                  iterator_type                                     //
   //------------------------------------------------------------------------------------//
  
-  template <class IterValue>
+  template <class ValueType>
   class iterator_type
-    : public boost::iterator_facade<iterator_type<IterValue>,
-                                    IterValue, bidirectional_traversal_tag>
+    : public boost::iterator_facade<iterator_type<ValueType>,
+                                    ValueType, bidirectional_traversal_tag>
   {
   public:
-    iterator_type(): m_element(0) {}
-    iterator_type(buffer_ptr p, IterValue* e)
+    iterator_type(): m_element(0) {}  // construct the end iterator
+    iterator_type(buffer_ptr p, ValueType* e)
       : m_page(static_cast<typename btree_base::btree_page_ptr>(p)), m_element(e) {}
 
 
@@ -467,14 +478,14 @@ private:
     friend class btree_base;
    
     typename btree_base::btree_page_ptr  m_page; 
-    IterValue*                           m_element;  // 0 for the end iterator
+    ValueType*                           m_element;  // 0 for the end iterator
 
-    IterValue& dereference() const  { return *m_element; }
+    ValueType& dereference() const  { return *m_element; }
  
     bool equal(const iterator_type& rhs) const
     {
       return m_element == rhs.m_element
-        // check page_id() in case page memory has been reused
+        // check page_id() rather that m_page in case page memory has been reused
         && m_page->page_id() == rhs.m_page->page_id();
     }
 
@@ -859,7 +870,8 @@ btree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter,
   const value_type& value)
 {
   btree_page_ptr     pg = insert_iter.m_page;
-  value_type*        insert_begin = insert_iter.m_element;
+  // for sets, cast away const:
+  value_type*        insert_begin = const_cast<value_type*>(insert_iter.m_element);
   btree_page_ptr     pg2;
   value_type*        split_begin;
 
@@ -1220,8 +1232,6 @@ std::pair<typename btree_base<Key,Base,Traits,Comp>::const_iterator, bool>
 btree_base<Key,Base,Traits,Comp>::m_insert_unique(const value_type& value)
 {
   BOOST_ASSERT(is_open());
-
-  std::cout << "  m_insert_unique; size returns: " << boost::btree::size(value) << std::endl;
 
   iterator insert_point = m_lower_page_bound(key(value));
 
