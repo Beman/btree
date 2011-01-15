@@ -16,6 +16,7 @@
 #include <boost/assert.hpp>
 #include <boost/mpl/if.hpp>
 #include <boost/type_traits/is_pointer.hpp>
+#include <boost/type_traits/remove_pointer.hpp>
 #include <cstddef>     // for size_t
 #include <cstring>     // for strlen, etc.
 #include <cassert>
@@ -42,12 +43,12 @@ template <class Key, class Comp>
 class btree_set_base
 {
 public:
-  typedef Key       value_type;
+  typedef Key value_type;
 //protected:
   // [const_]iterator_value_type
   typedef typename boost::mpl::if_<boost::is_pointer<Key>,
-    value_type,  // varies
-    const value_type   // fixed
+    typename boost::remove_pointer<Key>::type const *,  // variable length
+    const value_type   // fixed length
     >::type  iterator_value_type;
 
   typedef iterator_value_type  const_iterator_value_type;
@@ -85,17 +86,18 @@ template <class Key, class T, class Comp>
 class btree_map_base
 {
 public:
-  typedef std::pair<const Key, T>    value_type;
+  typedef typename boost::mpl::if_<boost::is_pointer<Key>,
+    std::pair<typename boost::remove_pointer<Key>::type const *, T>,   // variable length
+    std::pair<const Key, T>   // fixed length
+    >::type  value_type;
 //protected:
   // [const_]iterator_value_type
-  typedef typename boost::mpl::if_<boost::is_pointer<Key>,
-    value_type,  // varies
-    value_type   // fixed
-    >::type  iterator_value_type;
+  typedef value_type iterator_value_type;
 
   typedef typename boost::mpl::if_<boost::is_pointer<Key>,
-    std::pair<const Key, const T>,  // varies
-    const value_type                // fixed
+    std::pair<typename boost::remove_pointer<Key>::type const *,
+              typename boost::remove_pointer<T>::type const *>,  // variable length
+    const value_type                // fixed length
     >::type  const_iterator_value_type;
 
 
