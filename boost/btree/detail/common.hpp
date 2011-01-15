@@ -14,6 +14,7 @@
 #include <boost/noncopyable.hpp>
 #include <boost/btree/detail/buffer_manager.hpp>
 #include <boost/assert.hpp>
+#include <boost/mpl/if.hpp>
 #include <boost/type_traits/is_pointer.hpp>
 #include <cstddef>     // for size_t
 #include <cstring>     // for strlen, etc.
@@ -31,6 +32,51 @@ namespace btree
 
 #include <boost/btree/varies.hpp>
 
+struct empty_struct {};
+
+//--------------------------------------------------------------------------------------//
+//                               class btree_set_base                                   //
+//--------------------------------------------------------------------------------------//
+
+template <class Key, class Comp>
+class btree_set_base
+{
+public:
+  typedef Key       value_type;
+//protected:
+  // [const_]iterator_value_type
+  typedef typename boost::mpl::if_<boost::is_pointer<Key>,
+    value_type,  // varies
+    const value_type   // fixed
+    >::type  iterator_value_type;
+
+  typedef iterator_value_type  const_iterator_value_type;
+
+  //// [const_]iterator_base
+  //struct fixed_set_iterator_base
+  //{ 
+  //  value_type*  m_element;  // 0 for the end iterator
+  //  value_type&  m_dereference() const  { return *m_element; }
+  //};
+  //struct varies_set_iterator_base
+  //{ 
+  //  index_type*  m_index;  // 0 for the end iterator
+  //  value_type&  m_dereference() const  { return *m_element; }
+  //};
+  //typedef typename boost::mpl::if_<boost::is_pointer<Key>,
+  //  varies_set_iterator_base,
+  //  fixed_set_iterator_base
+  //  >::type              iterator_base;
+  //typedef iterator_base  const_iterator_base;
+public:
+  typedef Comp      value_compare;
+
+  const Key& key(const value_type& v) const {return v;}  // really handy, so expose
+
+  static std::size_t key_size() { return sizeof(Key); }
+  static std::size_t mapped_size() { return 0; }
+};
+
 //--------------------------------------------------------------------------------------//
 //                               class btree_map_base                                   //
 //--------------------------------------------------------------------------------------//
@@ -40,8 +86,29 @@ class btree_map_base
 {
 public:
   typedef std::pair<const Key, T>    value_type;
-protected:
-  typedef value_type iterator_type_parm;  // maps: iterator can modify
+//protected:
+  // [const_]iterator_value_type
+  typedef typename boost::mpl::if_<boost::is_pointer<Key>,
+    value_type,  // varies
+    value_type   // fixed
+    >::type  iterator_value_type;
+
+  typedef typename boost::mpl::if_<boost::is_pointer<Key>,
+    std::pair<const Key, const T>,  // varies
+    const value_type                // fixed
+    >::type  const_iterator_value_type;
+
+
+  //struct map_iterator_base  { std::pair<mutable Key, T> m_value; };
+  //typedef typename boost::mpl::if_<boost::is_pointer<Key>,
+  //  map_iterator_base,  // varies
+  //  empty_struct        // fixed
+  //  >::type              iterator_base;
+  //struct map_const_iterator_base  { std::pair<mutable Key, mutable T> m_value; };
+  //typedef typename boost::mpl::if_<boost::is_pointer<Key>,
+  //  map_const_iterator_base,  // varies
+  //  empty_struct              // fixed
+  //  >::type              const_iterator_base;
 public:
   const Key& key(const value_type& v) const {return v.first;}  // really handy, so expose
 
@@ -72,26 +139,6 @@ public:
 };
 
 //--------------------------------------------------------------------------------------//
-//                               class btree_set_base                                   //
-//--------------------------------------------------------------------------------------//
-
-template <class Key, class Comp>
-class btree_set_base
-{
-public:
-  typedef Key       value_type;
-protected:
-  typedef const value_type iterator_type_parm;    // sets: iterator can not modify
-public:
-  typedef Comp      value_compare;
-
-  const Key& key(const value_type& v) const {return v;}  // really handy, so expose
-
-  static std::size_t key_size() { return sizeof(Key); }
-  static std::size_t mapped_size() { return 0; }
-};
-
-//--------------------------------------------------------------------------------------//
 //                                                                                      //
 //                                 class btree_base                                     //
 //                                                                                      //
@@ -115,8 +162,7 @@ private:
   class leaf_page;
   class branch_page;
   class branch_value_type;
-  template <class IterValue>
-  class iterator_type;
+  template <class ItValueType> class iterator_type;
 
 //--------------------------------------------------------------------------------------//
 //                                public interface                                      //
@@ -133,13 +179,15 @@ public:
   typedef boost::uint64_t                       size_type;
   typedef value_type*                           pointer;
   typedef const value_type*                     const_pointer;
-//  typedef iterator_type<value_type>             iterator;
-  typedef iterator_type<typename Base::iterator_type_parm> iterator;
-  typedef iterator_type<const value_type>       const_iterator;
-  typedef std::reverse_iterator<iterator>       reverse_iterator;
-  typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
+
+  typedef iterator_type<typename Base::iterator_value_type>  iterator;
+  typedef iterator_type<typename Base::const_iterator_value_type>  const_iterator;
+
   typedef std::pair<const_iterator, const_iterator>
                                                 const_iterator_range;
+  typedef std::reverse_iterator<iterator>       reverse_iterator;
+  typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
+
   typedef typename Traits::page_id_type         page_id_type;
   typedef typename Traits::page_size_type       page_size_type;   // # of elements on page
   typedef typename Traits::page_level_type      page_level_type;  // 0 is leaf
@@ -251,11 +299,14 @@ public:
   const_iterator_range  equal_range(const key_type& k) const
                             { return std::make_pair(lower_bound(k), upper_bound(k)); }
 
-  template <class T>
-  typename boost::disable_if<boost::is_pointer<T>, bool>::type f() {return false;}
+  // TODO: development code follows; remove from production version
+  //template <class T>
+  //typename boost::disable_if<boost::is_pointer<T>, bool>::type f() {return false;}
 
-  template <class T>
-  typename boost::enable_if<boost::is_pointer<T>, bool>::type f() {return true;}
+  //template <class T>
+  //typename boost::enable_if<boost::is_pointer<T>, bool>::type f() {return true;}
+
+  bool key_is_pointer() const { return boost::is_pointer<Key>::value; }
 
 //--------------------------------------------------------------------------------------//
 //                                private data members                                  //
@@ -463,8 +514,8 @@ private:
   //------------------------------------------------------------------------------------//
  
   template <class ValueType>
-  class iterator_type
-    : public boost::iterator_facade<iterator_type<ValueType>,
+  class iterator_type : /*private iterator_base,*/
+    public boost::iterator_facade<iterator_type<ValueType>,
                                     ValueType, bidirectional_traversal_tag>
   {
   public:
@@ -1446,7 +1497,7 @@ btree_base<Key,Base,Traits,Comp>::count(const key_type& k) const
 
 ////  non-member functions  ----------------------------------------------------//
 
-///  non-member functions not implemented yet
+// TODO:  non-member functions not implemented yet
 /*
 template <typename Key, typename T, typename Comp>
 bool operator==(const common_base<Key,T,Comp,GetKey>& x,
@@ -1479,9 +1530,9 @@ void swap(common_base<Key,T,Comp,GetKey>& x,
 //--------------------------------------------------------------------------------------//
 
 template <class Key, class Base, class Traits, class Comp>
-template <class IterValue>
+template <class ItValueType>
 void
-btree_base<Key,Base,Traits,Comp>::iterator_type<IterValue>::increment()
+btree_base<Key,Base,Traits,Comp>::iterator_type<ItValueType>::increment()
 {
   BOOST_ASSERT(m_element);  // detects attempt to increment end iterator 
   BOOST_ASSERT(m_page);
@@ -1503,9 +1554,9 @@ btree_base<Key,Base,Traits,Comp>::iterator_type<IterValue>::increment()
 }
 
 template <class Key, class Base, class Traits, class Comp>
-template <class IterValue>
+template <class ItValueType>
 void
-btree_base<Key,Base,Traits,Comp>::iterator_type<IterValue>::decrement()
+btree_base<Key,Base,Traits,Comp>::iterator_type<ItValueType>::decrement()
 {
   if (*this == reinterpret_cast<const btree_base<Key,Base,Traits,Comp>*>
         (m_page->manager().owner())->end())

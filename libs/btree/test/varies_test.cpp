@@ -44,12 +44,17 @@ void types_test()
   typedef std::map<int, long>           std_map;
   typedef btree::btree_set<int>         fixed_set;
   typedef btree::btree_map<int, long>   fixed_map;
-  typedef btree::btree_set<char*>       varies_set;
-  typedef btree::btree_map<char*, int*> varies_map;
+  typedef btree::btree_set<const char*>       varies_set;
+  typedef btree::btree_map<const char*, int*> varies_map;
 
   // should fail static_assert with:
   //   "Key and T must both be pointers or neither may be a pointer"
   // btree::btree_map<char*, int> bad_varies_map;
+
+  varies_set vs;
+  BOOST_TEST(vs.key_is_pointer());
+  varies_map vm;
+  BOOST_TEST(vm.key_is_pointer());
 
   BOOST_TEST((boost::is_same<std_set::iterator::reference, const int&>::value));    // set values always const
   BOOST_TEST((boost::is_same<std_set::const_iterator::reference, const int&>::value));
@@ -66,18 +71,20 @@ void types_test()
   BOOST_TEST((boost::is_same<fixed_map::mapped_type, long>::value));
   BOOST_TEST((boost::is_same<fixed_map::value_type, std::pair<const int, long> >::value));
   BOOST_TEST((boost::is_same<fixed_map::iterator::reference, std::pair<const int, long>& >::value));
-  BOOST_TEST((boost::is_same<fixed_map::const_iterator::reference, const std::pair<const int, long>& >::value));
+  BOOST_TEST((boost::is_same<fixed_map::const_iterator::reference,
+    const std::pair<const int, long>& >::value));
 
-  BOOST_TEST((boost::is_same<varies_set::key_type, char*>::value));
-  BOOST_TEST((boost::is_same<varies_set::value_type, char*>::value));
-  BOOST_TEST((boost::is_same<varies_set::iterator::reference, const char*>::value));  // set values always const
-  BOOST_TEST((boost::is_same<varies_set::const_iterator::reference, const char*>::value));
+  BOOST_TEST((boost::is_same<varies_set::key_type, const char*>::value));
+  BOOST_TEST((boost::is_same<varies_set::value_type, const char*>::value));
+  BOOST_TEST((boost::is_same<varies_set::iterator::reference, const char*&>::value));  // set values always const
+  BOOST_TEST((boost::is_same<varies_set::const_iterator::reference, const char*&>::value));
   
-  BOOST_TEST((boost::is_same<varies_map::key_type, char*>::value));
+  BOOST_TEST((boost::is_same<varies_map::key_type, const char*>::value));
   BOOST_TEST((boost::is_same<varies_map::mapped_type, int*>::value));
   BOOST_TEST((boost::is_same<varies_map::value_type, std::pair<const char*, int*> >::value));
-  BOOST_TEST((boost::is_same<varies_map::iterator::reference, std::pair<const char*, int*> >::value));
-  BOOST_TEST((boost::is_same<varies_map::const_iterator::reference, std::pair<const char*, const int*> >::value));
+  BOOST_TEST((boost::is_same<varies_map::iterator::reference, std::pair<const char*, int*>& >::value));
+  BOOST_TEST((boost::is_same<varies_map::const_iterator::reference,
+    std::pair<const char*, const int*>& >::value));
 
   cout << "  types_test complete" << endl;
 }
