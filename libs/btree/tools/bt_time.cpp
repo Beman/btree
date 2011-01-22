@@ -9,9 +9,10 @@
 
 #include <boost/btree/map.hpp>
 #include <boost/random.hpp>
-#include <boost/detail/lightweight_test.hpp>
 #include <boost/btree/detail/timer.hpp>
+
 #include <iostream>
+#include <boost/detail/lightweight_test.hpp> // must follow <iostream> 
 #include <string>
 #include <cstring>
 #include <cstdlib>  // for atol()

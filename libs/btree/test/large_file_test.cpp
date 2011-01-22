@@ -6,7 +6,7 @@
 //  See http://www.boost.org/LICENSE_1_0.txt
 
 #include <boost/btree/detail/binary_file.hpp>
-#include <boost/detail/main.hpp>
+#include <boost/detail/lightweight_main.hpp>
 #include <boost/cstdint.hpp>
 #include <boost/filesystem.hpp>
 #include <iostream>

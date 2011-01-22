@@ -92,6 +92,17 @@
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\..\..\boost\btree\detail\binary_file.hpp" />
+    <ClInclude Include="..\..\..\..\..\boost\btree\detail\buffer_manager.hpp" />
+    <ClInclude Include="..\..\..\..\..\boost\btree\detail\common.hpp" />
+    <ClInclude Include="..\..\..\..\..\boost\btree\detail\config.hpp" />
+    <ClInclude Include="..\..\..\..\..\boost\btree\detail\fixstr.hpp" />
+    <ClInclude Include="..\..\..\..\..\boost\btree\detail\timer.hpp" />
+    <ClInclude Include="..\..\..\..\..\boost\btree\header.hpp" />
+    <ClInclude Include="..\..\..\..\..\boost\btree\map.hpp" />
+    <ClInclude Include="..\..\..\..\..\boost\btree\set.hpp" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
