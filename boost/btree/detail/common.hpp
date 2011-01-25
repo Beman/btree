@@ -37,7 +37,9 @@ template <class Key, class T, class Comp>
 class btree_map_base
 {
 public:
-  typedef std::pair<const Key, T>    value_type;
+  typedef std::pair<const Key, T>  value_type;
+  typedef value_type               iterator_value_type;
+  typedef value_type const         const_iterator_value_type;
 
   const Key& key(const value_type& v) const {return v.first;}  // really handy, so expose
 
@@ -72,6 +74,8 @@ class btree_set_base
 public:
   typedef Key       value_type;
   typedef Comp      value_compare;
+  typedef value_type const           iterator_value_type;
+  typedef value_type const           const_iterator_value_type;
 
   const Key& key(const value_type& v) const {return v;}  // really handy, so expose
 
@@ -121,8 +125,12 @@ public:
   typedef boost::uint64_t                       size_type;
   typedef value_type*                           pointer;
   typedef const value_type*                     const_pointer;
-  typedef iterator_type<value_type>             iterator;
-  typedef iterator_type<value_type const>       const_iterator;
+
+  typedef iterator_type<
+    typename Base::iterator_value_type>         iterator;
+  typedef iterator_type<
+    typename Base::const_iterator_value_type>   const_iterator;
+
   typedef std::reverse_iterator<iterator>       reverse_iterator;
   typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
   typedef std::pair<const_iterator, const_iterator>
@@ -851,7 +859,7 @@ btree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter,
   const value_type& value)
 {
   btree_page_ptr     pg = insert_iter.m_page;
-  value_type*        insert_begin = insert_iter.m_element;
+  value_type*        insert_begin = const_cast<value_type*>(insert_iter.m_element);
   btree_page_ptr     pg2;
   value_type*        split_begin;
 
