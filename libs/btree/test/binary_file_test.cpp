@@ -16,12 +16,12 @@
 #include <boost/btree/detail/binary_file.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <boost/detail/lightweight_main.hpp>
+#include <boost/detail/lightweight_test.hpp> 
 
 namespace fs = boost::filesystem;
 namespace bt = boost::btree;
 
 #include <iostream>
-#include <boost/detail/lightweight_test.hpp> // must follow <iostream> 
 #include <iomanip>
 #include <string>
 #include <cstring>

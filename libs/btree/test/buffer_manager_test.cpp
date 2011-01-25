@@ -16,9 +16,9 @@
 #include <boost/btree/detail/buffer_manager.hpp>
 #include <boost/filesystem/v3/operations.hpp>
 #include <boost/detail/lightweight_main.hpp>
+#include <boost/detail/lightweight_test.hpp> 
 
 #include <iostream>
-#include <boost/detail/lightweight_test.hpp> // must follow <iostream> 
 #include <iomanip>
 #include <string>
 #include <cstring>

@@ -9,9 +9,9 @@
 
 #include <boost/btree/detail/fixstr.hpp>
 #include <boost/detail/lightweight_main.hpp>
+#include <boost/detail/lightweight_test.hpp> 
 
 #include <iostream>
-#include <boost/detail/lightweight_test.hpp> // must follow <iostream> 
 
 namespace
 {

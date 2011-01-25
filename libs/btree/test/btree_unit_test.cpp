@@ -19,11 +19,13 @@
 #include <boost/btree/set.hpp>
 #include <boost/btree/detail/fixstr.hpp>
 #include <boost/detail/lightweight_main.hpp>
+#include <boost/detail/lightweight_test.hpp> 
 
 #include <iostream>
-#include <boost/detail/lightweight_test.hpp> // must follow <iostream> 
 #include <iomanip>
 #include <utility>
+#include <map>
+#include <set>
 
 using namespace boost;
 namespace fs = boost::filesystem;
@@ -94,6 +96,43 @@ void instantiate()
     instantiate_test(x);
   }
   cout << "    instantiate complete" << endl;
+}
+
+//-------------------------------- types_test ------------------------------------------//
+
+void types_test()
+{
+  cout << "  types_test..." << endl;
+
+  typedef std::set<int>                 std_set;
+  typedef std::map<int, long>           std_map;
+  typedef btree::btree_set<int>         bt_set;
+  typedef btree::btree_map<int, long>   bt_map;
+
+  BOOST_TEST((boost::is_same<std_set::key_type, int>::value));
+  BOOST_TEST((boost::is_same<std_set::value_type, int>::value));
+  BOOST_TEST((boost::is_same<std_set::iterator::reference, const int&>::value));    // set values always const
+  BOOST_TEST((boost::is_same<std_set::const_iterator::reference, const int&>::value));
+
+  BOOST_TEST((boost::is_same<std_map::key_type, int>::value));
+  BOOST_TEST((boost::is_same<std_map::mapped_type, long>::value));
+  BOOST_TEST((boost::is_same<std_map::value_type, std::pair<const int, long> >::value));
+  BOOST_TEST((boost::is_same<std_map::iterator::reference, std::pair<const int, long>& >::value));
+  BOOST_TEST((boost::is_same<std_map::const_iterator::reference, const std::pair<const int, long>& >::value));
+
+  BOOST_TEST((boost::is_same<bt_set::key_type, int>::value));
+  BOOST_TEST((boost::is_same<bt_set::value_type, int>::value));
+  BOOST_TEST((boost::is_same<bt_set::iterator::reference, const int&>::value));  // set values always const
+  BOOST_TEST((boost::is_same<bt_set::const_iterator::reference, const int&>::value));
+
+  BOOST_TEST((boost::is_same<bt_map::key_type, int>::value));
+  BOOST_TEST((boost::is_same<bt_map::mapped_type, long>::value));
+  BOOST_TEST((boost::is_same<bt_map::value_type, std::pair<const int, long> >::value));
+  BOOST_TEST((boost::is_same<bt_map::iterator::reference, std::pair<const int, long>& >::value));
+  BOOST_TEST((boost::is_same<bt_map::const_iterator::reference,
+    const std::pair<const int, long>& >::value));
+
+  cout << "    types_test complete" << endl;
 }
 
 //-------------------------------------- construct_new ---------------------------------//
@@ -677,6 +716,7 @@ void  fixstr()
 int cpp_main(int, char*[])
 {
   instantiate();
+  types_test();
   construct_new();
   open_existing();
   compare_function_objects();
