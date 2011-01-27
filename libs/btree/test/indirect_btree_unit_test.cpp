@@ -115,15 +115,15 @@ void types_test()
   BOOST_TEST((boost::is_same< bt_set::key_type, int*>::value));
 
   BOOST_TEST((boost::is_same<std_set::value_type, int*>::value));
-  BOOST_TEST((boost::is_same< bt_set::value_type, int*>::value));
+  BOOST_TEST((boost::is_same< bt_set::value_type, int const*>::value));
 
   // reference is "lvalue of T" where T is value_type
   BOOST_TEST((boost::is_same<std_set::reference, int*&>::value));
-  BOOST_TEST((boost::is_same< bt_set::reference, int*&>::value));
+  BOOST_TEST((boost::is_same< bt_set::reference, int const*&>::value));
 
   // const_reference is "const lvalue of T" where T is value_type
   BOOST_TEST((boost::is_same<std_set::const_reference, int*const&>::value));
-  BOOST_TEST((boost::is_same< bt_set::const_reference, int*const&>::value));
+  BOOST_TEST((boost::is_same< bt_set::const_reference, int const*const&>::value));
 
   BOOST_TEST((boost::is_same<std_set::iterator::reference, int*const&>::value));
   BOOST_TEST((boost::is_same< bt_set::iterator::reference, int const*const&>::value));
@@ -138,29 +138,29 @@ void types_test()
   BOOST_TEST((boost::is_same< bt_map::mapped_type, long*>::value));
 
   BOOST_TEST((boost::is_same<std_map::value_type, std::pair<int*const, long*> >::value));
-  BOOST_TEST((boost::is_same< bt_map::value_type, std::pair<int*const, long*> >::value));
+  BOOST_TEST((boost::is_same< bt_map::value_type, std::pair<int const*, long*> >::value));
 
   // reference is "lvalue of T" where T is value_type
   BOOST_TEST((boost::is_same<std_map::reference,
     std::pair<int*const, long*>& >::value));
   BOOST_TEST((boost::is_same< bt_map::reference,
-    std::pair<int const*const, long*>& >::value));
+    std::pair<int const*, long*>& >::value));
 
   // const_reference is "const lvalue of T" where T is value_type
   BOOST_TEST((boost::is_same<std_map::const_reference,
     const std::pair<int*const, long*>& >::value));
   BOOST_TEST((boost::is_same< bt_map::const_reference,
-    const std::pair<int const*const, long const*>& >::value));
+    const std::pair<int const*, long const*>& >::value));
 
   BOOST_TEST((boost::is_same<std_map::iterator::reference,
     std::pair<int*const, long*>& >::value));
   BOOST_TEST((boost::is_same< bt_map::iterator::reference,
-    const std::pair<int const*const, long*>& >::value));
+    const std::pair<int const*, long*>& >::value));
 
   BOOST_TEST((boost::is_same<std_map::const_iterator::reference,
     const std::pair<int*const, long*>& >::value));
   BOOST_TEST((boost::is_same< bt_map::const_iterator::reference,
-    const std::pair<int const*const, long const*>& >::value));
+    const std::pair<int const*, long const*>& >::value));
 
   cout << "    types_test complete" << endl;
 }

@@ -37,14 +37,18 @@ template <class Key, class T, class Comp>
 class indirect_btree_map_base
 {
 public:
-  typedef std::pair<Key const, T>  value_type;
-
-  typedef const std::pair<typename boost::remove_pointer<Key>::type const * const, T>
-    iterator_value_type;
-
-  typedef const std::pair<typename boost::remove_pointer<Key>::type const * const,
+  typedef std::pair<typename boost::remove_pointer<Key>::type const *, T>
+    value_type;
+  typedef std::pair<typename boost::remove_pointer<Key>::type const *,
     typename boost::remove_pointer<T>::type const *>
-    const_iterator_value_type;
+    const_value_type;
+
+  //typedef const std::pair<typename boost::remove_pointer<Key>::type const * const, T>
+  //  iterator_value_type;
+
+  //typedef const std::pair<typename boost::remove_pointer<Key>::type const * const,
+  //  typename boost::remove_pointer<T>::type const *>
+  //  const_iterator_value_type;
 
   const Key& key(const value_type& v) const {return v.first;}  // really handy, so expose
 
@@ -77,10 +81,11 @@ template <class Key, class Comp>
 class indirect_btree_set_base
 {
 public:
-  typedef Key       value_type;
+  typedef typename boost::remove_pointer<Key>::type const *  value_type;
+  typedef value_type const const_value_type;
   typedef Comp      value_compare;
-  typedef typename boost::remove_pointer<Key>::type const * const iterator_value_type;
-  typedef typename boost::remove_pointer<Key>::type const * const const_iterator_value_type;
+//  typedef typename boost::remove_pointer<Key>::type const * const iterator_value_type;
+//  typedef typename boost::remove_pointer<Key>::type const * const const_iterator_value_type;
 
   const Key& key(const value_type& v) const {return v;}  // really handy, so expose
 
@@ -123,18 +128,17 @@ public:
   // types:
   typedef Key                                   key_type;
   typedef typename Base::value_type             value_type;
+  typedef typename Base::const_value_type       const_value_type;
   typedef Comp                                  key_compare;
   typedef typename Base::value_compare          value_compare; 
   typedef value_type&                           reference;
-  typedef const value_type&                     const_reference;
+  typedef const const_value_type&               const_reference;
   typedef boost::uint64_t                       size_type;
   typedef value_type*                           pointer;
-  typedef const value_type*                     const_pointer;
+  typedef const const_value_type*               const_pointer;
 
-  typedef iterator_type<
-    typename Base::iterator_value_type>         iterator;
-  typedef iterator_type<
-    typename Base::const_iterator_value_type>   const_iterator;
+  typedef iterator_type<const value_type>       iterator;
+  typedef iterator_type<const const_value_type> const_iterator;
 
   typedef std::reverse_iterator<iterator>       reverse_iterator;
   typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
