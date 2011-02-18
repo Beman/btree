@@ -50,53 +50,53 @@ namespace
     bool operator!=(const fat& rhs) const {return x != rhs.x;}
   };
 
-////-------------------------------------- instantiate -----------------------------------//
-//
-//template <class BT>
-//void instantiate_test(BT& bt)
-//{ 
-//  BOOST_TEST(!bt.is_open());
-//  BOOST_TEST(bt.size() == 0U);
-//  BOOST_TEST(bt.empty());
-//}
-//
-//void instantiate()
-//{
-//  cout << "  instantiate..." << endl;
-//  {
-//    btree::indirect_btree_map<fat, int> x;
-//    instantiate_test(x);
-//  }
-//  {
-//    btree::indirect_btree_multimap<fat, int> x;
-//    instantiate_test(x);
-//  }
-//  {
-//    btree::indirect_btree_set<int> x;
-//    instantiate_test(x);
-//  }
-//  {
-//    btree::indirect_btree_multiset<int> x;
-//    instantiate_test(x);
-//  }
-//  {
-//    btree::indirect_btree_map<fat, int, btree::default_big_endian_traits> x;
-//    instantiate_test(x);
-//  }
-//  {
-//    btree::indirect_btree_multimap<fat, int, btree::default_little_endian_traits> x;
-//    instantiate_test(x);
-//  }
-//  {
-//    btree::indirect_btree_set<int, btree::default_little_endian_traits> x;
-//    instantiate_test(x);
-//  }
-//  {
-//    btree::indirect_btree_multiset<int, btree::default_big_endian_traits> x;
-//    instantiate_test(x);
-//  }
-//  cout << "    instantiate complete" << endl;
-//}
+//-------------------------------------- instantiate -----------------------------------//
+
+template <class BT>
+void instantiate_test(BT& bt)
+{ 
+  BOOST_TEST(!bt.is_open());
+  BOOST_TEST(bt.size() == 0U);
+  BOOST_TEST(bt.empty());
+}
+
+void instantiate()
+{
+  cout << "  instantiate..." << endl;
+  {
+    btree::indirect_btree_map<fat*, int*> x;
+    instantiate_test(x);
+  }
+  {
+    btree::indirect_btree_multimap<fat*, int*> x;
+    instantiate_test(x);
+  }
+  {
+    btree::indirect_btree_set<int*> x;
+    instantiate_test(x);
+  }
+  {
+    btree::indirect_btree_multiset<int*> x;
+    instantiate_test(x);
+  }
+  {
+    btree::indirect_btree_map<fat*, int*, btree::default_big_endian_traits> x;
+    instantiate_test(x);
+  }
+  {
+    btree::indirect_btree_multimap<fat*, int*, btree::default_little_endian_traits> x;
+    instantiate_test(x);
+  }
+  {
+    btree::indirect_btree_set<int*, btree::default_little_endian_traits> x;
+    instantiate_test(x);
+  }
+  {
+    btree::indirect_btree_multiset<int*, btree::default_big_endian_traits> x;
+    instantiate_test(x);
+  }
+  cout << "    instantiate complete" << endl;
+}
 
 //-------------------------------- types_test ------------------------------------------//
 
@@ -165,34 +165,34 @@ void types_test()
   cout << "    types_test complete" << endl;
 }
 
-////-------------------------------------- construct_new ---------------------------------//
-//
-//template <class BT>
-//void construct_new_test(BT& bt, const fs::path& p)
-//{ 
-//  BOOST_TEST(bt.is_open());
-//  BOOST_TEST_EQ(bt.size(), 0U);
-//  BOOST_TEST(bt.empty());
-//  BOOST_TEST(!bt.read_only());
-//  BOOST_TEST(bt.page_size() == btree::default_page_size);  // the default
-//  BOOST_TEST(bt.file_path() == p);
-//
-//  bt.close();
-//  BOOST_TEST(!bt.is_open());
-//}
-//
-//void construct_new()
-//{
-//  cout << "  construct_new..." << endl;
-//  {
-//    fs::path p("btree_map.btree");
-//    btree::indirect_btree_map<fat, int> x(p, btree::flags::truncate);
-//    construct_new_test(x, p);
-//  }
-//
-//  cout << "    construct_new complete" << endl;
-//}
-//
+//-------------------------------------- construct_new ---------------------------------//
+
+template <class BT>
+void construct_new_test(BT& bt, const fs::path& p)
+{ 
+  BOOST_TEST(bt.is_open());
+  BOOST_TEST_EQ(bt.size(), 0U);
+  BOOST_TEST(bt.empty());
+  BOOST_TEST(!bt.read_only());
+  BOOST_TEST(bt.page_size() == btree::default_page_size);  // the default
+  BOOST_TEST(bt.file_path() == p);
+
+  bt.close();
+  BOOST_TEST(!bt.is_open());
+}
+
+void construct_new()
+{
+  cout << "  construct_new..." << endl;
+  {
+    fs::path p("btree_map.btree");
+    btree::indirect_btree_map<fat*, int*> x(p, btree::flags::truncate);
+    construct_new_test(x, p);
+  }
+
+  cout << "    construct_new complete" << endl;
+}
+
 ////------------------------------------ open_existing -----------------------------------//
 //
 //void open_existing()
@@ -745,9 +745,9 @@ void types_test()
 
 int cpp_main(int, char*[])
 {
-  //instantiate();
+  instantiate();
   types_test();
-  //construct_new();
+  construct_new();
   //open_existing();
   //compare_function_objects();
   //alignment();
