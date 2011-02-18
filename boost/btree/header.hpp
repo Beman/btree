@@ -26,11 +26,25 @@ namespace boost
 {
   namespace btree
   {
+
+//--------------------------------------------------------------------------------------//
+//                                                                                      //
+//                                   Default Traits                                     //
+//                                                                                      //
+//  The traits provide the types for management objects on btree disk pages. Pages are  //
+//  typically 4096 bytes in length, and every byte wasted in overhead causes a          //
+//  measurable reduction in speed. Page formats were designed to avoid alignment        //
+//  bytes, given the defaults.                                                          //
+//                                                                                      //
+//--------------------------------------------------------------------------------------//
+
     struct default_native_traits
     {
-      typedef boost::uint32_t  page_id_type;     // page ids on page
-      typedef boost::uint16_t  page_size_type;   // number of elements on page
+      typedef boost::uint32_t  page_id_type;     // page ids
+      typedef boost::uint16_t  page_size_type;   // sizes
       typedef boost::uint16_t  page_level_type;  // level of page; 0 for leaf page
+                                                 // could be smaller, but that would
+                                                 // require alignment byte so why bother
       static const BOOST_SCOPED_ENUM(integer::endianness) header_endianness
 #   ifdef BOOST_BIG_ENDIAN
         = integer::endianness::big;

@@ -15,6 +15,8 @@
 #include <boost/btree/detail/buffer_manager.hpp>
 #include <boost/assert.hpp>
 #include <boost/static_assert.hpp>
+#include <boost/type_traits/is_const.hpp>
+#include <boost/type_traits/remove_const.hpp>
 #include <cstddef>     // for size_t
 #include <cstring>
 #include <cassert>
@@ -30,7 +32,81 @@ namespace btree
 {
 
 //--------------------------------------------------------------------------------------//
-//                               class indirect_btree_map_base                                   //
+//                                                                                      //
+//                   Helpers for variable length keys and/or data                       //
+//                                                                                      //
+//   Use cases include indirect_btree_set<char*> and indirect_btree_map<char*, char*>   //
+//                                                                                      //
+//--------------------------------------------------------------------------------------//
+
+//  See http://www.gotw.ca/publications/mill17.htm,
+//  Why Not Specialize: The Dimov/Abrahams Example
+
+template <class T>
+std::size_t dynamic_size(const T&) { return sizeof(T); }
+
+template <class T>
+std::size_t dynamic_size(const T*);  // pointers must be overloaded; if this overload is
+                                     // selected it means user failed to provide the
+                                     // required overload
+
+std::size_t dynamic_size(const char* s) { return std::strlen(s) + 1; }
+std::size_t dynamic_size(char* s)       { return std::strlen(s) + 1; }
+
+//  less function object class
+
+template <class T> struct less
+{
+  typedef T first_argument_type;
+  typedef T second_argument_type;
+  typedef bool result_type;
+  bool operator()(const T& x, const T& y) const { return x < y; }
+};
+
+//  partial specialization to poison pointer that hasn't been fully specialized
+template <class T> struct less<const T*>
+{
+  typedef T first_argument_type;
+  typedef T second_argument_type;
+  typedef bool result_type;
+  bool operator()(const T& x, const T& y) const;
+};
+
+//  full specialization for C strings
+template <> struct less<char*>
+{
+  typedef const char* first_argument_type;
+  typedef const char* second_argument_type;
+  typedef bool result_type;
+  bool operator()(const char* x, const char* y) const { return std::strcmp(x, y) < 0; }
+};
+
+//--------------------------------------------------------------------------------------//
+//                          class indirect_btree_set_base                               //
+//--------------------------------------------------------------------------------------//
+
+template <class Key, class Comp>
+class indirect_btree_set_base
+{
+public:
+  typedef typename boost::remove_pointer<Key>::type const *  value_type;
+  typedef value_type const const_value_type;
+  typedef Comp      value_compare;
+
+  const Key& key(const value_type& v) const {return v;}  // really handy, so expose
+
+  static std::size_t key_size() { return -1; }
+  static std::size_t mapped_size() { return -1; }
+
+protected:
+  static void set_value(value_type& target, const void* source)
+  {
+    target = reinterpret_cast<value_type>(source);
+  }
+};
+
+//--------------------------------------------------------------------------------------//
+//                          class indirect_btree_map_base                               //
 //--------------------------------------------------------------------------------------//
 
 template <class Key, class T, class Comp>
@@ -40,22 +116,13 @@ public:
   typedef std::pair<typename boost::remove_pointer<Key>::type const *, T>
     value_type;
   typedef std::pair<typename boost::remove_pointer<Key>::type const *,
-    typename boost::remove_pointer<T>::type const *>
+                    typename boost::remove_pointer<T>::type const *>
     const_value_type;
-
-  //typedef const std::pair<typename boost::remove_pointer<Key>::type const * const, T>
-  //  iterator_value_type;
-
-  //typedef const std::pair<typename boost::remove_pointer<Key>::type const * const,
-  //  typename boost::remove_pointer<T>::type const *>
-  //  const_iterator_value_type;
 
   const Key& key(const value_type& v) const {return v.first;}  // really handy, so expose
 
-  static std::size_t key_size() { return sizeof(Key); }
-  static std::size_t mapped_size() { return sizeof(T); }
-
-  //--------------------------------- value_compare ------------------------------------//
+  static std::size_t key_size() { return -1; }
+  static std::size_t mapped_size() { return -1; }
 
   class value_compare
   {
@@ -71,26 +138,13 @@ public:
   private:
     Comp    m_comp;
   };
-};
 
-//--------------------------------------------------------------------------------------//
-//                               class indirect_btree_set_base                                   //
-//--------------------------------------------------------------------------------------//
-
-template <class Key, class Comp>
-class indirect_btree_set_base
-{
-public:
-  typedef typename boost::remove_pointer<Key>::type const *  value_type;
-  typedef value_type const const_value_type;
-  typedef Comp      value_compare;
-//  typedef typename boost::remove_pointer<Key>::type const * const iterator_value_type;
-//  typedef typename boost::remove_pointer<Key>::type const * const const_iterator_value_type;
-
-  const Key& key(const value_type& v) const {return v;}  // really handy, so expose
-
-  static std::size_t key_size() { return sizeof(Key); }
-  static std::size_t mapped_size() { return 0; }
+protected:
+  static void set_value(value_type& target, const void* source)
+  {
+    target.first  = reinterpret_cast<Key>(source);
+    target.second = reinterpret_cast<T>(source + dynamic_size(target.first));
+  }
 };
 
 //--------------------------------------------------------------------------------------//
@@ -117,8 +171,8 @@ private:
   class leaf_page;
   class branch_page;
   class branch_value_type;
-  template <class IterValue>
-  class iterator_type;
+  template <class T>
+    class iterator_type;
 
 //--------------------------------------------------------------------------------------//
 //                                public interface                                      //
@@ -144,9 +198,11 @@ public:
   typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
   typedef std::pair<const_iterator, const_iterator>
                                                 const_iterator_range;
+
   typedef typename Traits::page_id_type         page_id_type;
   typedef typename Traits::page_size_type       page_size_type;   // # of elements on page
   typedef typename Traits::page_level_type      page_level_type;  // 0 is leaf
+  typedef page_size_type                        page_index_type;
 
   // construct/destroy:
 
@@ -288,6 +344,12 @@ private:
 
   //------------------------ disk data formats and operations --------------------------//
 
+  //  Variable length value types are handled by indirection. An index, m_element, stored
+  //  from the front of the page up, contains offsets of the variable length values,
+  //  stored from the end of the page down. On deletion, values are simply abandoned by
+  //  removing their index entry from m_element. Garbage is collected only when a page
+  //  is too full to accomodate an insertion.
+
   class btree_data
   {
   public:
@@ -295,37 +357,38 @@ private:
     void             level(int lv)                   {m_level = lv;}
     bool             is_leaf() const                 {return m_level == 0;}
     bool             is_branch() const               {return m_level != 0;}
-    boost::uint16_t  size() const                    {return m_size;}
-    void             size(boost::uint16_t sz)        {m_size = sz;}
+    page_size_type   end_offset() const              {return m_end;}
+    void             end_offset(page_size_type v)    {m_end = v;}
+    page_size_type   garbage_size() const            {return m_garbage_size;}
+    void             garbage_size(page_size_type v)  {m_garbage_size = v;}
+
   private:
-    page_level_type  m_level;  // leaf: 0, branches: distance from leaf, header: 0xFFFF,
-                               // free page list entry: 0xFFFFE
-    page_size_type   m_size;   // # of elements; excludes P0 pseudo-element on branches
+    page_level_type  m_level;     // leaf: 0, branches: distance from leaf, header: 0xFFFF,
+                                  // free page list entry: 0xFFFFE
+    page_size_type   m_end;       // offset on page of the past-the-end element
+    page_size_type   m_free_end;  // offset on page of last used free space
+    page_size_type   m_garbage_size;  // size in bytes of garbage on page
   };
   
   class leaf_data : public btree_data
   {
   public:
+    typedef page_index_type  element_type;
+
     page_id_type     prior_page_id() const           {return m_prior_page_id;}
     void             prior_page_id(page_id_type id)  {m_prior_page_id = id;}
     page_id_type     next_page_id() const            {return m_next_page_id;}
     void             next_page_id(page_id_type id)   {m_next_page_id = id;}
-    value_type*      begin()                         {return m_value;}
-    value_type*      end()                           {return &m_value[size()];}
-
-    //  offsetof() macro won't work for all value types, so compute by hand
-    static std::size_t offset()
+    element_type*    begin()                         {return m_element;}
+    element_type*    end()
     {
-      static leaf_data dummy;
-      static std::size_t off
-        = reinterpret_cast<char*>(&dummy.m_value) - reinterpret_cast<char*>(&dummy);
-      return off;
+      return reinterpret_cast<element_type*>((char*)this + m_end);
     }
 
-//  private:
+    //  private:
     page_id_type     m_prior_page_id;  // page sequence list; 0 for end
     page_id_type     m_next_page_id;   // page sequence list; 0 for end
-    value_type       m_value[1];
+    element_type     m_element[1];
   };
 
   struct branch_value_type
@@ -339,15 +402,6 @@ private:
   public:
     branch_value_type* begin()                       {return m_value;}
     branch_value_type* end()                         {return &m_value[size()];}
-
-    //  offsetof() macro won't work for all branch_value_type's, so compute by hand
-    static std::size_t offset()
-    {
-      static branch_data dummy;
-      static std::size_t off
-        = reinterpret_cast<char*>(&dummy.m_value) - reinterpret_cast<char*>(&dummy);
-      return off;
-    }
 
 //  private:
     page_id_type P0;  // the initial pseudo-element, which has no key;
@@ -460,25 +514,36 @@ private:
   //                                  iterator_type                                     //
   //------------------------------------------------------------------------------------//
  
-  template <class IterValue>
+  template <class T>
   class iterator_type
-    : public boost::iterator_facade<iterator_type<IterValue>,
-                                    IterValue, bidirectional_traversal_tag>
+    : public boost::iterator_facade<iterator_type<T>, T, bidirectional_traversal_tag>
   {
+
+    BOOST_STATIC_ASSERT_MSG(boost::is_const<T>::value,
+      "Internal logic error: T must be const since iterators reference a proxy"
+      " inside the iterator itself");
+
   public:
     iterator_type(): m_element(0) {}
-    iterator_type(buffer_ptr p, IterValue* e)
-      : m_page(static_cast<typename indirect_btree_base::btree_page_ptr>(p)), m_element(e) {}
+    iterator_type(buffer_ptr p, typename indirect_btree_base::page_index_type* e)
+      : m_page(static_cast<typename indirect_btree_base::btree_page_ptr>(p)),
+        m_element(e) { set_value(); }
 
 
   private:
     friend class boost::iterator_core_access;
     friend class indirect_btree_base;
    
-    typename indirect_btree_base::btree_page_ptr  m_page; 
-    IterValue*                           m_element;  // 0 for the end iterator
+    typename indirect_btree_base::btree_page_ptr    m_page; 
+    typename indirect_btree_base::page_index_type*  m_element;  // 0 for the end iterator
+    typename boost::remove_const<T>::type           m_value;    // proxy value
 
-    IterValue& dereference() const  { return *m_element; }
+    void set_value()
+    { 
+//      indirect_btree_base::set_value(m_value, m_page.data() + m_element);
+    }
+
+    T& dereference() const  { return m_value; }
  
     bool equal(const iterator_type& rhs) const
     {
@@ -1475,9 +1540,9 @@ void swap(common_base<Key,T,Comp,GetKey>& x,
 //--------------------------------------------------------------------------------------//
 
 template <class Key, class Base, class Traits, class Comp>
-template <class IterValue>
+template <class T>
 void
-indirect_btree_base<Key,Base,Traits,Comp>::iterator_type<IterValue>::increment()
+indirect_btree_base<Key,Base,Traits,Comp>::iterator_type<T>::increment()
 {
   BOOST_ASSERT_MSG(m_element, "increment of end iterator"); 
   BOOST_ASSERT(m_page);
@@ -1499,9 +1564,9 @@ indirect_btree_base<Key,Base,Traits,Comp>::iterator_type<IterValue>::increment()
 }
 
 template <class Key, class Base, class Traits, class Comp>
-template <class IterValue>
+template <class T>
 void
-indirect_btree_base<Key,Base,Traits,Comp>::iterator_type<IterValue>::decrement()
+indirect_btree_base<Key,Base,Traits,Comp>::iterator_type<T>::decrement()
 {
   if (*this == reinterpret_cast<const indirect_btree_base<Key,Base,Traits,Comp>*>
         (m_page->manager().owner())->end())
