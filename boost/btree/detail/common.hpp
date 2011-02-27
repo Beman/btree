@@ -30,6 +30,25 @@ namespace btree
 {
 
 //--------------------------------------------------------------------------------------//
+//                               class btree_set_base                                   //
+//--------------------------------------------------------------------------------------//
+
+template <class Key, class Comp>
+class btree_set_base
+{
+public:
+  typedef Key       value_type;
+  typedef Comp      value_compare;
+  typedef value_type const           iterator_value_type;
+  typedef value_type const           const_iterator_value_type;
+
+  const Key& key(const value_type& v) const {return v;}  // really handy, so expose
+
+  static std::size_t key_size() { return sizeof(Key); }
+  static std::size_t mapped_size() { return 0; }
+};
+
+//--------------------------------------------------------------------------------------//
 //                               class btree_map_base                                   //
 //--------------------------------------------------------------------------------------//
 
@@ -62,25 +81,6 @@ public:
   private:
     Comp    m_comp;
   };
-};
-
-//--------------------------------------------------------------------------------------//
-//                               class btree_set_base                                   //
-//--------------------------------------------------------------------------------------//
-
-template <class Key, class Comp>
-class btree_set_base
-{
-public:
-  typedef Key       value_type;
-  typedef Comp      value_compare;
-  typedef value_type const           iterator_value_type;
-  typedef value_type const           const_iterator_value_type;
-
-  const Key& key(const value_type& v) const {return v;}  // really handy, so expose
-
-  static std::size_t key_size() { return sizeof(Key); }
-  static std::size_t mapped_size() { return 0; }
 };
 
 //--------------------------------------------------------------------------------------//
@@ -371,36 +371,10 @@ private:
     void               parent_page_id(page_id_type id) {m_parent_page_id = id;}
 #   endif
 
-    //  functions valid for both leaf and branch pages
-    btree_data&        btree_ref()                     {return *reinterpret_cast<btree_data*>
+    leaf_data&         leaf()                      {return *reinterpret_cast<leaf_data*>
                                                          (buffer::data());}
-    const btree_data&  btree_ref() const               {return *reinterpret_cast<const btree_data*>
+    branch_data&       branch()                    {return *reinterpret_cast<branch_data*>
                                                          (buffer::data());}
-    int                level() const                   {return btree_ref().level();}
-    void               level(int lv)                   {btree_ref().level(lv);}
-    bool               is_leaf() const                 {return btree_ref().level() == 0;}
-    bool               is_branch() const               {return btree_ref().level() != 0;}
-    boost::uint16_t    size() const                    {return btree_ref().size();}
-    void               size(boost::uint16_t sz)        {btree_ref().size(sz);}
-
-    //  functions valid for leaf pages only
-    leaf_data&         leaf_ref()                      {return *reinterpret_cast<leaf_data*>
-                                                         (buffer::data());}
-    const leaf_data&   leaf_ref() const                {return *reinterpret_cast<const leaf_data*>
-                                                         (buffer::data());}
-    page_id_type       prior_page_id() const           {return leaf_ref().prior_page_id();}
-    void               prior_page_id(page_id_type id)  {leaf_ref().prior_page_id(id);}
-    page_id_type       next_page_id() const            {return leaf_ref().next_page_id();}
-    void               next_page_id(page_id_type id)   {leaf_ref().next_page_id(id);}
-    value_type*        leaf_begin()                    {return leaf_ref().begin();}
-    value_type*        leaf_end()                      {return leaf_ref().end();}
-
-    //  functions valid for branch pages only
-    branch_data&       branch_ref()                    {return *reinterpret_cast<branch_data*>
-                                                         (buffer::data());}
-    branch_value_type* branch_begin()                  {return branch_ref().begin();}
-    branch_value_type* branch_end()                    {return branch_ref().end();}
-
   private:
     btree_page*         m_parent;   // by definition, the parent is a branch page.
                                     // rationale for raw pointer: (1) elminate overhead
@@ -537,10 +511,10 @@ private:
   void  m_free_page(btree_page* pg)
   {
     pg->needs_write(true);
-    pg->level(0xFFFE);
-    pg->size(0);
-    pg->prior_page_id(page_id_type());
-    pg->next_page_id(page_id_type(m_hdr.free_page_list_head_id()));
+    pg->leaf().level(0xFFFE);
+    pg->leaf().size(0);
+    pg->leaf().prior_page_id(page_id_type());
+    pg->leaf().next_page_id(page_id_type(m_hdr.free_page_list_head_id()));
     m_hdr.free_page_list_head_id(pg->page_id());
   }
 
@@ -732,8 +706,8 @@ btree_base<Key,Base,Traits,Comp>::m_open(const boost::filesystem::path& p,
     m_hdr.root_page_id(m_root->page_id());
     m_hdr.first_page_id(m_root->page_id());
     m_hdr.last_page_id(m_root->page_id());
-    m_root->level(0);
-    m_root->size(0);
+    m_root->leaf().level(0);
+    m_root->leaf().size(0);
   }
   m_set_max_cache_pages();
   m_max_leaf_size = (m_mgr.data_size() - leaf_data::offset()) / sizeof(value_type);
@@ -780,7 +754,7 @@ btree_base<Key,Base,Traits,Comp>::begin() const
   BOOST_ASSERT(header().first_page_id());                     
   btree_page_ptr pg(m_mgr.read(header().first_page_id()));
   BOOST_ASSERT(pg->is_leaf());
-  return const_iterator(pg, pg->leaf_begin());
+  return const_iterator(pg, pg->leaf().begin());
 }
 
 //-------------------------------------- last() ---------------------------------------//
@@ -795,7 +769,7 @@ btree_base<Key,Base,Traits,Comp>::last() const
   BOOST_ASSERT(header().last_page_id());
   btree_page_ptr pg(m_mgr.read(header().last_page_id()));
   BOOST_ASSERT(pg->is_leaf());
-  return const_iterator(pg, pg->leaf_end()-1);
+  return const_iterator(pg, pg->leaf().end()-1);
 }
 
 //---------------------------------- m_new_page() --------------------------------------//
@@ -808,8 +782,8 @@ btree_base<Key,Base,Traits,Comp>::m_new_page(boost::uint16_t lv)
   if (m_hdr.free_page_list_head_id())
   {
     pg = m_mgr.read(m_hdr.free_page_list_head_id());
-    BOOST_ASSERT(pg->level() == 0xFFFE);  // free page list entry
-    m_hdr.free_page_list_head_id(pg->next_page_id());
+    BOOST_ASSERT(pg->leaf().level() == 0xFFFE);  // free page list entry
+    m_hdr.free_page_list_head_id(pg->leaf().next_page_id());
   }
   else
   {
@@ -819,8 +793,8 @@ btree_base<Key,Base,Traits,Comp>::m_new_page(boost::uint16_t lv)
   }
 
   pg->needs_write(true);
-  pg->level(lv);
-  pg->size(0);
+  pg->leaf().level(lv);
+  pg->leaf().size(0);
   return pg;
 }
 
@@ -837,14 +811,14 @@ btree_base<Key,Base,Traits,Comp>::m_new_root()
   m_set_max_cache_pages();
   m_root = m_new_page(m_hdr.root_level());
   m_hdr.root_page_id(m_root->page_id());
-  std::memcpy(&(m_root->branch_begin()-1)->page_id, &old_root_id, sizeof(page_id_type));
-  m_root->size(0);  // the P0 pseudo-element doesn't count as an element
+  std::memcpy(&(m_root->branch().begin()-1)->page_id, &old_root_id, sizeof(page_id_type));
+  m_root->leaf().size(0);  // the P0 pseudo-element doesn't count as an element
   // TODO: why maintain the child->parent list? By the time m_new_root() is called,
   // hasn't the need passed?
   m_root->parent(0);  
   m_root->parent_element(0);
   old_root->parent(m_root.get());
-  old_root->parent_element(m_root->branch_begin()-1);  // point to P0 pseudo-element
+  old_root->parent_element(m_root->branch().begin()-1);  // point to P0 pseudo-element
 # ifndef NDEBUG
   m_root->parent_page_id(page_id_type(0));
   old_root->parent_page_id(m_root->page_id());
@@ -864,33 +838,33 @@ btree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter,
   value_type*        split_begin;
 
   BOOST_ASSERT(pg->is_leaf());
-  BOOST_ASSERT(pg->size() <= m_max_leaf_size);
+  BOOST_ASSERT(pg->leaf().size() <= m_max_leaf_size);
 
   m_hdr.increment_element_count();
   pg->needs_write(true);
 
-  if (pg->size() == m_max_leaf_size)  // is the page full?
+  if (pg->leaf().size() == m_max_leaf_size)  // is the page full?
   {
     //  page is full, so must be split
 
-    if (pg->level() == m_hdr.root_level()) // splitting the root?
+    if (pg->leaf().level() == m_hdr.root_level()) // splitting the root?
       m_new_root();  // create a new root
     
-    pg2 = m_new_page(pg->level());  // create the new page 
+    pg2 = m_new_page(pg->leaf().level());  // create the new page 
 
     // ck pack conditions now, since leaf seq list update may chg header().last_page_id()
     if (m_ok_to_pack
-        && (insert_begin != pg->leaf_end() || pg->page_id() != header().last_page_id()))
+        && (insert_begin != pg->leaf().end() || pg->page_id() != header().last_page_id()))
       m_ok_to_pack = false;  // conditions for pack optimization not met
 
     // insert the new page into the leaf sequence lists
-    pg2->prior_page_id(pg->page_id());
-    pg2->next_page_id(pg->next_page_id());
-    pg->next_page_id(pg2->page_id());
-    if (pg2->next_page_id())
+    pg2->leaf().prior_page_id(pg->page_id());
+    pg2->leaf().next_page_id(pg->leaf().next_page_id());
+    pg->leaf().next_page_id(pg2->page_id());
+    if (pg2->leaf().next_page_id())
     {
-      const btree_page_ptr next_page(m_mgr.read(pg2->next_page_id()));
-      next_page->prior_page_id(pg2->page_id());
+      const btree_page_ptr next_page(m_mgr.read(pg2->leaf().next_page_id()));
+      next_page->leaf().prior_page_id(pg2->page_id());
       next_page->needs_write(true);
     }
     else 
@@ -900,41 +874,41 @@ btree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter,
     if (m_ok_to_pack)  // have all inserts been ordered and no erases occurred?
     {
       // pack optimization: instead of splitting pg, just put value alone on pg2
-      std::memcpy(pg2->leaf_begin(), &value, sizeof(value_type));  // insert value
-      pg2->size(1);
+      std::memcpy(pg2->leaf().begin(), &value, sizeof(value_type));  // insert value
+      pg2->leaf().size(1);
       BOOST_ASSERT(pg->parent()->page_id() == pg->parent_page_id()); // max_cache_size logic OK?
       m_branch_insert(pg->parent(), pg->parent_element()+1,
-        key(*pg2->leaf_begin()), pg2->page_id());
-      return const_iterator(pg2, pg2->leaf_begin());
+        key(*pg2->leaf().begin()), pg2->page_id());
+      return const_iterator(pg2, pg2->leaf().begin());
     }
 
     // split page pg by moving half the elements to page p2
 
-    std::size_t split_sz = pg->size() >> 1;  // if odd, lower size goes on pg2 for speed
+    std::size_t split_sz = pg->leaf().size() >> 1;  // if odd, lower size goes on pg2 for speed
     BOOST_ASSERT(split_sz);
-    split_begin = pg->leaf_begin() + (pg->size() - split_sz);
-    std::memcpy(pg2->leaf_begin(), split_begin, split_sz * sizeof(value_type));
-    pg2->size(split_sz);
-//std::cout << "******leaf "<< pg->leaf_end() - split_begin << std::endl;
+    split_begin = pg->leaf().begin() + (pg->leaf().size() - split_sz);
+    std::memcpy(pg2->leaf().begin(), split_begin, split_sz * sizeof(value_type));
+    pg2->leaf().size(split_sz);
+//std::cout << "******leaf "<< pg->leaf().end() - split_begin << std::endl;
     std::memset(split_begin, 0,                              // zero unused space to make
-      (pg->leaf_end() - split_begin) * sizeof(value_type));  // file dumps easier to read
-    pg->size(pg->size() - split_sz);
+      (pg->leaf().end() - split_begin) * sizeof(value_type));  // file dumps easier to read
+    pg->leaf().size(pg->leaf().size() - split_sz);
 
     // adjust pg and insert_begin if they now fall on the new page due to the split
     if (split_begin <= insert_begin)
     {
       pg = pg2;
-      insert_begin = pg2->leaf_begin() + (insert_begin - split_begin);
+      insert_begin = pg2->leaf().begin() + (insert_begin - split_begin);
     }
   }
 
   //  insert value into pg at insert_begin
-  BOOST_ASSERT(insert_begin >= pg->leaf_begin());
-  BOOST_ASSERT(insert_begin <= pg->leaf_end());
-  std::size_t memmove_sz = (pg->leaf_end() - insert_begin) * sizeof(value_type);
+  BOOST_ASSERT(insert_begin >= pg->leaf().begin());
+  BOOST_ASSERT(insert_begin <= pg->leaf().end());
+  std::size_t memmove_sz = (pg->leaf().end() - insert_begin) * sizeof(value_type);
   std::memmove(insert_begin+1, insert_begin, memmove_sz);  // make room
   std::memcpy(insert_begin, &value, sizeof(value_type));   // insert value
-  pg->size(pg->size()+1);
+  pg->leaf().size(pg->leaf().size()+1);
 
   // if there is a new page, its initial key and page_id are inserted into parent
   if (pg2)
@@ -942,7 +916,7 @@ btree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter,
     BOOST_ASSERT(insert_iter.m_page->parent()->page_id() \
       == insert_iter.m_page->parent_page_id()); // max_cache_size logic OK?
     m_branch_insert(insert_iter.m_page->parent(), insert_iter.m_page->parent_element()+1,
-      key(*pg2->leaf_begin()), pg2->page_id());
+      key(*pg2->leaf().begin()), pg2->page_id());
   }
 
   return const_iterator(pg, insert_begin);
@@ -967,35 +941,35 @@ btree_base<Key,Base,Traits,Comp>::m_branch_insert(
   btree_page_ptr       pg2;
   branch_value_type*   split_begin;
 
-  BOOST_ASSERT(pg->is_branch());
-  BOOST_ASSERT(pg->size() <= m_max_branch_size);
+  BOOST_ASSERT(pg->branch().is_branch());
+  BOOST_ASSERT(pg->branch().size() <= m_max_branch_size);
 
   pg->needs_write(true);
 
-  if (pg->size() == m_max_branch_size)  // is the page full?
+  if (pg->branch().size() == m_max_branch_size)  // is the page full?
   {
 // std::cout << "******branch " << pg->page_id() << std::endl;
    //  page is full, so must be split
 
-    if (pg->level() == m_hdr.root_level()) // splitting the root?
+    if (pg->branch().level() == m_hdr.root_level()) // splitting the root?
       m_new_root();  // create a new root
     
-    pg2 = m_new_page(pg->level());  // create the new page
+    pg2 = m_new_page(pg->branch().level());  // create the new page
 
     // split the page
-    std::size_t split_sz = pg->size() >> 1;  // if odd, lower size goes on pg2 for speed
+    std::size_t split_sz = pg->branch().size() >> 1;  // if odd, lower size goes on pg2 for speed
     BOOST_ASSERT(split_sz);
-    split_begin = pg->branch_begin() + (pg->size() - split_sz);
+    split_begin = pg->branch().begin() + (pg->branch().size() - split_sz);
 
     if (split_begin == insert_begin)
     {
-      pg2->branch_ref().P0 = id;
-      std::memcpy(pg2->branch_begin(), split_begin,
+      pg2->branch().P0 = id;
+      std::memcpy(pg2->branch().begin(), split_begin,
         split_sz * sizeof(branch_value_type)); // move split values to the new page
-      pg2->size(split_sz);
+      pg2->branch().size(split_sz);
       std::memset(split_begin, 0,  // zero unused space to make file dumps easier to read
-        (pg->branch_end() - split_begin) * sizeof(branch_value_type)); 
-      pg->size(pg->size() - split_sz);
+        (pg->branch().end() - split_begin) * sizeof(branch_value_type)); 
+      pg->branch().size(pg->branch().size() - split_sz);
       BOOST_ASSERT(pg->parent()->page_id() == pg->parent_page_id()); // max_cache_size logic OK?
       m_branch_insert(pg->parent(), pg->parent_element()+1, k, pg2->page_id());
       return;
@@ -1005,39 +979,39 @@ btree_base<Key,Base,Traits,Comp>::m_branch_insert(
     // go directly to the correct location, elminating the need for the make-room
     // memmove
 
-    pg2->branch_ref().P0 = split_begin->page_id;
-    std::memcpy(pg2->branch_begin(), split_begin+1,
+    pg2->branch().P0 = split_begin->page_id;
+    std::memcpy(pg2->branch().begin(), split_begin+1,
       (split_sz-1) * sizeof(branch_value_type)); // copy the values
-    pg2->size(split_sz-1);
+    pg2->branch().size(split_sz-1);
     BOOST_ASSERT(pg->parent()->page_id() == pg->parent_page_id()); // max_cache_size logic OK?
     m_branch_insert(pg->parent(), pg->parent_element()+1, split_begin->key,
       pg2->page_id());
     std::memset(split_begin, 0,  // zero unused space to make file dumps easier to read
-      (pg->branch_end() - split_begin) * sizeof(branch_value_type)); 
-    pg->size(pg->size() - split_sz);
+      (pg->branch().end() - split_begin) * sizeof(branch_value_type)); 
+    pg->branch().size(pg->branch().size() - split_sz);
 
     // adjust pg and insert_begin if they now fall on the new page due to the split
     if (split_begin < insert_begin)
     {
       pg = pg2.get();
-      insert_begin = pg2->branch_begin() + (insert_begin - split_begin - 1);
+      insert_begin = pg2->branch().begin() + (insert_begin - split_begin - 1);
     }
   }
 
   //  insert k, id into pg at insert_begin
-  BOOST_ASSERT(insert_begin >= pg->branch_begin());
-  BOOST_ASSERT(insert_begin <= pg->branch_end());
-  std::size_t memmove_sz = (pg->branch_end() - insert_begin) * sizeof(branch_value_type);
+  BOOST_ASSERT(insert_begin >= pg->branch().begin());
+  BOOST_ASSERT(insert_begin <= pg->branch().end());
+  std::size_t memmove_sz = (pg->branch().end() - insert_begin) * sizeof(branch_value_type);
   std::memmove(insert_begin+1, insert_begin, memmove_sz);  // make room
   insert_begin->key = k;       // do the
   insert_begin->page_id = id;  //  insert
-  pg->size(pg->size()+1);
+  pg->branch().size(pg->branch().size()+1);
 
 #ifndef NDEBUG
   if (!(m_hdr.flags() & btree::flags::multi))
   {
     key_type prev_key = 0;
-    for(const branch_value_type* beg = pg->branch_begin(); beg != pg->branch_end(); ++beg)
+    for(const branch_value_type* beg = pg->branch().begin(); beg != pg->branch().end(); ++beg)
     {
       BOOST_ASSERT(key_comp()(prev_key, beg->key));
       prev_key = beg->key;
@@ -1052,12 +1026,12 @@ template <class Key, class Base, class Traits, class Comp>
 void btree_base<Key,Base,Traits,Comp>::m_erase_branch_value(
   btree_page* pg, branch_value_type* value)
 {
-  BOOST_ASSERT(pg->is_branch());
-  if (pg->branch_begin() == pg->branch_end()) // P0 pseudo-value only value on page?
+  BOOST_ASSERT(pg->branch().is_branch());
+  if (pg->branch().begin() == pg->branch().end()) // P0 pseudo-value only value on page?
                                               // i.e. the entire sub-tree is now empty
   {
-    BOOST_ASSERT(value < pg->branch_begin());
-    BOOST_ASSERT(pg->level() != header().root_level());
+    BOOST_ASSERT(value < pg->branch().begin());
+    BOOST_ASSERT(pg->branch().level() != header().root_level());
     BOOST_ASSERT(pg->parent()->page_id() == pg->parent_page_id()); // max_cache_size logic OK?
     m_erase_branch_value(pg->parent(),
       pg->parent_element()); // erase parent value pointing to pg
@@ -1067,21 +1041,21 @@ void btree_base<Key,Base,Traits,Comp>::m_erase_branch_value(
   {
     // erase branch_value that is not on a P0-only page
     char* erase_point = (char*)value;
-    if (value < pg->branch_begin()) // is value the P0 pseudo-value?
+    if (value < pg->branch().begin()) // is value the P0 pseudo-value?
        erase_point = (char*)&value->page_id;
-    std::size_t memmove_sz = (char*)pg->branch_end()
+    std::size_t memmove_sz = (char*)pg->branch().end()
       - erase_point - sizeof(branch_value_type);
     std::memmove(erase_point, erase_point+sizeof(branch_value_type), memmove_sz);
-    pg->size(pg->size()-1);
-    std::memset(pg->branch_end(), 0, sizeof(branch_value_type));
+    pg->branch().size(pg->branch().size()-1);
+    std::memset(pg->branch().end(), 0, sizeof(branch_value_type));
     pg->needs_write(true);
 
-    while (pg->level()   // not the leaf (which can happen if iteration reaches leaf)
-      && pg->branch_begin() == pg->branch_end()  // page empty except for P0
-      && pg->level() == header().root_level())   // page is the root
+    while (pg->branch().level()   // not the leaf (which can happen if iteration reaches leaf)
+      && pg->branch().begin() == pg->branch().end()  // page empty except for P0
+      && pg->branch().level() == header().root_level())   // page is the root
     {
       // make P0 the new root and then free this page
-      m_hdr.root_page_id((pg->branch_begin()-1)->page_id);
+      m_hdr.root_page_id((pg->branch().begin()-1)->page_id);
       m_root = m_mgr.read(header().root_page_id());
       m_hdr.decrement_root_level();
       m_free_page(pg); // move page to free page list
@@ -1100,13 +1074,13 @@ btree_base<Key,Base,Traits,Comp>::erase(const_iterator pos)
   BOOST_ASSERT_MSG(pos != end(), "erase() on end iterator");
   BOOST_ASSERT(pos.m_page);
   BOOST_ASSERT(pos.m_page->is_leaf());
-  BOOST_ASSERT(pos.m_element < pos.m_page->leaf_end());
-  BOOST_ASSERT(pos.m_element >= pos.m_page->leaf_begin());
+  BOOST_ASSERT(pos.m_element < pos.m_page->leaf().end());
+  BOOST_ASSERT(pos.m_element >= pos.m_page->leaf().begin());
 
    m_ok_to_pack = false;
 
   if (pos.m_page->page_id() != m_root->page_id()  // not root?
-    && (pos.m_page->size() == 1))  // only 1 value on page?
+    && (pos.m_page->leaf().size() == 1))  // only 1 value on page?
   {
     // erase a single value leaf page that is not the root
     
@@ -1131,22 +1105,22 @@ btree_base<Key,Base,Traits,Comp>::erase(const_iterator pos)
 
     // cut the page out of the page sequence list
     btree_page_ptr link_pg;
-    if (low.m_page->prior_page_id())
+    if (low.m_page->leaf().prior_page_id())
     {
-      link_pg = m_mgr.read(low.m_page->prior_page_id()); // prior page
-      link_pg->next_page_id(low.m_page->next_page_id());
+      link_pg = m_mgr.read(low.m_page->leaf().prior_page_id()); // prior page
+      link_pg->leaf().next_page_id(low.m_page->leaf().next_page_id());
       link_pg->needs_write(true);
     }
     else
-      m_hdr.first_page_id(low.m_page->next_page_id());
-    if (low.m_page->next_page_id())
+      m_hdr.first_page_id(low.m_page->leaf().next_page_id());
+    if (low.m_page->leaf().next_page_id())
     {
-      link_pg = m_mgr.read(low.m_page->next_page_id()); // next page
-      link_pg->prior_page_id(low.m_page->prior_page_id());
+      link_pg = m_mgr.read(low.m_page->leaf().next_page_id()); // next page
+      link_pg->leaf().prior_page_id(low.m_page->leaf().prior_page_id());
       link_pg->needs_write(true);
     }
     else
-      m_hdr.last_page_id(low.m_page->prior_page_id());
+      m_hdr.last_page_id(low.m_page->leaf().prior_page_id());
 
     m_free_page(low.m_page.get());  // add page to free page list
 
@@ -1158,17 +1132,17 @@ btree_base<Key,Base,Traits,Comp>::erase(const_iterator pos)
   // the page from the tree.
 
   value_type* erase_point = const_cast<value_type*>(pos.m_element);
-  std::size_t memmove_sz = (pos.m_page->leaf_end() - erase_point - 1) * sizeof(value_type);
+  std::size_t memmove_sz = (pos.m_page->leaf().end() - erase_point - 1) * sizeof(value_type);
   std::memmove(erase_point, (const char*)erase_point + sizeof(value_type), memmove_sz);
-  pos.m_page->size(pos.m_page->size()-1);
-  std::memset(pos.m_page->leaf_end(), 0, sizeof(value_type));
+  pos.m_page->leaf().size(pos.m_page->leaf().size()-1);
+  std::memset(pos.m_page->leaf().end(), 0, sizeof(value_type));
   m_hdr.decrement_element_count();
   pos.m_page->needs_write(true);
 
   if (!memmove_sz)  // at end of page?
   {
     --pos.m_element;  // make pos incrementable so ++pos can be used to advance to next
-    if (pos.m_element < pos.m_page->leaf_begin()) // is page empty?
+    if (pos.m_element < pos.m_page->leaf().begin()) // is page empty?
     {
       BOOST_ASSERT(empty());  // logic check: the page is empty, implying page is an empty
                               // root; i.e. the tree is empty
@@ -1222,7 +1196,7 @@ btree_base<Key,Base,Traits,Comp>::m_insert_unique(const value_type& value)
   BOOST_ASSERT_MSG(is_open(), "insert() on unopen btree");
   iterator insert_point = m_lower_page_bound(key(value));
 
-  bool unique = insert_point.m_element == insert_point.m_page->leaf_end()
+  bool unique = insert_point.m_element == insert_point.m_page->leaf().end()
                 || key_comp()(key(value), key(*insert_point.m_element))
                 || key_comp()(key(*insert_point.m_element), key(value));
 
@@ -1248,7 +1222,7 @@ btree_base<Key,Base,Traits,Comp>::m_insert_non_unique(const value_type& value)
 
 //  Differs from lower_bound() in that a trail of parent page and element pointers is left
 //  behind, allowing inserts and erases to walk back up the tree to maintain the branch
-//  invariants. Also, m_element of the returned iterator will be m_page->leaf_end() if
+//  invariants. Also, m_element of the returned iterator will be m_page->leaf().end() if
 //  appropriate, rather than a pointer to the first element on the next page.
 
 template <class Key, class Base, class Traits, class Comp>   
@@ -1260,11 +1234,11 @@ btree_base<Key,Base,Traits,Comp>::m_lower_page_bound(const key_type& k)
   btree_page_ptr pg = m_root;
 
   // search branches down the tree until a leaf is reached
-  while (pg->is_branch())
+  while (pg->branch().is_branch())
   {
     branch_value_type* low
-      = std::lower_bound(pg->branch_begin(), pg->branch_end(), k, branch_comp());
-    if (low == pg->branch_end()        // all keys on page < search key, so low
+      = std::lower_bound(pg->branch().begin(), pg->branch().end(), k, branch_comp());
+    if (low == pg->branch().end()      // all keys on page < search key, so low
                                        // must point to last value on page
       || key_comp()(k, low->key))      // search key < low key, so low
                                        // must point to P0 pseudo-value
@@ -1282,7 +1256,7 @@ btree_base<Key,Base,Traits,Comp>::m_lower_page_bound(const key_type& k)
 
   //  search leaf
   value_type* low
-    = std::lower_bound(pg->leaf_begin(), pg->leaf_end(), k, value_comp());
+    = std::lower_bound(pg->leaf().begin(), pg->leaf().end(), k, value_comp());
 
   return iterator(pg, low);
 }
@@ -1297,12 +1271,12 @@ btree_base<Key,Base,Traits,Comp>::lower_bound(const key_type& k) const
   btree_page_ptr pg = m_root;
 
   // search branches down the tree until a leaf is reached
-  while (pg->is_branch())
+  while (pg->branch().is_branch())
   {
     branch_value_type* low
-      = std::lower_bound(pg->branch_begin(), pg->branch_end(), k, branch_comp());
+      = std::lower_bound(pg->branch().begin(), pg->branch().end(), k, branch_comp());
 
-    pg = (low == pg->branch_end()        // all keys on page < search key
+    pg = (low == pg->branch().end()    // all keys on page < search key
           || key_comp()(k, low->key)   // search key < low key
           || ((m_hdr.flags() & btree::flags::multi)
               && !key_comp()(low->key, k) ))  // non-unique && search key == low key
@@ -1312,23 +1286,23 @@ btree_base<Key,Base,Traits,Comp>::lower_bound(const key_type& k) const
 
   //  search leaf
   value_type* low
-    = std::lower_bound(pg->leaf_begin(), pg->leaf_end(), k, value_comp());
+    = std::lower_bound(pg->leaf().begin(), pg->leaf().end(), k, value_comp());
 
-  if (low != pg->leaf_end())
+  if (low != pg->leaf().end())
     return const_iterator(pg, low);
 
   // lower bound is first element on next page
-  if (!pg->next_page_id())
+  if (!pg->leaf().next_page_id())
     return end();
-  pg = m_mgr.read(pg->next_page_id());
-  return const_iterator(pg, pg->leaf_begin());
+  pg = m_mgr.read(pg->leaf().next_page_id());
+  return const_iterator(pg, pg->leaf().begin());
 }
 
 //--------------------------------- m_upper_page_bound() -------------------------------//
 
 //  Differs from upper_bound() in that a trail of parent page and element pointers is left
 //  behind, allowing inserts and erases to walk back up the tree to maintain the branch
-//  invariants. Also, m_element of the returned iterator will be m_page->leaf_end() if
+//  invariants. Also, m_element of the returned iterator will be m_page->leaf().end() if
 //  appropriate, rather than a pointer to the first element on the next page.
 
 template <class Key, class Base, class Traits, class Comp>   
@@ -1340,11 +1314,11 @@ btree_base<Key,Base,Traits,Comp>::m_upper_page_bound(const key_type& k)
   btree_page_ptr pg = m_root;
 
   // search branches down the tree until a leaf is reached
-  while (pg->is_branch())
+  while (pg->branch().is_branch())
   {
     branch_value_type* up
-      = std::upper_bound(pg->branch_begin(), pg->branch_end(), k, branch_comp());
-    if (up == pg->branch_end()        // all keys on page < search key, so up
+      = std::upper_bound(pg->branch().begin(), pg->branch().end(), k, branch_comp());
+    if (up == pg->branch().end()        // all keys on page < search key, so up
                                       // must point to last value on page
       || key_comp()(k, up->key))      // search key < up key, so up
                                       // must point to P0 pseudo-value
@@ -1362,7 +1336,7 @@ btree_base<Key,Base,Traits,Comp>::m_upper_page_bound(const key_type& k)
 
   //  search leaf
   value_type* up
-    = std::upper_bound(pg->leaf_begin(), pg->leaf_end(), k, value_comp());
+    = std::upper_bound(pg->leaf().begin(), pg->leaf().end(), k, value_comp());
 
   return iterator(pg, up);
 }
@@ -1377,29 +1351,29 @@ btree_base<Key,Base,Traits,Comp>::upper_bound(const key_type& k) const
   btree_page_ptr pg = m_root;
 
   // search branches down the tree until a leaf is reached
-  while (pg->is_branch())
+  while (pg->branch().is_branch())
   {
     branch_value_type* up
-      = std::upper_bound(pg->branch_begin(), pg->branch_end(), k, branch_comp());
+      = std::upper_bound(pg->branch().begin(), pg->branch().end(), k, branch_comp());
 
-    pg = (up == pg->branch_end()        // all keys on page < search key
-          || key_comp()(k, up->key))    // search key < up key
+    pg = (up == pg->branch().end()        // all keys on page < search key
+          || key_comp()(k, up->key))      // search key < up key
       ? m_mgr.read((up-1)->page_id)
       : m_mgr.read(up->page_id);
   }
 
   //  search leaf
   value_type* up
-    = std::upper_bound(pg->leaf_begin(), pg->leaf_end(), k, value_comp());
+    = std::upper_bound(pg->leaf().begin(), pg->leaf().end(), k, value_comp());
 
-  if (up != pg->leaf_end())
+  if (up != pg->leaf().end())
     return const_iterator(pg, up);
 
   // upper bound is first element on next page
-  if (!pg->next_page_id())
+  if (!pg->leaf().next_page_id())
     return end();
-  pg = m_mgr.read(pg->next_page_id());
-  return const_iterator(pg, pg->leaf_begin());
+  pg = m_mgr.read(pg->leaf().next_page_id());
+  return const_iterator(pg, pg->leaf().begin());
 }
 
 //------------------------------------- find() -----------------------------------------//
@@ -1472,15 +1446,15 @@ btree_base<Key,Base,Traits,Comp>::iterator_type<IterValue>::increment()
 {
   BOOST_ASSERT_MSG(m_element, "increment of end iterator"); 
   BOOST_ASSERT(m_page);
-  BOOST_ASSERT(m_element >= m_page->leaf_begin());
-  BOOST_ASSERT(m_element < m_page->leaf_end());
+  BOOST_ASSERT(m_element >= m_page->leaf().begin());
+  BOOST_ASSERT(m_element < m_page->leaf().end());
 
-  if (++m_element != m_page->leaf_end())
+  if (++m_element != m_page->leaf().end())
     return;
-  if (m_page->next_page_id())
+  if (m_page->leaf().next_page_id())
   {  
-    m_page = m_page->manager().read(m_page->next_page_id());
-    m_element = m_page->leaf_begin();
+    m_page = m_page->manager().read(m_page->leaf().next_page_id());
+    m_element = m_page->leaf().begin();
   }
   else // end() reached
   {
@@ -1498,12 +1472,12 @@ btree_base<Key,Base,Traits,Comp>::iterator_type<IterValue>::decrement()
         (m_page->manager().owner())->end())
     *this = reinterpret_cast<btree_base<Key,Base,Traits,Comp>*>
         (m_page->manager().owner())->last();
-  else if (m_element != m_page->leaf_begin())
+  else if (m_element != m_page->leaf().begin())
     --m_element;
-  else if (m_page->prior_page_id())
+  else if (m_page->leaf().prior_page_id())
   {  
-    m_page = m_page->manager().read(m_page->prior_page_id());
-    m_element = m_page->leaf_end();
+    m_page = m_page->manager().read(m_page->leaf().prior_page_id());
+    m_element = m_page->leaf().end();
     --m_element;
   }
   else // end() reached
