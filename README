@@ -1,0 +1,9 @@
+This branch explores an approach to variable length data that stores variable length values on pages in just the same way as for fixed length values.
+
+* Sequential search is used rather than binary search, since the pointers used as search iterators don't support random access binary searches. The hope is that modern hardware memory caches will reduce costs to an acceptable level.
+
+* Backward iteration uses a kludge - steping forward to the prior element. Ugly and slow, but it works.
+
+The hope is that this approach will avoid much code complexity compared to other approaches. The approach has nearly thirty years history of being "good enough" in the original C implementnation. 
+
+ 
