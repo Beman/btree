@@ -753,7 +753,7 @@ btree_base<Key,Base,Traits,Comp>::begin() const
     return end();
   BOOST_ASSERT(header().first_page_id());                     
   btree_page_ptr pg(m_mgr.read(header().first_page_id()));
-  BOOST_ASSERT(pg->is_leaf());
+  BOOST_ASSERT(pg->leaf().is_leaf());
   return const_iterator(pg, pg->leaf().begin());
 }
 
@@ -768,7 +768,7 @@ btree_base<Key,Base,Traits,Comp>::last() const
     return end();
   BOOST_ASSERT(header().last_page_id());
   btree_page_ptr pg(m_mgr.read(header().last_page_id()));
-  BOOST_ASSERT(pg->is_leaf());
+  BOOST_ASSERT(pg->leaf().is_leaf());
   return const_iterator(pg, pg->leaf().end()-1);
 }
 
@@ -837,7 +837,7 @@ btree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter,
   btree_page_ptr     pg2;
   value_type*        split_begin;
 
-  BOOST_ASSERT(pg->is_leaf());
+  BOOST_ASSERT(pg->leaf().is_leaf());
   BOOST_ASSERT(pg->leaf().size() <= m_max_leaf_size);
 
   m_hdr.increment_element_count();
@@ -1073,7 +1073,7 @@ btree_base<Key,Base,Traits,Comp>::erase(const_iterator pos)
   BOOST_ASSERT_MSG(is_open(), "erase() on unopen btree");
   BOOST_ASSERT_MSG(pos != end(), "erase() on end iterator");
   BOOST_ASSERT(pos.m_page);
-  BOOST_ASSERT(pos.m_page->is_leaf());
+  BOOST_ASSERT(pos.m_page->leaf().is_leaf());
   BOOST_ASSERT(pos.m_element < pos.m_page->leaf().end());
   BOOST_ASSERT(pos.m_element >= pos.m_page->leaf().begin());
 
