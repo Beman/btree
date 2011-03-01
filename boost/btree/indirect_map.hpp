@@ -16,7 +16,7 @@
 #include <boost/cstdint.hpp>
 #include <boost/btree/header.hpp>
 #include <boost/filesystem/path.hpp>
-#include <boost/btree/detail/indirect_common.hpp>  // interface common to vbtree_map and btree_set
+#include <boost/btree/detail/vcommon.hpp>  // interface common to vbtree_map and btree_set
 #include <boost/static_assert.hpp>
 #include <boost/type_traits/is_pointer.hpp>
 
