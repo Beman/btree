@@ -132,8 +132,8 @@ namespace boost
       page_id_type        m_free_page_list_head_id;  // list of recycleable pages
 
       boost::uint16_t     m_root_level;
-      boost::uint16_t     m_key_size;            // sizeof(key_type)
-      boost::uint16_t     m_mapped_size;         // sizeof(mapped_type)
+      boost::uint16_t     m_key_size;            // sizeof(key_type); -1 imples indirect
+      boost::uint16_t     m_mapped_size;         // sizeof(mapped_type); -1 implies indirect
 
       // TODO: Add a better way to verify that an existing file is opened using the same
       // Key, T, Comp, and Traits or when originally created. 

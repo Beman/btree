@@ -332,8 +332,6 @@ private:
 
   btree::header_page m_hdr;
 
-  std::size_t        m_max_leaf_size;
-  std::size_t        m_max_branch_size;  // not including P0 pseudo-element
   bool               m_read_only;
   bool               m_ok_to_pack;  // true while all inserts ordered and no erases
                                                
@@ -357,17 +355,19 @@ private:
     void             level(int lv)                   {m_level = lv;}
     bool             is_leaf() const                 {return m_level == 0;}
     bool             is_branch() const               {return m_level != 0;}
-    page_size_type   end_offset() const              {return m_end;}
-    void             end_offset(page_size_type v)    {m_end = v;}
+    page_size_type   size() const                    {return m_size;}
+    void             size(page_size_type sz)         {m_size = sz;}
+    page_size_type   value_size() const              {return m_value_size;}
+    void             value_size(page_size_type v)    {m_value_size = v;}
     page_size_type   garbage_size() const            {return m_garbage_size;}
     void             garbage_size(page_size_type v)  {m_garbage_size = v;}
 
   private:
-    page_level_type  m_level;     // leaf: 0, branches: distance from leaf, header: 0xFFFF,
-                                  // free page list entry: 0xFFFFE
-    page_size_type   m_end;       // offset on page of the past-the-end element
-    page_size_type   m_free_end;  // offset on page of last used free space
-    page_size_type   m_garbage_size;  // size in bytes of garbage on page
+    page_level_type  m_level;        // leaf: 0, branches: distance from leaf,
+                                     // header: 0xFFFF, free page list entry: 0xFFFE
+    page_size_type   m_size;         // number of elements on page
+    page_size_type   m_value_size;   // size in bytes of values on page including garbage
+    page_size_type   m_garbage_size; // size in bytes of garbage values on page
   };
   
   class leaf_data : public btree_data
@@ -380,14 +380,11 @@ private:
     page_id_type     next_page_id() const            {return m_next_page_id;}
     void             next_page_id(page_id_type id)   {m_next_page_id = id;}
     element_type*    begin()                         {return m_element;}
-    element_type*    end()
-    {
-      return reinterpret_cast<element_type*>((char*)this + m_end);
-    }
+    element_type*    end()                           {return m_element + m_size;}
 
     //  private:
-    page_id_type     m_prior_page_id;  // page sequence list; 0 for end
-    page_id_type     m_next_page_id;   // page sequence list; 0 for end
+    page_id_type     m_next_page_id;   // page sequence fwd list; 0 for end
+    page_id_type     m_prior_page_id;  // page sequence bwd list; 0 for end
     element_type     m_element[1];
   };
 
@@ -434,35 +431,15 @@ private:
     void               parent_page_id(page_id_type id) {m_parent_page_id = id;}
 #   endif
 
-    //  functions valid for both leaf and branch pages
-    btree_data&        btree_ref()                     {return *reinterpret_cast<btree_data*>
-                                                         (buffer::data());}
-    const btree_data&  btree_ref() const               {return *reinterpret_cast<const btree_data*>
-                                                         (buffer::data());}
-    int                level() const                   {return btree_ref().level();}
-    void               level(int lv)                   {btree_ref().level(lv);}
-    bool               is_leaf() const                 {return btree_ref().level() == 0;}
-    bool               is_branch() const               {return btree_ref().level() != 0;}
-    boost::uint16_t    size() const                    {return btree_ref().size();}
-    void               size(boost::uint16_t sz)        {btree_ref().size(sz);}
+    //btree_data&        btree_ref()                     {return *reinterpret_cast<btree_data*>
+    //                                                     (buffer::data());}
+    //const btree_data&  btree_ref() const               {return *reinterpret_cast<const btree_data*>
+    //                                                     (buffer::data());}
 
-    //  functions valid for leaf pages only
-    leaf_data&         leaf_ref()                      {return *reinterpret_cast<leaf_data*>
-                                                         (buffer::data());}
-    const leaf_data&   leaf_ref() const                {return *reinterpret_cast<const leaf_data*>
-                                                         (buffer::data());}
-    page_id_type       prior_page_id() const           {return leaf_ref().prior_page_id();}
-    void               prior_page_id(page_id_type id)  {leaf_ref().prior_page_id(id);}
-    page_id_type       next_page_id() const            {return leaf_ref().next_page_id();}
-    void               next_page_id(page_id_type id)   {leaf_ref().next_page_id(id);}
-    value_type*        leaf_begin()                    {return leaf_ref().begin();}
-    value_type*        leaf_end()                      {return leaf_ref().end();}
-
-    //  functions valid for branch pages only
-    branch_data&       branch_ref()                    {return *reinterpret_cast<branch_data*>
-                                                         (buffer::data());}
-    branch_value_type* branch_begin()                  {return branch_ref().begin();}
-    branch_value_type* branch_end()                    {return branch_ref().end();}
+    leaf_data&         leaf()       {return *reinterpret_cast<leaf_data*>(buffer::data());}
+    const leaf_data&   leaf() const {return *reinterpret_cast<const leaf_data*>(buffer::data());}
+    branch_data&       branch()     {return *reinterpret_cast<branch_data*>(buffer::data());}
+    const branch_data& branch()const{return *reinterpret_cast<const branch_data*>(buffer::data());}
 
   private:
     btree_page*         m_parent;   // by definition, the parent is a branch page.
@@ -477,6 +454,8 @@ private:
                                            // overwritten by faulty max_cache_pages
 # endif
   };
+
+  //-------------------------------  btree_page_ptr  -----------------------------------//
 
   class btree_page_ptr : public buffer_ptr
   {
@@ -806,13 +785,14 @@ indirect_btree_base<Key,Base,Traits,Comp>::m_open(const boost::filesystem::path&
     m_hdr.root_page_id(m_root->page_id());
     m_hdr.first_page_id(m_root->page_id());
     m_hdr.last_page_id(m_root->page_id());
-    m_root->level(0);
-    m_root->size(0);
+    m_root->leaf().level(0);
+    m_root->leaf().size(0);
+    m_root->leaf().value_size(0);
+    m_root->leaf().garbage_size(0);
+    m_root->leaf().prior_page_id(0);
+    m_root->leaf().next_page_id(0);
   }
   m_set_max_cache_pages();
-  m_max_leaf_size = (m_mgr.data_size() - leaf_data::offset()) / sizeof(value_type);
-  m_max_branch_size =
-    (m_mgr.data_size() - branch_data::offset()) / sizeof(branch_value_type);
 }
 
 //------------------------------------- clear() ----------------------------------------//
@@ -1296,7 +1276,7 @@ indirect_btree_base<Key,Base,Traits,Comp>::m_insert_unique(const value_type& val
   BOOST_ASSERT_MSG(is_open(), "insert() on unopen btree");
   iterator insert_point = m_lower_page_bound(key(value));
 
-  bool unique = insert_point.m_element == insert_point.m_page->leaf_end()
+  bool unique = insert_point.m_element == insert_point.m_page->leaf().end()
                 || key_comp()(key(value), key(*insert_point.m_element))
                 || key_comp()(key(*insert_point.m_element), key(value));
 
