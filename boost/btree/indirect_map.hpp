@@ -16,7 +16,7 @@
 #include <boost/cstdint.hpp>
 #include <boost/btree/header.hpp>
 #include <boost/filesystem/path.hpp>
-#include <boost/btree/detail/indirect_common.hpp>  // interface common to indirect_btree_map and btree_set
+#include <boost/btree/detail/indirect_common.hpp>  // interface common to vbtree_map and btree_set
 #include <boost/static_assert.hpp>
 #include <boost/type_traits/is_pointer.hpp>
 
@@ -26,13 +26,13 @@ namespace boost
   {
 
 //--------------------------------------------------------------------------------------//
-//                                 class indirect_btree_map                                      //
+//                                 class vbtree_map                                     //
 //--------------------------------------------------------------------------------------//
 
     template <class Key, class T, class Traits = default_native_traits,
               class Comp = std::less<Key> >
-    class indirect_btree_map
-      : public indirect_btree_base<Key, indirect_btree_map_base<Key,T,Comp>, Traits, Comp>
+    class vbtree_map
+      : public vbtree_base<Key, vbtree_map_base<Key,T,Comp>, Traits, Comp>
     {
     public:
 
@@ -42,42 +42,42 @@ namespace boost
       typedef T  mapped_type;
 
       // <Key,T,Comp> is required by GCC but not by VC++
-      explicit indirect_btree_map(const Comp& comp = Comp())
-        : indirect_btree_base<Key,indirect_btree_map_base<Key,T,Comp>,Traits,Comp>(comp) {}
+      explicit vbtree_map(const Comp& comp = Comp())
+        : vbtree_base<Key,vbtree_map_base<Key,T,Comp>,Traits,Comp>(comp) {}
 
-      explicit indirect_btree_map(const boost::filesystem::path& p,
+      explicit vbtree_map(const boost::filesystem::path& p,
           flags::bitmask flgs = flags::read_only,
           std::size_t pg_sz = default_page_size,  // ignored if existing file
           const Comp& comp = Comp())
-        : indirect_btree_base<Key,indirect_btree_map_base<Key,T,Comp>,Traits,Comp>(p,
+        : vbtree_base<Key,vbtree_map_base<Key,T,Comp>,Traits,Comp>(p,
             flags::user(flgs), pg_sz, comp) {}
 
       template <class InputIterator>
-      indirect_btree_map(InputIterator first, InputIterator last,
+      vbtree_map(InputIterator first, InputIterator last,
         const boost::filesystem::path& p,
         flags::bitmask flgs = flags::read_only,
         std::size_t pg_sz = default_page_size,  // ignored if existing file
         const Comp& comp = Comp())
-      : indirect_btree_base<Key,indirect_btree_map_base<Key,T,Comp>,Traits,Comp>(p,
+      : vbtree_base<Key,vbtree_map_base<Key,T,Comp>,Traits,Comp>(p,
           flags::user(flgs), pg_sz, comp)
       {
         for (; first != last; ++first)
-          indirect_btree_base<Key,indirect_btree_map_base<Key,T,Comp>,Traits,Comp>::m_insert_unique(*first);
+          vbtree_base<Key,vbtree_map_base<Key,T,Comp>,Traits,Comp>::m_insert_unique(*first);
       }
  
       void open(const boost::filesystem::path& p,
         flags::bitmask flgs = flags::read_only,
         std::size_t pg_sz = default_page_size) // pg_sz ignored if existing file
       {
-        indirect_btree_base<Key,indirect_btree_map_base<Key,T,Comp>,Traits,Comp>::m_open(p,
+        vbtree_base<Key,vbtree_map_base<Key,T,Comp>,Traits,Comp>::m_open(p,
           flags::user(flgs), pg_sz);
       }
 
-      // typename indirect_btree_base<Key,indirect_btree_map_base<Key,T,Comp>,Traits,Comp>:: is required by GCC but not VC++
-      std::pair<typename indirect_btree_base<Key,indirect_btree_map_base<Key,T,Comp>,Traits,Comp>::const_iterator, bool>
-      insert(const typename indirect_btree_base<Key,indirect_btree_map_base<Key,T,Comp>,Traits,Comp>::value_type& value)
+      // typename vbtree_base<Key,vbtree_map_base<Key,T,Comp>,Traits,Comp>:: is required by GCC but not VC++
+      std::pair<typename vbtree_base<Key,vbtree_map_base<Key,T,Comp>,Traits,Comp>::const_iterator, bool>
+      insert(const typename vbtree_base<Key,vbtree_map_base<Key,T,Comp>,Traits,Comp>::value_type& value)
       {
-        return indirect_btree_base<Key,indirect_btree_map_base<Key,T,Comp>,Traits,Comp>::m_insert_unique(
+        return vbtree_base<Key,vbtree_map_base<Key,T,Comp>,Traits,Comp>::m_insert_unique(
           value);
       }
 
@@ -85,18 +85,18 @@ namespace boost
       void insert(InputIterator first, InputIterator last)
       { 
         for (; first != last; ++first) 
-          indirect_btree_base<Key,indirect_btree_map_base<Key,T,Comp>,Traits,Comp>::m_insert_unique(*first);
+          vbtree_base<Key,vbtree_map_base<Key,T,Comp>,Traits,Comp>::m_insert_unique(*first);
       }
     };
 
 //--------------------------------------------------------------------------------------//
-//                               class indirect_btree_multimap                                   //
+//                               class vbtree_multimap                                  //
 //--------------------------------------------------------------------------------------//
 
     template <class Key, class T, class Traits = default_native_traits,
               class Comp = std::less<Key> >
-    class indirect_btree_multimap
-      : public indirect_btree_base<Key, indirect_btree_map_base<Key,T,Comp>, Traits, Comp>
+    class vbtree_multimap
+      : public vbtree_base<Key, vbtree_map_base<Key,T,Comp>, Traits, Comp>
     {
     public:
 
@@ -106,27 +106,27 @@ namespace boost
       typedef T  mapped_type;
 
       // <Key,T,Comp> is required by GCC but not by VC++
-      explicit indirect_btree_multimap(const Comp& comp = Comp())
-        : indirect_btree_base<Key,indirect_btree_map_base<Key,T,Comp>,Traits,Comp>(comp) {}
+      explicit vbtree_multimap(const Comp& comp = Comp())
+        : vbtree_base<Key,vbtree_map_base<Key,T,Comp>,Traits,Comp>(comp) {}
 
-      explicit indirect_btree_multimap(const boost::filesystem::path& p,
+      explicit vbtree_multimap(const boost::filesystem::path& p,
           flags::bitmask flgs = flags::read_only,
           std::size_t pg_sz = default_page_size,  // ignored if existing file
           const Comp& comp = Comp())
-        : indirect_btree_base<Key,indirect_btree_map_base<Key,T,Comp>,Traits,Comp>(p,
+        : vbtree_base<Key,vbtree_map_base<Key,T,Comp>,Traits,Comp>(p,
             flags::user(flgs) | flags::multi, pg_sz, comp) {}
 
       template <class InputIterator>
-      indirect_btree_multimap(InputIterator first, InputIterator last,
+      vbtree_multimap(InputIterator first, InputIterator last,
           const boost::filesystem::path& p,
           flags::bitmask flgs = flags::read_only,
           std::size_t pg_sz = default_page_size,  // ignored if existing file
           const Comp& comp = Comp())
-        : indirect_btree_base<Key,indirect_btree_map_base<Key,T,Comp>,Traits,Comp>(p,
+        : vbtree_base<Key,vbtree_map_base<Key,T,Comp>,Traits,Comp>(p,
             flags::user(flgs) | flags::multi, pg_sz, comp)
       {
         for (; first != last; ++first)
-          indirect_btree_base<Key,indirect_btree_map_base<Key,T,Comp>,Traits,Comp>::m_insert_non_unique(
+          vbtree_base<Key,vbtree_map_base<Key,T,Comp>,Traits,Comp>::m_insert_non_unique(
             *first);
       }
 
@@ -134,15 +134,15 @@ namespace boost
       flags::bitmask flgs = flags::read_only,
       std::size_t pg_sz = default_page_size) // pg_sz ignored if existing file
       {
-        indirect_btree_base<Key,indirect_btree_map_base<Key,T,Comp>,Traits,Comp>::m_open(p,
+        vbtree_base<Key,vbtree_map_base<Key,T,Comp>,Traits,Comp>::m_open(p,
           flgs | flags::multi, pg_sz);
       }
 
-      // typename indirect_btree_base<Key,indirect_btree_map_base<Key,T,Comp>,Traits,Comp>:: is required by GCC but not VC++
-      typename indirect_btree_base<Key,indirect_btree_map_base<Key,T,Comp>,Traits,Comp>::const_iterator
-      insert(const typename indirect_btree_base<Key,indirect_btree_map_base<Key,T,Comp>,Traits,Comp>::value_type& value)
+      // typename vbtree_base<Key,vbtree_map_base<Key,T,Comp>,Traits,Comp>:: is required by GCC but not VC++
+      typename vbtree_base<Key,vbtree_map_base<Key,T,Comp>,Traits,Comp>::const_iterator
+      insert(const typename vbtree_base<Key,vbtree_map_base<Key,T,Comp>,Traits,Comp>::value_type& value)
       {
-        return indirect_btree_base<Key,indirect_btree_map_base<Key,T,Comp>,Traits,Comp>::m_insert_non_unique(
+        return vbtree_base<Key,vbtree_map_base<Key,T,Comp>,Traits,Comp>::m_insert_non_unique(
           value);
       }
 
@@ -150,7 +150,7 @@ namespace boost
       void insert(InputIterator first, InputIterator last)
       {
         for (; first != last; ++first)
-          indirect_btree_base<Key,indirect_btree_map_base<Key,T,Comp>,Traits,Comp>::m_insert_non_unique(
+          vbtree_base<Key,vbtree_map_base<Key,T,Comp>,Traits,Comp>::m_insert_non_unique(
             *first);
       }
     };

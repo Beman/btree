@@ -26,55 +26,55 @@ namespace boost
   {
 
 //--------------------------------------------------------------------------------------//
-//                             class indirect_btree_set                                 //
+//                                class vbtree_set                                      //
 //--------------------------------------------------------------------------------------//
 
     template <class Key, class Traits = default_native_traits,
               class Comp = std::less<Key> >
-    class indirect_btree_set
-      : public indirect_btree_base<Key, indirect_btree_set_base<Key,Comp>, Traits, Comp>
+    class vbtree_set
+      : public vbtree_base<Key, vbtree_set_base<Key,Comp>, Traits, Comp>
     {
     public:
 
       BOOST_STATIC_ASSERT_MSG( boost::is_pointer<Key>::value, "Key must be a pointer type");
 
       // <Key,Comp> is required by GCC but not by VC++
-      explicit indirect_btree_set(const Comp& comp = Comp())
-        : indirect_btree_base<Key,indirect_btree_set_base<Key,Comp>,Traits,Comp>(comp) {}
+      explicit vbtree_set(const Comp& comp = Comp())
+        : vbtree_base<Key,vbtree_set_base<Key,Comp>,Traits,Comp>(comp) {}
 
-      explicit indirect_btree_set(const boost::filesystem::path& p,
+      explicit vbtree_set(const boost::filesystem::path& p,
           flags::bitmask flgs = flags::read_only,
           std::size_t pg_sz = default_page_size,  // ignored if existing file
           const Comp& comp = Comp())
-        : indirect_btree_base<Key,indirect_btree_set_base<Key,Comp>,Traits,Comp>(p,
+        : vbtree_base<Key,vbtree_set_base<Key,Comp>,Traits,Comp>(p,
             flags::user(flgs) | flags::key_only, pg_sz, comp) {}
 
       template <class InputIterator>
-      indirect_btree_set(InputIterator first, InputIterator last,
+      vbtree_set(InputIterator first, InputIterator last,
         const boost::filesystem::path& p,
         flags::bitmask flgs = flags::read_only,
         std::size_t pg_sz = default_page_size,  // ignored if existing file
         const Comp& comp = Comp())
-      : indirect_btree_base<Key,indirect_btree_set_base<Key,Comp>,Traits,Comp>(p,
+      : vbtree_base<Key,vbtree_set_base<Key,Comp>,Traits,Comp>(p,
           flags::user(flgs) | flags::key_only, pg_sz, comp)
       {
         for (; first != last; ++first)
-          indirect_btree_base<Key,indirect_btree_set_base<Key,Comp>,Traits,Comp>::m_insert_unique(*first);
+          vbtree_base<Key,vbtree_set_base<Key,Comp>,Traits,Comp>::m_insert_unique(*first);
       }
  
       void open(const boost::filesystem::path& p,
         flags::bitmask flgs = flags::read_only,
         std::size_t pg_sz = default_page_size) // pg_sz ignored if existing file
       {
-        indirect_btree_base<Key,indirect_btree_set_base<Key,Comp>,Traits,Comp>::m_open(p,
+        vbtree_base<Key,vbtree_set_base<Key,Comp>,Traits,Comp>::m_open(p,
           flags::user(flgs) | flags::key_only, pg_sz);
       }
 
-      // typename indirect_btree_base<Key,indirect_btree_set_base<Key,Comp>,Traits,Comp>:: is required by GCC but not VC++
-      std::pair<typename indirect_btree_base<Key,indirect_btree_set_base<Key,Comp>,Traits,Comp>::const_iterator, bool>
-      insert(const typename indirect_btree_base<Key,indirect_btree_set_base<Key,Comp>,Traits,Comp>::value_type& value)
+      // typename vbtree_base<Key,vbtree_set_base<Key,Comp>,Traits,Comp>:: is required by GCC but not VC++
+      std::pair<typename vbtree_base<Key,vbtree_set_base<Key,Comp>,Traits,Comp>::const_iterator, bool>
+      insert(const typename vbtree_base<Key,vbtree_set_base<Key,Comp>,Traits,Comp>::value_type& value)
       {
-        return indirect_btree_base<Key,indirect_btree_set_base<Key,Comp>,Traits,Comp>::m_insert_unique(
+        return vbtree_base<Key,vbtree_set_base<Key,Comp>,Traits,Comp>::m_insert_unique(
           value);
       }
 
@@ -82,45 +82,45 @@ namespace boost
       void insert(InputIterator first, InputIterator last)
       {
         for (; first != last; ++first) 
-          indirect_btree_base<Key,indirect_btree_set_base<Key,Comp>,Traits,Comp>::m_insert_unique(*first);
+          vbtree_base<Key,vbtree_set_base<Key,Comp>,Traits,Comp>::m_insert_unique(*first);
       }
     };
 
 //--------------------------------------------------------------------------------------//
-//                              class indirect_btree_multiset                                    //
+//                              class vbtree_multiset                                   //
 //--------------------------------------------------------------------------------------//
 
     template <class Key, class Traits = default_native_traits,
               class Comp = std::less<Key> >              
-    class indirect_btree_multiset
-      : public indirect_btree_base<Key, indirect_btree_set_base<Key,Comp>, Traits, Comp>
+    class vbtree_multiset
+      : public vbtree_base<Key, vbtree_set_base<Key,Comp>, Traits, Comp>
     {
     public:
 
       BOOST_STATIC_ASSERT_MSG( boost::is_pointer<Key>::value, "Key must be a pointer type");
 
       // <Key,Comp> is required by GCC but not by VC++
-      explicit indirect_btree_multiset(const Comp& comp = Comp())
-        : indirect_btree_base<Key,indirect_btree_set_base<Key,Comp>,Traits,Comp>(comp) {}
+      explicit vbtree_multiset(const Comp& comp = Comp())
+        : vbtree_base<Key,vbtree_set_base<Key,Comp>,Traits,Comp>(comp) {}
 
-      explicit indirect_btree_multiset(const boost::filesystem::path& p,
+      explicit vbtree_multiset(const boost::filesystem::path& p,
           flags::bitmask flgs = flags::read_only,
           std::size_t pg_sz = default_page_size,  // ignored if existing file
           const Comp& comp = Comp())
-        : indirect_btree_base<Key,indirect_btree_set_base<Key,Comp>,Traits,Comp>(p,
+        : vbtree_base<Key,vbtree_set_base<Key,Comp>,Traits,Comp>(p,
             flags::user(flgs) | flags::key_only | flags::multi, pg_sz, comp) {}
 
       template <class InputIterator>
-      indirect_btree_multiset(InputIterator first, InputIterator last,
+      vbtree_multiset(InputIterator first, InputIterator last,
         const boost::filesystem::path& p,
         flags::bitmask flgs = flags::read_only,
         std::size_t pg_sz = default_page_size,  // ignored if existing file
         const Comp& comp = Comp())
-      : indirect_btree_base<Key,indirect_btree_set_base<Key,Comp>,Traits,Comp>(p,
+      : vbtree_base<Key,vbtree_set_base<Key,Comp>,Traits,Comp>(p,
           flags::user(flgs) | flags::key_only | flags::multi, pg_sz, comp)
       {
         for (; first != last; ++first)
-          indirect_btree_base<Key,indirect_btree_set_base<Key,Comp>,Traits,Comp>::m_insert_non_unique(
+          vbtree_base<Key,vbtree_set_base<Key,Comp>,Traits,Comp>::m_insert_non_unique(
             *first);
       }
 
@@ -128,15 +128,15 @@ namespace boost
         flags::bitmask flgs = flags::read_only,
         std::size_t pg_sz = default_page_size) // pg_sz ignored if existing file
       {
-         indirect_btree_base<Key,indirect_btree_set_base<Key,Comp>,Traits,Comp>::m_open(p,
+         vbtree_base<Key,vbtree_set_base<Key,Comp>,Traits,Comp>::m_open(p,
           flags::user(flgs) | flags::key_only | flags::multi, pg_sz);
       }
 
-      // typename indirect_btree_base<Key,indirect_btree_set_base<Key,Comp>,Traits,Comp>:: is required by GCC but not VC++
-      typename indirect_btree_base<Key,indirect_btree_set_base<Key,Comp>,Traits,Comp>::const_iterator
-      insert(const typename indirect_btree_base<Key,indirect_btree_set_base<Key,Comp>,Traits,Comp>::value_type& value)
+      // typename vbtree_base<Key,vbtree_set_base<Key,Comp>,Traits,Comp>:: is required by GCC but not VC++
+      typename vbtree_base<Key,vbtree_set_base<Key,Comp>,Traits,Comp>::const_iterator
+      insert(const typename vbtree_base<Key,vbtree_set_base<Key,Comp>,Traits,Comp>::value_type& value)
       {
-        return indirect_btree_base<Key,indirect_btree_set_base<Key,Comp>,Traits,Comp>::m_insert_non_unique(
+        return vbtree_base<Key,vbtree_set_base<Key,Comp>,Traits,Comp>::m_insert_non_unique(
           value);
       }
 
@@ -144,7 +144,7 @@ namespace boost
       void insert(InputIterator first, InputIterator last)
       {
         for (; first != last; ++first) 
-          indirect_btree_base<Key,indirect_btree_set_base<Key,Comp>,Traits,Comp>::m_insert_non_unique(
+          vbtree_base<Key,vbtree_set_base<Key,Comp>,Traits,Comp>::m_insert_non_unique(
             *first);
       }
     };
