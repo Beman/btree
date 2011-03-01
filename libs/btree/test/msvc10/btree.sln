@@ -40,12 +40,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "large_file_test", "large_fi
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "experiments", "experiments\experiments.vcxproj", "{BFF80CC4-2B32-412D-B94B-CFFAF508FF02}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "indirect_btree_unit_test", "indirect_btree_unit_test\indirect_btree_unit_test.vcxproj", "{873EB0F7-F6CF-4BD2-AF70-AA4EDB0ABF42}"
-	ProjectSection(ProjectDependencies) = postProject
-		{61954631-3857-4C20-9E7C-1DA7BAAFF426} = {61954631-3857-4C20-9E7C-1DA7BAAFF426}
-		{2AAD90AC-4FD3-422F-9E99-1CEA3EF092ED} = {2AAD90AC-4FD3-422F-9E99-1CEA3EF092ED}
-		{2558C6E2-046F-441D-9515-0FAB44F5A22E} = {2558C6E2-046F-441D-9515-0FAB44F5A22E}
-	EndProjectSection
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vbtree_unit_test", "vbtree_unit_test\vbtree_unit_test.vcxproj", "{873EB0F7-F6CF-4BD2-AF70-AA4EDB0ABF42}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
