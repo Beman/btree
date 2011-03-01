@@ -15,8 +15,8 @@
 //                                                                                      //
 //--------------------------------------------------------------------------------------//
 
-#include <boost/btree/indirect_map.hpp>
-#include <boost/btree/indirect_set.hpp>
+#include <boost/btree/vmap.hpp>
+#include <boost/btree/vset.hpp>
 #include <boost/btree/detail/fixstr.hpp>
 #include <boost/detail/lightweight_main.hpp>
 #include <boost/detail/lightweight_test.hpp> 
