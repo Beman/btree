@@ -1,0 +1,5 @@
+This is a branch of branch "indirect".
+
+It builds on the work of "indirect" in creating separate classes to handle variable length btree values.
+
+It differs from "indirect" in that pages contain values in sequential order, rather than having separate index and value storage areas on the page. Hopefully this will result in simpler code and shorter development time.
