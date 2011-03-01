@@ -1,4 +1,4 @@
-//  indirect_btree_unit_test.cpp  ------------------------------------------------------//
+//  vbtree_unit_test.cpp  ------------------------------------------------------//
 
 //  Copyright Beman Dawes 2006, 2010
 
@@ -64,35 +64,35 @@ void instantiate()
 {
   cout << "  instantiate..." << endl;
   {
-    btree::indirect_btree_map<fat*, int*> x;
+    btree::vbtree_map<fat*, int*> x;
     instantiate_test(x);
   }
   {
-    btree::indirect_btree_multimap<fat*, int*> x;
+    btree::vbtree_multimap<fat*, int*> x;
     instantiate_test(x);
   }
   {
-    btree::indirect_btree_set<int*> x;
+    btree::vbtree_set<int*> x;
     instantiate_test(x);
   }
   {
-    btree::indirect_btree_multiset<int*> x;
+    btree::vbtree_multiset<int*> x;
     instantiate_test(x);
   }
   {
-    btree::indirect_btree_map<fat*, int*, btree::default_big_endian_traits> x;
+    btree::vbtree_map<fat*, int*, btree::default_big_endian_traits> x;
     instantiate_test(x);
   }
   {
-    btree::indirect_btree_multimap<fat*, int*, btree::default_little_endian_traits> x;
+    btree::vbtree_multimap<fat*, int*, btree::default_little_endian_traits> x;
     instantiate_test(x);
   }
   {
-    btree::indirect_btree_set<int*, btree::default_little_endian_traits> x;
+    btree::vbtree_set<int*, btree::default_little_endian_traits> x;
     instantiate_test(x);
   }
   {
-    btree::indirect_btree_multiset<int*, btree::default_big_endian_traits> x;
+    btree::vbtree_multiset<int*, btree::default_big_endian_traits> x;
     instantiate_test(x);
   }
   cout << "    instantiate complete" << endl;
@@ -108,8 +108,8 @@ void types_test()
 
   typedef std::set<int*>                          std_set;
   typedef std::map<int*, long*>                   std_map;
-  typedef btree::indirect_btree_set<int*>         bt_set;
-  typedef btree::indirect_btree_map<int*, long*>  bt_map;
+  typedef btree::vbtree_set<int*>         bt_set;
+  typedef btree::vbtree_map<int*, long*>  bt_map;
 
   BOOST_TEST((boost::is_same<std_set::key_type, int*>::value));
   BOOST_TEST((boost::is_same< bt_set::key_type, int*>::value));
@@ -186,7 +186,7 @@ void construct_new()
   cout << "  construct_new..." << endl;
   {
     fs::path p("btree_map.btree");
-    btree::indirect_btree_map<fat*, int*> x(p, btree::flags::truncate);
+    btree::vbtree_map<fat*, int*> x(p, btree::flags::truncate);
     construct_new_test(x, p);
   }
 
@@ -200,7 +200,7 @@ void  single_insert()
   cout << "  single_insert..." << endl;
 
   fs::path p("btree_map.btree");
-  btree::indirect_btree_map<char*, char*> x(p, btree::flags::truncate);
+  btree::vbtree_map<char*, char*> x(p, btree::flags::truncate);
 
   x.insert(std::make_pair<const char*, char*>("harry", "cat"));
 
@@ -216,14 +216,14 @@ void  single_insert()
 //  cout << "  open_existing..." << endl;
 //  fs::path p("btree_map.btree");
 //  {
-//    btree::indirect_btree_map<fat, int> bt(p, btree::flags::truncate, 128);
+//    btree::vbtree_map<fat, int> bt(p, btree::flags::truncate, 128);
 //
 //    bt.insert(std::make_pair(fat(5), 55));
 //    bt.insert(std::make_pair(fat(4), 44));
 //    bt.insert(std::make_pair(fat(6), 66));
 //  }
 //
-//  btree::indirect_btree_map<fat, int> bt2(p);
+//  btree::vbtree_map<fat, int> bt2(p);
 //  BOOST_TEST(bt2.is_open());
 //  BOOST_TEST(!bt2.empty());
 //  BOOST_TEST_EQ(bt2.size(), 3U);
@@ -247,7 +247,7 @@ void  single_insert()
 //{
 //  cout << "  compare_function_objects..." << endl;
 //  {
-//    btree::indirect_btree_map<fat, int> bt;
+//    btree::vbtree_map<fat, int> bt;
 //
 //    int i1 = 1;
 //    int i2 = 2;
@@ -264,13 +264,13 @@ void  single_insert()
 //  }
 //
 //  //{
-//  //  btree::indirect_btree_multimap x;
+//  //  btree::vbtree_multimap x;
 //  //}
 //  //{
-//  //  btree::indirect_btree_set x;
+//  //  btree::vbtree_set x;
 //  //}
 //  //{
-//  //  btree::indirect_btree_multiset x;
+//  //  btree::vbtree_multiset x;
 //  //}
 //  cout << "    compare_function_objects complete" << endl;
 //}
@@ -483,13 +483,13 @@ void  single_insert()
 //
 //  {
 //    fs::path map_path("btree_map.btree");
-//    btree::indirect_btree_map<fat, int> map(map_path, btree::flags::truncate, 128);
+//    btree::vbtree_map<fat, int> map(map_path, btree::flags::truncate, 128);
 //    map.max_cache_pages(0);  // maximum stress
 //    insert_tests(map);
 //  }
 //  {
 //    fs::path map_path("btree_map_big.btree");
-//    btree::indirect_btree_map<fat, int, btree::default_big_endian_traits>
+//    btree::vbtree_map<fat, int, btree::default_big_endian_traits>
 //      map(map_path, btree::flags::truncate, 128);
 //    map.max_cache_pages(0);  // maximum stress
 //    insert_tests(map);
@@ -577,7 +577,7 @@ void  single_insert()
 //  //  the code by causing a lot of page splits 
 //
 //  {
-//    btree::indirect_btree_map<fat, int> map("find_and_bounds_map.btr",
+//    btree::vbtree_map<fat, int> map("find_and_bounds_map.btr",
 //      btree::flags::truncate, 128);
 //    BOOST_TEST(map.header().flags() == 0);
 //    map.max_cache_pages(0);  // maximum stress
@@ -585,7 +585,7 @@ void  single_insert()
 //  }
 //
 //  {
-//    btree::indirect_btree_multimap<fat, int> multimap("find_and_bounds_multimap.btr",
+//    btree::vbtree_multimap<fat, int> multimap("find_and_bounds_multimap.btr",
 //      btree::flags::truncate, 128);
 //    BOOST_TEST(multimap.header().flags() == btree::flags::multi);
 //    multimap.max_cache_pages(0);  // maximum stress
@@ -593,7 +593,7 @@ void  single_insert()
 //  }
 //
 //  {
-//    btree::indirect_btree_set<int> set("find_and_bounds_set.btr",
+//    btree::vbtree_set<int> set("find_and_bounds_set.btr",
 //      btree::flags::truncate, 128);
 //    BOOST_TEST(set.header().flags() == btree::flags::key_only);
 //    set.max_cache_pages(0);  // maximum stress
@@ -601,7 +601,7 @@ void  single_insert()
 //  }
 //
 //  {
-//    btree::indirect_btree_multiset<int> multiset("find_and_bounds_multiset.btr",
+//    btree::vbtree_multiset<int> multiset("find_and_bounds_multiset.btr",
 //      btree::flags::truncate, 128);
 //    BOOST_TEST(multiset.header().flags() == (btree::flags::key_only | btree::flags::multi));
 //    multiset.max_cache_pages(0);  // maximum stress
@@ -653,7 +653,7 @@ void  single_insert()
 //
 //  {
 //    fs::path map_path("non_unique.btr");
-//    btree::indirect_btree_multimap<fat, int> multimap(map_path,
+//    btree::vbtree_multimap<fat, int> multimap(map_path,
 //      btree::flags::truncate, 128);
 //    multimap.max_cache_pages(0);  // maximum stress
 //    insert_non_unique_tests(multimap);
@@ -714,13 +714,13 @@ void  single_insert()
 //  const int per_page = (page_sz - overhead) / sizeof(value_type);
 //  const int n = per_page * 2;  // sufficient to distinguish if pack optimization works
 //
-//  btree::indirect_btree_map<int, int> np("not_packed.btr", btree::flags::truncate, page_sz);
+//  btree::vbtree_map<int, int> np("not_packed.btr", btree::flags::truncate, page_sz);
 //  for (int i=n; i > 0; --i)
 //    np.insert(std::make_pair(i, 0xffffff00+i));
 //
 //  BOOST_TEST_EQ(np.header().page_count(), 5U);
 //
-//  btree::indirect_btree_map<int, int> p("packed.btr", btree::flags::truncate, page_sz);
+//  btree::vbtree_map<int, int> p("packed.btr", btree::flags::truncate, page_sz);
 //  for (int i=1; i <= n; ++i)
 //    p.insert(std::make_pair(i, 0xffffff00+i));
 //
@@ -736,7 +736,7 @@ void  single_insert()
 //  cout << "  fixstr..." << endl;
 //
 //  typedef boost::detail::fixstr<15>       str_t;
-//  typedef btree::indirect_btree_map<str_t, str_t>  map_t;
+//  typedef btree::vbtree_map<str_t, str_t>  map_t;
 //
 //  map_t bt("fixstr.btr", btree::flags::truncate);
 //
@@ -792,19 +792,19 @@ int cpp_main(int, char*[])
   //{
   //  cout << "btree_multimap tests..." << endl;
   //  fs::path multimap_path("btree_multimap.btree");
-  //  btree::indirect_btree_multimap<int,long> multimap(multimap_path, btree::flags::truncate);
+  //  btree::vbtree_multimap<int,long> multimap(multimap_path, btree::flags::truncate);
   //}
 
   //{
   //  cout << "btree_set tests..." << endl;
   //  fs::path set_path("btree_set.btree");
-  //  btree::indirect_btree_set<int,long> set(set_path, btree::flags::truncate);
+  //  btree::vbtree_set<int,long> set(set_path, btree::flags::truncate);
   //}
 
   //{
   //  cout << "btree_multiset tests..." << endl;
   //  fs::path multiset_path("btree_multiset.btree");
-  //  btree::indirect_btree_multiset<int,long> multiset(multiset_path, btree::flags::truncate);
+  //  btree::vbtree_multiset<int,long> multiset(multiset_path, btree::flags::truncate);
   //}
 
   cout << "all tests complete" << endl;
