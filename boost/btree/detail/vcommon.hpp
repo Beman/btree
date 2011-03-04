@@ -82,8 +82,41 @@ template <> struct less<char*>
 
 namespace detail
 {
+  //-------------------------------- dynamic_iterator ----------------------------------//
+  //
+  //  Pointers to elements on a page aren't useful as iterators because the elements are
+  //  variable length. dynamic_iterator provides the correct semantics.
+
+  template <class T>
+  class dynamic_iterator
+    : public boost::iterator_facade<dynamic_iterator<T>, T, forward_traversal_tag>
+  {
+  public:
+    dynamic_iterator() : m_ptr(0) {} 
+    explicit dynamic_iterator(T* ptr) : m_ptr(ptr) {}
+    dynamic_iterator(T* ptr, std::size_t sz)
+      : m_ptr(reinterpret_cast<T*>(reinterpret_cast<char*>(m_ptr) + sz)) {}
+
+  private:
+    friend class boost::iterator_core_access;
+
+    T* m_ptr;
+
+    T& dereference() const  { return *m_ptr; }
+ 
+    bool equal(const dynamic_iterator& rhs) const { return m_ptr == rhs.ptr; }
+
+    void increment()
+    {
+      m_ptr = reinterpret_cast<T*>(reinterpret_cast<char*>(m_ptr) + btree::size(m_ptr));
+    }
+  };
 
   //-------------------------------- dynamic_pair --------------------------------------//
+
+  // TODO: either add code to align second() or add a requirement that T2 is an unaligned
+  // type.
+
 
   template <class T1, class T2>
   class dynamic_pair
@@ -91,11 +124,10 @@ namespace detail
   public:
     T1*       first()         { return reinterpret_cast<T1*>(this); }
     const T1* first() const   { return reinterpret_cast<const T1*>(this); }
-    T2*       second()
-      { return reinterpret_cast<T2*>(reinterpret_cast<char*>(this) + size(first()); }
-    T2*       second() const
-      { return reinterpret_cast<const T2*>(reinterpret_cast<const char*>(this)
-                 + size(first()); }
+    T2*       second()        { return reinterpret_cast<T2*>(reinterpret_cast<char*>(this)
+                                  + size(first())); }
+    T2*       second() const  { return reinterpret_cast<const T2*>(
+                                  reinterpret_cast<const char*>(this) + size(first())); }
   };
 
 }  // namespace detail
@@ -139,7 +171,7 @@ public:
                     typename boost::remove_pointer<T>::type const *>
     const_value_type;
 
-  typedef dynamic_pair<typename boost::remove_pointer<Key>::type,
+  typedef detail::dynamic_pair<typename boost::remove_pointer<Key>::type,
                        typename boost::remove_pointer<T>::type>
     element_type;
 
@@ -226,6 +258,8 @@ public:
   typedef typename Traits::page_id_type         page_id_type;
   typedef typename Traits::page_size_type       page_size_type;
   typedef typename Traits::page_level_type      page_level_type;
+
+  typedef typename Base::element_type           leaf_element_type;
 
   // construct/destroy:
 
@@ -363,36 +397,6 @@ private:
 //                                private nested classes                                //
 //--------------------------------------------------------------------------------------//
 
-  //-------------------------------- dynamic_iterator ----------------------------------//
-  //
-  //  Pointers to elements on a page aren't useful as iterators because the elements are
-  //  variable length. dynamic_iterator provides the correct semantics.
-
-  template <class T>
-  class dynamic_iterator
-    : public boost::iterator_facade<dynamic_iterator<T>, T, forward_traversal_tag>
-  {
-  public:
-    dynamic_iterator() : m_ptr(0) {} 
-    explicit dynamic_iterator(T* ptr) : m_ptr(ptr) {}
-    dynamic_iterator(T* ptr, std::size_t sz)
-      : m_ptr(reinterpret_cast<T*>(reinterpret_cast<char*>(m_ptr) + sz)) {}
-
-  private:
-    friend class boost::iterator_core_access;
-
-    T* m_ptr;
-
-    T& dereference() const  { return *m_ptr; }
- 
-    bool equal(const dynamic_iterator& rhs) const { return m_ptr == rhs.ptr; }
-
-    void increment()
-    {
-      m_ptr = reinterpret_cast<T*>(reinterpret_cast<char*>(m_ptr) + btree::size(m_ptr));
-    }
-  };
-
   //------------------------ disk data formats and operations --------------------------//
 
   //  Pages hold a sequences of elements, plus administrivia. See details below.
@@ -418,20 +422,19 @@ private:
   class leaf_data : public btree_data
   {
   public:
-    typedef ... leaf_value_type;
-    typedef dynamic_iterator<leaf_value_type>  leaf_value_iterator;
+    typedef detail::dynamic_iterator<leaf_element_type>  leaf_element_iterator;
 
-    page_id_type         prior_page_id() const           {return m_prior_page_id;}
-    void                 prior_page_id(page_id_type id)  {m_prior_page_id = id;}
-    page_id_type         next_page_id() const            {return m_next_page_id;}
-    void                 next_page_id(page_id_type id)   {m_next_page_id = id;}
-    leaf_value_iterator  begin()         { return leaf_value_iterator(m_value);}
-    leaf_value_iterator  end()           { return leaf_value_iterator(m_value, size()); }
+    page_id_type           prior_page_id() const           {return m_prior_page_id;}
+    void                   prior_page_id(page_id_type id)  {m_prior_page_id = id;}
+    page_id_type           next_page_id() const            {return m_next_page_id;}
+    void                   next_page_id(page_id_type id)   {m_next_page_id = id;}
+    leaf_element_iterator  begin()      { return leaf_element_iterator(m_value);}
+    leaf_element_iterator  end()        { return leaf_element_iterator(m_value, size()); }
 
     //  private:
-    page_id_type     m_next_page_id;   // page sequence fwd list; 0 for end
-    page_id_type     m_prior_page_id;  // page sequence bwd list; 0 for end
-    leaf_value_type  m_value[];
+    page_id_type       m_next_page_id;   // page sequence fwd list; 0 for end
+    page_id_type       m_prior_page_id;  // page sequence bwd list; 0 for end
+    leaf_element_type  m_element[1];
   };
 
   //------------------------ branch data formats and operations ------------------------//
@@ -478,11 +481,6 @@ private:
     page_id_type       parent_page_id()                {return m_parent_page_id;}
     void               parent_page_id(page_id_type id) {m_parent_page_id = id;}
 #   endif
-
-    //btree_data&        btree_ref()                     {return *reinterpret_cast<btree_data*>
-    //                                                     (buffer::data());}
-    //const btree_data&  btree_ref() const               {return *reinterpret_cast<const btree_data*>
-    //                                                     (buffer::data());}
 
     leaf_data&         leaf()       {return *reinterpret_cast<leaf_data*>(buffer::data());}
     //const leaf_data&   leaf() const {return *reinterpret_cast<const leaf_data*>(buffer::data());}
@@ -553,18 +551,21 @@ private:
   public:
     iterator_type(): m_element(0) {}
     iterator_type(buffer_ptr p,
-      typename vbtree_base::leaf_data::leaf_value_iterator e)
+      typename vbtree_base::leaf_data::leaf_element_iterator e)
       : m_page(static_cast<typename vbtree_base::btree_page_ptr>(p)),
         m_element(e) { set_value(); }
 
-
   private:
+    iterator_type(buffer_ptr p)  // used solely to setup the end iterator
+      : m_page(static_cast<typename vbtree_base::btree_page_ptr>(p)),
+        m_element(0) {}
+
     friend class boost::iterator_core_access;
     friend class vbtree_base;
    
-    typename vbtree_base::btree_page_ptr                  m_page; 
-    typename vbtree_base::leaf_data::leaf_value_iterator  m_element;
-    typename boost::remove_const<T>::type                 m_value;    // proxy value
+    typename vbtree_base::btree_page_ptr                    m_page; 
+    typename vbtree_base::leaf_data::leaf_element_iterator  m_element;  // 0 for end iterator
+    typename boost::remove_const<T>::type                   m_value;    // proxy value
 
     void set_value()
     { 
@@ -732,7 +733,7 @@ vbtree_base<Key,Base,Traits,Comp>::vbtree_base(const Comp& comp)
 
   // set up the end iterator
   m_end_page.manager(&m_mgr);
-  m_end_iterator = const_iterator(buffer_ptr(m_end_page),0);
+  m_end_iterator = const_iterator(buffer_ptr(m_end_page));
 }
 
 //------------------------------- construct with open ----------------------------------//
@@ -746,7 +747,7 @@ vbtree_base<Key,Base,Traits,Comp>::vbtree_base(const boost::filesystem::path& p,
 
   // set up the end iterator
   m_end_page.manager(&m_mgr);
-  m_end_iterator = const_iterator(buffer_ptr(m_end_page),0);
+  m_end_iterator = const_iterator(buffer_ptr(m_end_page));
 
   // open the file and set up data members
   m_open(p, flgs, pg_sz);
@@ -818,9 +819,9 @@ vbtree_base<Key,Base,Traits,Comp>::m_open(const boost::filesystem::path& p,
     m_hdr.user_c_str("");
     m_hdr.page_size(pg_sz);
     m_hdr.key_size(Base::key_size());
-    BOOST_ASSERT(m_hdr.key_size() == Base::key_size());  // fails if key_type too large
+//    BOOST_ASSERT(m_hdr.key_size() == Base::key_size());  // fails if key_type too large
     m_hdr.mapped_size(Base::mapped_size());
-    BOOST_ASSERT(m_hdr.mapped_size() == Base::mapped_size());  // fails if mapped_type too large
+//    BOOST_ASSERT(m_hdr.mapped_size() == Base::mapped_size());  // fails if mapped_type too large
     m_hdr.increment_page_count();  // i.e. the header itself
     m_mgr.new_buffer();  // force a buffer write, thus zeroing the header for its full size
     flush();
@@ -836,8 +837,6 @@ vbtree_base<Key,Base,Traits,Comp>::m_open(const boost::filesystem::path& p,
     m_hdr.last_page_id(m_root->page_id());
     m_root->leaf().level(0);
     m_root->leaf().size(0);
-    m_root->leaf().value_size(0);
-    m_root->leaf().garbage_size(0);
     m_root->leaf().prior_page_id(0);
     m_root->leaf().next_page_id(0);
   }
