@@ -165,6 +165,7 @@ template <class Key, class T, class Comp>
 class vbtree_map_base
 {
 public:
+  typedef typename boost::remove_pointer<Key>::type const * const_key_type;
   typedef std::pair<typename boost::remove_pointer<Key>::type const *, T>
     value_type;
   typedef std::pair<typename boost::remove_pointer<Key>::type const *,
@@ -175,7 +176,8 @@ public:
                        typename boost::remove_pointer<T>::type>
     element_type;
 
-  const Key& key(const value_type& v) const {return v.first;}  // really handy, so expose
+  const const_key_type& key(const value_type& v) const  // really handy, so expose
+    {return v.first;}
 
   static std::size_t key_size() { return -1; }
   static std::size_t mapped_size() { return -1; }
@@ -1325,8 +1327,8 @@ vbtree_base<Key,Base,Traits,Comp>::m_insert_unique(const value_type& value)
   iterator insert_point = m_lower_page_bound(key(value));
 
   bool unique = insert_point.m_element == insert_point.m_page->leaf().end()
-                || key_comp()(key(value), key(*insert_point.m_element))
-                || key_comp()(key(*insert_point.m_element), key(value));
+                || key_comp()(key(value), key(*insert_point))
+                || key_comp()(key(*insert_point), key(value));
 
   if (unique)
     return std::pair<const_iterator, bool>(m_leaf_insert(insert_point, value), true);
