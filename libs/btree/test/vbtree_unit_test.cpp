@@ -26,6 +26,7 @@
 #include <utility>
 #include <map>
 #include <set>
+#include <algorithm>
 
 using namespace boost;
 namespace fs = boost::filesystem;
@@ -237,44 +238,100 @@ void types_test()
 //  cout << "    open_existing complete" << endl;
 //}
 
-////------------------------------- compare_function_objects -----------------------------//
-//
-//template <class BT>
-//void compare_function_objects_test(BT& bt)
-//{
-//}
-//
-//void compare_function_objects()
-//{
-//  cout << "  compare_function_objects..." << endl;
-//  {
-//    btree::vbtree_map<fat, int> bt;
-//
-//    int i1 = 1;
-//    int i2 = 2;
-//    std::pair<fat, int> p1, p2;
-//    p1.first = 1;
-//    p2.first = 2;
-//     
-//    BOOST_TEST(bt.value_comp()(p1, p2));
-//    BOOST_TEST(!bt.value_comp()(p1, p1));
-//    BOOST_TEST(!bt.value_comp()(p2, p1));
-//    BOOST_TEST(bt.key_comp()(i1, i2));
-//    BOOST_TEST(!bt.key_comp()(i1, i1));
-//    BOOST_TEST(!bt.key_comp()(i2, i1));
-//  }
-//
-//  //{
-//  //  btree::vbtree_multimap x;
-//  //}
-//  //{
-//  //  btree::vbtree_set x;
-//  //}
-//  //{
-//  //  btree::vbtree_multiset x;
-//  //}
-//  cout << "    compare_function_objects complete" << endl;
-//}
+//------------------------------- btree_less ---------------------------------------------//
+
+void btree_less()
+{
+  cout << "  btree_less..." << endl;
+
+  const char* list[] = {"bb", "b", "a", "aa"};
+
+  for (int i = 0; i < 4; ++i) 
+    cout << list[i] << '\n';
+  cout << endl;
+
+  std::sort(&list[0], &list[4], btree::less<const char*>());
+
+  for (int i = 0; i < 4; ++i) 
+    cout << list[i] << '\n';
+
+  int i1=4;
+  int i2=3;
+  int i3=1;
+  int i4=2;
+  const int* list_int[] = {&i1, &i2, &i3, &i4};
+
+  for (int i = 0; i < 4; ++i) 
+    cout << *list_int[i] << '\n';
+  cout << endl;
+
+  std::sort(&list_int[0], &list_int[4], btree::less<const int*>());
+
+  for (int i = 0; i < 4; ++i) 
+    cout << *list_int[i] << '\n';
+  cout << endl;
+
+  cout << "    btree_less complete" << endl;
+}
+
+//------------------------------- compare_function_objects -----------------------------//
+
+template <class BT>
+void compare_function_objects_test(BT& bt)
+{
+}
+
+void compare_function_objects()
+{
+  cout << "  compare_function_objects..." << endl;
+  {
+    btree::vbtree_set<int> bt;
+
+    int i2 = 2;
+    int i1 = 1;
+     
+    BOOST_TEST(bt.key_comp()(&i1, &i2));
+    BOOST_TEST(!bt.key_comp()(&i1, &i1));
+    BOOST_TEST(!bt.key_comp()(&i2, &i1));
+    BOOST_TEST(bt.value_comp()(&i1, &i2));
+    BOOST_TEST(!bt.value_comp()(&i1, &i1));
+    BOOST_TEST(!bt.value_comp()(&i2, &i1));
+  }
+
+  {
+    btree::vbtree_map<int, long> bt;
+
+    int i2 = 2;
+    int i1 = 1;
+
+    BOOST_TEST(bt.key_comp()(&i1, &i2));
+    BOOST_TEST(!bt.key_comp()(&i1, &i1));
+    BOOST_TEST(!bt.key_comp()(&i2, &i1));
+
+    struct my_pair : public btree::vbtree_pair<const int, const long>
+    {
+      int first;
+      int second;
+    };
+
+    my_pair pr2, pr1;
+    pr1.first = 1;
+    pr2.first = 2;
+
+    BOOST_TEST(bt.value_comp()(pr1, pr2));
+//    BOOST_TEST(!bt.value_comp()(pr1, pr1));
+//    BOOST_TEST(!bt.value_comp()(pr2, pr1));
+  }
+
+  //{
+  //  btree::vbtree_multimap x;
+  //}
+  //{
+  //  btree::vbtree_multiset x;
+  //}
+
+  cout << "    compare_function_objects complete" << endl;
+}
 
 ////------------------------------------ alignment ---------------------------------------//
 //
@@ -773,7 +830,8 @@ int cpp_main(int, char*[])
 {
   instantiate();
   types_test();
-  //compare_function_objects();
+  btree_less();
+  compare_function_objects();
   //construct_new();
   //single_insert();
   //open_existing();
