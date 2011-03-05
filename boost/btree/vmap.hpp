@@ -36,8 +36,8 @@ namespace boost
     {
     public:
 
-      BOOST_STATIC_ASSERT_MSG( boost::is_pointer<Key>::value, "Key must be a pointer type");
-      BOOST_STATIC_ASSERT_MSG( boost::is_pointer<T>::value, "T must be a pointer type");
+      BOOST_STATIC_ASSERT_MSG( !boost::is_pointer<Key>::value, "Key must not be a pointer type");
+      BOOST_STATIC_ASSERT_MSG( !boost::is_pointer<T>::value, "T must not be a pointer type");
 
       typedef T  mapped_type;
 
@@ -100,8 +100,8 @@ namespace boost
     {
     public:
 
-      BOOST_STATIC_ASSERT_MSG( boost::is_pointer<Key>::value, "Key must be a pointer type");
-      BOOST_STATIC_ASSERT_MSG( boost::is_pointer<T>::value, "T must be a pointer type");
+      BOOST_STATIC_ASSERT_MSG( !boost::is_pointer<Key>::value, "Key must not be a pointer type");
+      BOOST_STATIC_ASSERT_MSG( !boost::is_pointer<T>::value, "T must not be a pointer type");
 
       typedef T  mapped_type;
 

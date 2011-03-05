@@ -36,7 +36,7 @@ namespace boost
     {
     public:
 
-      BOOST_STATIC_ASSERT_MSG( boost::is_pointer<Key>::value, "Key must be a pointer type");
+      BOOST_STATIC_ASSERT_MSG( !boost::is_pointer<Key>::value, "Key must not be a pointer type");
 
       // <Key,Comp> is required by GCC but not by VC++
       explicit vbtree_set(const Comp& comp = Comp())
@@ -97,7 +97,7 @@ namespace boost
     {
     public:
 
-      BOOST_STATIC_ASSERT_MSG( boost::is_pointer<Key>::value, "Key must be a pointer type");
+      BOOST_STATIC_ASSERT_MSG( !boost::is_pointer<Key>::value, "Key must not be a pointer type");
 
       // <Key,Comp> is required by GCC but not by VC++
       explicit vbtree_multiset(const Comp& comp = Comp())
