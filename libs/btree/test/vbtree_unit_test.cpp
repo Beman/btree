@@ -64,35 +64,35 @@ void instantiate()
 {
   cout << "  instantiate..." << endl;
   {
-    btree::vbtree_map<fat*, int*> x;
+    btree::vbtree_map<fat, int> x;
     instantiate_test(x);
   }
   {
-    btree::vbtree_multimap<fat*, int*> x;
+    btree::vbtree_multimap<fat, int> x;
     instantiate_test(x);
   }
   {
-    btree::vbtree_set<int*> x;
+    btree::vbtree_set<int> x;
     instantiate_test(x);
   }
   {
-    btree::vbtree_multiset<int*> x;
+    btree::vbtree_multiset<int> x;
     instantiate_test(x);
   }
   {
-    btree::vbtree_map<fat*, int*, btree::default_big_endian_traits> x;
+    btree::vbtree_map<fat, int, btree::default_big_endian_traits> x;
     instantiate_test(x);
   }
   {
-    btree::vbtree_multimap<fat*, int*, btree::default_little_endian_traits> x;
+    btree::vbtree_multimap<fat, int, btree::default_little_endian_traits> x;
     instantiate_test(x);
   }
   {
-    btree::vbtree_set<int*, btree::default_little_endian_traits> x;
+    btree::vbtree_set<int, btree::default_little_endian_traits> x;
     instantiate_test(x);
   }
   {
-    btree::vbtree_multiset<int*, btree::default_big_endian_traits> x;
+    btree::vbtree_multiset<int, btree::default_big_endian_traits> x;
     instantiate_test(x);
   }
   cout << "    instantiate complete" << endl;
@@ -106,108 +106,109 @@ void types_test()
 
   //  test std::set and std::map to add insight into types
 
-  typedef std::set<int*>                          std_set;
-  typedef std::map<int*, long*>                   std_map;
-  typedef btree::vbtree_set<int*>         bt_set;
-  typedef btree::vbtree_map<int*, long*>  bt_map;
+  typedef std::set<int>                  std_set;
+  typedef btree::vbtree_set<int>         bt_set;
 
-  BOOST_TEST((boost::is_same<std_set::key_type, int*>::value));
-  BOOST_TEST((boost::is_same< bt_set::key_type, int*>::value));
+  BOOST_TEST((boost::is_same<std_set::key_type, int>::value));
+  BOOST_TEST((boost::is_same< bt_set::key_type, int>::value));
 
-  BOOST_TEST((boost::is_same<std_set::value_type, int*>::value));
-  BOOST_TEST((boost::is_same< bt_set::value_type, int const*>::value));
+  BOOST_TEST((boost::is_same<std_set::value_type, int>::value));
+  BOOST_TEST((boost::is_same< bt_set::value_type, int>::value));
 
   // reference is "lvalue of T" where T is value_type
-  BOOST_TEST((boost::is_same<std_set::reference, int*&>::value));
-  BOOST_TEST((boost::is_same< bt_set::reference, int const*&>::value));
+  BOOST_TEST((boost::is_same<std_set::reference, int&>::value));
+  BOOST_TEST((boost::is_same< bt_set::reference, int&>::value));
 
   // const_reference is "const lvalue of T" where T is value_type
-  BOOST_TEST((boost::is_same<std_set::const_reference, int*const&>::value));
-  BOOST_TEST((boost::is_same< bt_set::const_reference, int const*const&>::value));
+  BOOST_TEST((boost::is_same<std_set::const_reference, int const&>::value));
+  BOOST_TEST((boost::is_same< bt_set::const_reference, int const&>::value));
 
-  BOOST_TEST((boost::is_same<std_set::iterator::reference, int*const&>::value));
-  BOOST_TEST((boost::is_same< bt_set::iterator::reference, int const*const&>::value));
+  BOOST_TEST((boost::is_same<std_set::iterator::reference, int const&>::value));
+  BOOST_TEST((boost::is_same< bt_set::iterator::reference, int const&>::value));
   
-  BOOST_TEST((boost::is_same<std_set::const_iterator::reference, int*const&>::value));
-  BOOST_TEST((boost::is_same< bt_set::const_iterator::reference, int const*const&>::value));
+  BOOST_TEST((boost::is_same<std_set::const_iterator::reference, int const&>::value));
+  BOOST_TEST((boost::is_same< bt_set::const_iterator::reference, int const&>::value));
 
-  BOOST_TEST((boost::is_same<std_map::key_type, int*>::value));
-  BOOST_TEST((boost::is_same< bt_map::key_type, int*>::value));
+  typedef std::map<int, long>            std_map;
+  typedef btree::vbtree_map<int, long>   bt_map;
 
-  BOOST_TEST((boost::is_same<std_map::mapped_type, long*>::value));
-  BOOST_TEST((boost::is_same< bt_map::mapped_type, long*>::value));
+  BOOST_TEST((boost::is_same<std_map::key_type, int>::value));
+  BOOST_TEST((boost::is_same< bt_map::key_type, int>::value));
+  
+  BOOST_TEST((boost::is_same<std_map::mapped_type, long>::value));
+  BOOST_TEST((boost::is_same< bt_map::mapped_type, long>::value));
 
-  BOOST_TEST((boost::is_same<std_map::value_type, std::pair<int*const, long*> >::value));
-  BOOST_TEST((boost::is_same< bt_map::value_type, std::pair<int const*, long*> >::value));
+  BOOST_TEST((boost::is_same<std_map::value_type, std::pair<const int, long> >::value));
+  BOOST_TEST((boost::is_same< bt_map::value_type, btree::vbtree_pair<const int, const long> >::value));
 
   // reference is "lvalue of T" where T is value_type
   BOOST_TEST((boost::is_same<std_map::reference,
-    std::pair<int*const, long*>& >::value));
+    std::pair<const int, long>& >::value));
   BOOST_TEST((boost::is_same< bt_map::reference,
-    std::pair<int const*, long*>& >::value));
+    btree::vbtree_pair<const int, const long>& >::value));
 
   // const_reference is "const lvalue of T" where T is value_type
   BOOST_TEST((boost::is_same<std_map::const_reference,
-    const std::pair<int*const, long*>& >::value));
+    const std::pair<const int, long>& >::value));
   BOOST_TEST((boost::is_same< bt_map::const_reference,
-    const std::pair<int const*, long const*>& >::value));
+    const btree::vbtree_pair<const int, const long>& >::value));
 
   BOOST_TEST((boost::is_same<std_map::iterator::reference,
-    std::pair<int*const, long*>& >::value));
+    std::pair<const int, long>& >::value));
   BOOST_TEST((boost::is_same< bt_map::iterator::reference,
-    const std::pair<int const*, long*>& >::value));
+    const btree::vbtree_pair<const int, const long>& >::value));
 
   BOOST_TEST((boost::is_same<std_map::const_iterator::reference,
-    const std::pair<int*const, long*>& >::value));
+    const std::pair<const int, long>& >::value));
   BOOST_TEST((boost::is_same< bt_map::const_iterator::reference,
-    const std::pair<int const*, long const*>& >::value));
+    const btree::vbtree_pair<const int, const long>& >::value));
 
   cout << "    types_test complete" << endl;
 }
 
-//-------------------------------------- construct_new ---------------------------------//
+////-------------------------------------- construct_new ---------------------------------//
+//
+//template <class BT>
+//void construct_new_test(BT& bt, const fs::path& p)
+//{ 
+//  BOOST_TEST(bt.is_open());
+//  BOOST_TEST_EQ(bt.size(), 0U);
+//  BOOST_TEST(bt.empty());
+//  BOOST_TEST(!bt.read_only());
+//  BOOST_TEST(bt.page_size() == btree::default_page_size);  // the default
+//  BOOST_TEST(bt.file_path() == p);
+//
+//  bt.close();
+//  BOOST_TEST(!bt.is_open());
+//}
+//
+//void construct_new()
+//{
+//  cout << "  construct_new..." << endl;
+//  {
+//    fs::path p("btree_map.btree");
+//    btree::vbtree_map<fat*, int*> x(p, btree::flags::truncate);
+//    construct_new_test(x, p);
+//  }
+//
+//  cout << "    construct_new complete" << endl;
+//}
 
-template <class BT>
-void construct_new_test(BT& bt, const fs::path& p)
-{ 
-  BOOST_TEST(bt.is_open());
-  BOOST_TEST_EQ(bt.size(), 0U);
-  BOOST_TEST(bt.empty());
-  BOOST_TEST(!bt.read_only());
-  BOOST_TEST(bt.page_size() == btree::default_page_size);  // the default
-  BOOST_TEST(bt.file_path() == p);
-
-  bt.close();
-  BOOST_TEST(!bt.is_open());
-}
-
-void construct_new()
-{
-  cout << "  construct_new..." << endl;
-  {
-    fs::path p("btree_map.btree");
-    btree::vbtree_map<fat*, int*> x(p, btree::flags::truncate);
-    construct_new_test(x, p);
-  }
-
-  cout << "    construct_new complete" << endl;
-}
-
-//-----------------------------------  single_insert  ----------------------------------//
-
-void  single_insert()
-{
-  cout << "  single_insert..." << endl;
-
-  fs::path p("btree_map.btree");
-  btree::vbtree_map<char*, char*> x(p, btree::flags::truncate);
-
-  x.insert(std::make_pair<const char*, char*>("harry", "cat"));
-
-  BOOST_TEST_EQ(x.size(), 1);
-
-  cout << "     single_insert complete" << endl;
-}
+////-----------------------------------  single_insert  ----------------------------------//
+//
+//void  single_insert()
+//{
+//  cout << "  single_insert..." << endl;
+//
+//  fs::path p("btree_map.btree");
+//  btree::vbtree_map<char*, char*> x(p, btree::flags::truncate);
+//
+//  x.insert(std::make_pair<const char*, char*>("harry", "cat"));
+//
+//  BOOST_TEST_EQ(x.size(), 1);
+//
+//  cout << "     single_insert complete" << endl;
+//}
 
 ////------------------------------------ open_existing -----------------------------------//
 //
@@ -235,7 +236,7 @@ void  single_insert()
 //
 //  cout << "    open_existing complete" << endl;
 //}
-//
+
 ////------------------------------- compare_function_objects -----------------------------//
 //
 //template <class BT>
@@ -274,7 +275,7 @@ void  single_insert()
 //  //}
 //  cout << "    compare_function_objects complete" << endl;
 //}
-//
+
 ////------------------------------------ alignment ---------------------------------------//
 //
 //void alignment()
@@ -772,10 +773,10 @@ int cpp_main(int, char*[])
 {
   instantiate();
   types_test();
-  construct_new();
-  single_insert();
-  //open_existing();
   //compare_function_objects();
+  //construct_new();
+  //single_insert();
+  //open_existing();
   //alignment();
   //insert();
   //insert_non_unique();

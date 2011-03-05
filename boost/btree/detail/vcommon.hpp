@@ -80,6 +80,75 @@ template <> struct less<char*>
   bool operator()(const char* x, const char* y) const { return std::strcmp(x, y) < 0; }
 };
 
+  //-------------------------------- vbtree_pair ---------------------------------------//
+
+  // TODO: either add code to align second() or add a requirement that T2 is an unaligned
+  // type.
+
+
+  template <class T1, class T2>
+  class vbtree_pair
+  {
+  public:
+    T1* first() const   { return reinterpret_cast<T1*>(this); }
+    T2* second() const  { return reinterpret_cast<T2*>(
+                                  reinterpret_cast<const char*>(this) + size(first())); }
+  };
+
+//--------------------------------------------------------------------------------------//
+//                             class vbtree_set_base                                    //
+//--------------------------------------------------------------------------------------//
+
+template <class Key, class Comp>
+class vbtree_set_base
+{
+public:
+  typedef Key   value_type;
+  typedef Comp  value_compare;
+
+  const Key* key(const value_type* v) const {return v;}  // really handy, so expose
+
+  static std::size_t key_size() { return -1; }
+  static std::size_t mapped_size() { return -1; }
+};
+
+//--------------------------------------------------------------------------------------//
+//                             class vbtree_map_base                                    //
+//--------------------------------------------------------------------------------------//
+
+template <class Key, class T, class Comp>
+class vbtree_map_base
+{
+public:
+  typedef vbtree_pair<const Key, const T>  value_type;
+
+  //typedef detail::vbtree_pair<typename boost::remove_pointer<Key>::type,
+  //                     typename boost::remove_pointer<T>::type>
+  //  element_type;
+
+  const Key* key(const value_type* v) const  // really handy, so expose
+    {return v.first();}
+
+  static std::size_t key_size() { return -1; }
+  static std::size_t mapped_size() { return -1; }
+
+  class value_compare
+  {
+  public:
+    value_compare() {}
+    value_compare(Comp comp) : m_comp(comp) {}
+    bool operator()(const value_type* x, const value_type* y) const
+      { return m_comp(x.first, y.first); }
+    bool operator()(const value_type* x, const Key& y) const
+      { return m_comp(x.first, y); }
+    bool operator()(const Key& x, const value_type* y) const
+      { return m_comp(x, y.first); }
+  private:
+    Comp    m_comp;
+  };
+
+};
+
 namespace detail
 {
   //-------------------------------- dynamic_iterator ----------------------------------//
@@ -112,98 +181,7 @@ namespace detail
     }
   };
 
-  //-------------------------------- dynamic_pair --------------------------------------//
-
-  // TODO: either add code to align second() or add a requirement that T2 is an unaligned
-  // type.
-
-
-  template <class T1, class T2>
-  class dynamic_pair
-  {
-  public:
-    T1*       first()         { return reinterpret_cast<T1*>(this); }
-    const T1* first() const   { return reinterpret_cast<const T1*>(this); }
-    T2*       second()        { return reinterpret_cast<T2*>(reinterpret_cast<char*>(this)
-                                  + size(first())); }
-    T2*       second() const  { return reinterpret_cast<const T2*>(
-                                  reinterpret_cast<const char*>(this) + size(first())); }
-  };
-
 }  // namespace detail
-
-//--------------------------------------------------------------------------------------//
-//                             class vbtree_set_base                                    //
-//--------------------------------------------------------------------------------------//
-
-template <class Key, class Comp>
-class vbtree_set_base
-{
-public:
-  typedef typename boost::remove_pointer<Key>::type const *  value_type;
-  typedef value_type const                                   const_value_type;
-  typedef Comp                                               value_compare;
-  typedef typename boost::remove_pointer<Key>::type          element_type;
-
-  const Key& key(const value_type& v) const {return v;}  // really handy, so expose
-
-  static std::size_t key_size() { return -1; }
-  static std::size_t mapped_size() { return -1; }
-
-protected:
-  static void set_value(value_type& target, const void* source)
-  {
-    target = reinterpret_cast<value_type>(source);
-  }
-};
-
-//--------------------------------------------------------------------------------------//
-//                             class vbtree_map_base                                    //
-//--------------------------------------------------------------------------------------//
-
-template <class Key, class T, class Comp>
-class vbtree_map_base
-{
-public:
-  typedef typename boost::remove_pointer<Key>::type const * const_key_type;
-  typedef std::pair<typename boost::remove_pointer<Key>::type const *, T>
-    value_type;
-  typedef std::pair<typename boost::remove_pointer<Key>::type const *,
-                    typename boost::remove_pointer<T>::type const *>
-    const_value_type;
-
-  typedef detail::dynamic_pair<typename boost::remove_pointer<Key>::type,
-                       typename boost::remove_pointer<T>::type>
-    element_type;
-
-  const const_key_type& key(const value_type& v) const  // really handy, so expose
-    {return v.first;}
-
-  static std::size_t key_size() { return -1; }
-  static std::size_t mapped_size() { return -1; }
-
-  class value_compare
-  {
-  public:
-    value_compare() {}
-    value_compare(Comp comp) : m_comp(comp) {}
-    bool operator()(const value_type& x, const value_type& y) const
-      { return m_comp(x.first, y.first); }
-    bool operator()(const value_type& x, const Key& y) const
-      { return m_comp(x.first, y); }
-    bool operator()(const Key& x, const value_type& y) const
-      { return m_comp(x, y.first); }
-  private:
-    Comp    m_comp;
-  };
-
-protected:
-  static void set_value(value_type& target, const void* source)
-  {
-    target.first  = reinterpret_cast<Key>(source);
-    target.second = reinterpret_cast<T>(source + btree::size(target.first));
-  }
-};
 
 //--------------------------------------------------------------------------------------//
 //                                                                                      //
@@ -240,17 +218,16 @@ public:
   // types:
   typedef Key                                   key_type;
   typedef typename Base::value_type             value_type;
-  typedef typename Base::const_value_type       const_value_type;
   typedef Comp                                  key_compare;
   typedef typename Base::value_compare          value_compare; 
   typedef value_type&                           reference;
-  typedef const const_value_type&               const_reference;
+  typedef const value_type&                     const_reference;
   typedef boost::uint64_t                       size_type;
   typedef value_type*                           pointer;
-  typedef const const_value_type*               const_pointer;
+  typedef const value_type*                     const_pointer;
 
   typedef iterator_type<const value_type>       iterator;
-  typedef iterator_type<const const_value_type> const_iterator;
+  typedef iterator                              const_iterator;
 
   typedef std::reverse_iterator<iterator>       reverse_iterator;
   typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
@@ -260,8 +237,6 @@ public:
   typedef typename Traits::page_id_type         page_id_type;
   typedef typename Traits::page_size_type       page_size_type;
   typedef typename Traits::page_level_type      page_level_type;
-
-  typedef typename Base::element_type           leaf_element_type;
 
   // construct/destroy:
 
@@ -332,10 +307,10 @@ public:
   //  iterators doesn't suffer the same since iterators contain reference counted smart
   //  pointers to the page's memory.
   //
-  //  T&        operator[](const key_type& k);
-  //  const T&  at(const key_type& k) const;
+  //  T&        operator[](const key_type* k);
+  //  const T&  at(const key_type* k) const;
   //  T&        operator[](key_type&& k);
-  //  T&        at(const key_type& k);
+  //  T&        at(const key_type* k);
 
 
   // modifiers:
@@ -350,7 +325,7 @@ public:
   //void insert(initializer_list<value_type>);
 
   const_iterator     erase(const_iterator position);
-  size_type          erase(const key_type& k);
+  size_type          erase(const key_type* k);
   const_iterator     erase(const_iterator first, const_iterator last);
   void               clear();
 
@@ -361,13 +336,13 @@ public:
 
   // operations:
 
-  const_iterator     find(const key_type& k) const;
-  size_type          count(const key_type& k) const;
+  const_iterator     find(const key_type* k) const;
+  size_type          count(const key_type* k) const;
 
-  const_iterator     lower_bound(const key_type& k) const;
-  const_iterator     upper_bound(const key_type& k) const;
+  const_iterator     lower_bound(const key_type* k) const;
+  const_iterator     upper_bound(const key_type* k) const;
 
-  const_iterator_range  equal_range(const key_type& k) const
+  const_iterator_range  equal_range(const key_type* k) const
                             { return std::make_pair(lower_bound(k), upper_bound(k)); }
 
 //--------------------------------------------------------------------------------------//
@@ -424,6 +399,7 @@ private:
   class leaf_data : public btree_data
   {
   public:
+    typedef value_type                                   leaf_element_type;
     typedef detail::dynamic_iterator<leaf_element_type>  leaf_element_iterator;
 
     page_id_type           prior_page_id() const           {return m_prior_page_id;}
@@ -567,12 +543,6 @@ private:
    
     typename vbtree_base::btree_page_ptr                    m_page; 
     typename vbtree_base::leaf_data::leaf_element_iterator  m_element;  // 0 for end iterator
-    typename boost::remove_const<T>::type                   m_value;    // proxy value
-
-    void set_value()
-    { 
-      vbtree_base::set_value(m_value, m_element);
-    }
 
     T& dereference() const  { return m_value; }
  
@@ -593,9 +563,9 @@ private:
 protected:
 
   std::pair<const_iterator, bool>
-    m_insert_unique(const value_type& value);
+    m_insert_unique(const value_type* value);
   const_iterator
-    m_insert_non_unique(const value_type& value);
+    m_insert_non_unique(const value_type* value);
   // Remark: Insert after any elements with equivalent keys, per C++ standard
 
   void m_open(const boost::filesystem::path& p, flags::bitmask flgs, std::size_t pg_sz);
@@ -623,19 +593,19 @@ private:
     m_hdr.endian_flip_if_needed();
   }
 
-  iterator m_lower_page_bound(const key_type& k);
+  iterator m_lower_page_bound(const key_type* k);
   // returned iterator::m_element is the insertion point, and thus may be the 
   // past-the-end value_type* for iterator::m_page
   // postcondition: parent pointers are set, all the way up the chain to the root
-  iterator m_upper_page_bound(const key_type& k);
+  iterator m_upper_page_bound(const key_type* k);
   // returned iterator::m_element is the insertion point, and thus may be the 
   // past-the-end value_type* for iterator::m_page
   // postcondition: parent pointers are set, all the way up the chain to the root
   btree_page_ptr m_new_page(boost::uint16_t lv);
   void  m_new_root();
-  const_iterator m_leaf_insert(iterator insert_iter, const value_type& value);
+  const_iterator m_leaf_insert(iterator insert_iter, const value_type* value);
   void  m_branch_insert(btree_page* pg, branch_value_type* element,
-    const key_type& k, page_id_type id);
+    const key_type* k, page_id_type id);
 
   struct branch_value_type;
   void  m_erase_branch_value(btree_page* pg, branch_value_type* value);
@@ -960,7 +930,7 @@ vbtree_base<Key,Base,Traits,Comp>::m_new_root()
 template <class Key, class Base, class Traits, class Comp>   
 typename vbtree_base<Key,Base,Traits,Comp>::const_iterator
 vbtree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter,
-  const value_type& value)
+  const value_type* value)
 {
   btree_page_ptr     pg = insert_iter.m_page;
   value_type*        insert_begin = const_cast<value_type*>(insert_iter.m_element);
@@ -1064,7 +1034,7 @@ vbtree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter,
 template <class Key, class Base, class Traits, class Comp>   
 void
 vbtree_base<Key,Base,Traits,Comp>::m_branch_insert(
-  btree_page* pg1, branch_value_type* element, const key_type& k, page_id_type id) 
+  btree_page* pg1, branch_value_type* element, const key_type* k, page_id_type id) 
 {
   btree_page*          pg = pg1;
   branch_value_type*   insert_begin = element;
@@ -1285,7 +1255,7 @@ vbtree_base<Key,Base,Traits,Comp>::erase(const_iterator pos)
 
 template <class Key, class Base, class Traits, class Comp>   
 typename vbtree_base<Key,Base,Traits,Comp>::size_type
-vbtree_base<Key,Base,Traits,Comp>::erase(const key_type& k)
+vbtree_base<Key,Base,Traits,Comp>::erase(const key_type* k)
 {
   BOOST_ASSERT_MSG(is_open(), "erase() on unopen btree");
   size_type count = 0;
@@ -1321,7 +1291,7 @@ vbtree_base<Key,Base,Traits,Comp>::erase(const_iterator first, const_iterator la
 
 template <class Key, class Base, class Traits, class Comp>   
 std::pair<typename vbtree_base<Key,Base,Traits,Comp>::const_iterator, bool>
-vbtree_base<Key,Base,Traits,Comp>::m_insert_unique(const value_type& value)
+vbtree_base<Key,Base,Traits,Comp>::m_insert_unique(const value_type* value)
 {
   BOOST_ASSERT_MSG(is_open(), "insert() on unopen btree");
   iterator insert_point = m_lower_page_bound(key(value));
@@ -1341,7 +1311,7 @@ vbtree_base<Key,Base,Traits,Comp>::m_insert_unique(const value_type& value)
 
 template <class Key, class Base, class Traits, class Comp>   
 inline typename vbtree_base<Key,Base,Traits,Comp>::const_iterator
-vbtree_base<Key,Base,Traits,Comp>::m_insert_non_unique(const value_type& value)
+vbtree_base<Key,Base,Traits,Comp>::m_insert_non_unique(const value_type* value)
 {
   BOOST_ASSERT_MSG(is_open(), "erase() on unopen btree");
   iterator insert_point = m_upper_page_bound(key(value));
@@ -1357,7 +1327,7 @@ vbtree_base<Key,Base,Traits,Comp>::m_insert_non_unique(const value_type& value)
 
 template <class Key, class Base, class Traits, class Comp>   
 typename vbtree_base<Key,Base,Traits,Comp>::iterator
-vbtree_base<Key,Base,Traits,Comp>::m_lower_page_bound(const key_type& k)
+vbtree_base<Key,Base,Traits,Comp>::m_lower_page_bound(const key_type* k)
 // returned iterator::m_element may be the 
 // past-the-end Value* for iterator::m_page
 {
@@ -1395,7 +1365,7 @@ vbtree_base<Key,Base,Traits,Comp>::m_lower_page_bound(const key_type& k)
 
 template <class Key, class Base, class Traits, class Comp>   
 typename vbtree_base<Key,Base,Traits,Comp>::const_iterator
-vbtree_base<Key,Base,Traits,Comp>::lower_bound(const key_type& k) const
+vbtree_base<Key,Base,Traits,Comp>::lower_bound(const key_type* k) const
 {
   BOOST_ASSERT_MSG(is_open(), "lower_bound() on unopen btree");
   btree_page_ptr pg = m_root;
@@ -1437,7 +1407,7 @@ vbtree_base<Key,Base,Traits,Comp>::lower_bound(const key_type& k) const
 
 template <class Key, class Base, class Traits, class Comp>   
 typename vbtree_base<Key,Base,Traits,Comp>::iterator
-vbtree_base<Key,Base,Traits,Comp>::m_upper_page_bound(const key_type& k)
+vbtree_base<Key,Base,Traits,Comp>::m_upper_page_bound(const key_type* k)
 // returned iterator::m_element may be the 
 // past-the-end Value* for iterator::m_page
 {
@@ -1475,7 +1445,7 @@ vbtree_base<Key,Base,Traits,Comp>::m_upper_page_bound(const key_type& k)
 
 template <class Key, class Base, class Traits, class Comp>   
 typename vbtree_base<Key,Base,Traits,Comp>::const_iterator
-vbtree_base<Key,Base,Traits,Comp>::upper_bound(const key_type& k) const
+vbtree_base<Key,Base,Traits,Comp>::upper_bound(const key_type* k) const
 {
   BOOST_ASSERT_MSG(is_open(), "upper_bound() on unopen btree");
   btree_page_ptr pg = m_root;
@@ -1510,7 +1480,7 @@ vbtree_base<Key,Base,Traits,Comp>::upper_bound(const key_type& k) const
 
 template <class Key, class Base, class Traits, class Comp>   
 typename vbtree_base<Key,Base,Traits,Comp>::const_iterator
-vbtree_base<Key,Base,Traits,Comp>::find(const key_type& k) const
+vbtree_base<Key,Base,Traits,Comp>::find(const key_type* k) const
 {
   BOOST_ASSERT_MSG(is_open(), "find() on unopen btree");
   const_iterator low = lower_bound(k);
@@ -1523,7 +1493,7 @@ vbtree_base<Key,Base,Traits,Comp>::find(const key_type& k) const
 
 template <class Key, class Base, class Traits, class Comp>   
 typename vbtree_base<Key,Base,Traits,Comp>::size_type
-vbtree_base<Key,Base,Traits,Comp>::count(const key_type& k) const
+vbtree_base<Key,Base,Traits,Comp>::count(const key_type* k) const
 {
   BOOST_ASSERT_MSG(is_open(), "lower_bound() on unopen btree");
   size_type count = 0;
