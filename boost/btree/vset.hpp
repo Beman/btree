@@ -30,7 +30,7 @@ namespace boost
 //--------------------------------------------------------------------------------------//
 
     template <class Key, class Traits = default_native_traits,
-              class Comp = std::less<Key> >
+              class Comp = btree::less<Key*> >
     class vbtree_set
       : public vbtree_base<Key, vbtree_set_base<Key,Comp>, Traits, Comp>
     {
@@ -91,7 +91,7 @@ namespace boost
 //--------------------------------------------------------------------------------------//
 
     template <class Key, class Traits = default_native_traits,
-              class Comp = std::less<Key> >              
+              class Comp = btree::less<Key*> >              
     class vbtree_multiset
       : public vbtree_base<Key, vbtree_set_base<Key,Comp>, Traits, Comp>
     {

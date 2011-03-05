@@ -71,8 +71,17 @@ template <class T> struct less<const T*>
   bool operator()(const T& x, const T& y) const;
 };
 
+////  full specialization for C strings
+//template <> struct less<char*>
+//{
+//  typedef const char* first_argument_type;
+//  typedef const char* second_argument_type;
+//  typedef bool result_type;
+//  bool operator()(const char* x, const char* y) const { return std::strcmp(x, y) < 0; }
+//};
+
 //  full specialization for C strings
-template <> struct less<char*>
+template <> struct less<const char*>
 {
   typedef const char* first_argument_type;
   typedef const char* second_argument_type;
@@ -122,10 +131,6 @@ class vbtree_map_base
 public:
   typedef vbtree_pair<const Key, const T>  value_type;
 
-  //typedef detail::vbtree_pair<typename boost::remove_pointer<Key>::type,
-  //                     typename boost::remove_pointer<T>::type>
-  //  element_type;
-
   const Key* key(const value_type* v) const  // really handy, so expose
     {return v.first();}
 
@@ -137,12 +142,12 @@ public:
   public:
     value_compare() {}
     value_compare(Comp comp) : m_comp(comp) {}
-    bool operator()(const value_type* x, const value_type* y) const
-      { return m_comp(x.first, y.first); }
-    bool operator()(const value_type* x, const Key& y) const
-      { return m_comp(x.first, y); }
-    bool operator()(const Key& x, const value_type* y) const
-      { return m_comp(x, y.first); }
+    bool operator()(const value_type& x, const value_type& y) const
+      { return m_comp(x.first(), y.first()); }
+    bool operator()(const value_type& x, const Key& y) const
+      { return m_comp(x.first(), y); }
+    bool operator()(const Key& x, const value_type& y) const
+      { return m_comp(x, y.first()); }
   private:
     Comp    m_comp;
   };
