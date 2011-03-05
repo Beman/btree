@@ -193,21 +193,21 @@ void construct_new()
   cout << "    construct_new complete" << endl;
 }
 
-////-----------------------------------  single_insert  ----------------------------------//
-//
-//void  single_insert()
-//{
-//  cout << "  single_insert..." << endl;
-//
-//  fs::path p("btree_map.btree");
-//  btree::vbtree_map<char*, char*> x(p, btree::flags::truncate);
-//
-//  x.insert(std::make_pair<const char*, char*>("harry", "cat"));
-//
-//  BOOST_TEST_EQ(x.size(), 1);
-//
-//  cout << "     single_insert complete" << endl;
-//}
+//-----------------------------------  single_insert  ----------------------------------//
+
+void  single_insert()
+{
+  cout << "  single_insert..." << endl;
+
+  fs::path p("btree_map.btree");
+  btree::vbtree_map<char*, char*> x(p, btree::flags::truncate);
+
+  x.insert(std::make_pair<const char*, char*>("harry", "cat"));
+
+  BOOST_TEST_EQ(x.size(), 1);
+
+  cout << "     single_insert complete" << endl;
+}
 
 ////------------------------------------ open_existing -----------------------------------//
 //
@@ -773,7 +773,7 @@ int cpp_main(int, char*[])
   instantiate();
   types_test();
   construct_new();
-  //single_insert();
+  single_insert();
   //open_existing();
   //compare_function_objects();
   //alignment();
