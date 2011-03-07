@@ -203,7 +203,9 @@ void  single_insert()
 
   fs::path p("btree_map.btree");
 
-  btree::vbtree_map<int, int> x(p, btree::flags::truncate);
+  typedef btree::vbtree_map<int, int> btree_type;
+  fs::remove(p);
+  btree_type x(p, btree::flags::read_write, 256);
 
   class my_pair : public btree::vbtree_pair<const int, const int>
   {
@@ -213,12 +215,22 @@ void  single_insert()
   };
 
   my_pair mp;
+
+  BOOST_TEST_EQ(btree::dynamic_size(mp), sizeof(mp.key) + sizeof(mp.mapped));
+
   mp.key = 123;
   mp.mapped = 456;
 
-  x.insert(mp);
+  BOOST_TEST_EQ(mp.first(), 123);
+  BOOST_TEST_EQ(mp.second(), 456);
+
+  std::pair<btree_type::const_iterator, bool> result;
+  result = x.insert(mp);
 
   BOOST_TEST_EQ(x.size(), 1);
+  BOOST_TEST(result.second);
+  BOOST_TEST_EQ(result.first->first(), 123);
+  BOOST_TEST_EQ(result.first->second(), 456);
 
   cout << "     single_insert complete" << endl;
 }

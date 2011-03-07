@@ -35,22 +35,43 @@ namespace btree
 //                                                                                      //
 //                   Helpers for variable length keys and/or data                       //
 //                                                                                      //
-//          Use cases include vbtree_set<char*> and vbtree_map<char*, char*>            //
-//                                                                                      //
 //--------------------------------------------------------------------------------------//
 
+//--------------------------------- dynamic_size ---------------------------------------//
+
+//  Must be overloaded for any type T whose dynamic size differs from sizeof(T)
 //  See http://www.gotw.ca/publications/mill17.htm,
 //  Why Not Specialize: The Dimov/Abrahams Example
 
 template <class T>
-std::size_t size(const T&) { return sizeof(T); }
+inline std::size_t dynamic_size(const T&) { return sizeof(T); }
 
-template <class T>
-std::size_t size(const T*);  // pointers must be overloaded; if this overload is selected
-                             // it means user failed to provide the required overload
+//--------------------------------- vbtree_pair ----------------------------------------//
 
-std::size_t size(const char* s) { return std::strlen(s) + 1; }
-std::size_t size(char* s)       { return std::strlen(s) + 1; }
+// TODO: either add code to align second() or add a requirement that T2 is an unaligned
+// type.
+
+template <class T1, class T2>
+class vbtree_pair
+{
+public:
+  T1& first() const   { return *reinterpret_cast<T1*>(this); }
+  T2& second() const
+  {
+    return *reinterpret_cast<T2*>(reinterpret_cast<const char*>(this)
+             + btree::dynamic_size(first()));
+  }
+  std::size_t dynamic_size() const
+  { 
+    return btree::dynamic_size(first()) + btree::dynamic_size(second());
+  }
+};
+
+template <class T1, class T2>
+inline std::size_t dynamic_size(const vbtree_pair<T1, T2>& x) {return x.dynamic_size();}
+
+//std::size_t size(const char* s) { return std::strlen(s) + 1; }
+//std::size_t size(char* s)       { return std::strlen(s) + 1; }
 
 //  less function object class
 
@@ -88,21 +109,6 @@ template <class T> struct less<const T*>
 //  typedef bool result_type;
 //  bool operator()(const char* x, const char* y) const { return std::strcmp(x, y) < 0; }
 //};
-
-  //-------------------------------- vbtree_pair ---------------------------------------//
-
-  // TODO: either add code to align second() or add a requirement that T2 is an unaligned
-  // type.
-
-
-  template <class T1, class T2>
-  class vbtree_pair
-  {
-  public:
-    T1& first() const   { return *reinterpret_cast<T1*>(this); }
-    T2& second() const  { return *reinterpret_cast<T2*>(
-                                  reinterpret_cast<const char*>(this) + size(first())); }
-  };
 
 //--------------------------------------------------------------------------------------//
 //                             class vbtree_set_base                                    //
@@ -169,7 +175,7 @@ namespace detail
     dynamic_iterator() : m_ptr(0) {} 
     explicit dynamic_iterator(T* ptr) : m_ptr(ptr) {}
     dynamic_iterator(T* ptr, std::size_t sz)
-      : m_ptr(reinterpret_cast<T*>(reinterpret_cast<char*>(m_ptr) + sz)) {}
+      : m_ptr(reinterpret_cast<T*>(reinterpret_cast<char*>(ptr) + sz)) {}
 
   private:
     friend class boost::iterator_core_access;
@@ -182,7 +188,7 @@ namespace detail
 
     void increment()
     {
-      m_ptr = reinterpret_cast<T*>(reinterpret_cast<char*>(m_ptr) + btree::size(m_ptr));
+      m_ptr = reinterpret_cast<T*>(reinterpret_cast<char*>(m_ptr) + dynamic_size(m_ptr));
     }
 
 //    void decrement() { throw "should never reach here"; }
@@ -971,14 +977,15 @@ typename vbtree_base<Key,Base,Traits,Comp>::const_iterator
 vbtree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter,
   const value_type& value)
 {
-  std::size_t                     value_size = btree::size(value);
+  std::size_t                     value_size = dynamic_size(value);
   btree_page_ptr                  pg = insert_iter.m_page;
   leaf_data::leaf_value_iterator  insert_begin = insert_iter.m_element;
   btree_page_ptr                  pg2;
   leaf_data::leaf_value_iterator  split_begin;
 
-  BOOST_ASSERT(pg->is_leaf());
-  BOOST_ASSERT(pg->size() <= m_max_leaf_size);
+  BOOST_ASSERT_MSG(pg->is_leaf(), "internal error");
+  BOOST_ASSERT_MSG(pg->size() <= m_max_leaf_size, "internal error");
+  BOOST_ASSERT_MSG(value_size, "dynamic_size(value_type x) returned 0. Is your overload correct?");
 
   m_hdr.increment_element_count();
   pg->needs_write(true);
@@ -1394,6 +1401,7 @@ vbtree_base<Key,Base,Traits,Comp>::m_lower_page_bound(const key_type& k)
   }
 
   //  search leaf
+  BOOST_ASSERT(pg->leaf().begin() == pg->leaf().end());
   leaf_data::leaf_value_iterator low
     = std::lower_bound(pg->leaf().begin(), pg->leaf().end(), k, value_comp());
 
