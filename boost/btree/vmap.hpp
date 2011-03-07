@@ -30,7 +30,7 @@ namespace boost
 //--------------------------------------------------------------------------------------//
 
     template <class Key, class T, class Traits = default_native_traits,
-              class Comp = btree::less<Key*> >
+              class Comp = btree::less<Key> >
     class vbtree_map
       : public vbtree_base<Key, vbtree_map_base<Key,T,Comp>, Traits, Comp>
     {
@@ -94,7 +94,7 @@ namespace boost
 //--------------------------------------------------------------------------------------//
 
     template <class Key, class T, class Traits = default_native_traits,
-              class Comp = btree::less<Key*> >
+              class Comp = btree::less<Key> >
     class vbtree_multimap
       : public vbtree_base<Key, vbtree_map_base<Key,T,Comp>, Traits, Comp>
     {
