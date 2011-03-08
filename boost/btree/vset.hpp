@@ -25,11 +25,13 @@ namespace boost
   namespace btree
   {
 
+    //  endian traits are the default since they don't require page_id_type alignment
+
 //--------------------------------------------------------------------------------------//
 //                                class vbtree_set                                      //
 //--------------------------------------------------------------------------------------//
 
-    template <class Key, class Traits = default_native_traits,
+    template <class Key, class Traits = default_endian_traits,
               class Comp = btree::less<Key*> >
     class vbtree_set
       : public vbtree_base<Key, vbtree_set_base<Key,Comp>, Traits, Comp>
@@ -90,7 +92,7 @@ namespace boost
 //                              class vbtree_multiset                                   //
 //--------------------------------------------------------------------------------------//
 
-    template <class Key, class Traits = default_native_traits,
+    template <class Key, class Traits = default_endian_traits,
               class Comp = btree::less<Key*> >              
     class vbtree_multiset
       : public vbtree_base<Key, vbtree_set_base<Key,Comp>, Traits, Comp>
