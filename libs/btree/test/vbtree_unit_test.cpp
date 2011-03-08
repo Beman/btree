@@ -45,11 +45,61 @@ namespace
     fat() : x(-1) {}
     fat(const fat& f) : x(f.x) {}
     fat& operator=(const fat& f) {x = f.x; return *this; }
+    fat& operator=(int v) {x = v; return *this; }
 
     bool operator<(const fat& rhs) const {return x < rhs.x;}
     bool operator==(const fat& rhs) const {return x == rhs.x;}
     bool operator!=(const fat& rhs) const {return x != rhs.x;}
   };
+
+  class c_str_pair : public btree::vbtree_pair<const int, const int>
+  {
+  public:
+    static const std::size_t max_size = 256;
+
+    c_str_pair(const char* key, const char* mapped)
+    {
+      std::size_t key_sz = std::strlen(key);
+      if (key_sz > max_size-2)
+        key_sz = max_size-2;
+      std::memcpy(_buf, key, key_sz);
+      _buf[key_sz] = '\0';
+      ++key_sz;
+
+      std::size_t mapped_sz = std::strlen(mapped);
+      if (mapped_sz > max_size-(1+key_sz))
+        mapped_sz = max_size-(1+key_sz);
+      std::memcpy(_buf+key_sz+1, mapped, mapped_sz);
+      _buf[key_sz+1+mapped_sz] = '\0';
+    }
+
+  private:
+    char _buf[max_size];
+  };
+
+  class c_string
+  {
+  public:
+    static const std::size_t max_size = 255;
+
+    c_string(const char* s)
+    {
+      std::size_t sz = std::strlen(s);
+      if (sz > max_size)
+        sz = max_size;
+      std::memcpy(_buf, s, sz);
+      _buf[sz] = '\0';
+      _size = sz;
+    }
+
+    std::size_t dynamic_size() const {return _size + 1 + sizeof(_size);}
+
+  private:
+    // keep the size for speed, particularly with larger strings 
+    boost::uint8_t _size;  // std::strlen(_buf)
+    char _buf[max_size+1];
+  };
+
 
 //-------------------------------------- instantiate -----------------------------------//
 
@@ -201,66 +251,87 @@ void  single_insert()
 {
   cout << "  single_insert..." << endl;
 
+  {
+    fs::path p("btree_map.btree");
+    fs::remove(p);
+
+    typedef btree::vbtree_map<int, int> btree_type;
+
+    btree_type x(p, btree::flags::read_write, 128);
+
+    class my_pair : public btree::vbtree_pair<const int, const int>
+    {
+    public:
+      int key;
+      int mapped;
+    };
+
+    my_pair mp;
+
+    BOOST_TEST_EQ(btree::dynamic_size(mp), sizeof(mp.key) + sizeof(mp.mapped));
+
+    mp.key = 123;
+    mp.mapped = 456;
+
+    BOOST_TEST_EQ(mp.first(), 123);
+    BOOST_TEST_EQ(mp.second(), 456);
+
+    std::pair<btree_type::const_iterator, bool> result;
+    result = x.insert(mp);
+
+    BOOST_TEST_EQ(x.size(), 1);
+    BOOST_TEST(result.second);
+    BOOST_TEST_EQ(result.first->first(), 123);
+    BOOST_TEST_EQ(result.first->second(), 456);
+  }
+ 
+  cout << "     single_insert complete" << endl;
+}
+
+//------------------------------------ open_existing -----------------------------------//
+
+void open_existing()
+{
+  cout << "  open_existing..." << endl;
   fs::path p("btree_map.btree");
 
-  typedef btree::vbtree_map<int, int> btree_type;
-  fs::remove(p);
-  btree_type x(p, btree::flags::read_write, 256);
-
-  class my_pair : public btree::vbtree_pair<const int, const int>
+  class my_pair : public btree::vbtree_pair<const fat, const int>
   {
   public:
-    int key;
+    fat key;
     int mapped;
   };
 
   my_pair mp;
 
   BOOST_TEST_EQ(btree::dynamic_size(mp), sizeof(mp.key) + sizeof(mp.mapped));
+  std::cout << sizeof(mp.key) << ' ' << sizeof(mp.mapped) << ' '
+            << sizeof(mp) << ' ' << btree::dynamic_size(mp) << '\n';
 
-  mp.key = 123;
-  mp.mapped = 456;
+  {
+    fs::remove(p);
+    btree::vbtree_map<fat, int> bt(p, btree::flags::truncate, 128);
 
-  BOOST_TEST_EQ(mp.first(), 123);
-  BOOST_TEST_EQ(mp.second(), 456);
+    mp.key = 5; mp.mapped = 0x55;
+    bt.insert(mp);
+    mp.key = 4; mp.mapped = 0x44;
+    bt.insert(mp);
+    mp.key = 6; mp.mapped = 0x66;
+    bt.insert(mp);
+  }
 
-  std::pair<btree_type::const_iterator, bool> result;
-  result = x.insert(mp);
+  btree::vbtree_map<fat, int> bt2(p);
+  BOOST_TEST(bt2.is_open());
+  BOOST_TEST(!bt2.empty());
+  BOOST_TEST_EQ(bt2.size(), 3U);
+  BOOST_TEST_EQ(bt2.page_size(), 128U);
+  BOOST_TEST_EQ(bt2.header().element_count(), 3U);
+  BOOST_TEST_EQ(bt2.header().page_size(), 128U);
 
-  BOOST_TEST_EQ(x.size(), 1);
-  BOOST_TEST(result.second);
-  BOOST_TEST_EQ(result.first->first(), 123);
-  BOOST_TEST_EQ(result.first->second(), 456);
+  // TODO: test each header value
 
-  cout << "     single_insert complete" << endl;
+  cout << "    open_existing complete" << endl;
 }
-
-////------------------------------------ open_existing -----------------------------------//
-//
-//void open_existing()
-//{
-//  cout << "  open_existing..." << endl;
-//  fs::path p("btree_map.btree");
-//  {
-//    btree::vbtree_map<fat, int> bt(p, btree::flags::truncate, 128);
-//
-//    bt.insert(std::make_pair(fat(5), 55));
-//    bt.insert(std::make_pair(fat(4), 44));
-//    bt.insert(std::make_pair(fat(6), 66));
-//  }
-//
-//  btree::vbtree_map<fat, int> bt2(p);
-//  BOOST_TEST(bt2.is_open());
-//  BOOST_TEST(!bt2.empty());
-//  BOOST_TEST_EQ(bt2.size(), 3U);
-//  BOOST_TEST_EQ(bt2.page_size(), 128U);
-//  BOOST_TEST_EQ(bt2.header().element_count(), 3U);
-//  BOOST_TEST_EQ(bt2.header().page_size(), 128U);
-//
-//  // TODO: test each header value
-//
-//  cout << "    open_existing complete" << endl;
-//}
 
 ////------------------------------- btree_less ---------------------------------------------//
 //
@@ -858,7 +929,7 @@ int cpp_main(int, char*[])
   //compare_function_objects();
   construct_new();
   single_insert();
-  //open_existing();
+  open_existing();
   //alignment();
   //insert();
   //insert_non_unique();
