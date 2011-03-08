@@ -55,8 +55,8 @@ template <class T1, class T2>
 class vbtree_value
 {
 public:
-  T1& key() const   { return *reinterpret_cast<T1*>(this); }
-  T2& mapped_value() const
+  T1& key() const   { return *reinterpret_cast<const T1*>(this); }
+  const T2& mapped_value() const
   {
     return *reinterpret_cast<T2*>(reinterpret_cast<const char*>(this)
              + btree::dynamic_size(key()));
