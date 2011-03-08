@@ -71,6 +71,17 @@ namespace boost
         = integer::endianness::little;
     };
 
+    struct default_endian_traits
+    {
+      typedef integer::ubig32_t  page_id_type;
+      typedef integer::ubig16_t  page_size_type;
+      typedef integer::ubig16_t  page_level_type;
+      static const BOOST_SCOPED_ENUM(integer::endianness) header_endianness
+        = integer::endianness::big;
+    };
+
+
+
     namespace flags
     {
       enum bitmask

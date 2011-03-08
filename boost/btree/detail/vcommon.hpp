@@ -46,29 +46,29 @@ namespace btree
 template <class T>
 inline std::size_t dynamic_size(const T&) { return sizeof(T); }
 
-//--------------------------------- vbtree_pair ----------------------------------------//
+//--------------------------------- vbtree_value ---------------------------------------//
 
 // TODO: either add code to align second() or add a requirement that T2 is an unaligned
 // type.
 
 template <class T1, class T2>
-class vbtree_pair
+class vbtree_value
 {
 public:
-  T1& first() const   { return *reinterpret_cast<T1*>(this); }
-  T2& second() const
+  T1& key() const   { return *reinterpret_cast<T1*>(this); }
+  T2& mapped_value() const
   {
     return *reinterpret_cast<T2*>(reinterpret_cast<const char*>(this)
-             + btree::dynamic_size(first()));
+             + btree::dynamic_size(key()));
   }
   std::size_t dynamic_size() const
   { 
-    return btree::dynamic_size(first()) + btree::dynamic_size(second());
+    return btree::dynamic_size(key()) + btree::dynamic_size(mapped_value());
   }
 };
 
 template <class T1, class T2>
-inline std::size_t dynamic_size(const vbtree_pair<T1, T2>& x) {return x.dynamic_size();}
+inline std::size_t dynamic_size(const vbtree_value<T1, T2>& x) {return x.dynamic_size();}
 
 //std::size_t size(const char* s) { return std::strlen(s) + 1; }
 //std::size_t size(char* s)       { return std::strlen(s) + 1; }
@@ -135,10 +135,10 @@ template <class Key, class T, class Comp>
 class vbtree_map_base
 {
 public:
-  typedef vbtree_pair<const Key, const T>  value_type;
+  typedef vbtree_value<const Key, const T>  value_type;
 
   const Key& key(const value_type& v) const  // really handy, so expose
-    {return v.first();}
+    {return v.key();}
 
   static std::size_t key_size() { return -1; }
   static std::size_t mapped_size() { return -1; }
@@ -149,11 +149,11 @@ public:
     value_compare() {}
     value_compare(Comp comp) : m_comp(comp) {}
     bool operator()(const value_type& x, const value_type& y) const
-      { return m_comp(x.first(), y.first()); }
+      { return m_comp(x.key(), y.key()); }
     bool operator()(const value_type& x, const Key& y) const
-      { return m_comp(x.first(), y); }
+      { return m_comp(x.key(), y); }
     bool operator()(const Key& x, const value_type& y) const
-      { return m_comp(x, y.first()); }
+      { return m_comp(x, y.key()); }
   private:
     Comp    m_comp;
   };
@@ -249,6 +249,9 @@ public:
   typedef typename Traits::page_id_type         page_id_type;
   typedef typename Traits::page_size_type       page_size_type;
   typedef typename Traits::page_level_type      page_level_type;
+
+  typedef value_type                                 leaf_value_type;
+  typedef detail::dynamic_iterator<leaf_value_type>  leaf_value_iterator;
 
   // construct/destroy:
 
@@ -411,13 +414,10 @@ private:
   
   //------------------------ leaf data formats and operations --------------------------//
 
-  class leaf_data : public btree_data
+ class leaf_data : public btree_data
   {
+    friend class vbtree_base;
   public:
-    typedef value_type                                 leaf_value_type;
-    typedef detail::dynamic_iterator<leaf_value_type>  leaf_value_iterator;
-
-
     page_id_type         prior_page_id() const           {return m_prior_page_id;}
     void                 prior_page_id(page_id_type id)  {m_prior_page_id = id;}
     page_id_type         next_page_id() const            {return m_next_page_id;}
@@ -440,15 +440,14 @@ private:
     leaf_value_type  m_value[1];
   };
 
-  std::size_t distance_size(typename leaf_data::leaf_value_iterator from,
-                            typename leaf_data::leaf_value_iterator to)
+  std::size_t distance_size(leaf_value_iterator from, leaf_value_iterator to)
   {
     return reinterpret_cast<const char*>(&*to) - reinterpret_cast<const char*>(&*from);
   }
 
   //------------------------ branch data formats and operations ------------------------//
 
-  typedef vbtree_pair<const key_type, const page_id_type>  branch_value_type;
+  typedef vbtree_value<const key_type, const page_id_type>  branch_value_type;
   typedef detail::dynamic_iterator<branch_value_type>      branch_value_iterator;
 
   class branch_data : public btree_data
@@ -471,6 +470,16 @@ private:
                       // it is often called P subscript 0 in the literature
     branch_value_type  m_value[1];
   };
+
+  //  Access to (itr-1)->page_id on branch pages may be expensive since it may be a
+  //  ForwardIterator, and won't work at all for access to PO given begin(). The fix
+  //  is a function that knows what to do.
+  page_id_type prior_page_id(branch_value_iterator itr) const
+  {
+    // page_id_type must be unaligned || key_type must have same or stronger alignment
+    return *reinterpret_cast<const page_id_type*>(
+      reinterpret_cast<const char*>(&*itr) - sizeof(page_id_type));
+  }
 
   class branch_page;
 
@@ -570,8 +579,7 @@ private:
 
   public:
     iterator_type(): m_element(0) {}
-    iterator_type(buffer_ptr p,
-      typename vbtree_base::leaf_data::leaf_value_iterator e)
+    iterator_type(buffer_ptr p, leaf_value_iterator e)
       : m_page(static_cast<typename vbtree_base::btree_page_ptr>(p)),
         m_element(e) {}
 
@@ -583,8 +591,8 @@ private:
     friend class boost::iterator_core_access;
     friend class vbtree_base;
    
-    typename vbtree_base::btree_page_ptr                  m_page; 
-    typename vbtree_base::leaf_data::leaf_value_iterator  m_element;  // 0 for end iterator
+    typename vbtree_base::btree_page_ptr       m_page; 
+    typename vbtree_base::leaf_value_iterator  m_element;  // 0 for end iterator
 
     T& dereference() const  { return *m_element; }
  
@@ -691,11 +699,11 @@ private:
     branch_compare(Comp comp) : m_comp(comp) {}
   public:
    bool operator()(const branch_value_type& x, const branch_value_type& y) const
-      {return m_comp(x.first(), y.first());}
+      {return m_comp(x.key(), y.key());}
    bool operator()(const Key& x, const branch_value_type& y) const
-      {return m_comp(x, y.first());}
+      {return m_comp(x, y.key());}
    bool operator()(const branch_value_type& x, const Key& y) const
-      {return m_comp(x.first(), y);}
+      {return m_comp(x.key(), y);}
   };
 
   //------------------------ comparison function objects -------------------------------//
@@ -853,8 +861,8 @@ vbtree_base<Key,Base,Traits,Comp>::m_open(const boost::filesystem::path& p,
     m_hdr.last_page_id(m_root->page_id());
     m_root->level(0);
     m_root->size(0);
-    m_root->leaf().prior_page_id(0);
-    m_root->leaf().next_page_id(0);
+    m_root->leaf().prior_page_id(page_id_type(0));
+    m_root->leaf().next_page_id(page_id_type(0));
   }
   m_set_max_cache_pages();
 }
@@ -977,11 +985,11 @@ typename vbtree_base<Key,Base,Traits,Comp>::const_iterator
 vbtree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter,
   const value_type& value)
 {
-  std::size_t                     value_size = dynamic_size(value);
-  btree_page_ptr                  pg = insert_iter.m_page;
-  leaf_data::leaf_value_iterator  insert_begin = insert_iter.m_element;
-  btree_page_ptr                  pg2;
-  leaf_data::leaf_value_iterator  split_begin;
+  std::size_t          value_size = dynamic_size(value);
+  btree_page_ptr       pg = insert_iter.m_page;
+  leaf_value_iterator  insert_begin = insert_iter.m_element;
+  btree_page_ptr       pg2;
+  leaf_value_iterator  split_begin;
 
   BOOST_ASSERT_MSG(pg->is_leaf(), "internal error");
   BOOST_ASSERT_MSG(pg->size() <= m_max_leaf_size, "internal error");
@@ -1392,7 +1400,7 @@ vbtree_base<Key,Base,Traits,Comp>::m_lower_page_bound(const key_type& k)
     //  --low;
     btree_page_ptr child_pg;
     // create the ephemeral child->parent list
-    child_pg = m_mgr.read(low->second());
+    child_pg = m_mgr.read(low->mapped_value());  // mapped_value() is page_id
     child_pg->parent(pg.get());
     child_pg->parent_element(low);
 #   ifndef NDEBUG
@@ -1402,7 +1410,7 @@ vbtree_base<Key,Base,Traits,Comp>::m_lower_page_bound(const key_type& k)
   }
 
   //  search leaf
-  leaf_data::leaf_value_iterator low
+  leaf_value_iterator low
     = std::lower_bound(pg->leaf().begin(), pg->leaf().end(), k, value_comp());
 
   return iterator(pg, low);
@@ -1417,26 +1425,26 @@ vbtree_base<Key,Base,Traits,Comp>::lower_bound(const key_type& k) const
   BOOST_ASSERT_MSG(is_open(), "lower_bound() on unopen btree");
   btree_page_ptr pg = m_root;
 
-  //// search branches down the tree until a leaf is reached
-  //while (pg->is_branch())
-  //{
-  //  branch_value_iterator low
-  //    = std::lower_bound(pg->branch().begin(), pg->branch().end(), k, branch_comp());
+  // search branches down the tree until a leaf is reached
+  while (pg->is_branch())
+  {
+    branch_value_iterator low
+      = std::lower_bound(pg->branch().begin(), pg->branch().end(), k, branch_comp());
 
-  //  pg = (low == pg->branch().end()        // all keys on page < search key
-  //        || key_comp()(k, low->key)   // search key < low key
-  //        || ((m_hdr.flags() & btree::flags::multi)
-  //            && !key_comp()(low->key, k) ))  // non-unique && search key == low key
-  //    ? m_mgr.read((low-1)->page_id)
-  //    : m_mgr.read(low->page_id);
-  //}
+    pg = (low == pg->branch().end()           // all keys on page < search key
+          || key_comp()(k, low->key())          // search key < low key
+          || ((m_hdr.flags() & btree::flags::multi)
+              && !key_comp()(low->key(), k) ))  // non-unique && search key == low key
+      ? m_mgr.read(prior_page_id(low))
+      : m_mgr.read(low->mapped_value());
+  }
 
-  ////  search leaf
-  //leaf_value_iterator low
-  //  = std::lower_bound(pg->leaf().begin(), pg->leaf().end(), k, value_comp());
+  //  search leaf
+  leaf_value_iterator low
+    = std::lower_bound(pg->leaf().begin(), pg->leaf().end(), k, value_comp());
 
-  //if (low != pg->leaf().end())
-  //  return const_iterator(pg, low);
+  if (low != pg->leaf().end())
+    return const_iterator(pg, low);
 
   // lower bound is first element on next page
   if (!pg->leaf().next_page_id())
@@ -1505,7 +1513,7 @@ vbtree_base<Key,Base,Traits,Comp>::upper_bound(const key_type& k) const
 
     pg = (up == pg->branch().end()        // all keys on page < search key
           || key_comp()(k, up->key))    // search key < up key
-      ? m_mgr.read((up-1)->page_id)
+      ? m_mgr.read(prior_page_id(up))
       : m_mgr.read(up->page_id);
   }
 

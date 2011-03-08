@@ -52,7 +52,7 @@ namespace
     bool operator!=(const fat& rhs) const {return x != rhs.x;}
   };
 
-  class c_str_pair : public btree::vbtree_pair<const int, const int>
+  class c_str_pair : public btree::vbtree_value<const int, const int>
   {
   public:
     static const std::size_t max_size = 256;
@@ -190,29 +190,29 @@ void types_test()
   BOOST_TEST((boost::is_same< bt_map::mapped_type, long>::value));
 
   BOOST_TEST((boost::is_same<std_map::value_type, std::pair<const int, long> >::value));
-  BOOST_TEST((boost::is_same< bt_map::value_type, btree::vbtree_pair<const int, const long> >::value));
+  BOOST_TEST((boost::is_same< bt_map::value_type, btree::vbtree_value<const int, const long> >::value));
 
   // reference is "lvalue of T" where T is value_type
   BOOST_TEST((boost::is_same<std_map::reference,
     std::pair<const int, long>& >::value));
   BOOST_TEST((boost::is_same< bt_map::reference,
-    btree::vbtree_pair<const int, const long>& >::value));
+    btree::vbtree_value<const int, const long>& >::value));
 
   // const_reference is "const lvalue of T" where T is value_type
   BOOST_TEST((boost::is_same<std_map::const_reference,
     const std::pair<const int, long>& >::value));
   BOOST_TEST((boost::is_same< bt_map::const_reference,
-    const btree::vbtree_pair<const int, const long>& >::value));
+    const btree::vbtree_value<const int, const long>& >::value));
 
   BOOST_TEST((boost::is_same<std_map::iterator::reference,
     std::pair<const int, long>& >::value));
   BOOST_TEST((boost::is_same< bt_map::iterator::reference,
-    const btree::vbtree_pair<const int, const long>& >::value));
+    const btree::vbtree_value<const int, const long>& >::value));
 
   BOOST_TEST((boost::is_same<std_map::const_iterator::reference,
     const std::pair<const int, long>& >::value));
   BOOST_TEST((boost::is_same< bt_map::const_iterator::reference,
-    const btree::vbtree_pair<const int, const long>& >::value));
+    const btree::vbtree_value<const int, const long>& >::value));
 
   cout << "    types_test complete" << endl;
 }
@@ -259,30 +259,30 @@ void  single_insert()
 
     btree_type x(p, btree::flags::read_write, 128);
 
-    class my_pair : public btree::vbtree_pair<const int, const int>
+    class my_pair : public btree::vbtree_value<const int, const int>
     {
     public:
-      int key;
-      int mapped;
+      int _key;
+      int _mapped;
     };
 
     my_pair mp;
 
-    BOOST_TEST_EQ(btree::dynamic_size(mp), sizeof(mp.key) + sizeof(mp.mapped));
+    BOOST_TEST_EQ(btree::dynamic_size(mp), sizeof(mp._key) + sizeof(mp._mapped));
 
-    mp.key = 123;
-    mp.mapped = 456;
+    mp._key = 123;
+    mp._mapped = 456;
 
-    BOOST_TEST_EQ(mp.first(), 123);
-    BOOST_TEST_EQ(mp.second(), 456);
+    BOOST_TEST_EQ(mp.key(), 123);
+    BOOST_TEST_EQ(mp.mapped_value(), 456);
 
     std::pair<btree_type::const_iterator, bool> result;
     result = x.insert(mp);
 
     BOOST_TEST_EQ(x.size(), 1);
     BOOST_TEST(result.second);
-    BOOST_TEST_EQ(result.first->first(), 123);
-    BOOST_TEST_EQ(result.first->second(), 456);
+    BOOST_TEST_EQ(result.first->key(), 123);
+    BOOST_TEST_EQ(result.first->mapped_value(), 456);
   }
  
   cout << "     single_insert complete" << endl;
@@ -295,7 +295,7 @@ void open_existing()
   cout << "  open_existing..." << endl;
   fs::path p("btree_map.btree");
 
-  class my_pair : public btree::vbtree_pair<const fat, const int>
+  class my_pair : public btree::vbtree_value<const fat, const int>
   {
   public:
     fat key;
@@ -403,7 +403,7 @@ void open_existing()
 //    BOOST_TEST(!bt.key_comp()(&i1, &i1));
 //    BOOST_TEST(!bt.key_comp()(&i2, &i1));
 //
-//    struct my_pair : public btree::vbtree_pair<const int, const long>
+//    struct my_pair : public btree::vbtree_value<const int, const long>
 //    {
 //      int first;
 //      int second;
@@ -435,223 +435,232 @@ void open_existing()
 //  cout << "  alignment..." << endl;
 //  cout << "    alignment complete" << endl;
 //}
-//
-////------------------------------------- insert -----------------------------------------//
-//
-//template <class BTree>
-//void insert_tests(BTree& bt)
-//{
-//  cout << "  testing \"" << bt.file_path().string() << "\" ..." << endl;
-//  cout << '\n' << bt.manager() << '\n';
-//
-//  BOOST_TEST(bt.size() == 0U);
-//  BOOST_TEST(bt.empty());
-//  BOOST_TEST(!bt.read_only());
-//  BOOST_TEST(bt.page_size() == 128);
-//  BOOST_TEST(bt.begin() == bt.end());
-//
-//  typename BTree::const_iterator empty_iterator, begin, end, cur;
-//  begin = bt.begin();
-//  end = bt.end();
-//  BOOST_TEST(begin == end);
-//  BOOST_TEST(bt.find(fat(0)) == bt.end());
-//
-//  fat  key;
-//  key.x = 0x0C;
-//
-//  std::pair<fat, int> element(key, 0xCCCCCCCC);
-//
-//  std::pair<typename BTree::const_iterator, bool> result;
-//
-//  result = bt.insert(element);
-//  BOOST_TEST(result.second);
-//  BOOST_TEST_EQ(result.first->first.x, element.first.x);
-//  BOOST_TEST_EQ(result.first->second, element.second);
-//  BOOST_TEST(bt.size() == 1U);
-//  BOOST_TEST(!bt.empty());
-//  BOOST_TEST(bt.begin() != bt.end());
-//  cur = bt.find(element.first);
-//  BOOST_TEST(cur != bt.end());
-//  BOOST_TEST(cur->first == element.first);
-//  BOOST_TEST(cur->second == element.second);
-//  BOOST_TEST(bt.find(0) == bt.end());
-//  BOOST_TEST(bt.find(1000) == bt.end());
-//
-//  element.first.x = 0x0A;
-//  element.second = 0xAAAAAAAA;
-//  result = bt.insert(element);
-//  BOOST_TEST(result.second);
-//  BOOST_TEST_EQ(result.first->first.x, element.first.x);
-//  BOOST_TEST_EQ(result.first->second, element.second);
-//  BOOST_TEST_EQ(bt.find(0x0A)->first.x, 0x0A);
-//  BOOST_TEST_EQ(bt.find(0x0C)->first.x, 0x0C);
-//
-//  element.first.x = 0x0E;
-//  element.second = 0xEEEEEEEE;
-//  result = bt.insert(element);
-//  BOOST_TEST(result.second);
-//  BOOST_TEST_EQ(result.first->first.x, element.first.x);
-//  BOOST_TEST_EQ(result.first->second, element.second);
-//  BOOST_TEST_EQ(bt.find(0x0E)->first.x, 0x0E);
-//  BOOST_TEST_EQ(bt.find(0x0A)->first.x, 0x0A);
-//  BOOST_TEST_EQ(bt.find(0x0C)->first.x, 0x0C);
-//
-//  element.first.x = 0x0B;
-//  element.second = 0xBBBBBBBB;
-//  result = bt.insert(element);
-//  BOOST_TEST(result.second);
-//  BOOST_TEST_EQ(result.first->first.x, element.first.x);
-//  BOOST_TEST_EQ(result.first->second, element.second);
-//  BOOST_TEST_EQ(bt.find(0x0B)->first.x, 0x0B);
-//  BOOST_TEST_EQ(bt.find(0x0E)->first.x, 0x0E);
-//  BOOST_TEST_EQ(bt.find(0x0A)->first.x, 0x0A);
-//  BOOST_TEST_EQ(bt.find(0x0C)->first.x, 0x0C);
-//
-//  element.first.x = 0x0D;
-//  element.second = 0xDDDDDDDD;
-//  result = bt.insert(element);
-//  BOOST_TEST(result.second);
-//  BOOST_TEST_EQ(result.first->first.x, element.first.x);
-//  BOOST_TEST_EQ(result.first->second, element.second);
-//  BOOST_TEST_EQ(bt.find(0x0D)->first.x, 0x0D);
-//  BOOST_TEST_EQ(bt.find(0x0B)->first.x, 0x0B);
-//  BOOST_TEST_EQ(bt.find(0x0E)->first.x, 0x0E);
-//  BOOST_TEST_EQ(bt.find(0x0A)->first.x, 0x0A);
-//  BOOST_TEST_EQ(bt.find(0x0C)->first.x, 0x0C);
-//  bt.flush();
-//
-//  BOOST_TEST_EQ(bt.size(), 5U);
-//
-//  BOOST_TEST_EQ(bt.find(0x0A)->first.x, 0x0A);
-//  BOOST_TEST_EQ(bt.find(0x0B)->first.x, 0x0B);
-//  BOOST_TEST_EQ(bt.find(0x0C)->first.x, 0x0C);
-//  BOOST_TEST_EQ(bt.find(0x0D)->first.x, 0x0D);
-//  BOOST_TEST_EQ(bt.find(0x0E)->first.x, 0x0E);
-//
-//  cur = begin = end = empty_iterator;
-//  cout << '\n' << bt.manager() << '\n';
-//
-//  cur = bt.begin();
-//  BOOST_TEST_EQ(cur->first.x, 0x0A);
-//  ++cur;
-//  BOOST_TEST_EQ(cur->first.x, 0x0B);
-//  ++cur;
-//  BOOST_TEST_EQ(cur->first.x, 0x0C);
-//  ++cur;
-//  BOOST_TEST_EQ(cur->first.x, 0x0D);
-//  ++cur;
-//  BOOST_TEST_EQ(cur->first.x, 0x0E);
-//  ++cur;
-//  BOOST_TEST(cur == bt.end());
-//  --cur;
-//  BOOST_TEST_EQ(cur->first.x, 0x0E);
-//  --cur;
-//  BOOST_TEST_EQ(cur->first.x, 0x0D);
-//  --cur;
-//  BOOST_TEST_EQ(cur->first.x, 0x0C);
-//  --cur;
-//  BOOST_TEST_EQ(cur->first.x, 0x0B);
-//  --cur;
-//  BOOST_TEST_EQ(cur->first.x, 0x0A);
-//  BOOST_TEST(cur == bt.begin());
-//
-//  BOOST_TEST_EQ(bt.last()->first.x, 0x0E);
-//
-//  // delete and retest
-//
-//  cur = bt.find(0x0C);
-//  cur = bt.erase(cur);
-//
-//  BOOST_TEST_EQ(cur->first.x, 0x0D);
-//  BOOST_TEST_EQ(bt.size(), 4U);
-//
-//  cur = bt.find(0x0B);
-//  cur = bt.erase(cur);
-//
-//  BOOST_TEST_EQ(cur->first.x, 0x0D);
-//  BOOST_TEST_EQ(bt.size(), 3U);
-//
-//  cur = bt.find(0x0E);
-//  cur = bt.erase(cur);
-//
-//  BOOST_TEST(cur == bt.end());
-//  BOOST_TEST_EQ(bt.size(), 2U);
-//  BOOST_TEST_EQ(bt.header().root_page_id(), 2U);
-//  BOOST_TEST_EQ(bt.header().root_level(), 1);
-//
-//  cur = bt.find(0x0A);
-//  cur = bt.erase(cur);
-//
-//  BOOST_TEST(cur != bt.end());
-//  BOOST_TEST_EQ(cur->first.x, 0x0D);
-//  BOOST_TEST(bt.begin() == cur);
-//  BOOST_TEST_EQ(bt.size(), 1U);
-//  BOOST_TEST_EQ(bt.header().root_page_id(), 4U);
-//  BOOST_TEST_EQ(bt.header().root_level(), 0);
-// 
-//
-//  cur = bt.find(0x0D);
-//  cur = bt.erase(cur);
-//
-//  BOOST_TEST(cur == bt.end());
-//  BOOST_TEST(bt.begin() == bt.end());
-//  BOOST_TEST_EQ(bt.size(), 0U);
-//  BOOST_TEST_EQ(bt.header().root_page_id(), 4U);
-//  BOOST_TEST_EQ(bt.header().root_level(), 0);
-//
-//
-//  for (int i = 0xff01; i <= 0xff01+20; ++i )
-//  {
-//    element.first.x = i;
-//    element.second = i;
-//    bt.insert(element);
-//  }
-//  BOOST_TEST_EQ(bt.size(), 21U);
-//
-//  for (int i = 0xff01; i <= 0xff01+20; i += 2 )
-//  {
-//    BOOST_TEST_EQ(bt.erase(i), 1U);
-//    BOOST_TEST_EQ(bt.erase(i), 0U);
-//  }
-//  BOOST_TEST_EQ(bt.size(), 10U);
-//
-//  for (int i = 0xff01; i <= 0xff01+30; ++i )  // many of these won't exist
-//  {
-//    bt.erase(i);
-//  }
-//  BOOST_TEST_EQ(bt.size(), 0U);
-//
-//  bt.flush();
-//  cout << '\n' << bt << '\n';
-//
-//  cout << "  testing \"" << bt.file_path().string() << "\" complete" << endl;
-//}
-//
-//void insert()
-//{
-//  cout << "  insert..." << endl;
-//
-//  //  these tests use a value type that is large relative to the page size, thus stressing
-//  //  the code by causing a lot of page splits 
-//
-//  {
-//    fs::path map_path("btree_map.btree");
-//    btree::vbtree_map<fat, int> map(map_path, btree::flags::truncate, 128);
-//    map.max_cache_pages(0);  // maximum stress
-//    insert_tests(map);
-//  }
-//  {
-//    fs::path map_path("btree_map_big.btree");
-//    btree::vbtree_map<fat, int, btree::default_big_endian_traits>
-//      map(map_path, btree::flags::truncate, 128);
-//    map.max_cache_pages(0);  // maximum stress
-//    insert_tests(map);
-//  }
-//
-//  cout << "    insert complete" << endl;
-//}
-//
-//
+
+//------------------------------------- insert -----------------------------------------//
+
+template <class BTree>
+void insert_tests(BTree& bt)
+{
+  cout << "  testing \"" << bt.file_path().string() << "\" ..." << endl;
+  cout << '\n' << bt.manager() << '\n';
+
+  class my_vbtree_value : public btree::vbtree_value<const fat, const int>
+  {
+  public:
+    void key(int k)           {_key.x = k;}
+    void mapped_value(int v)  {_mapped_value = v;}
+  private:
+    fat _key;
+    int _mapped_value;
+  };
+
+  BOOST_TEST(bt.size() == 0U);
+  BOOST_TEST(bt.empty());
+  BOOST_TEST(!bt.read_only());
+  BOOST_TEST(bt.page_size() == 128);
+  BOOST_TEST(bt.begin() == bt.end());
+
+  typename BTree::const_iterator empty_iterator, begin, end, cur;
+  begin = bt.begin();
+  end = bt.end();
+  BOOST_TEST(begin == end);
+  BOOST_TEST(bt.find(fat(0)) == bt.end());
+
+  my_vbtree_value element;
+
+  element.key(0x0C);
+  element.mapped_value(0xCCCCCCCC);
+
+  std::pair<typename BTree::const_iterator, bool> result;
+
+  result = bt.insert(element);
+  BOOST_TEST(result.second);
+  //BOOST_TEST_EQ(result.first->key().x, element.key().x);
+  //BOOST_TEST_EQ(result.first->mapped_value(), element.mapped_value());
+  //BOOST_TEST(bt.size() == 1U);
+  //BOOST_TEST(!bt.empty());
+  //BOOST_TEST(bt.begin() != bt.end());
+  //cur = bt.find(element.first);
+  //BOOST_TEST(cur != bt.end());
+  //BOOST_TEST(cur->key() == element.first);
+  //BOOST_TEST(cur->mapped_value() == element.mapped_value());
+  //BOOST_TEST(bt.find(0) == bt.end());
+  //BOOST_TEST(bt.find(1000) == bt.end());
+
+  //element.key(0x0A);
+  //element.mapped_value(0xAAAAAAAA);
+  //result = bt.insert(element);
+  //BOOST_TEST(result.second);
+  //BOOST_TEST_EQ(result.first->key().x, element.key().x);
+  //BOOST_TEST_EQ(result.first->mapped_value(), element.mapped_value());
+  //BOOST_TEST_EQ(bt.find(0x0A)->key().x, 0x0A);
+  //BOOST_TEST_EQ(bt.find(0x0C)->key().x, 0x0C);
+
+  //element.key(0x0E);
+  //element.mapped_value(0xEEEEEEEE);
+  //result = bt.insert(element);
+  //BOOST_TEST(result.second);
+  //BOOST_TEST_EQ(result.first->key().x, element.key().x);
+  //BOOST_TEST_EQ(result.first->mapped_value(), element.mapped_value());
+  //BOOST_TEST_EQ(bt.find(0x0E)->key().x, 0x0E);
+  //BOOST_TEST_EQ(bt.find(0x0A)->key().x, 0x0A);
+  //BOOST_TEST_EQ(bt.find(0x0C)->key().x, 0x0C);
+
+  //element.key(0x0B);
+  //element.mapped_value(0xBBBBBBBB);
+  //result = bt.insert(element);
+  //BOOST_TEST(result.second);
+  //BOOST_TEST_EQ(result.first->key().x, element.key().x);
+  //BOOST_TEST_EQ(result.first->mapped_value(), element.mapped_value());
+  //BOOST_TEST_EQ(bt.find(0x0B)->key().x, 0x0B);
+  //BOOST_TEST_EQ(bt.find(0x0E)->key().x, 0x0E);
+  //BOOST_TEST_EQ(bt.find(0x0A)->key().x, 0x0A);
+  //BOOST_TEST_EQ(bt.find(0x0C)->key().x, 0x0C);
+
+  //element.key(0x0D);
+  //element.mapped_value(0xDDDDDDDD);
+  //result = bt.insert(element);
+  //BOOST_TEST(result.second);
+  //BOOST_TEST_EQ(result.first->key().x, element.key().x);
+  //BOOST_TEST_EQ(result.first->mapped_value(), element.mapped_value());
+  //BOOST_TEST_EQ(bt.find(0x0D)->key().x, 0x0D);
+  //BOOST_TEST_EQ(bt.find(0x0B)->key().x, 0x0B);
+  //BOOST_TEST_EQ(bt.find(0x0E)->key().x, 0x0E);
+  //BOOST_TEST_EQ(bt.find(0x0A)->key().x, 0x0A);
+  //BOOST_TEST_EQ(bt.find(0x0C)->key().x, 0x0C);
+  //bt.flush();
+
+  //BOOST_TEST_EQ(bt.size(), 5U);
+
+  //BOOST_TEST_EQ(bt.find(0x0A)->key().x, 0x0A);
+  //BOOST_TEST_EQ(bt.find(0x0B)->key().x, 0x0B);
+  //BOOST_TEST_EQ(bt.find(0x0C)->key().x, 0x0C);
+  //BOOST_TEST_EQ(bt.find(0x0D)->key().x, 0x0D);
+  //BOOST_TEST_EQ(bt.find(0x0E)->key().x, 0x0E);
+
+  //cur = begin = end = empty_iterator;
+  //cout << '\n' << bt.manager() << '\n';
+
+  //cur = bt.begin();
+  //BOOST_TEST_EQ(cur->first.x, 0x0A);
+  //++cur;
+  //BOOST_TEST_EQ(cur->first.x, 0x0B);
+  //++cur;
+  //BOOST_TEST_EQ(cur->first.x, 0x0C);
+  //++cur;
+  //BOOST_TEST_EQ(cur->first.x, 0x0D);
+  //++cur;
+  //BOOST_TEST_EQ(cur->first.x, 0x0E);
+  //++cur;
+  //BOOST_TEST(cur == bt.end());
+  //--cur;
+  //BOOST_TEST_EQ(cur->first.x, 0x0E);
+  //--cur;
+  //BOOST_TEST_EQ(cur->first.x, 0x0D);
+  //--cur;
+  //BOOST_TEST_EQ(cur->first.x, 0x0C);
+  //--cur;
+  //BOOST_TEST_EQ(cur->first.x, 0x0B);
+  //--cur;
+  //BOOST_TEST_EQ(cur->first.x, 0x0A);
+  //BOOST_TEST(cur == bt.begin());
+
+  //BOOST_TEST_EQ(bt.last()->first.x, 0x0E);
+
+  //// delete and retest
+
+  //cur = bt.find(0x0C);
+  //cur = bt.erase(cur);
+
+  //BOOST_TEST_EQ(cur->first.x, 0x0D);
+  //BOOST_TEST_EQ(bt.size(), 4U);
+
+  //cur = bt.find(0x0B);
+  //cur = bt.erase(cur);
+
+  //BOOST_TEST_EQ(cur->first.x, 0x0D);
+  //BOOST_TEST_EQ(bt.size(), 3U);
+
+  //cur = bt.find(0x0E);
+  //cur = bt.erase(cur);
+
+  //BOOST_TEST(cur == bt.end());
+  //BOOST_TEST_EQ(bt.size(), 2U);
+  //BOOST_TEST_EQ(bt.header().root_page_id(), 2U);
+  //BOOST_TEST_EQ(bt.header().root_level(), 1);
+
+  //cur = bt.find(0x0A);
+  //cur = bt.erase(cur);
+
+  //BOOST_TEST(cur != bt.end());
+  //BOOST_TEST_EQ(cur->first.x, 0x0D);
+  //BOOST_TEST(bt.begin() == cur);
+  //BOOST_TEST_EQ(bt.size(), 1U);
+  //BOOST_TEST_EQ(bt.header().root_page_id(), 4U);
+  //BOOST_TEST_EQ(bt.header().root_level(), 0);
+ 
+
+  //cur = bt.find(0x0D);
+  //cur = bt.erase(cur);
+
+  //BOOST_TEST(cur == bt.end());
+  //BOOST_TEST(bt.begin() == bt.end());
+  //BOOST_TEST_EQ(bt.size(), 0U);
+  //BOOST_TEST_EQ(bt.header().root_page_id(), 4U);
+  //BOOST_TEST_EQ(bt.header().root_level(), 0);
+
+
+  //for (int i = 0xff01; i <= 0xff01+20; ++i )
+  //{
+  //  element.first.x = i;
+  //  element.second = i;
+  //  bt.insert(element);
+  //}
+  //BOOST_TEST_EQ(bt.size(), 21U);
+
+  //for (int i = 0xff01; i <= 0xff01+20; i += 2 )
+  //{
+  //  BOOST_TEST_EQ(bt.erase(i), 1U);
+  //  BOOST_TEST_EQ(bt.erase(i), 0U);
+  //}
+  //BOOST_TEST_EQ(bt.size(), 10U);
+
+  //for (int i = 0xff01; i <= 0xff01+30; ++i )  // many of these won't exist
+  //{
+  //  bt.erase(i);
+  //}
+  //BOOST_TEST_EQ(bt.size(), 0U);
+
+  bt.flush();
+  cout << '\n' << bt << '\n';
+
+  cout << "  testing \"" << bt.file_path().string() << "\" complete" << endl;
+}
+
+void insert()
+{
+  cout << "  insert..." << endl;
+
+  //  these tests use a value type that is large relative to the page size, thus stressing
+  //  the code by causing a lot of page splits 
+
+  {
+    fs::path map_path("btree_map.btree");
+    btree::vbtree_map<fat, int> map(map_path, btree::flags::truncate, 128);
+    map.max_cache_pages(0);  // maximum stress
+    insert_tests(map);
+  }
+  {
+    fs::path map_path("btree_map_big.btree");
+    btree::vbtree_map<fat, int, btree::default_big_endian_traits>
+      map(map_path, btree::flags::truncate, 128);
+    map.max_cache_pages(0);  // maximum stress
+    insert_tests(map);
+  }
+
+  cout << "    insert complete" << endl;
+}
+
 ////---------------------------------- find_and_bounds -----------------------------------//
 //
 //template <class VT>
@@ -931,7 +940,7 @@ int cpp_main(int, char*[])
   single_insert();
   open_existing();
   //alignment();
-  //insert();
+  insert();
   //insert_non_unique();
   //find_and_bounds();
   //erase();
