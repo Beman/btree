@@ -447,8 +447,11 @@ void insert_tests(BTree& bt)
   class my_vbtree_value : public btree::vbtree_value<const fat, const int>
   {
   public:
-    void key(int k)           {_key.x = k;}
-    void mapped_value(int v)  {_mapped_value = v;}
+    const fat& key() const          {return _key;}
+    void       key(int k)           {_key.x = k;}
+    int        mapped_value() const {return _mapped_value;}
+    void       mapped_value(int v)  {_mapped_value = v;}
+
   private:
     fat _key;
     int _mapped_value;
@@ -471,21 +474,24 @@ void insert_tests(BTree& bt)
   element.key(0x0C);
   element.mapped_value(0xCCCCCCCC);
 
+  BOOST_TEST(element.key() == fat(0x0C));
+  BOOST_TEST(element.mapped_value() == 0xCCCCCCCC);
+
   std::pair<typename BTree::const_iterator, bool> result;
 
   result = bt.insert(element);
   BOOST_TEST(result.second);
-  //BOOST_TEST_EQ(result.first->key().x, element.key().x);
-  //BOOST_TEST_EQ(result.first->mapped_value(), element.mapped_value());
-  //BOOST_TEST(bt.size() == 1U);
-  //BOOST_TEST(!bt.empty());
-  //BOOST_TEST(bt.begin() != bt.end());
-  //cur = bt.find(element.first);
-  //BOOST_TEST(cur != bt.end());
-  //BOOST_TEST(cur->key() == element.first);
-  //BOOST_TEST(cur->mapped_value() == element.mapped_value());
-  //BOOST_TEST(bt.find(0) == bt.end());
-  //BOOST_TEST(bt.find(1000) == bt.end());
+  BOOST_TEST(result.first->key() == element.key());
+  BOOST_TEST(result.first->mapped_value() == element.mapped_value());
+  BOOST_TEST(bt.size() == 1U);
+  BOOST_TEST(!bt.empty());
+  BOOST_TEST(bt.begin() != bt.end());
+  cur = bt.find(element.key());
+  BOOST_TEST(cur != bt.end());
+  BOOST_TEST(cur->key() == element.key());
+  BOOST_TEST(cur->mapped_value() == element.mapped_value());
+  BOOST_TEST(bt.find(fat(0)) == bt.end());
+  BOOST_TEST(bt.find(fat(1000)) == bt.end());
 
   //element.key(0x0A);
   //element.mapped_value(0xAAAAAAAA);
