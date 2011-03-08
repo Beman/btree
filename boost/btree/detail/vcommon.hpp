@@ -188,7 +188,7 @@ namespace detail
 
     void increment()
     {
-      m_ptr = reinterpret_cast<T*>(reinterpret_cast<char*>(m_ptr) + dynamic_size(m_ptr));
+      m_ptr = reinterpret_cast<T*>(reinterpret_cast<char*>(m_ptr) + dynamic_size(*m_ptr));
     }
 
 //    void decrement() { throw "should never reach here"; }
@@ -820,10 +820,10 @@ vbtree_base<Key,Base,Traits,Comp>::m_open(const boost::filesystem::path& p,
       BOOST_BTREE_THROW(std::runtime_error(file_path().string()+" isn't a btree"));
     if (m_hdr.big_endian() != (Traits::header_endianness == integer::endianness::big))
       BOOST_BTREE_THROW(std::runtime_error(file_path().string()+" has wrong endianness"));
-    if (m_hdr.key_size() != Base::key_size())
-      BOOST_BTREE_THROW(std::runtime_error(file_path().string()+" has wrong key_type size"));
-    if (m_hdr.mapped_size() != Base::mapped_size())
-      BOOST_BTREE_THROW(std::runtime_error(file_path().string()+" has wrong mapped_type size"));
+    //if (m_hdr.key_size() != Base::key_size())
+    //  BOOST_BTREE_THROW(std::runtime_error(file_path().string()+" has wrong key_type size"));
+    //if (m_hdr.mapped_size() != Base::mapped_size())
+    //  BOOST_BTREE_THROW(std::runtime_error(file_path().string()+" has wrong mapped_type size"));
     m_mgr.data_size(m_hdr.page_size());
     m_root = m_mgr.read(m_hdr.root_page_id());
   }
@@ -1384,6 +1384,7 @@ vbtree_base<Key,Base,Traits,Comp>::m_lower_page_bound(const key_type& k)
   {
     branch_value_iterator low
       = std::lower_bound(pg->branch().begin(), pg->branch().end(), k, branch_comp());
+    BOOST_ASSERT_MSG(false, "--low not implemented yet");
     //if (low == pg->branch().end()      // all keys on page < search key, so low
     //                                   // must point to last value on page
     //  || key_comp()(k, low->first()))  // search key < low key, so low
@@ -1401,7 +1402,6 @@ vbtree_base<Key,Base,Traits,Comp>::m_lower_page_bound(const key_type& k)
   }
 
   //  search leaf
-  BOOST_ASSERT(pg->leaf().begin() == pg->leaf().end());
   leaf_data::leaf_value_iterator low
     = std::lower_bound(pg->leaf().begin(), pg->leaf().end(), k, value_comp());
 
