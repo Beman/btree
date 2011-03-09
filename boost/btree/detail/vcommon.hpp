@@ -1060,8 +1060,8 @@ vbtree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter,
   //  insert value into pg at insert_begin
   BOOST_ASSERT(&*insert_begin >= &*pg->leaf().begin());
   BOOST_ASSERT(&*insert_begin <= &*pg->leaf().end());
-  std::memmove(&*insert_begin + value_size, &*insert_begin,
-    distance_size(insert_begin, pg->leaf().end()));  // make room
+  std::memmove(reinterpret_cast<char*>(&*insert_begin) + value_size,
+    &*insert_begin, distance_size(insert_begin, pg->leaf().end()));  // make room
   std::memcpy(&*insert_begin, &value, value_size);   // insert value
   pg->size(pg->size() + value_size);
 
