@@ -19,7 +19,8 @@
 #include <boost/btree/vset.hpp>
 #include <boost/btree/detail/fixstr.hpp>
 #include <boost/detail/lightweight_main.hpp>
-#include <boost/detail/lightweight_test.hpp> 
+#include <boost/detail/lightweight_test.hpp>
+#include <boost/cstdint.hpp>
 
 #include <iostream>
 #include <iomanip>
@@ -77,12 +78,14 @@ namespace
     char _buf[max_size];
   };
 
-  class c_string
+  class c_string_buf
   {
   public:
     static const std::size_t max_size = 255;
 
-    c_string(const char* s)
+    c_string_buf() : _size(0) {_buf[0] = '\0';}
+    
+    c_string_buf(const char* s)
     {
       std::size_t sz = std::strlen(s);
       if (sz > max_size)
@@ -92,14 +95,53 @@ namespace
       _size = sz;
     }
 
-    std::size_t dynamic_size() const {return _size + 1 + sizeof(_size);}
+    c_string_buf(const c_string_buf& s)
+    {
+      std::strcpy(_buf, s._buf);
+      _size = s._size;
+    }
+
+    c_string_buf& operator=(const char* s)
+    {
+      std::size_t sz = std::strlen(s);
+      if (sz > max_size)
+        sz = max_size;
+      std::memcpy(_buf, s, sz);
+      _buf[sz] = '\0';
+      _size = sz;
+      return *this;
+    }
+
+    c_string_buf& operator=(const c_string_buf& s)
+    {
+      std::strcpy(_buf, s._buf);  // self-assignment is harmless
+      _size = s._size;
+      return *this;
+    }
+
+    std::size_t size() const {return _size + 1 + sizeof(_size);}
+
+    bool operator==(const c_string_buf& rhs) const {return std::strcmp(_buf, rhs._buf) == 0;}
+    bool operator!=(const c_string_buf& rhs) const {return std::strcmp(_buf, rhs._buf) != 0;}
+    bool operator< (const c_string_buf& rhs) const {return std::strcmp(_buf, rhs._buf) < 0;}
+    bool operator<=(const c_string_buf& rhs) const {return std::strcmp(_buf, rhs._buf) <= 0;}
+    bool operator> (const c_string_buf& rhs) const {return std::strcmp(_buf, rhs._buf) > 0;}
+    bool operator>=(const c_string_buf& rhs) const {return std::strcmp(_buf, rhs._buf) >= 0;}
 
   private:
-    // keep the size for speed, particularly with larger strings 
-    boost::uint8_t _size;  // std::strlen(_buf)
-    char _buf[max_size+1];
+    boost::uint8_t  _size;  // std::strlen(_buf); for speed, particularly on large strings 
+    char            _buf[max_size+1];
   };
 
+}  // unnamed namespace
+
+namespace boost { namespace btree {
+
+inline std::size_t dynamic_size(const c_string_buf& csb)  {return csb.size();}
+
+}}
+
+namespace {
 
 //-------------------------------------- instantiate -----------------------------------//
 
@@ -333,6 +375,45 @@ void open_existing()
   cout << "    open_existing complete" << endl;
 }
 
+//--------------------------------- small_variable_set ---------------------------------//
+
+void small_variable_set()
+{
+  cout << "  small_variable_set..." << endl;
+
+  fs::path p("btree_set.btree");
+  fs::remove(p);
+  btree::vbtree_set<c_string_buf> bt(p, btree::flags::truncate, 128);
+
+  c_string_buf stuff;
+
+  stuff = "now";
+  bt.insert(stuff);
+  stuff = "is";
+  bt.insert(stuff);
+  //stuff = "the";
+  //bt.insert(stuff);
+  //stuff = "time";
+  //bt.insert(stuff);
+  //stuff = "when";
+  //bt.insert(stuff);
+  //stuff = "all";
+  //bt.insert(stuff);
+  //stuff = "good";
+  //bt.insert(stuff);
+  //stuff = "...";
+  //bt.insert(stuff);
+
+  BOOST_TEST(bt.is_open());
+  BOOST_TEST(!bt.empty());
+  BOOST_TEST_EQ(bt.size(), 8U);
+  BOOST_TEST_EQ(bt.page_size(), 128U);
+  BOOST_TEST_EQ(bt.header().element_count(), 8U);
+  BOOST_TEST_EQ(bt.header().page_size(), 128U);
+
+  cout << "    small_variable_set complete" << endl;
+}
+
 ////------------------------------- btree_less ---------------------------------------------//
 //
 //void btree_less()
@@ -512,16 +593,16 @@ void insert_tests(BTree& bt)
   BOOST_TEST_EQ(bt.find(0x0A)->key().x, 0x0A);
   BOOST_TEST_EQ(bt.find(0x0C)->key().x, 0x0C);
 
-  element.key(0x0B);
-  element.mapped_value(0xBBBBBBBB);
-  result = bt.insert(element);
-  BOOST_TEST(result.second);
-  BOOST_TEST_EQ(result.first->key().x, element.key().x);
-  BOOST_TEST_EQ(result.first->mapped_value(), element.mapped_value());
-  BOOST_TEST_EQ(bt.find(0x0B)->key().x, 0x0B);
-  BOOST_TEST_EQ(bt.find(0x0E)->key().x, 0x0E);
-  BOOST_TEST_EQ(bt.find(0x0A)->key().x, 0x0A);
-  BOOST_TEST_EQ(bt.find(0x0C)->key().x, 0x0C);
+  //element.key(0x0B);
+  //element.mapped_value(0xBBBBBBBB);
+  //result = bt.insert(element);
+  //BOOST_TEST(result.second);
+  //BOOST_TEST_EQ(result.first->key().x, element.key().x);
+  //BOOST_TEST_EQ(result.first->mapped_value(), element.mapped_value());
+  //BOOST_TEST_EQ(bt.find(0x0B)->key().x, 0x0B);
+  //BOOST_TEST_EQ(bt.find(0x0E)->key().x, 0x0E);
+  //BOOST_TEST_EQ(bt.find(0x0A)->key().x, 0x0A);
+  //BOOST_TEST_EQ(bt.find(0x0C)->key().x, 0x0C);
 
   //element.key(0x0D);
   //element.mapped_value(0xDDDDDDDD);
@@ -945,6 +1026,7 @@ int cpp_main(int, char*[])
   construct_new();
   single_insert();
   open_existing();
+  small_variable_set();
   //alignment();
   insert();
   //insert_non_unique();

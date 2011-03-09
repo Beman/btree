@@ -83,14 +83,14 @@ template <class T> struct less
   bool operator()(const T& x, const T& y) const { return x < y; }
 };
 
-//  partial specialization to poison pointer that hasn't been fully specialized
-template <class T> struct less<const T*>
-{
-  typedef T first_argument_type;
-  typedef T second_argument_type;
-  typedef bool result_type;
-  bool operator()(const T& x, const T& y) const;
-};
+////  partial specialization to poison pointer that hasn't been fully specialized
+//template <class T> struct less<const T*>
+//{
+//  typedef T first_argument_type;
+//  typedef T second_argument_type;
+//  typedef bool result_type;
+//  bool operator()(const T& x, const T& y) const;
+//};
 
 ////  full specialization for C strings
 //template <> struct less<char*>
@@ -805,8 +805,9 @@ vbtree_base<Key,Base,Traits,Comp>::m_open(const boost::filesystem::path& p,
 {
   BOOST_ASSERT(!is_open());
   BOOST_ASSERT(pg_sz >= sizeof(btree::header_page));
-  BOOST_ASSERT(pg_sz / sizeof(value_type) >= 3);
-  BOOST_ASSERT(pg_sz / sizeof(branch_value_type) >= 3);
+// TODO: need max_value_type_size like the old lib95 btree
+//  BOOST_ASSERT(pg_sz / sizeof(value_type) >= 3);
+//  BOOST_ASSERT(pg_sz / sizeof(branch_value_type) >= 3);
 
   oflag::bitmask open_flags = oflag::in;
   if (flgs & flags::read_write)
@@ -993,7 +994,6 @@ vbtree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter,
 
   BOOST_ASSERT_MSG(pg->is_leaf(), "internal error");
   BOOST_ASSERT_MSG(pg->size() <= m_max_leaf_size, "internal error");
-  BOOST_ASSERT_MSG(value_size, "dynamic_size(value_type x) returned 0. Is your overload correct?");
 
   m_hdr.increment_element_count();
   pg->needs_write(true);
