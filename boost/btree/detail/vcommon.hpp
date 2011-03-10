@@ -27,6 +27,17 @@
 #include <ostream>
 #include <stdexcept>
 
+/*
+
+  TODO:
+
+  * Add static_assert Key, T are is_trivially_copyable
+
+  * Add check for trying to insert a value sized >= 1/4 (page size - begin)
+
+
+*/
+
 namespace boost
 {
 namespace btree
@@ -209,7 +220,11 @@ namespace detail
 
     void advance(std::ptrdiff_t n)
     {
-      BOOST_ASSERT(false);   // is this function ever used?
+      BOOST_ASSERT(false);   // why is this function ever used?
+      BOOST_ASSERT_MSG(n >= 0, "negative advance not supported");
+
+      for (; n; --n)
+        increment();
     }
 
     std::ptrdiff_t distance_to(const dynamic_iterator& rhs) const
@@ -466,10 +481,14 @@ private:
     leaf_value_type  m_value[1];
   };
 
-  template <class T>
-  std::size_t char_distance(const T* from, const T* to)
+  std::size_t char_distance(const void* from, const void* to)
   {
     return reinterpret_cast<const char*>(to) - reinterpret_cast<const char*>(from);
+  }
+
+  char* char_ptr(void* from)
+  {
+    return reinterpret_cast<char*>(from);
   }
 
   //------------------------ branch data formats and operations ------------------------//
@@ -483,12 +502,17 @@ private:
   class branch_value
   {
   public:
-    const page_id_type&  page_id() const {return *reinterpret_cast<const page_id_type*>(this); }
-    void                 page_id(page_id_type pid)
+    page_id_type&  page_id() {return *reinterpret_cast<page_id_type*>(this); }
+    //void           page_id(page_id_type pid)
+    //{
+    //  *reinterpret_cast<page_id_type*>(this) = pid;
+    //}
+    K&  key()
     {
-      *reinterpret_cast<page_id_type*>(this) = pid;
+      return *reinterpret_cast<K*>(reinterpret_cast<char*>(this)
+               + sizeof(page_id_type));
     }
-    const K&             key() const
+    const K&  key() const
     {
       return *reinterpret_cast<const K*>(reinterpret_cast<const char*>(this)
                + sizeof(page_id_type));
@@ -1014,7 +1038,7 @@ vbtree_base<Key,Base,Traits,Comp>::m_new_root()
   m_set_max_cache_pages();
   m_root = m_new_page(m_hdr.root_level());
   m_hdr.root_page_id(m_root->page_id());
-  m_root->branch().begin()->page_id(old_root_id);
+  m_root->branch().begin()->page_id() = old_root_id;
   m_root->size(0);  // the end pseudo-element doesn't count as an element
   // TODO: why maintain the child->parent list? By the time m_new_root() is called,
   // hasn't the need passed?
@@ -1037,9 +1061,8 @@ vbtree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter,
 {
   std::size_t          value_size = dynamic_size(value);
   btree_page_ptr       pg = insert_iter.m_page;
-  leaf_iterator  insert_begin = insert_iter.m_element;
+  leaf_iterator        insert_begin = insert_iter.m_element;
   btree_page_ptr       pg2;
-  leaf_iterator  split_begin;
 
   BOOST_ASSERT_MSG(pg->is_leaf(), "internal error");
   BOOST_ASSERT_MSG(pg->size() <= m_max_leaf_size, "internal error");
@@ -1049,7 +1072,9 @@ vbtree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter,
 
   if (pg->size() + value_size > m_max_leaf_size)  // no room on page?
   {
-    //  no room, so page must be split
+    //  no room on page, so page must be split
+
+    leaf_iterator  split_begin;
 
     if (pg->level() == m_hdr.root_level()) // splitting the root?
       m_new_root();  // create a new root
@@ -1081,7 +1106,7 @@ vbtree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter,
       std::memcpy(&*pg2->leaf().begin(), &value, value_size);  // insert value
       pg2->size(value_size);
       BOOST_ASSERT(pg->parent()->page_id() == pg->parent_page_id()); // max_cache_size logic OK?
-      m_branch_insert(pg->parent(), pg->parent_element()+1,
+      m_branch_insert(pg->parent(), pg->parent_element(),
         key(*pg2->leaf().begin()), pg2->page_id());
       return const_iterator(pg2, pg2->leaf().begin());
     }
@@ -1094,6 +1119,7 @@ vbtree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter,
     split_begin = pg->leaf().begin();
     std::advance(split_begin, split_ct);
     std::size_t split_sz = char_distance(&*split_begin, &*pg->leaf().end());
+
     std::memcpy(&*pg2->leaf().begin(), &*split_begin, split_sz);
     pg2->size(split_sz);
 //std::cout << "******leaf "<< pg->leaf().end() - split_begin << std::endl;
@@ -1113,7 +1139,7 @@ vbtree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter,
   //  insert value into pg at insert_begin
   BOOST_ASSERT(&*insert_begin >= &*pg->leaf().begin());
   BOOST_ASSERT(&*insert_begin <= &*pg->leaf().end());
-  std::memmove(reinterpret_cast<char*>(&*insert_begin) + value_size,
+  std::memmove(char_ptr(&*insert_begin) + value_size,
     &*insert_begin, char_distance(&*insert_begin, &*pg->leaf().end()));  // make room
   std::memcpy(&*insert_begin, &value, value_size);   // insert value
   pg->size(pg->size() + value_size);
@@ -1124,7 +1150,7 @@ vbtree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter,
     BOOST_ASSERT(insert_iter.m_page->parent()->page_id() \
       == insert_iter.m_page->parent_page_id()); // max_cache_size logic OK?
     m_branch_insert(insert_iter.m_page->parent(),
-      insert_iter.m_page->parent_element()+1,
+      insert_iter.m_page->parent_element(),
       key(*pg2->leaf().begin()), pg2->page_id());
   }
 
@@ -1145,87 +1171,101 @@ void
 vbtree_base<Key,Base,Traits,Comp>::m_branch_insert(
   btree_page* pg1, branch_iterator element, const key_type& k, page_id_type id) 
 {
-//  btree_page*          pg = pg1;
-//  branch_iterator   insert_begin = element;
-//  btree_page_ptr       pg2;
-//  branch_iterator   split_begin;
-//
-//  BOOST_ASSERT(pg->is_branch());
-//  BOOST_ASSERT(pg->size() <= m_max_branch_size);
-//
-//  pg->needs_write(true);
-//
-//  if (pg->size() == m_max_branch_size)  // is the page full?
-//  {
-//// std::cout << "******branch " << pg->page_id() << std::endl;
-//   //  page is full, so must be split
-//
-//    if (pg->level() == m_hdr.root_level()) // splitting the root?
-//      m_new_root();  // create a new root
-//    
-//    pg2 = m_new_page(pg->level());  // create the new page
-//
-//    // split the page
-//    std::size_t split_sz = pg->size() >> 1;  // if odd, lower size goes on pg2 for speed
-//    BOOST_ASSERT(split_sz);
-//    split_begin = pg->branch().begin() + (pg->size() - split_sz);
-//
-//    if (split_begin == insert_begin)
-//    {
-//      pg2->branch().P0 = id;
-//      std::memcpy(&*pg2->branch().begin(), &*split_begin, split_sz); // move split values to new page
-//      pg2->size(split_sz);
-//      std::memset(&*split_begin, 0,  // zero unused space to make file dumps easier to read
-//        (pg->branch().end() - split_begin) * sizeof(branch_value_type)); 
-//      pg->size(pg->size() - split_sz);
-//      BOOST_ASSERT(pg->parent()->page_id() == pg->parent_page_id()); // max_cache_size logic OK?
-//      m_branch_insert(pg->parent(), pg->parent_element()+1, k, pg2->page_id());
-//      return;
-//    }
-//
-//    // TODO: insert_begin == split_begin+1 could special cased since the copy could
-//    // go directly to the correct location, elminating the need for the make-room
-//    // memmove
-//
-//    pg2->branch().P0 = split_begin->first();
-//    std::memcpy(&*pg2->branch().begin(), split_begin+1,
-//      (split_sz-1) * sizeof(branch_value_type)); // copy the values
-//    pg2->size(split_sz-1);
-//    BOOST_ASSERT(pg->parent()->page_id() == pg->parent_page_id()); // max_cache_size logic OK?
-//    m_branch_insert(pg->parent(), pg->parent_element()+1, split_begin->key,
-//      pg2->page_id());
-//    std::memset(&*split_begin, 0,  // zero unused space to make file dumps easier to read
-//      (pg->branch().end() - split_begin) * sizeof(branch_value_type)); 
-//    pg->size(pg->size() - split_sz);
-//
-//    // adjust pg and insert_begin if they now fall on the new page due to the split
-//    if (split_begin < insert_begin)
-//    {
-//      pg = pg2.get();
-//      insert_begin = pg2->branch().begin() + (insert_begin - split_begin - 1);
-//    }
-//  }
-//
-//  //  insert k, id into pg at insert_begin
-//  BOOST_ASSERT(insert_begin >= pg->branch().begin());
-//  BOOST_ASSERT(insert_begin <= pg->branch().end());
-//  std::size_t memmove_sz = (pg->branch().end() - insert_begin) * sizeof(branch_value_type);
-//  std::memmove(insert_begin+1, insert_begin, memmove_sz);  // make room
-//  insert_begin->key = k;       // do the
-//  insert_begin->page_id = id;  //  insert
-//  pg->size(pg->size()+1);
-//
-//#ifndef NDEBUG
-//  if (!(m_hdr.flags() & btree::flags::multi))
-//  {
-//    key_type prev_key = 0;
-//    for(const branch_iterator beg = pg->branch().begin(); beg != pg->branch().end(); ++beg)
-//    {
-//      BOOST_ASSERT(key_comp()(prev_key, beg->key));
-//      prev_key = beg->key;
-//    }
-//  }
-//#endif
+  std::size_t       k_size = dynamic_size(k);
+  std::size_t       insert_size = k_size + sizeof(page_id_type);
+  btree_page*       pg = pg1;
+  key_type*         insert_begin = &element->key();
+  btree_page_ptr    pg2;
+
+  BOOST_ASSERT(pg->is_branch());
+  BOOST_ASSERT(pg->size() <= m_max_branch_size);
+
+  pg->needs_write(true);
+
+  if (pg->size() + insert_size > m_max_branch_size)  // no room on page?
+  {
+    BOOST_ASSERT(false);
+    ////  no room on page, so page must be split
+
+    //key_type* split_begin;
+
+    //if (pg->level() == m_hdr.root_level()) // splitting the root?
+    //  m_new_root();  // create a new root
+    //
+    //pg2 = m_new_page(pg->level());  // create the new page
+
+    ////// split the page
+    ////std::size_t split_sz = pg->size() >> 1;  // if odd, lower size goes on pg2 for speed
+    ////BOOST_ASSERT(split_sz);
+    ////split_begin = pg->branch().begin() + (pg->size() - split_sz);
+
+    //// split page pg by moving half the elements to page p2
+
+    //std::ptrdiff_t split_ct = std::distance(pg->branch().begin(), pg->branch().end())
+    //  / 2;  // split_ct determines the size moved to pg2, so rounding down is appropriate
+    //BOOST_ASSERT_MSG(split_ct, "internal logic error");
+    //branch_iterator split_begin_itr = pg->leaf().begin();
+    //std::advance(split_begin_itr, split_ct);
+    //split_begin = &split_begin_itr->key();
+    //std::size_t split_sz = char_distance(split_begin, &*pg->leaf().end()) 
+    //  + sizeof(page_id_type);
+
+    //if (split_begin == insert_begin)
+    //{
+    //  pg2->branch().P0 = id;
+    //  std::memcpy(&*pg2->branch().begin(), &*split_begin, split_sz); // move split values to new page
+    //  pg2->size(split_sz);
+    //  std::memset(&*split_begin, 0,  // zero unused space to make file dumps easier to read
+    //    (pg->branch().end() - split_begin) * sizeof(branch_value_type)); 
+    //  pg->size(pg->size() - split_sz);
+    //  BOOST_ASSERT(pg->parent()->page_id() == pg->parent_page_id()); // max_cache_size logic OK?
+    //  m_branch_insert(pg->parent(), pg->parent_element()+1, k, pg2->page_id());
+    //  return;
+    //}
+
+    //// TODO: insert_begin == split_begin+1 could special cased since the copy could
+    //// go directly to the correct location, elminating the need for the make-room
+    //// memmove
+
+    //pg2->branch().P0 = split_begin->first();
+    //std::memcpy(&*pg2->branch().begin(), split_begin+1,
+    //  (split_sz-1) * sizeof(branch_value_type)); // copy the values
+    //pg2->size(split_sz-1);
+    //BOOST_ASSERT(pg->parent()->page_id() == pg->parent_page_id()); // max_cache_size logic OK?
+    //m_branch_insert(pg->parent(), pg->parent_element()+1, split_begin->key,
+    //  pg2->page_id());
+    //std::memset(&*split_begin, 0,  // zero unused space to make file dumps easier to read
+    //  (pg->branch().end() - split_begin) * sizeof(branch_value_type)); 
+    //pg->size(pg->size() - split_sz);
+
+    //// adjust pg and insert_begin if they now fall on the new page due to the split
+    //if (split_begin < insert_begin)
+    //{
+    //  pg = pg2.get();
+    //  insert_begin = pg2->branch().begin() + (insert_begin - split_begin - 1);
+    //}
+  }
+
+  //  insert k, id, into pg at insert_begin
+  BOOST_ASSERT(insert_begin >= &pg->branch().begin()->key());
+  BOOST_ASSERT(insert_begin <= &pg->branch().end()->key());
+  std::memmove(char_ptr(insert_begin) + insert_size,
+    insert_begin, char_distance(insert_begin, &pg->branch().end()->key()));  // make room
+  std::memcpy(insert_begin, &k, k_size);  // insert k
+  std::memcpy(char_ptr(insert_begin) + k_size, &id, sizeof(page_id_type));
+  pg->size(pg->size() + insert_size);
+
+#ifndef NDEBUG
+  if (!(m_hdr.flags() & btree::flags::multi))
+  {
+    key_type prev_key = key_type();
+    for(branch_iterator beg = pg->branch().begin(); beg != pg->branch().end(); ++beg)
+    {
+      BOOST_ASSERT(key_comp()(prev_key, beg->key()));
+      prev_key = beg->key();
+    }
+  }
+#endif
 }
 
 //------------------------------ m_erase_branch_value() --------------------------------//
