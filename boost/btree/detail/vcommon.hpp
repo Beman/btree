@@ -49,8 +49,8 @@ inline std::size_t dynamic_size(const T&) { return sizeof(T); }
 
 //--------------------------------- vbtree_value ---------------------------------------//
 
-// TODO: either add code to align second() or add a requirement that T2 is an unaligned
-// type.
+// TODO: either add code to align mapped() or add a requirement that T2 does not
+// require alignment.
 
 template <class T1, class T2>
 class vbtree_value
@@ -277,7 +277,7 @@ public:
   typedef typename Traits::page_level_type      page_level_type;
 
   typedef value_type                                 leaf_value_type;
-  typedef detail::dynamic_iterator<leaf_value_type>  leaf_value_iterator;
+  typedef detail::dynamic_iterator<leaf_value_type>  leaf_iterator;
 
   // construct/destroy:
 
@@ -448,8 +448,8 @@ private:
     void                 prior_page_id(page_id_type id)  {m_prior_page_id = id;}
     page_id_type         next_page_id() const            {return m_next_page_id;}
     void                 next_page_id(page_id_type id)   {m_next_page_id = id;}
-    leaf_value_iterator  begin()      { return leaf_value_iterator(m_value);}
-    leaf_value_iterator  end()        { return leaf_value_iterator(m_value, size()); }
+    leaf_iterator  begin()      { return leaf_iterator(m_value);}
+    leaf_iterator  end()        { return leaf_iterator(m_value, size()); }
 
     //  offsetof() macro won't work for all value types, so compute by hand
     static std::size_t value_offset()
@@ -474,14 +474,39 @@ private:
 
   //------------------------ branch data formats and operations ------------------------//
 
-  typedef vbtree_value<const key_type, const page_id_type>  branch_value_type;
-  typedef detail::dynamic_iterator<branch_value_type>       branch_value_iterator;
+  //--------------------------------- branch_value -------------------------------------//
+
+  // TODO: either add code to align mapped() or add a requirement that T2 does not
+  // require alignment.
+
+  template <class K>
+  class branch_value
+  {
+  public:
+    const page_id_type&  page_id() const {return *reinterpret_cast<const page_id_type*>(this); }
+    void                 page_id(page_id_type pid)
+    {
+      *reinterpret_cast<page_id_type*>(this) = pid;
+    }
+    const K&             key() const
+    {
+      return *reinterpret_cast<const K*>(reinterpret_cast<const char*>(this)
+               + sizeof(page_id_type));
+    }
+    std::size_t dynamic_size() const
+    { 
+      return sizeof(page_id_type) + btree::dynamic_size(key());
+    }
+  };
+
+  typedef branch_value<key_type>                       branch_value_type;
+  typedef detail::dynamic_iterator<branch_value_type>  branch_iterator;
 
   class branch_data : public btree_data
   {
   public:
-    branch_value_iterator  begin()    { return branch_value_iterator(m_value);}
-    branch_value_iterator  end()      { return branch_value_iterator(m_value, size()); }
+    branch_iterator  begin()    { return branch_iterator(m_value);}
+    branch_iterator  end()      { return branch_iterator(m_value, size()); }
 
     //  offsetof() macro won't work for all branch_value_type's, so compute by hand
     static std::size_t value_offset()
@@ -493,20 +518,18 @@ private:
     }
 
 //  private:
-    page_id_type P0;  // the initial pseudo-element, which has no key;
-                      // it is often called P subscript 0 in the literature
     branch_value_type  m_value[1];
   };
 
-  //  Access to (itr-1)->page_id on branch pages may be expensive since it may be a
-  //  ForwardIterator, and won't work at all for access to PO given begin(). The fix
-  //  is a function that knows what to do.
-  page_id_type prior_page_id(branch_value_iterator itr) const
-  {
-    // page_id_type must be unaligned || key_type must have same or stronger alignment
-    return *reinterpret_cast<const page_id_type*>(
-      reinterpret_cast<const char*>(&*itr) - sizeof(page_id_type));
-  }
+  ////  Access to (itr-1)->page_id on branch pages may be expensive since it may be a
+  ////  ForwardIterator, and won't work at all for access to PO given begin(). The fix
+  ////  is a function that knows what to do.
+  //page_id_type prior_page_id(branch_iterator itr) const
+  //{
+  //  // page_id_type must be unaligned || key_type must have same or stronger alignment
+  //  return *reinterpret_cast<const page_id_type*>(
+  //    reinterpret_cast<const char*>(&*itr) - sizeof(page_id_type));
+  //}
 
   class branch_page;
 
@@ -524,13 +547,13 @@ private:
     // established (by m_lower_page/m_upper_page) during insert and erase operations.   //
     // Once those operations are complete, child->parent list pointers are not valid.   //
     //----------------------------------------------------------------------------------//
-    btree_page*        parent()                        {return m_parent;}
-    void               parent(btree_page* p)           {m_parent = p;}
-    branch_value_iterator parent_element()             {return m_parent_element;}
-    void               parent_element(branch_value_iterator p) {m_parent_element = p;}
+    btree_page*        parent()                          {return m_parent;}
+    void               parent(btree_page* p)             {m_parent = p;}
+    branch_iterator    parent_element()                  {return m_parent_element;}
+    void               parent_element(branch_iterator p) {m_parent_element = p;}
 #   ifndef NDEBUG
-    page_id_type       parent_page_id()                {return m_parent_page_id;}
-    void               parent_page_id(page_id_type id) {m_parent_page_id = id;}
+    page_id_type       parent_page_id()                  {return m_parent_page_id;}
+    void               parent_page_id(page_id_type id)   {m_parent_page_id = id;}
 #   endif
 
     leaf_data&         leaf()       {return *reinterpret_cast<leaf_data*>(buffer::data());}
@@ -550,7 +573,7 @@ private:
                                     // (2) allows single m_upper/m_lower_page search
                                     // function to cover both modifying and non-modifying
                                     // uses.
-    branch_value_iterator  m_parent_element;
+    branch_iterator  m_parent_element;
 # ifndef NDEBUG
     page_id_type        m_parent_page_id;  // allows assert that m_parent has not been
                                            // overwritten by faulty max_cache_pages
@@ -606,7 +629,7 @@ private:
 
   public:
     iterator_type(): m_element(0) {}
-    iterator_type(buffer_ptr p, leaf_value_iterator e)
+    iterator_type(buffer_ptr p, leaf_iterator e)
       : m_page(static_cast<typename vbtree_base::btree_page_ptr>(p)),
         m_element(e) {}
 
@@ -619,7 +642,7 @@ private:
     friend class vbtree_base;
    
     typename vbtree_base::btree_page_ptr       m_page; 
-    typename vbtree_base::leaf_value_iterator  m_element;  // 0 for end iterator
+    typename vbtree_base::leaf_iterator  m_element;  // 0 for end iterator
 
     T& dereference() const  { return *m_element; }
  
@@ -672,20 +695,20 @@ private:
 
   iterator m_lower_page_bound(const key_type& k);
   // returned iterator::m_element is the insertion point, and thus may be the 
-  // past-the-end leaf_value_iterator for iterator::m_page
+  // past-the-end leaf_iterator for iterator::m_page
   // postcondition: parent pointers are set, all the way up the chain to the root
   iterator m_upper_page_bound(const key_type& k);
   // returned iterator::m_element is the insertion point, and thus may be the 
-  // past-the-end leaf_value_iterator for iterator::m_page
+  // past-the-end leaf_iterator for iterator::m_page
   // postcondition: parent pointers are set, all the way up the chain to the root
   btree_page_ptr m_new_page(boost::uint16_t lv);
   void  m_new_root();
   const_iterator m_leaf_insert(iterator insert_iter, const value_type& value);
-  void  m_branch_insert(btree_page* pg, branch_value_iterator element,
+  void  m_branch_insert(btree_page* pg, branch_iterator element,
     const key_type& k, page_id_type id);
 
   struct branch_value_type;
-  void  m_erase_branch_value(btree_page* pg, branch_value_iterator value);
+  void  m_erase_branch_value(btree_page* pg, branch_iterator value);
   void  m_free_page(btree_page* pg)
   {
     pg->needs_write(true);
@@ -991,15 +1014,14 @@ vbtree_base<Key,Base,Traits,Comp>::m_new_root()
   m_set_max_cache_pages();
   m_root = m_new_page(m_hdr.root_level());
   m_hdr.root_page_id(m_root->page_id());
-  m_root->branch().P0 = old_root_id;
-  m_root->size(0);  // the P0 pseudo-element doesn't count as an element
+  m_root->branch().begin()->page_id(old_root_id);
+  m_root->size(0);  // the end pseudo-element doesn't count as an element
   // TODO: why maintain the child->parent list? By the time m_new_root() is called,
   // hasn't the need passed?
   m_root->parent(0);  
-  m_root->parent_element(branch_value_iterator());
+  m_root->parent_element(branch_iterator());
   old_root->parent(m_root.get());
-  old_root->parent_element(branch_value_iterator(
-    reinterpret_cast<branch_value_type*>(&m_root->branch().P0)));  // point to P0 pseudo-element
+  old_root->parent_element(m_root->branch().begin());
 # ifndef NDEBUG
   m_root->parent_page_id(page_id_type(0));
   old_root->parent_page_id(m_root->page_id());
@@ -1015,9 +1037,9 @@ vbtree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter,
 {
   std::size_t          value_size = dynamic_size(value);
   btree_page_ptr       pg = insert_iter.m_page;
-  leaf_value_iterator  insert_begin = insert_iter.m_element;
+  leaf_iterator  insert_begin = insert_iter.m_element;
   btree_page_ptr       pg2;
-  leaf_value_iterator  split_begin;
+  leaf_iterator  split_begin;
 
   BOOST_ASSERT_MSG(pg->is_leaf(), "internal error");
   BOOST_ASSERT_MSG(pg->size() <= m_max_leaf_size, "internal error");
@@ -1083,7 +1105,7 @@ vbtree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter,
     if (&*split_begin <= &*insert_begin)
     {
       pg = pg2;
-      insert_begin = leaf_value_iterator(&*pg->leaf().begin(),
+      insert_begin = leaf_iterator(&*pg->leaf().begin(),
         char_distance(&*split_begin, &*insert_begin));  
     }
   }
@@ -1121,12 +1143,12 @@ vbtree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter,
 template <class Key, class Base, class Traits, class Comp>   
 void
 vbtree_base<Key,Base,Traits,Comp>::m_branch_insert(
-  btree_page* pg1, branch_value_iterator element, const key_type& k, page_id_type id) 
+  btree_page* pg1, branch_iterator element, const key_type& k, page_id_type id) 
 {
 //  btree_page*          pg = pg1;
-//  branch_value_iterator   insert_begin = element;
+//  branch_iterator   insert_begin = element;
 //  btree_page_ptr       pg2;
-//  branch_value_iterator   split_begin;
+//  branch_iterator   split_begin;
 //
 //  BOOST_ASSERT(pg->is_branch());
 //  BOOST_ASSERT(pg->size() <= m_max_branch_size);
@@ -1197,7 +1219,7 @@ vbtree_base<Key,Base,Traits,Comp>::m_branch_insert(
 //  if (!(m_hdr.flags() & btree::flags::multi))
 //  {
 //    key_type prev_key = 0;
-//    for(const branch_value_iterator beg = pg->branch().begin(); beg != pg->branch().end(); ++beg)
+//    for(const branch_iterator beg = pg->branch().begin(); beg != pg->branch().end(); ++beg)
 //    {
 //      BOOST_ASSERT(key_comp()(prev_key, beg->key));
 //      prev_key = beg->key;
@@ -1210,7 +1232,7 @@ vbtree_base<Key,Base,Traits,Comp>::m_branch_insert(
 
 template <class Key, class Base, class Traits, class Comp>   
 void vbtree_base<Key,Base,Traits,Comp>::m_erase_branch_value(
-  btree_page* pg, branch_value_iterator value)
+  btree_page* pg, branch_iterator value)
 {
   //BOOST_ASSERT(pg->is_branch());
   //if (pg->branch().begin() == pg->branch().end()) // P0 pseudo-value only value on page?
@@ -1422,7 +1444,7 @@ vbtree_base<Key,Base,Traits,Comp>::m_lower_page_bound(const key_type& k)
   // search branches down the tree until a leaf is reached
   while (pg->is_branch())
   {
-    branch_value_iterator low
+    branch_iterator low
       = std::lower_bound(pg->branch().begin(), pg->branch().end(), k, branch_comp());
     BOOST_ASSERT_MSG(false, "--low not implemented yet");
     //if (low == pg->branch().end()      // all keys on page < search key, so low
@@ -1432,7 +1454,7 @@ vbtree_base<Key,Base,Traits,Comp>::m_lower_page_bound(const key_type& k)
     //  --low;
     btree_page_ptr child_pg;
     // create the ephemeral child->parent list
-    child_pg = m_mgr.read(low->mapped_value());  // mapped_value() is page_id
+    child_pg = m_mgr.read(low->page_id());  // mapped_value() is page_id
     child_pg->parent(pg.get());
     child_pg->parent_element(low);
 #   ifndef NDEBUG
@@ -1442,7 +1464,7 @@ vbtree_base<Key,Base,Traits,Comp>::m_lower_page_bound(const key_type& k)
   }
 
   //  search leaf
-  leaf_value_iterator low
+  leaf_iterator low
     = std::lower_bound(pg->leaf().begin(), pg->leaf().end(), k, value_comp());
 
   return iterator(pg, low);
@@ -1460,19 +1482,20 @@ vbtree_base<Key,Base,Traits,Comp>::lower_bound(const key_type& k) const
   // search branches down the tree until a leaf is reached
   while (pg->is_branch())
   {
-    branch_value_iterator low
+    branch_iterator low
       = std::lower_bound(pg->branch().begin(), pg->branch().end(), k, branch_comp());
 
-    pg = (low == pg->branch().end()           // all keys on page < search key
-          || key_comp()(k, low->key())          // search key < low key
-          || ((m_hdr.flags() & btree::flags::multi)
-              && !key_comp()(low->key(), k) ))  // non-unique && search key == low key
-      ? m_mgr.read(prior_page_id(low))
-      : m_mgr.read(low->mapped_value());
+    //pg = (low == pg->branch().end()           // all keys on page < search key
+    //      || key_comp()(k, low->key())          // search key < low key
+    //      || ((m_hdr.flags() & btree::flags::multi)
+    //          && !key_comp()(low->key(), k) ))  // non-unique && search key == low key
+    //  ? m_mgr.read(prior_page_id(low))
+    //  : m_mgr.read(low->mapped_value());
+    pg = m_mgr.read(low->page_id());
   }
 
   //  search leaf
-  leaf_value_iterator low
+  leaf_iterator low
     = std::lower_bound(pg->leaf().begin(), pg->leaf().end(), k, value_comp());
 
   if (low != pg->leaf().end())
@@ -1503,7 +1526,7 @@ vbtree_base<Key,Base,Traits,Comp>::m_upper_page_bound(const key_type& k)
   // search branches down the tree until a leaf is reached
   while (pg->is_branch())
   {
-    branch_value_iterator up
+    branch_iterator up
       = std::upper_bound(pg->branch().begin(), pg->branch().end(), k, branch_comp());
     if (up == pg->branch().end()        // all keys on page < search key, so up
                                       // must point to last value on page
@@ -1522,7 +1545,7 @@ vbtree_base<Key,Base,Traits,Comp>::m_upper_page_bound(const key_type& k)
   }
 
   //  search leaf
-  leaf_value_iterator up
+  leaf_iterator up
     = std::upper_bound(pg->leaf().begin(), pg->leaf().end(), k, value_comp());
 
   return iterator(pg, up);
@@ -1540,7 +1563,7 @@ vbtree_base<Key,Base,Traits,Comp>::upper_bound(const key_type& k) const
   // search branches down the tree until a leaf is reached
   while (pg->is_branch())
   {
-    branch_value_iterator up
+    branch_iterator up
       = std::upper_bound(pg->branch().begin(), pg->branch().end(), k, branch_comp());
 
     pg = (up == pg->branch().end()        // all keys on page < search key
@@ -1550,7 +1573,7 @@ vbtree_base<Key,Base,Traits,Comp>::upper_bound(const key_type& k) const
   }
 
   //  search leaf
-  leaf_value_iterator up
+  leaf_iterator up
     = std::upper_bound(pg->leaf().begin(), pg->leaf().end(), k, value_comp());
 
   if (up != pg->leaf().end())
