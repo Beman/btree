@@ -1,5 +1,11 @@
-This is a branch of branch "indirect".
+vflip is a branch of branch "vbase2".
 
-It builds on the work of "indirect" in creating separate classes to handle variable length btree values.
+The key insight is that by exchanging the order of branch_value_type data members, P0 can be eliminated. This may eliminate some complex and error prone special case code.
 
-It differs from "indirect" in that pages contain values in sequential order, rather than having separate index and value storage areas on the page. Hopefully this will result in simpler code and shorter development time.
+It would work this way:
+
+* branch_value_type members would be ordered page_id_type, key_type.
+
+* The end iterator would be dereferenceable to obtain the page_id. In other words, the extra page_id_type value is at the end, rather than the beginning of the sequence.
+
+* Code should be simpler since it is never necessary to decrement begin(), which may have made sense in C or assembler, but is really tricky in C++.
