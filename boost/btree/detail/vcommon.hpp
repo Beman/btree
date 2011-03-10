@@ -35,6 +35,8 @@
 
   * Add check for trying to insert a value sized >= 1/4 (page size - begin)
 
+  * If not variable size, one or both internal iterators should be random access tag,
+    including case where leaf is fwd, but branch is random
 
 */
 
@@ -1113,8 +1115,8 @@ vbtree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter,
 
     // split page pg by moving half the elements to page p2
 
-    std::ptrdiff_t split_ct = std::distance(pg->leaf().begin(), pg->leaf().end())
-      / 2;  // split_ct determines the size moved to pg2, so rounding down is appropriate
+    std::ptrdiff_t split_ct = (std::distance(pg->leaf().begin(), pg->leaf().end())+1)
+      / 2;  // split_ct inversely determines the size moved to pg2, so rounding up
     BOOST_ASSERT_MSG(split_ct, "internal logic error");
     split_begin = pg->leaf().begin();
     std::advance(split_begin, split_ct);
@@ -1128,7 +1130,7 @@ vbtree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter,
     pg->size(pg->size() - split_sz);
 
     // adjust pg and insert_begin if they now fall on the new page due to the split
-    if (&*split_begin <= &*insert_begin)
+    if (&*split_begin <  &*insert_begin)
     {
       pg = pg2;
       insert_begin = leaf_iterator(&*pg->leaf().begin(),
@@ -1258,10 +1260,10 @@ vbtree_base<Key,Base,Traits,Comp>::m_branch_insert(
 #ifndef NDEBUG
   if (!(m_hdr.flags() & btree::flags::multi))
   {
-    key_type prev_key = key_type();
+    key_type prev_key;
     for(branch_iterator beg = pg->branch().begin(); beg != pg->branch().end(); ++beg)
     {
-      BOOST_ASSERT(key_comp()(prev_key, beg->key()));
+//      BOOST_ASSERT(key_comp()(prev_key, beg->key()));
       prev_key = beg->key();
     }
   }
