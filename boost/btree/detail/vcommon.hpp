@@ -23,6 +23,7 @@
 #include <utility>
 #include <iterator>
 #include <functional>  // for less, binary_function
+#include <algorithm>
 #include <ostream>
 #include <stdexcept>
 
@@ -169,18 +170,19 @@ namespace detail
 
   template <class T>
   class dynamic_iterator
-    : public boost::iterator_facade<dynamic_iterator<T>, T, forward_traversal_tag>
+    : public boost::iterator_facade<dynamic_iterator<T>, T, bidirectional_traversal_tag>
   {
   public:
-    dynamic_iterator() : m_ptr(0) {} 
-    explicit dynamic_iterator(T* ptr) : m_ptr(ptr) {}
+    dynamic_iterator() : m_ptr(0), m_begin(0) {} 
+    explicit dynamic_iterator(T* ptr) : m_ptr(ptr) {m_begin = ptr;}
     dynamic_iterator(T* ptr, std::size_t sz)
-      : m_ptr(reinterpret_cast<T*>(reinterpret_cast<char*>(ptr) + sz)) {}
+      : m_ptr(reinterpret_cast<T*>(reinterpret_cast<char*>(ptr) + sz)) {m_begin = ptr;}
 
   private:
     friend class boost::iterator_core_access;
 
-    T* m_ptr;
+    T* m_ptr;    // the pointer
+    T* m_begin;  // the begin pointer for decrements
 
     T& dereference() const  { return *m_ptr; }
  
@@ -191,7 +193,31 @@ namespace detail
       m_ptr = reinterpret_cast<T*>(reinterpret_cast<char*>(m_ptr) + dynamic_size(*m_ptr));
     }
 
-//    void decrement() { throw "should never reach here"; }
+    void decrement()
+    {
+      BOOST_ASSERT_MSG(m_ptr != m_begin, "internal logic error; decrement of begin");
+      T* prior = m_begin;
+      T* cur = m_begin;
+      for(;;)
+      {
+        cur = reinterpret_cast<T*>(reinterpret_cast<char*>(cur) + dynamic_size(*cur));
+        if (cur == m_ptr) break;
+        prior = cur;
+      }
+      m_ptr = prior;
+    }
+
+    void advance(std::ptrdiff_t n)
+    {
+      BOOST_ASSERT(false);   // is this function ever used?
+    }
+
+    std::ptrdiff_t distance_to(const dynamic_iterator& rhs) const
+    {
+      BOOST_ASSERT(false);   // is this function ever used?
+      return 0;
+    }
+
   };
 
 }  // namespace detail
@@ -440,15 +466,16 @@ private:
     leaf_value_type  m_value[1];
   };
 
-  std::size_t distance_size(leaf_value_iterator from, leaf_value_iterator to)
+  template <class T>
+  std::size_t char_distance(const T* from, const T* to)
   {
-    return reinterpret_cast<const char*>(&*to) - reinterpret_cast<const char*>(&*from);
+    return reinterpret_cast<const char*>(to) - reinterpret_cast<const char*>(from);
   }
 
   //------------------------ branch data formats and operations ------------------------//
 
   typedef vbtree_value<const key_type, const page_id_type>  branch_value_type;
-  typedef detail::dynamic_iterator<branch_value_type>      branch_value_iterator;
+  typedef detail::dynamic_iterator<branch_value_type>       branch_value_iterator;
 
   class branch_data : public btree_data
   {
@@ -570,7 +597,7 @@ private:
  
   template <class T>
   class iterator_type
-    : public boost::iterator_facade<iterator_type<T>, T, forward_traversal_tag>
+    : public boost::iterator_facade<iterator_type<T>, T, bidirectional_traversal_tag>
   {
 
     BOOST_STATIC_ASSERT_MSG(boost::is_const<T>::value,
@@ -604,7 +631,7 @@ private:
     }
 
     void increment();
-    //void decrement();
+    void decrement();
   };
 
 //--------------------------------------------------------------------------------------//
@@ -1000,78 +1027,83 @@ vbtree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter,
 
   if (pg->size() + value_size > m_max_leaf_size)  // no room on page?
   {
-//    //  no room, so page must be split
-//
-//    if (pg->level() == m_hdr.root_level()) // splitting the root?
-//      m_new_root();  // create a new root
-//    
-//    pg2 = m_new_page(pg->level());  // create the new page 
-//
-//    // ck pack conditions now, since leaf seq list update may chg header().last_page_id()
-//    if (m_ok_to_pack
-//        && (insert_begin != pg->leaf().end() || pg->page_id() != header().last_page_id()))
-//      m_ok_to_pack = false;  // conditions for pack optimization not met
-//
-//    // insert the new page into the leaf sequence lists
-//    pg2->leaf().prior_page_id(pg->page_id());
-//    pg2->leaf().next_page_id(pg->leaf().next_page_id());
-//    pg->leaf().next_page_id(pg2->page_id());
-//    if (pg2->leaf().next_page_id())
-//    {
-//      const btree_page_ptr next_page(m_mgr.read(pg2->leaf().next_page_id()));
-//      next_page->leaf().prior_page_id(pg2->page_id());
-//      next_page->needs_write(true);
-//    }
-//    else 
-//      m_hdr.last_page_id(pg2->page_id());
-//
-//    // apply pack optimization if applicable
-//    if (m_ok_to_pack)  // have all inserts been ordered and no erases occurred?
-//    {
-//      // pack optimization: instead of splitting pg, just put value alone on pg2
-//      std::memcpy(&*pg2->leaf().begin(), &value, sizeof(value_type));  // insert value
-//      pg2->size(1);
-//      BOOST_ASSERT(pg->parent()->page_id() == pg->parent_page_id()); // max_cache_size logic OK?
-//      m_branch_insert(pg->parent(), pg->parent_element()+1,
-//        key(*pg2->leaf().begin()), pg2->page_id());
-//      return const_iterator(pg2, pg2->leaf().begin());
-//    }
-//
-//    // split page pg by moving half the elements to page p2
-//
-//    std::size_t split_sz = pg->size() >> 1;  // if odd, lower size goes on pg2 for speed
-//    BOOST_ASSERT(split_sz);
-//    split_begin = pg->leaf().begin() + (pg->size() - split_sz);
-//    std::memcpy(&*pg2->leaf().begin(), &*split_begin, split_sz * sizeof(value_type));
-//    pg2->size(split_sz);
-////std::cout << "******leaf "<< pg->leaf().end() - split_begin << std::endl;
-//    std::memset(&*split_begin, 0,                              // zero unused space to make
-//      (pg->leaf().end() - split_begin) * sizeof(value_type));  // file dumps easier to read
-//    pg->size(pg->size() - split_sz);
-//
-//    // adjust pg and insert_begin if they now fall on the new page due to the split
-//    if (split_begin <= insert_begin)
-//    {
-//      pg = pg2;
-//      insert_begin = pg2->leaf().begin() + (insert_begin - split_begin);
-//    }
+    //  no room, so page must be split
+
+    if (pg->level() == m_hdr.root_level()) // splitting the root?
+      m_new_root();  // create a new root
+    
+    pg2 = m_new_page(pg->level());  // create the new page 
+
+    // ck pack conditions now, since leaf seq list update may chg header().last_page_id()
+    if (m_ok_to_pack
+        && (insert_begin != pg->leaf().end() || pg->page_id() != header().last_page_id()))
+      m_ok_to_pack = false;  // conditions for pack optimization not met
+
+    // insert the new page into the leaf sequence lists
+    pg2->leaf().prior_page_id(pg->page_id());
+    pg2->leaf().next_page_id(pg->leaf().next_page_id());
+    pg->leaf().next_page_id(pg2->page_id());
+    if (pg2->leaf().next_page_id())
+    {
+      const btree_page_ptr next_page(m_mgr.read(pg2->leaf().next_page_id()));
+      next_page->leaf().prior_page_id(pg2->page_id());
+      next_page->needs_write(true);
+    }
+    else 
+      m_hdr.last_page_id(pg2->page_id());
+
+    // apply pack optimization if applicable
+    if (m_ok_to_pack)  // have all inserts been ordered and no erases occurred?
+    {
+      // pack optimization: instead of splitting pg, just put value alone on pg2
+      std::memcpy(&*pg2->leaf().begin(), &value, value_size);  // insert value
+      pg2->size(value_size);
+      BOOST_ASSERT(pg->parent()->page_id() == pg->parent_page_id()); // max_cache_size logic OK?
+      m_branch_insert(pg->parent(), pg->parent_element()+1,
+        key(*pg2->leaf().begin()), pg2->page_id());
+      return const_iterator(pg2, pg2->leaf().begin());
+    }
+
+    // split page pg by moving half the elements to page p2
+
+    std::ptrdiff_t split_ct = std::distance(pg->leaf().begin(), pg->leaf().end())
+      / 2;  // split_ct determines the size moved to pg2, so rounding down is appropriate
+    BOOST_ASSERT_MSG(split_ct, "internal logic error");
+    split_begin = pg->leaf().begin();
+    std::advance(split_begin, split_ct);
+    std::size_t split_sz = char_distance(&*split_begin, &*pg->leaf().end());
+    std::memcpy(&*pg2->leaf().begin(), &*split_begin, split_sz);
+    pg2->size(split_sz);
+//std::cout << "******leaf "<< pg->leaf().end() - split_begin << std::endl;
+    std::memset(&*split_begin, 0,                         // zero unused space to make
+      char_distance(&*split_begin, &*pg->leaf().end()));  //  file dumps easier to read
+    pg->size(pg->size() - split_sz);
+
+    // adjust pg and insert_begin if they now fall on the new page due to the split
+    if (&*split_begin <= &*insert_begin)
+    {
+      pg = pg2;
+      insert_begin = leaf_value_iterator(&*pg->leaf().begin(),
+        char_distance(&*split_begin, &*insert_begin));  
+    }
   }
 
   //  insert value into pg at insert_begin
   BOOST_ASSERT(&*insert_begin >= &*pg->leaf().begin());
   BOOST_ASSERT(&*insert_begin <= &*pg->leaf().end());
   std::memmove(reinterpret_cast<char*>(&*insert_begin) + value_size,
-    &*insert_begin, distance_size(insert_begin, pg->leaf().end()));  // make room
+    &*insert_begin, char_distance(&*insert_begin, &*pg->leaf().end()));  // make room
   std::memcpy(&*insert_begin, &value, value_size);   // insert value
   pg->size(pg->size() + value_size);
 
   // if there is a new page, its initial key and page_id are inserted into parent
   if (pg2)
   {
-    //BOOST_ASSERT(insert_iter.m_page->parent()->page_id() \
-    //  == insert_iter.m_page->parent_page_id()); // max_cache_size logic OK?
-    //m_branch_insert(insert_iter.m_page->parent(), insert_iter.m_page->parent_element()+1,
-    //  key(*pg2->leaf().begin()), pg2->page_id());
+    BOOST_ASSERT(insert_iter.m_page->parent()->page_id() \
+      == insert_iter.m_page->parent_page_id()); // max_cache_size logic OK?
+    m_branch_insert(insert_iter.m_page->parent(),
+      insert_iter.m_page->parent_element()+1,
+      key(*pg2->leaf().begin()), pg2->page_id());
   }
 
   return const_iterator(pg, insert_begin);
@@ -1327,17 +1359,17 @@ template <class Key, class Base, class Traits, class Comp>
 typename vbtree_base<Key,Base,Traits,Comp>::const_iterator 
 vbtree_base<Key,Base,Traits,Comp>::erase(const_iterator first, const_iterator last)
 {
-  //BOOST_ASSERT_MSG(is_open(), "erase() on unopen btree");
-  //// caution: last must be revalidated when on the same page as first
-  //while (first != last)
-  //{
-  //  if (last != end() && first.m_page == last.m_page)
-  //  {
-  //    BOOST_ASSERT(first.m_element < last.m_element);
-  //    --last;  // revalidate in anticipation of erasing a prior element on same page
-  //  }
-  //  first = erase(first);
-  //}
+  BOOST_ASSERT_MSG(is_open(), "erase() on unopen btree");
+  // caution: last must be revalidated when on the same page as first
+  while (first != last)
+  {
+    if (last != end() && first.m_page == last.m_page)
+    {
+      BOOST_ASSERT(first.m_element < last.m_element);
+      --last;  // revalidate in anticipation of erasing a prior element on same page
+    }
+    first = erase(first);
+  }
   return last;
 }
 
@@ -1618,27 +1650,27 @@ vbtree_base<Key,Base,Traits,Comp>::iterator_type<T>::increment()
   }
 }
 
-//template <class Key, class Base, class Traits, class Comp>
-//template <class T>
-//void
-//vbtree_base<Key,Base,Traits,Comp>::iterator_type<T>::decrement()
-//{
-//  if (*this == reinterpret_cast<const vbtree_base<Key,Base,Traits,Comp>*>
-//        (m_page->manager().owner())->end())
-//    *this = reinterpret_cast<vbtree_base<Key,Base,Traits,Comp>*>
-//        (m_page->manager().owner())->last();
-//  else if (m_element != m_page->leaf().begin())
-//    --m_element;
-//  else if (m_page->leaf().prior_page_id())
-//  {  
-//    m_page = m_page->manager().read(m_page->leaf().prior_page_id());
-//    m_element = m_page->leaf().end();
-//    --m_element;
-//  }
-//  else // end() reached
-//    *this = reinterpret_cast<const vbtree_base<Key,Base,Traits,Comp>*>
-//        (m_page->manager().owner())->m_end_iterator;
-//}
+template <class Key, class Base, class Traits, class Comp>
+template <class T>
+void
+vbtree_base<Key,Base,Traits,Comp>::iterator_type<T>::decrement()
+{
+  if (*this == reinterpret_cast<const vbtree_base<Key,Base,Traits,Comp>*>
+        (m_page->manager().owner())->end())
+    *this = reinterpret_cast<vbtree_base<Key,Base,Traits,Comp>*>
+        (m_page->manager().owner())->last();
+  else if (m_element != m_page->leaf().begin())
+    --m_element;
+  else if (m_page->leaf().prior_page_id())
+  {  
+    m_page = m_page->manager().read(m_page->leaf().prior_page_id());
+    m_element = m_page->leaf().end();
+    --m_element;
+  }
+  else // end() reached
+    *this = reinterpret_cast<const vbtree_base<Key,Base,Traits,Comp>*>
+        (m_page->manager().owner())->m_end_iterator;
+}
 
 }  // namespace btree
 }  // namespace boost
