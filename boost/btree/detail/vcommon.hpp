@@ -203,7 +203,8 @@ namespace detail
 
     void increment()
     {
-      m_ptr = reinterpret_cast<T*>(reinterpret_cast<char*>(m_ptr) + dynamic_size(*m_ptr));
+      m_ptr = reinterpret_cast<T*>(reinterpret_cast<char*>(m_ptr)
+        + btree::dynamic_size(*m_ptr));
     }
 
     void decrement()
@@ -237,7 +238,36 @@ namespace detail
 
   };
 
+  //--------------------------------- branch_value -------------------------------------//
+
+  // TODO: either add code to align mapped() or add a requirement that T2 does not
+  // require alignment.
+
+  template <class K, class PID>
+  class branch_value
+  {
+  public:
+    PID&  page_id() {return *reinterpret_cast<PID*>(this); }
+    K&  key()
+    {
+      return *reinterpret_cast<K*>(reinterpret_cast<char*>(this)
+               + sizeof(PID));
+    }
+    const K&  key() const
+    {
+      return *reinterpret_cast<const K*>(reinterpret_cast<const char*>(this)
+               + sizeof(PID));
+    }
+    std::size_t dynamic_size() const
+    { 
+      return sizeof(PID) + btree::dynamic_size(key());
+    }
+  };
+
 }  // namespace detail
+
+template <class K, class PID>
+std::size_t dynamic_size(const detail::branch_value<K, PID>& v) {return v.dynamic_size();}
 
 //--------------------------------------------------------------------------------------//
 //                                                                                      //
@@ -495,38 +525,8 @@ private:
 
   //------------------------ branch data formats and operations ------------------------//
 
-  //--------------------------------- branch_value -------------------------------------//
-
-  // TODO: either add code to align mapped() or add a requirement that T2 does not
-  // require alignment.
-
-  template <class K>
-  class branch_value
-  {
-  public:
-    page_id_type&  page_id() {return *reinterpret_cast<page_id_type*>(this); }
-    //void           page_id(page_id_type pid)
-    //{
-    //  *reinterpret_cast<page_id_type*>(this) = pid;
-    //}
-    K&  key()
-    {
-      return *reinterpret_cast<K*>(reinterpret_cast<char*>(this)
-               + sizeof(page_id_type));
-    }
-    const K&  key() const
-    {
-      return *reinterpret_cast<const K*>(reinterpret_cast<const char*>(this)
-               + sizeof(page_id_type));
-    }
-    std::size_t dynamic_size() const
-    { 
-      return sizeof(page_id_type) + btree::dynamic_size(key());
-    }
-  };
-
-  typedef branch_value<key_type>                       branch_value_type;
-  typedef detail::dynamic_iterator<branch_value_type>  branch_iterator;
+  typedef detail::branch_value<key_type, page_id_type>  branch_value_type;
+  typedef detail::dynamic_iterator<branch_value_type>   branch_iterator;
 
   class branch_data : public btree_data
   {
@@ -1260,11 +1260,13 @@ vbtree_base<Key,Base,Traits,Comp>::m_branch_insert(
 #ifndef NDEBUG
   if (!(m_hdr.flags() & btree::flags::multi))
   {
-    key_type prev_key;
-    for(branch_iterator beg = pg->branch().begin(); beg != pg->branch().end(); ++beg)
+    branch_iterator cur = pg->branch().begin();
+    key_type prev_key = cur->key();
+    ++cur;
+    for(; cur != pg->branch().end(); ++cur)
     {
-//      BOOST_ASSERT(key_comp()(prev_key, beg->key()));
-      prev_key = beg->key();
+      BOOST_ASSERT(key_comp()(prev_key, cur->key()));
+      prev_key = cur->key();
     }
   }
 #endif
