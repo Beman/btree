@@ -604,55 +604,55 @@ void insert_tests(BTree& bt)
   BOOST_TEST_EQ(bt.find(0x0A)->key().x, 0x0A);
   BOOST_TEST_EQ(bt.find(0x0C)->key().x, 0x0C);
 
-  //element.key(0x0D);
-  //element.mapped_value(0xDDDDDDDD);
-  //result = bt.insert(element);
-  //BOOST_TEST(result.second);
-  //BOOST_TEST_EQ(result.first->key().x, element.key().x);
-  //BOOST_TEST_EQ(result.first->mapped_value(), element.mapped_value());
-  //BOOST_TEST_EQ(bt.find(0x0D)->key().x, 0x0D);
-  //BOOST_TEST_EQ(bt.find(0x0B)->key().x, 0x0B);
-  //BOOST_TEST_EQ(bt.find(0x0E)->key().x, 0x0E);
-  //BOOST_TEST_EQ(bt.find(0x0A)->key().x, 0x0A);
-  //BOOST_TEST_EQ(bt.find(0x0C)->key().x, 0x0C);
-  //bt.flush();
+  element.key(0x0D);
+  element.mapped_value(0xDDDDDDDD);
+  result = bt.insert(element);
+  BOOST_TEST(result.second);
+  BOOST_TEST_EQ(result.first->key().x, element.key().x);
+  BOOST_TEST_EQ(result.first->mapped_value(), element.mapped_value());
+  BOOST_TEST_EQ(bt.find(0x0D)->key().x, 0x0D);
+  BOOST_TEST_EQ(bt.find(0x0B)->key().x, 0x0B);
+  BOOST_TEST_EQ(bt.find(0x0E)->key().x, 0x0E);
+  BOOST_TEST_EQ(bt.find(0x0A)->key().x, 0x0A);
+  BOOST_TEST_EQ(bt.find(0x0C)->key().x, 0x0C);
+  bt.flush();
 
-  //BOOST_TEST_EQ(bt.size(), 5U);
+  BOOST_TEST_EQ(bt.size(), 5U);
 
-  //BOOST_TEST_EQ(bt.find(0x0A)->key().x, 0x0A);
-  //BOOST_TEST_EQ(bt.find(0x0B)->key().x, 0x0B);
-  //BOOST_TEST_EQ(bt.find(0x0C)->key().x, 0x0C);
-  //BOOST_TEST_EQ(bt.find(0x0D)->key().x, 0x0D);
-  //BOOST_TEST_EQ(bt.find(0x0E)->key().x, 0x0E);
+  BOOST_TEST_EQ(bt.find(0x0A)->key().x, 0x0A);
+  BOOST_TEST_EQ(bt.find(0x0B)->key().x, 0x0B);
+  BOOST_TEST_EQ(bt.find(0x0C)->key().x, 0x0C);
+  BOOST_TEST_EQ(bt.find(0x0D)->key().x, 0x0D);
+  BOOST_TEST_EQ(bt.find(0x0E)->key().x, 0x0E);
 
-  //cur = begin = end = empty_iterator;
-  //cout << '\n' << bt.manager() << '\n';
+  cur = begin = end = empty_iterator;
+  cout << '\n' << bt.manager() << '\n';
 
-  //cur = bt.begin();
-  //BOOST_TEST_EQ(cur->first.x, 0x0A);
-  //++cur;
-  //BOOST_TEST_EQ(cur->first.x, 0x0B);
-  //++cur;
-  //BOOST_TEST_EQ(cur->first.x, 0x0C);
-  //++cur;
-  //BOOST_TEST_EQ(cur->first.x, 0x0D);
-  //++cur;
-  //BOOST_TEST_EQ(cur->first.x, 0x0E);
-  //++cur;
-  //BOOST_TEST(cur == bt.end());
-  //--cur;
-  //BOOST_TEST_EQ(cur->first.x, 0x0E);
-  //--cur;
-  //BOOST_TEST_EQ(cur->first.x, 0x0D);
-  //--cur;
-  //BOOST_TEST_EQ(cur->first.x, 0x0C);
-  //--cur;
-  //BOOST_TEST_EQ(cur->first.x, 0x0B);
-  //--cur;
-  //BOOST_TEST_EQ(cur->first.x, 0x0A);
-  //BOOST_TEST(cur == bt.begin());
+  cur = bt.begin();
+  BOOST_TEST_EQ(cur->key().x, 0x0A);
+  ++cur;
+  BOOST_TEST_EQ(cur->key().x, 0x0B);
+  ++cur;
+  BOOST_TEST_EQ(cur->key().x, 0x0C);
+  ++cur;
+  BOOST_TEST_EQ(cur->key().x, 0x0D);
+  ++cur;
+  BOOST_TEST_EQ(cur->key().x, 0x0E);
+  ++cur;
+  BOOST_TEST(cur == bt.end());
+  --cur;
+  BOOST_TEST_EQ(cur->key().x, 0x0E);
+  --cur;
+  BOOST_TEST_EQ(cur->key().x, 0x0D);
+  --cur;
+  BOOST_TEST_EQ(cur->key().x, 0x0C);
+  --cur;
+  BOOST_TEST_EQ(cur->key().x, 0x0B);
+  --cur;
+  BOOST_TEST_EQ(cur->key().x, 0x0A);
+  BOOST_TEST(cur == bt.begin());
 
-  //BOOST_TEST_EQ(bt.last()->first.x, 0x0E);
+  BOOST_TEST_EQ(bt.last()->key().x, 0x0E);
 
   //// delete and retest
 

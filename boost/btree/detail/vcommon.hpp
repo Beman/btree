@@ -223,11 +223,12 @@ namespace detail
 
     void advance(std::ptrdiff_t n)
     {
-      BOOST_ASSERT(false);   // why is this function ever used?
-      BOOST_ASSERT_MSG(n >= 0, "negative advance not supported");
-
-      for (; n; --n)
-        increment();
+      if (n > 0)
+        for (; n; --n)
+          increment();
+      else if (n < 0)
+        for (; n; ++n)
+          decrement();
     }
 
     std::ptrdiff_t distance_to(const dynamic_iterator& rhs) const
@@ -667,8 +668,8 @@ private:
     friend class boost::iterator_core_access;
     friend class vbtree_base;
    
-    typename vbtree_base::btree_page_ptr       m_page; 
-    typename vbtree_base::leaf_iterator  m_element;  // 0 for end iterator
+    typename vbtree_base::btree_page_ptr  m_page; 
+    typename vbtree_base::leaf_iterator   m_element;  // 0 for end iterator
 
     T& dereference() const  { return *m_element; }
  
@@ -1490,7 +1491,7 @@ vbtree_base<Key,Base,Traits,Comp>::m_lower_page_bound(const key_type& k)
   {
     branch_iterator low
       = std::lower_bound(pg->branch().begin(), pg->branch().end(), k, branch_comp());
-    BOOST_ASSERT_MSG(false, "--low not implemented yet");
+    //BOOST_ASSERT_MSG(false, "--low not implemented yet");
     //if (low == pg->branch().end()      // all keys on page < search key, so low
     //                                   // must point to last value on page
     //  || key_comp()(k, low->first()))  // search key < low key, so low
@@ -1698,10 +1699,11 @@ template <class T>
 void
 vbtree_base<Key,Base,Traits,Comp>::iterator_type<T>::increment()
 {
-  BOOST_ASSERT_MSG(m_element, "increment of uninitialized iterator"); 
+  BOOST_ASSERT_MSG(m_element != typename vbtree_base::leaf_iterator(0),
+    "increment of end iterator"); 
   BOOST_ASSERT(m_page);
-  BOOST_ASSERT(m_element >= m_page->leaf().begin());
-  BOOST_ASSERT(m_element < m_page->leaf().end());
+  BOOST_ASSERT(&*m_element >= &*m_page->leaf().begin());
+  BOOST_ASSERT(&*m_element < &*m_page->leaf().end());
 
   if (++m_element != m_page->leaf().end())
     return;
