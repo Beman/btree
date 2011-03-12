@@ -737,13 +737,6 @@ void insert()
     map.max_cache_pages(0);  // maximum stress
     insert_tests(map);
   }
-  {
-    fs::path map_path("btree_map_big.btree");
-    btree::vbtree_map<fat, int, btree::default_big_endian_traits>
-      map(map_path, btree::flags::truncate, 128);
-    map.max_cache_pages(0);  // maximum stress
-    insert_tests(map);
-  }
 
   cout << "    insert complete" << endl;
 }
