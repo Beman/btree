@@ -38,6 +38,9 @@
   * If not variable size, one or both internal iterators should be random access tag,
     including case where leaf is fwd, but branch is random
 
+  * advance_by_size should dispatch on iterator type and use more efficient
+    algorithm if random access (I.E. fixed size)
+
 */
 
 namespace boost
@@ -244,7 +247,7 @@ namespace detail
   // TODO: either add code to align mapped() or add a requirement that T2 does not
   // require alignment.
 
-  template <class K, class PID>
+  template <class PID, class K>
   class branch_value
   {
   public:
@@ -265,10 +268,26 @@ namespace detail
     }
   };
 
+  //------------------------------- advance_by_size ------------------------------------//
+
+  template <class ForwardIterator>
+  ForwardIterator advance_by_size(ForwardIterator begin, std::size_t max_sz)
+  {
+    std::size_t sz = 0;
+    for(;;)
+    {
+      sz +- dynamic_size(*begin);
+      if (sz > max_sz)
+        break;
+      ++begin;
+    }
+    return begin;
+  }
+
 }  // namespace detail
 
-template <class K, class PID>
-std::size_t dynamic_size(const detail::branch_value<K, PID>& v) {return v.dynamic_size();}
+template <class PID, class K>
+std::size_t dynamic_size(const detail::branch_value<PID, K>& v) {return v.dynamic_size();}
 
 //--------------------------------------------------------------------------------------//
 //                                                                                      //
@@ -526,7 +545,7 @@ private:
 
   //------------------------ branch data formats and operations ------------------------//
 
-  typedef detail::branch_value<key_type, page_id_type>  branch_value_type;
+  typedef detail::branch_value<page_id_type, key_type>  branch_value_type;
   typedef detail::dynamic_iterator<branch_value_type>   branch_iterator;
 
   class branch_data : public btree_data
@@ -1077,8 +1096,6 @@ vbtree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter,
   {
     //  no room on page, so page must be split
 
-    leaf_iterator  split_begin;
-
     if (pg->level() == m_hdr.root_level()) // splitting the root?
       m_new_root();  // create a new root
     
@@ -1114,24 +1131,24 @@ vbtree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter,
       return const_iterator(pg2, pg2->leaf().begin());
     }
 
-    // split page pg by moving half the elements to page p2
-
-    std::ptrdiff_t split_ct = (std::distance(pg->leaf().begin(), pg->leaf().end())+1)
-      / 2;  // split_ct inversely determines the size moved to pg2, so rounding up
-    BOOST_ASSERT_MSG(split_ct, "internal logic error");
-    split_begin = pg->leaf().begin();
-    std::advance(split_begin, split_ct);
+    // split page pg by moving half the elements, by size, to page p2
+    leaf_iterator split_begin(detail::advance_by_size(pg->leaf().begin(),
+      pg->leaf().size() / 2));
     std::size_t split_sz = char_distance(&*split_begin, &*pg->leaf().end());
+
+    // TODO: if the insert point will fall on the new page, it would be faster to
+    // copy the portion before the insert point, copy the value being inserted, and
+    // finally copy the portion after the insert point. However, that's a fair amount of
+    // additional code for something that only happens on half of all leaf splits on average.
 
     std::memcpy(&*pg2->leaf().begin(), &*split_begin, split_sz);
     pg2->size(split_sz);
-//std::cout << "******leaf "<< pg->leaf().end() - split_begin << std::endl;
     std::memset(&*split_begin, 0,                         // zero unused space to make
       char_distance(&*split_begin, &*pg->leaf().end()));  //  file dumps easier to read
     pg->size(pg->size() - split_sz);
 
     // adjust pg and insert_begin if they now fall on the new page due to the split
-    if (&*split_begin <  &*insert_begin)
+    if (&*split_begin < &*insert_begin)
     {
       pg = pg2;
       insert_begin = leaf_iterator(&*pg->leaf().begin(),
@@ -1187,32 +1204,31 @@ vbtree_base<Key,Base,Traits,Comp>::m_branch_insert(
 
   if (pg->size() + insert_size > m_max_branch_size)  // no room on page?
   {
-    BOOST_ASSERT(false);
-    ////  no room on page, so page must be split
+    //  no room on page, so page must be split
 
-    //key_type* split_begin;
+    key_type* split_begin;
 
-    //if (pg->level() == m_hdr.root_level()) // splitting the root?
-    //  m_new_root();  // create a new root
-    //
-    //pg2 = m_new_page(pg->level());  // create the new page
+    if (pg->level() == m_hdr.root_level()) // splitting the root?
+      m_new_root();  // create a new root
+    
+    pg2 = m_new_page(pg->level());  // create the new page
 
-    ////// split the page
-    ////std::size_t split_sz = pg->size() >> 1;  // if odd, lower size goes on pg2 for speed
-    ////BOOST_ASSERT(split_sz);
-    ////split_begin = pg->branch().begin() + (pg->size() - split_sz);
+    // split page pg by moving half the elements, by size, to page p2
 
-    //// split page pg by moving half the elements to page p2
+    branch_iterator unsplit_end(detail::advance_by_size(pg->branch().begin(),
+      pg->branch().size() / 2));
+    branch_iterator split_begin;
+    split_begin = unsplit_end;
+    ++split_begin;
+    std::size_t split_sz = char_distance(&*split_begin, char_ptr(&*pg->branch().end()) 
+      + sizeof(page_id_type));  // include the end pseudo-element page_id
 
-    //std::ptrdiff_t split_ct = std::distance(pg->branch().begin(), pg->branch().end())
-    //  / 2;  // split_ct determines the size moved to pg2, so rounding down is appropriate
-    //BOOST_ASSERT_MSG(split_ct, "internal logic error");
-    //branch_iterator split_begin_itr = pg->leaf().begin();
-    //std::advance(split_begin_itr, split_ct);
-    //split_begin = &split_begin_itr->key();
-    //std::size_t split_sz = char_distance(split_begin, &*pg->leaf().end()) 
-    //  + sizeof(page_id_type);
+    // TODO: if the insert point will fall on the new page, it would be faster to
+    // copy the portion before the insert point, copy the value being inserted, and
+    // finally copy the portion after the insert point. However, that's a fair amount of
+    // additional code for something that only happens on half of all branch splits on average.
 
+    //// if the insert will be at the start just copy everything to the proper location
     //if (split_begin == insert_begin)
     //{
     //  pg2->branch().P0 = id;
@@ -1226,27 +1242,26 @@ vbtree_base<Key,Base,Traits,Comp>::m_branch_insert(
     //  return;
     //}
 
-    //// TODO: insert_begin == split_begin+1 could special cased since the copy could
-    //// go directly to the correct location, elminating the need for the make-room
-    //// memmove
+    // copy the split elements, including the pseudo-end element, to p2
+    std::memcpy(&*pg2->branch().begin(), &*split_begin, split_sz);  // include end pseudo element
+    pg2->size(split_sz - sizeof(page_id_type));  // exclude end pseudo element from size
 
-    //pg2->branch().P0 = split_begin->first();
-    //std::memcpy(&*pg2->branch().begin(), split_begin+1,
-    //  (split_sz-1) * sizeof(branch_value_type)); // copy the values
-    //pg2->size(split_sz-1);
-    //BOOST_ASSERT(pg->parent()->page_id() == pg->parent_page_id()); // max_cache_size logic OK?
-    //m_branch_insert(pg->parent(), pg->parent_element()+1, split_begin->key,
-    //  pg2->page_id());
-    //std::memset(&*split_begin, 0,  // zero unused space to make file dumps easier to read
-    //  (pg->branch().end() - split_begin) * sizeof(branch_value_type)); 
-    //pg->size(pg->size() - split_sz);
+    BOOST_ASSERT(pg->parent()->page_id() == pg->parent_page_id()); // max_cache_size logic OK?
 
-    //// adjust pg and insert_begin if they now fall on the new page due to the split
-    //if (split_begin < insert_begin)
-    //{
-    //  pg = pg2.get();
-    //  insert_begin = pg2->branch().begin() + (insert_begin - split_begin - 1);
-    //}
+    // promote the key from the original page's new end pseudo element to the parent branch page
+    m_branch_insert(pg->parent(), pg->parent_element(), unsplit_end->key(), pg2->page_id());
+
+    // finalize work on the original page
+    std::memset(&unsplit_end->key(), 0,  // zero unused space to make file dumps easier to read
+      char_distance(&unsplit_end->key(), &pg->branch().end()->key())); 
+    pg->size(char_distance(pg->branch().begin(), &*unsplit_end));
+
+    // adjust pg and insert_begin if they now fall on the new page due to the split
+    if (split_begin < insert_begin)
+    {
+      pg = pg2.get();
+      insert_begin = pg2->branch().begin() + char_distance(split_begin, insert_begin);
+    }
   }
 
   //  insert k, id, into pg at insert_begin
