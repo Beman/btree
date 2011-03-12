@@ -244,7 +244,7 @@ namespace detail
 
   //--------------------------------- branch_value -------------------------------------//
 
-  // TODO: either add code to align mapped() or add a requirement that T2 does not
+  // TODO: either add code to align mapped() or add a requirement that PID, K does not
   // require alignment.
 
   template <class PID, class K>
@@ -276,7 +276,7 @@ namespace detail
     std::size_t sz = 0;
     for(;;)
     {
-      sz +- dynamic_size(*begin);
+      sz += dynamic_size(*begin);
       if (sz > max_sz)
         break;
       ++begin;
@@ -1085,7 +1085,7 @@ vbtree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter,
   btree_page_ptr       pg = insert_iter.m_page;
   leaf_iterator        insert_begin = insert_iter.m_element;
   btree_page_ptr       pg2;
-
+  
   BOOST_ASSERT_MSG(pg->is_leaf(), "internal error");
   BOOST_ASSERT_MSG(pg->size() <= m_max_leaf_size, "internal error");
 
@@ -1206,8 +1206,6 @@ vbtree_base<Key,Base,Traits,Comp>::m_branch_insert(
   {
     //  no room on page, so page must be split
 
-    key_type* split_begin;
-
     if (pg->level() == m_hdr.root_level()) // splitting the root?
       m_new_root();  // create a new root
     
@@ -1217,9 +1215,7 @@ vbtree_base<Key,Base,Traits,Comp>::m_branch_insert(
 
     branch_iterator unsplit_end(detail::advance_by_size(pg->branch().begin(),
       pg->branch().size() / 2));
-    branch_iterator split_begin;
-    split_begin = unsplit_end;
-    ++split_begin;
+    branch_iterator split_begin(unsplit_end+1);
     std::size_t split_sz = char_distance(&*split_begin, char_ptr(&*pg->branch().end()) 
       + sizeof(page_id_type));  // include the end pseudo-element page_id
 
@@ -1254,13 +1250,14 @@ vbtree_base<Key,Base,Traits,Comp>::m_branch_insert(
     // finalize work on the original page
     std::memset(&unsplit_end->key(), 0,  // zero unused space to make file dumps easier to read
       char_distance(&unsplit_end->key(), &pg->branch().end()->key())); 
-    pg->size(char_distance(pg->branch().begin(), &*unsplit_end));
+    pg->size(char_distance(&*pg->branch().begin(), &*unsplit_end));
 
     // adjust pg and insert_begin if they now fall on the new page due to the split
-    if (split_begin < insert_begin)
+    if (&split_begin->key() < insert_begin)
     {
       pg = pg2.get();
-      insert_begin = pg2->branch().begin() + char_distance(split_begin, insert_begin);
+      BOOST_ASSERT(false);
+//      insert_begin = pg2->branch().begin() + char_distance(split_begin, insert_begin);
     }
   }
 
