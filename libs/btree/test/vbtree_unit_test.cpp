@@ -741,118 +741,130 @@ void insert()
   cout << "    insert complete" << endl;
 }
 
-////---------------------------------- find_and_bounds -----------------------------------//
-//
-//template <class VT>
-//VT make_value(int i);
-//
-//template<> std::pair<const fat, int>
-//make_value<std::pair<const fat, int> >(int i)
-//{ return std::make_pair<const fat, int>(fat(i), 0); }
-//
-//template<> int
-//make_value<int>(int i)
-//{ return i; }
-//
-//template<> fat
-//make_value<fat>(int i)
-//{ return fat(i); }
-//
-//template <class BTree>
-//void find_and_bounds_tests(BTree& bt)
-//{
-//  cout << "  testing \"" << bt.file_path().string() << "\" ..." << endl;
-//
-//  for (int i = 1; i < 18; i += 2)
-//  {
-//    typename BTree::value_type v = make_value<typename BTree::value_type>(i);
-//    bt.insert(v);
-//  }
-//
-//  BOOST_TEST_EQ(bt.size(), 9U);
-//
-//  if (bt.header().flags() & btree::flags::multi)
-//  {
-//    bt.insert(make_value<typename BTree::value_type>(3));
-//    bt.insert(make_value<typename BTree::value_type>(7));
-//    bt.insert(make_value<typename BTree::value_type>(7));
-//    for (int i = 0; i < 10; ++i)
-//      bt.insert(make_value<typename BTree::value_type>(15));
-//
-//    BOOST_TEST_EQ(bt.size(), 22U);
-//  }
-//
-//  //             i =   0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18
-//  const int  lwr[] = { 1, 1, 3, 3, 5, 5, 7, 7, 9, 9, 11, 11, 13, 13, 15, 15, 17, 17, -1};
-//  const int  upr[] = { 1, 3, 3, 5, 5, 7, 7, 9, 9,11, 11, 13, 13, 15, 15, 17, 17, -1, -1};
-//  const int  fnd[] = {-1, 1,-1, 3,-1, 5,-1, 7,-1, 9, -1, 11, -1, 13, -1, 15, -1, 17, -1};
-//  const unsigned
-//             cnt[] = { 0, 1, 0, 2, 0, 1, 0, 3, 0, 1,  0,  1,  0,  1,  0, 11,  0,  1,  0};
-//
-//  for (int i = 0; i <= 18; ++i)
-//  {
-//    BOOST_TEST((bt.lower_bound(i) != bt.end() && bt.key(*bt.lower_bound(i)) == lwr[i])
-//      || (bt.lower_bound(i) == bt.end() && lwr[i] == -1));
-//
-//    BOOST_TEST((bt.upper_bound(i) != bt.end() && bt.key(*bt.upper_bound(i)) == upr[i])
-//      || (bt.upper_bound(i) == bt.end() && upr[i] == -1));
-//
-//    BOOST_TEST((bt.find(i) != bt.end() && bt.key(*bt.find(i)) == fnd[i])
-//      || (bt.find(i) == bt.end() && fnd[i] == -1));
-//
-//    if (bt.header().flags() & btree::flags::multi)
-//      BOOST_TEST(bt.count(i) == cnt[i]);
-//    else
-//      BOOST_TEST(bt.count(i) == (cnt[i] ? 1 : 0));
-//
-////    cout << "      i = " << i << ", bt.count(i) = " << bt.count(i) <<endl;
-//  }
-//
-//  cout << "  testing \"" << bt.file_path().string() << "\" complete" << endl;
-//}
-//
-//void find_and_bounds()
-//{
-//  cout << "  find_and_bounds..." << endl;
-//
-//  //  these tests use a value type that is large relative to the page size, thus stressing
-//  //  the code by causing a lot of page splits 
-//
-//  {
-//    btree::vbtree_map<fat, int> map("find_and_bounds_map.btr",
-//      btree::flags::truncate, 128);
-//    BOOST_TEST(map.header().flags() == 0);
-//    map.max_cache_pages(0);  // maximum stress
-//    find_and_bounds_tests(map);
-//  }
-//
-//  {
-//    btree::vbtree_multimap<fat, int> multimap("find_and_bounds_multimap.btr",
-//      btree::flags::truncate, 128);
-//    BOOST_TEST(multimap.header().flags() == btree::flags::multi);
-//    multimap.max_cache_pages(0);  // maximum stress
-//    find_and_bounds_tests(multimap);
-//  }
-//
-//  {
-//    btree::vbtree_set<int> set("find_and_bounds_set.btr",
-//      btree::flags::truncate, 128);
-//    BOOST_TEST(set.header().flags() == btree::flags::key_only);
-//    set.max_cache_pages(0);  // maximum stress
-//    find_and_bounds_tests(set);
-//  }
-//
-//  {
-//    btree::vbtree_multiset<int> multiset("find_and_bounds_multiset.btr",
-//      btree::flags::truncate, 128);
-//    BOOST_TEST(multiset.header().flags() == (btree::flags::key_only | btree::flags::multi));
-//    multiset.max_cache_pages(0);  // maximum stress
-//    find_and_bounds_tests(multiset);
-//  }
-//
-//  cout << "    find_and_bounds complete" << endl;
-//}
-//
+//---------------------------------- find_and_bounds -----------------------------------//
+
+class fat_int_value : public btree::vbtree_value<const fat, const int>
+{
+public:
+  fat_int_value(int i) : _fat(i), _int(i << 8) {}
+private:
+  fat _fat;
+  int _int;
+};
+
+template <class VT>
+VT make_value(int i);
+
+template<> btree::vbtree_value<const fat, const int>
+make_value<btree::vbtree_value<const fat, const int> >(int i)
+{
+  return fat_int_value(i);
+}
+
+template<> int
+make_value<int>(int i)
+{ return i; }
+
+template<> fat
+make_value<fat>(int i)
+{ return fat(i); }
+
+template <class BTree>
+void find_and_bounds_tests(BTree& bt)
+{
+  cout << "  testing \"" << bt.file_path().string() << "\" ..." << endl;
+
+  for (int i = 1; i < 18; i += 2)
+  {
+    //typename BTree::value_type v = make_value<typename BTree::value_type>(i);
+    //bt.insert(v);
+    bt.insert(make_value<typename BTree::value_type>(i));
+  }
+
+  BOOST_TEST_EQ(bt.size(), 9U);
+
+  if (bt.header().flags() & btree::flags::multi)
+  {
+    bt.insert(make_value<typename BTree::value_type>(3));
+    bt.insert(make_value<typename BTree::value_type>(7));
+    bt.insert(make_value<typename BTree::value_type>(7));
+    for (int i = 0; i < 10; ++i)
+      bt.insert(make_value<typename BTree::value_type>(15));
+
+    BOOST_TEST_EQ(bt.size(), 22U);
+  }
+
+  //             i =   0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18
+  const int  lwr[] = { 1, 1, 3, 3, 5, 5, 7, 7, 9, 9, 11, 11, 13, 13, 15, 15, 17, 17, -1};
+  const int  upr[] = { 1, 3, 3, 5, 5, 7, 7, 9, 9,11, 11, 13, 13, 15, 15, 17, 17, -1, -1};
+  const int  fnd[] = {-1, 1,-1, 3,-1, 5,-1, 7,-1, 9, -1, 11, -1, 13, -1, 15, -1, 17, -1};
+  const unsigned
+             cnt[] = { 0, 1, 0, 2, 0, 1, 0, 3, 0, 1,  0,  1,  0,  1,  0, 11,  0,  1,  0};
+
+  for (int i = 0; i <= 18; ++i)
+  {
+    BOOST_TEST((bt.lower_bound(i) != bt.end() && bt.key(*bt.lower_bound(i)) == lwr[i])
+      || (bt.lower_bound(i) == bt.end() && lwr[i] == -1));
+
+    BOOST_TEST((bt.upper_bound(i) != bt.end() && bt.key(*bt.upper_bound(i)) == upr[i])
+      || (bt.upper_bound(i) == bt.end() && upr[i] == -1));
+
+    BOOST_TEST((bt.find(i) != bt.end() && bt.key(*bt.find(i)) == fnd[i])
+      || (bt.find(i) == bt.end() && fnd[i] == -1));
+
+    if (bt.header().flags() & btree::flags::multi)
+      BOOST_TEST(bt.count(i) == cnt[i]);
+    else
+      BOOST_TEST(bt.count(i) == (cnt[i] ? 1 : 0));
+
+//    cout << "      i = " << i << ", bt.count(i) = " << bt.count(i) <<endl;
+  }
+
+  cout << "  testing \"" << bt.file_path().string() << "\" complete" << endl;
+}
+
+void find_and_bounds()
+{
+  cout << "  find_and_bounds..." << endl;
+
+  {
+    btree::vbtree_set<int> set("find_and_bounds_set.btr",
+      btree::flags::truncate, 128);
+    BOOST_TEST(set.header().flags() == btree::flags::key_only);
+    set.max_cache_pages(0);  // maximum stress
+    find_and_bounds_tests(set);
+  }
+
+  {
+    btree::vbtree_multiset<int> multiset("find_and_bounds_multiset.btr",
+      btree::flags::truncate, 128);
+    BOOST_TEST(multiset.header().flags() == (btree::flags::key_only | btree::flags::multi));
+    multiset.max_cache_pages(0);  // maximum stress
+    find_and_bounds_tests(multiset);
+  }
+
+  //  these tests use a value type that is large relative to the page size, thus stressing
+  //  the code by causing a lot of page splits 
+
+  {
+    btree::vbtree_map<fat, int> map("find_and_bounds_map.btr",
+      btree::flags::truncate, 128);
+    BOOST_TEST(map.header().flags() == 0);
+    map.max_cache_pages(0);  // maximum stress
+    find_and_bounds_tests(map);
+  }
+
+  {
+    btree::vbtree_multimap<fat, int> multimap("find_and_bounds_multimap.btr",
+      btree::flags::truncate, 128);
+    BOOST_TEST(multimap.header().flags() == btree::flags::multi);
+    multimap.max_cache_pages(0);  // maximum stress
+    find_and_bounds_tests(multimap);
+  }
+
+  cout << "    find_and_bounds complete" << endl;
+}
+
 ////---------------------------------- insert_non_unique -----------------------------------//
 //
 //template <class BTree>
@@ -1023,7 +1035,7 @@ int cpp_main(int, char*[])
   //alignment();
   insert();
   //insert_non_unique();
-  //find_and_bounds();
+  find_and_bounds();
   //erase();
   //iteration();
   //multi();

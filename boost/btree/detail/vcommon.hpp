@@ -1503,14 +1503,9 @@ vbtree_base<Key,Base,Traits,Comp>::m_lower_page_bound(const key_type& k)
   {
     branch_iterator low
       = std::lower_bound(pg->branch().begin(), pg->branch().end(), k, branch_comp());
-    //BOOST_ASSERT_MSG(false, "--low not implemented yet");
-    //if (low == pg->branch().end()      // all keys on page < search key, so low
-    //                                   // must point to last value on page
-    //  || key_comp()(k, low->first()))  // search key < low key, so low
-    //                                   // must point to P0 pseudo-value
-    //  --low;
-    btree_page_ptr child_pg;
+
     // create the ephemeral child->parent list
+    btree_page_ptr child_pg;
     child_pg = m_mgr.read(low->page_id());  // mapped_value() is page_id
     child_pg->parent(pg.get());
     child_pg->parent_element(low);
@@ -1541,13 +1536,6 @@ vbtree_base<Key,Base,Traits,Comp>::lower_bound(const key_type& k) const
   {
     branch_iterator low
       = std::lower_bound(pg->branch().begin(), pg->branch().end(), k, branch_comp());
-
-    //pg = (low == pg->branch().end()           // all keys on page < search key
-    //      || key_comp()(k, low->key())          // search key < low key
-    //      || ((m_hdr.flags() & btree::flags::multi)
-    //          && !key_comp()(low->key(), k) ))  // non-unique && search key == low key
-    //  ? m_mgr.read(prior_page_id(low))
-    //  : m_mgr.read(low->mapped_value());
     pg = m_mgr.read(low->page_id());
   }
 
@@ -1585,14 +1573,15 @@ vbtree_base<Key,Base,Traits,Comp>::m_upper_page_bound(const key_type& k)
   {
     branch_iterator up
       = std::upper_bound(pg->branch().begin(), pg->branch().end(), k, branch_comp());
-    if (up == pg->branch().end()        // all keys on page < search key, so up
-                                      // must point to last value on page
-      || key_comp()(k, up->key))      // search key < up key, so up
-                                      // must point to P0 pseudo-value
-      --up;
-    btree_page_ptr child_pg;
+    //if (up == pg->branch().end()        // all keys on page < search key, so up
+    //                                  // must point to last value on page
+    //  || key_comp()(k, up->key))      // search key < up key, so up
+    //                                  // must point to P0 pseudo-value
+    //  --up;
+
     // create the ephemeral child->parent list
-    child_pg = m_mgr.read(up->page_id);
+    btree_page_ptr child_pg;
+    child_pg = m_mgr.read(up->page_id());
     child_pg->parent(pg.get());
     child_pg->parent_element(up);
 #   ifndef NDEBUG
@@ -1623,10 +1612,11 @@ vbtree_base<Key,Base,Traits,Comp>::upper_bound(const key_type& k) const
     branch_iterator up
       = std::upper_bound(pg->branch().begin(), pg->branch().end(), k, branch_comp());
 
-    pg = (up == pg->branch().end()        // all keys on page < search key
-          || key_comp()(k, up->key))    // search key < up key
-      ? m_mgr.read(prior_page_id(up))
-      : m_mgr.read(up->page_id);
+    //pg = (up == pg->branch().end()        // all keys on page < search key
+    //      || key_comp()(k, up->key()))    // search key < up key
+    //  ? m_mgr.read(prior_page_id(up))
+    //  : m_mgr.read(up->page_id);
+    pg = m_mgr.read(up->page_id());
   }
 
   //  search leaf
