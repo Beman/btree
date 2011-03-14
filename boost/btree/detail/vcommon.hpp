@@ -511,10 +511,10 @@ private:
   {
     friend class vbtree_base;
   public:
-    page_id_type         prior_page_id() const           {return m_prior_page_id;}
-    void                 prior_page_id(page_id_type id)  {m_prior_page_id = id;}
-    page_id_type         next_page_id() const            {return m_next_page_id;}
-    void                 next_page_id(page_id_type id)   {m_next_page_id = id;}
+    page_id_type   prior_page_id() const           {return m_prior_page_id;}
+    void           prior_page_id(page_id_type id)  {m_prior_page_id = id;}
+    page_id_type   next_page_id() const            {return m_next_page_id;}
+    void           next_page_id(page_id_type id)   {m_next_page_id = id;}
     leaf_iterator  begin()      { return leaf_iterator(m_value);}
     leaf_iterator  end()        { return leaf_iterator(m_value, size()); }
 
@@ -611,6 +611,7 @@ private:
     bool               is_branch() const     {return leaf().m_level != 0;}
     std::size_t        size() const          {return leaf().m_size;}  // std::size_t is correct!
     void               size(std::size_t sz)  {leaf().m_size = sz;}    // ditto
+    bool               empty() const         {return leaf().m_size == 0;}
 
   private:
     btree_page*         m_parent;   // by definition, the parent is a branch page.
@@ -1285,137 +1286,140 @@ vbtree_base<Key,Base,Traits,Comp>::m_branch_insert(
 #endif
 }
 
-//------------------------------ m_erase_branch_value() --------------------------------//
-
-template <class Key, class Base, class Traits, class Comp>   
-void vbtree_base<Key,Base,Traits,Comp>::m_erase_branch_value(
-  btree_page* pg, branch_iterator value)
-{
-  //BOOST_ASSERT(pg->is_branch());
-  //if (pg->branch().begin() == pg->branch().end()) // P0 pseudo-value only value on page?
-  //                                            // i.e. the entire sub-tree is now empty
-  //{
-  //  BOOST_ASSERT(value < pg->branch().begin());
-  //  BOOST_ASSERT(pg->level() != header().root_level());
-  //  BOOST_ASSERT(pg->parent()->page_id() == pg->parent_page_id()); // max_cache_size logic OK?
-  //  m_erase_branch_value(pg->parent(),
-  //    pg->parent_element()); // erase parent value pointing to pg
-  //  m_free_page(pg); // move page to free page list
-  //}
-  //else
-  //{
-  //  // erase branch_value that is not on a P0-only page
-  //  char* erase_point = (char*)value;
-  //  if (value < pg->branch().begin()) // is value the P0 pseudo-value?
-  //     erase_point = (char*)&value->page_id;
-  //  std::size_t memmove_sz = (char*)pg->branch().end()
-  //    - erase_point - sizeof(branch_value_type);
-  //  std::memmove(erase_point, erase_point+sizeof(branch_value_type), memmove_sz);
-  //  pg->size(pg->size()-1);
-  //  std::memset(pg->branch().end(), 0, sizeof(branch_value_type));
-  //  pg->needs_write(true);
-
-  //  while (pg->level()   // not the leaf (which can happen if iteration reaches leaf)
-  //    && pg->branch().begin() == pg->branch().end()  // page empty except for P0
-  //    && pg->level() == header().root_level())   // page is the root
-  //  {
-  //    // make P0 the new root and then free this page
-  //    m_hdr.root_page_id((pg->branch().begin()-1)->page_id);
-  //    m_root = m_mgr.read(header().root_page_id());
-  //    m_hdr.decrement_root_level();
-  //    m_free_page(pg); // move page to free page list
-  //    pg = m_root.get();
-  //  }
-  //}
-}
-
 //------------------------------------- erase() ----------------------------------------//
 
 template <class Key, class Base, class Traits, class Comp>   
 typename vbtree_base<Key,Base,Traits,Comp>::const_iterator
 vbtree_base<Key,Base,Traits,Comp>::erase(const_iterator pos)
 {
-  //BOOST_ASSERT_MSG(is_open(), "erase() on unopen btree");
-  //BOOST_ASSERT_MSG(pos != end(), "erase() on end iterator");
-  //BOOST_ASSERT(pos.m_page);
-  //BOOST_ASSERT(pos.m_page->is_leaf());
-  //BOOST_ASSERT(pos.m_element < pos.m_page->leaf().end());
-  //BOOST_ASSERT(pos.m_element >= pos.m_page->leaf().begin());
+  BOOST_ASSERT_MSG(is_open(), "erase() on unopen btree");
+  BOOST_ASSERT_MSG(pos != end(), "erase() on end iterator");
+  BOOST_ASSERT(pos.m_page);
+  BOOST_ASSERT(pos.m_page->is_leaf());
+  BOOST_ASSERT(&*pos.m_element < &*pos.m_page->leaf().end());
+  BOOST_ASSERT(&*pos.m_element >= &*pos.m_page->leaf().begin());
 
-  // m_ok_to_pack = false;
+  m_ok_to_pack = false;  // TODO: is this too conservative?
 
-  //if (pos.m_page->page_id() != m_root->page_id()  // not root?
-  //  && (pos.m_page->size() == 1))  // only 1 value on page?
-  //{
-  //  // erase a single value leaf page that is not the root
-  //  
-  //  // establish the parent chain back to the root; the parent chain must be established
-  //  // since the page may have been reached by iteration, and also because any existing
-  //  // parent chain might have been invalidated by inserts or erases of common ancestors.
+  if (pos.m_page->page_id() != m_root->page_id()  // not root?
+    && (pos.m_page->size() == dynamic_size(*pos.m_page->leaf().begin())))  // only 1 value on page?
+  {
+    // erase a single value leaf page that is not the root
+    
+    // establish the parent chain back to the root; the parent chain must be established
+    // since the page may have been reached by iteration, and also because any existing
+    // parent chain might have been invalidated by inserts or erases of common ancestors.
 
-  //  iterator low = m_lower_page_bound(key(*pos));
-  //  BOOST_ASSERT(low.m_page->page_id() == pos.m_page->page_id());
-  //  BOOST_ASSERT(low.m_element == pos.m_element);
+    iterator low = m_lower_page_bound(key(*pos));
+    BOOST_ASSERT(low.m_page->page_id() == pos.m_page->page_id());
+    BOOST_ASSERT(low.m_element == pos.m_element);
 
-  //  low.m_page->needs_write(true);
+    low.m_page->needs_write(true);
 
-  //  BOOST_ASSERT(low.m_page->parent()->page_id() \
-  //    == low.m_page->parent_page_id()); // max_cache_size logic OK?
-  //  m_erase_branch_value(low.m_page->parent(), low.m_page->parent_element());
+    BOOST_ASSERT(low.m_page->parent()->page_id() \
+      == low.m_page->parent_page_id()); // max_cache_size logic OK?
+    m_erase_branch_value(low.m_page->parent(), low.m_page->parent_element());
 
-  //  m_hdr.decrement_element_count();
+    m_hdr.decrement_element_count();
 
-  //  ++pos;  // increment iterator to be returned before killing the page
-  //  BOOST_ASSERT(pos.m_page != low.m_page);  // logic check: ++pos moved to next page
+    ++pos;  // increment iterator to be returned before killing the page
+    BOOST_ASSERT(pos.m_page != low.m_page);  // logic check: ++pos moved to next page
 
-  //  // cut the page out of the page sequence list
-  //  btree_page_ptr link_pg;
-  //  if (low.m_page->leaf().prior_page_id())
-  //  {
-  //    link_pg = m_mgr.read(low.m_page->leaf().prior_page_id()); // prior page
-  //    link_pg->leaf().next_page_id(low.m_page->leaf().next_page_id());
-  //    link_pg->needs_write(true);
-  //  }
-  //  else
-  //    m_hdr.first_page_id(low.m_page->leaf().next_page_id());
-  //  if (low.m_page->leaf().next_page_id())
-  //  {
-  //    link_pg = m_mgr.read(low.m_page->leaf().next_page_id()); // next page
-  //    link_pg->leaf().prior_page_id(low.m_page->leaf().prior_page_id());
-  //    link_pg->needs_write(true);
-  //  }
-  //  else
-  //    m_hdr.last_page_id(low.m_page->leaf().prior_page_id());
+    // cut the page out of the page sequence list
+    btree_page_ptr link_pg;
+    if (low.m_page->leaf().prior_page_id())
+    {
+      link_pg = m_mgr.read(low.m_page->leaf().prior_page_id()); // prior page
+      link_pg->leaf().next_page_id(low.m_page->leaf().next_page_id());
+      link_pg->needs_write(true);
+    }
+    else
+      m_hdr.first_page_id(low.m_page->leaf().next_page_id());
+    if (low.m_page->leaf().next_page_id())
+    {
+      link_pg = m_mgr.read(low.m_page->leaf().next_page_id()); // next page
+      link_pg->leaf().prior_page_id(low.m_page->leaf().prior_page_id());
+      link_pg->needs_write(true);
+    }
+    else
+      m_hdr.last_page_id(low.m_page->leaf().prior_page_id());
 
-  //  m_free_page(low.m_page.get());  // add page to free page list
+    m_free_page(low.m_page.get());  // add page to free page list
 
-  //  return pos;
-  //}
+    return pos;
+  }
 
-  //// erase an element from a leaf with multiple elements or erase the only element
-  //// on a leaf that is also the root; these use the same logic because they do not remove
-  //// the page from the tree.
+  // erase an element from a leaf with multiple elements or erase the only element
+  // on a leaf that is also the root; these use the same logic because they do not remove
+  // the page from the tree.
 
-  //value_type* erase_point = const_cast<value_type*>(pos.m_element);
-  //std::size_t memmove_sz = (pos.m_page->leaf().end() - erase_point - 1) * sizeof(value_type);
-  //std::memmove(erase_point, (const char*)erase_point + sizeof(value_type), memmove_sz);
-  //pos.m_page->size(pos.m_page->size()-1);
-  //std::memset(pos.m_page->leaf().end(), 0, sizeof(value_type));
-  //m_hdr.decrement_element_count();
-  //pos.m_page->needs_write(true);
+  value_type* erase_point = &*pos.m_element;
+  std::size_t erase_sz = dynamic_size(*erase_point);
+  std::size_t move_sz = char_ptr(&*pos.m_page->leaf().end())
+    - (char_ptr(erase_point) + erase_sz); 
+  std::memmove(erase_point, char_ptr(erase_point) + erase_sz, move_sz);
+  pos.m_page->size(pos.m_page->size() - erase_sz);
+  std::memset(&*pos.m_page->leaf().end(), 0, erase_sz);
+  m_hdr.decrement_element_count();
+  pos.m_page->needs_write(true);
 
-  //if (!memmove_sz)  // at end of page?
-  //{
-  //  --pos.m_element;  // make pos incrementable so ++pos can be used to advance to next
-  //  if (pos.m_element < pos.m_page->leaf().begin()) // is page empty?
-  //  {
-  //    BOOST_ASSERT(empty());  // logic check: the page is empty, implying page is an empty
-  //                            // root; i.e. the tree is empty
-  //    return end();
-  //  }
-  //  ++pos;
-  //}
-  //return pos; 
+  if (erase_point == &*pos.m_page->leaf().end())  // was the element before the old end()
+                                                  // just erased?
+  {
+    if (pos.m_page->empty())  // is the page empty, implying the page is an empty root?
+    {
+      BOOST_ASSERT(empty());  // "erase a single value leaf page that is not the root"
+                              // logic as start of function should have taken care of
+                              // cases that don't empty the tree
+      return end();
+    }
+
+    --pos.m_element;  // make pos incrementable so ++pos can be used to advance to next page
+    ++pos;            // advance to first element on next page
+  }
+  return pos; 
+}
+
+//------------------------------ m_erase_branch_value() --------------------------------//
+
+template <class Key, class Base, class Traits, class Comp>   
+void vbtree_base<Key,Base,Traits,Comp>::m_erase_branch_value(
+  btree_page* pg, branch_iterator element)
+{
+  BOOST_ASSERT(pg->is_branch());
+  if (pg->empty()) // end pseudo-element only element on page?
+                   // i.e. the entire sub-tree is now empty
+  {
+    BOOST_ASSERT(pg->level() != header().root_level());
+    BOOST_ASSERT(pg->parent()->page_id() == pg->parent_page_id()); // max_cache_size logic OK?
+    m_erase_branch_value(pg->parent(),
+      pg->parent_element()); // erase parent value pointing to pg
+    m_free_page(pg); // move page to free page list
+  }
+  else
+  {
+    // value that is not on a end pseudo-element-only page
+    branch_value_type* erase_point = &*element;
+    std::size_t erase_sz = dynamic_size(*erase_point);
+    std::size_t move_sz = char_ptr(&*pg->leaf().end())
+      - (char_ptr(erase_point) + erase_sz) + sizeof(page_id_type); 
+    std::memmove(erase_point, char_ptr(erase_point) + erase_sz, move_sz);
+    pg->size(pg->size() - erase_sz);
+    std::memset(char_ptr(&pg->leaf().end()) + sizeof(page_id_type), 0, erase_sz);
+    pg->needs_write(true);
+
+    while (pg->level()   // not the leaf (which can happen if iteration reaches leaf)
+      && pg->branch().begin() == pg->branch().end()  // page empty except for P0
+      && pg->level() == header().root_level())   // page is the root
+    {
+      // make the end pseudo-element the new root and then free this page
+      m_hdr.root_page_id(pg->branch().end()->page_id());
+      m_root = m_mgr.read(header().root_page_id());
+      m_hdr.decrement_root_level();
+      m_free_page(pg); // move page to free page list
+      pg = m_root.get();
+    }
+  }
 }
 
 template <class Key, class Base, class Traits, class Comp>   
