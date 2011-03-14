@@ -42,8 +42,8 @@ namespace boost
     {
       typedef boost::uint32_t  page_id_type;     // page ids
       typedef boost::uint16_t  page_size_type;   // sizes
-      typedef boost::uint16_t  page_level_type;  // level of page; 0 for leaf page
-                                                 // could be smaller, but that would
+      typedef boost::uint16_t  page_level_type;  // level of page; 0 for leaf page.
+                                                 // Could be smaller, but that would
                                                  // require alignment byte so why bother
       static const BOOST_SCOPED_ENUM(integer::endianness) header_endianness
 #   ifdef BOOST_BIG_ENDIAN
