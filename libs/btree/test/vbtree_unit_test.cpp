@@ -654,47 +654,47 @@ void insert_tests(BTree& bt)
 
   BOOST_TEST_EQ(bt.last()->key().x, 0x0E);
 
-  //// delete and retest
+  // erase tests
 
-  //cur = bt.find(0x0C);
-  //cur = bt.erase(cur);
+  cur = bt.find(0x0C);
+  cur = bt.erase(cur);
 
-  //BOOST_TEST_EQ(cur->first.x, 0x0D);
-  //BOOST_TEST_EQ(bt.size(), 4U);
+  BOOST_TEST_EQ(cur->key().x, 0x0D);
+  BOOST_TEST_EQ(bt.size(), 4U);
 
-  //cur = bt.find(0x0B);
-  //cur = bt.erase(cur);
+  cur = bt.find(0x0B);
+  cur = bt.erase(cur);
 
-  //BOOST_TEST_EQ(cur->first.x, 0x0D);
-  //BOOST_TEST_EQ(bt.size(), 3U);
+  BOOST_TEST_EQ(cur->key().x, 0x0D);
+  BOOST_TEST_EQ(bt.size(), 3U);
 
-  //cur = bt.find(0x0E);
-  //cur = bt.erase(cur);
+  cur = bt.find(0x0E);
+  cur = bt.erase(cur);
 
-  //BOOST_TEST(cur == bt.end());
-  //BOOST_TEST_EQ(bt.size(), 2U);
-  //BOOST_TEST_EQ(bt.header().root_page_id(), 2U);
-  //BOOST_TEST_EQ(bt.header().root_level(), 1);
+  BOOST_TEST(cur == bt.end());
+  BOOST_TEST_EQ(bt.size(), 2U);
+  BOOST_TEST_EQ(bt.header().root_page_id(), 2U);
+  BOOST_TEST_EQ(bt.header().root_level(), 1);
 
-  //cur = bt.find(0x0A);
-  //cur = bt.erase(cur);
+  cur = bt.find(0x0A);
+  cur = bt.erase(cur);
 
-  //BOOST_TEST(cur != bt.end());
-  //BOOST_TEST_EQ(cur->first.x, 0x0D);
-  //BOOST_TEST(bt.begin() == cur);
-  //BOOST_TEST_EQ(bt.size(), 1U);
-  //BOOST_TEST_EQ(bt.header().root_page_id(), 4U);
-  //BOOST_TEST_EQ(bt.header().root_level(), 0);
+  BOOST_TEST(cur != bt.end());
+  BOOST_TEST_EQ(cur->key().x, 0x0D);
+  BOOST_TEST(bt.begin() == cur);
+  BOOST_TEST_EQ(bt.size(), 1U);
+  BOOST_TEST_EQ(bt.header().root_page_id(), 4U);
+  BOOST_TEST_EQ(bt.header().root_level(), 0);
  
 
-  //cur = bt.find(0x0D);
-  //cur = bt.erase(cur);
+  cur = bt.find(0x0D);
+  cur = bt.erase(cur);
 
-  //BOOST_TEST(cur == bt.end());
-  //BOOST_TEST(bt.begin() == bt.end());
-  //BOOST_TEST_EQ(bt.size(), 0U);
-  //BOOST_TEST_EQ(bt.header().root_page_id(), 4U);
-  //BOOST_TEST_EQ(bt.header().root_level(), 0);
+  BOOST_TEST(cur == bt.end());
+  BOOST_TEST(bt.begin() == bt.end());
+  BOOST_TEST_EQ(bt.size(), 0U);
+  BOOST_TEST_EQ(bt.header().root_page_id(), 4U);
+  BOOST_TEST_EQ(bt.header().root_level(), 0);
 
 
   //for (int i = 0xff01; i <= 0xff01+20; ++i )
@@ -1035,7 +1035,7 @@ int cpp_main(int, char*[])
   //alignment();
   insert();
   //insert_non_unique();
-  find_and_bounds();
+  //find_and_bounds();
   //erase();
   //iteration();
   //multi();
