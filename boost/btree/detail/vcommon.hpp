@@ -85,10 +85,14 @@ public:
 };
 
 template <class T1, class T2>
-inline std::size_t dynamic_size(const vbtree_value<T1, T2>& x) {return x.dynamic_size();}
+std::ostream& operator<<(std::ostream& os, const vbtree_value<T1, T2>& x)
+{
+  os << x.key() << ',' << x.mapped_value();
+  return os;
+}
 
-//std::size_t size(const char* s) { return std::strlen(s) + 1; }
-//std::size_t size(char* s)       { return std::strlen(s) + 1; }
+template <class T1, class T2>
+inline std::size_t dynamic_size(const vbtree_value<T1, T2>& x) {return x.dynamic_size();}
 
 //  less function object class
 
@@ -395,6 +399,7 @@ public:
   const header_page& header() const         {BOOST_ASSERT(is_open());
                                               return m_hdr;
                                             }
+  void   dump_dot(std::ostream& os) const; // dump tree using Graphviz dot format
 
   // capacity:
 
@@ -492,10 +497,10 @@ private:
   class btree_data
   {
   public:
-    int              level() const         {return m_level;}
-    void             level(int lv)         {m_level = lv;}
+    unsigned         level() const         {return m_level;}
+    void             level(unsigned lv)    {m_level = lv;}
     bool             is_leaf() const       {return m_level == 0;}
-    bool             is_branch() const     {return m_level != 0;}
+    bool             is_branch() const     {return m_level > 0 && m_level < 0xFFFEU;}
     std::size_t      size() const          {return m_size;}  // std::size_t is correct!
     void             size(std::size_t sz)  {m_size = sz;}    // ditto
 
@@ -605,10 +610,10 @@ private:
     leaf_data&         leaf()       {return *reinterpret_cast<leaf_data*>(buffer::data());}
     const leaf_data&   leaf() const {return *reinterpret_cast<const leaf_data*>(buffer::data());}
     branch_data&       branch()     {return *reinterpret_cast<branch_data*>(buffer::data());}
-    int                level() const         {return leaf().m_level;}
-    void               level(int lv)         {leaf().m_level = lv;}
-    bool               is_leaf() const       {return leaf().m_level == 0;}
-    bool               is_branch() const     {return leaf().m_level != 0;}
+    unsigned           level() const         {return leaf().m_level;}
+    void               level(unsigned lv)    {leaf().m_level = lv;}
+    bool               is_leaf() const       {return leaf().is_leaf();}
+    bool               is_branch() const     {return leaf().is_branch();}
     std::size_t        size() const          {return leaf().m_size;}  // std::size_t is correct!
     void               size(std::size_t sz)  {leaf().m_size = sz;}    // ditto
     bool               empty() const         {return leaf().m_size == 0;}
@@ -1664,6 +1669,55 @@ vbtree_base<Key,Base,Traits,Comp>::count(const key_type& k) const
         ++it) { ++count; } 
 
   return count;
+}
+
+//----------------------------------- dump_dot -----------------------------------------//
+
+template <class Key, class Base, class Traits, class Comp>   
+void vbtree_base<Key,Base,Traits,Comp>::dump_dot(std::ostream& os) const
+{
+  BOOST_ASSERT_MSG(is_open(), "dump_dot() on unopen btree");
+  os << "digraph btree {\n"
+    "node [shape = record,height=.1];\n";
+
+  for (unsigned int p = 1; p < header().page_count(); ++p)
+  {
+    btree_page_ptr pg = m_mgr.read(p);
+
+    if (pg->is_leaf())
+    {
+      os << "page" << p << "[label = \"<f0> ";
+      for (leaf_iterator it = pg->leaf().begin(); it != pg->leaf().end(); ++it)
+      {
+        if (it != pg->leaf().begin())
+          os << '|';
+        os << *it;
+      }
+      os << "\"];\n";
+    }
+    else if (pg->is_branch())
+    {
+      os << "page" << p << "[label = \"";
+      int f = 0;
+      branch_iterator it;
+      for (it = pg->branch().begin(); it != pg->branch().end(); ++it)
+      {
+        os << "<f" << f << "> " << it->page_id() << "," << it->key() << "|";
+        ++f;
+      }
+      os << "<f" << f << "> " << it->page_id();
+      os << "\"];\n";
+      f = 0;
+      for (it = pg->branch().begin(); it != pg->branch().end(); ++it)
+      {
+        os << "\"page" << p << "\":f" << f << " -> \"page" << it->page_id() << "\":f0;\n";
+        ++f;
+      }
+    os << "\"page" << p << "\":f" << f << " -> \"page" << it->page_id() << "\":f0;\n";
+    }
+  }
+
+  os << "}" << std::endl;
 }
 
 ////  non-member functions  ----------------------------------------------------//

@@ -53,6 +53,12 @@ namespace
     bool operator!=(const fat& rhs) const {return x != rhs.x;}
   };
 
+  std::ostream& operator<<(std::ostream& os, const fat& f)
+  {
+    os << f.x;
+    return os;
+  }
+
   class c_str_pair : public btree::vbtree_value<const int, const int>
   {
   public:
@@ -119,7 +125,8 @@ namespace
       return *this;
     }
 
-    std::size_t size() const {return _size + 1 + sizeof(_size);}
+    std::size_t  size() const  {return _size + 1 + sizeof(_size);}
+    const char*  c_str() const {return _buf;}
 
     bool operator==(const c_string_buf& rhs) const {return std::strcmp(_buf, rhs._buf) == 0;}
     bool operator!=(const c_string_buf& rhs) const {return std::strcmp(_buf, rhs._buf) != 0;}
@@ -132,6 +139,12 @@ namespace
     boost::uint8_t  _size;  // std::strlen(_buf); for speed, particularly on large strings 
     char            _buf[max_size+1];
   };
+
+  std::ostream& operator<<(std::ostream& os, const c_string_buf& x)
+  {
+    os << x.c_str();
+    return os;
+  }
 
 }  // unnamed namespace
 
@@ -370,6 +383,8 @@ void open_existing()
   BOOST_TEST_EQ(bt2.header().element_count(), 3U);
   BOOST_TEST_EQ(bt2.header().page_size(), 128U);
 
+  bt2.dump_dot(std::cout);
+
   // TODO: test each header value
 
   cout << "    open_existing complete" << endl;
@@ -410,6 +425,8 @@ void small_variable_set()
   BOOST_TEST_EQ(bt.page_size(), 128U);
   BOOST_TEST_EQ(bt.header().element_count(), 8U);
   BOOST_TEST_EQ(bt.header().page_size(), 128U);
+
+  bt.dump_dot(std::cout);
 
   cout << "    small_variable_set complete" << endl;
 }
@@ -617,6 +634,8 @@ void insert_tests(BTree& bt)
   BOOST_TEST_EQ(bt.find(0x0C)->key().x, 0x0C);
   bt.flush();
 
+  bt.dump_dot(std::cout);
+
   BOOST_TEST_EQ(bt.size(), 5U);
 
   BOOST_TEST_EQ(bt.find(0x0A)->key().x, 0x0A);
@@ -656,6 +675,8 @@ void insert_tests(BTree& bt)
 
   // erase tests
 
+  bt.dump_dot(std::cout);
+
   cur = bt.find(0x0C);
   cur = bt.erase(cur);
 
@@ -683,9 +704,8 @@ void insert_tests(BTree& bt)
   BOOST_TEST_EQ(cur->key().x, 0x0D);
   BOOST_TEST(bt.begin() == cur);
   BOOST_TEST_EQ(bt.size(), 1U);
-  BOOST_TEST_EQ(bt.header().root_page_id(), 4U);
+  BOOST_TEST_EQ(bt.header().root_page_id(), 3U);
   BOOST_TEST_EQ(bt.header().root_level(), 0);
- 
 
   cur = bt.find(0x0D);
   cur = bt.erase(cur);
@@ -693,7 +713,7 @@ void insert_tests(BTree& bt)
   BOOST_TEST(cur == bt.end());
   BOOST_TEST(bt.begin() == bt.end());
   BOOST_TEST_EQ(bt.size(), 0U);
-  BOOST_TEST_EQ(bt.header().root_page_id(), 4U);
+  BOOST_TEST_EQ(bt.header().root_page_id(), 3U);
   BOOST_TEST_EQ(bt.header().root_level(), 0);
 
 
