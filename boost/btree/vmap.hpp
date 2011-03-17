@@ -55,7 +55,7 @@ namespace boost
             flags::user(flgs), pg_sz, comp) {}
 
       template <class InputIterator>
-      vbtree_map(InputIterator first, InputIterator last,
+      vbtree_map(InputIterator begin, InputIterator end,
         const boost::filesystem::path& p,
         flags::bitmask flgs = flags::read_only,
         std::size_t pg_sz = default_page_size,  // ignored if existing file
@@ -63,8 +63,9 @@ namespace boost
       : vbtree_base<Key,vbtree_map_base<Key,T,Comp>,Traits,Comp>(p,
           flags::user(flgs), pg_sz, comp)
       {
-        for (; first != last; ++first)
-          vbtree_base<Key,vbtree_map_base<Key,T,Comp>,Traits,Comp>::m_insert_unique(*first);
+        for (; begin != end; ++begin)
+          vbtree_base<Key,vbtree_map_base<Key,T,Comp>,Traits,Comp>::m_insert_unique(
+            begin->key(), begin->mapped_value());
       }
  
       void open(const boost::filesystem::path& p,
@@ -77,17 +78,18 @@ namespace boost
 
       // typename vbtree_base<Key,vbtree_map_base<Key,T,Comp>,Traits,Comp>:: is required by GCC but not VC++
       std::pair<typename vbtree_base<Key,vbtree_map_base<Key,T,Comp>,Traits,Comp>::const_iterator, bool>
-      insert(const typename vbtree_base<Key,vbtree_map_base<Key,T,Comp>,Traits,Comp>::value_type& value)
+      insert(const K& key, const T& mapped_value)
       {
         return vbtree_base<Key,vbtree_map_base<Key,T,Comp>,Traits,Comp>::m_insert_unique(
-          value);
+          key, mapped_value);
       }
 
       template <class InputIterator>
-      void insert(InputIterator first, InputIterator last)
+      void insert(InputIterator begin, InputIterator end)
       { 
-        for (; first != last; ++first) 
-          vbtree_base<Key,vbtree_map_base<Key,T,Comp>,Traits,Comp>::m_insert_unique(*first);
+        for (; begin != end; ++begin) 
+          vbtree_base<Key,vbtree_map_base<Key,T,Comp>,Traits,Comp>::m_insert_unique(
+            begin->key(), begin->mapped_value());
       }
     };
 
@@ -119,7 +121,7 @@ namespace boost
             flags::user(flgs) | flags::multi, pg_sz, comp) {}
 
       template <class InputIterator>
-      vbtree_multimap(InputIterator first, InputIterator last,
+      vbtree_multimap(InputIterator begin, InputIterator end,
           const boost::filesystem::path& p,
           flags::bitmask flgs = flags::read_only,
           std::size_t pg_sz = default_page_size,  // ignored if existing file
@@ -127,9 +129,9 @@ namespace boost
         : vbtree_base<Key,vbtree_map_base<Key,T,Comp>,Traits,Comp>(p,
             flags::user(flgs) | flags::multi, pg_sz, comp)
       {
-        for (; first != last; ++first)
+        for (; begin != end; ++begin)
           vbtree_base<Key,vbtree_map_base<Key,T,Comp>,Traits,Comp>::m_insert_non_unique(
-            *first);
+            begin->key(), begin->mapped_value()););
       }
 
       void open(const boost::filesystem::path& p,
@@ -145,15 +147,15 @@ namespace boost
       insert(const typename vbtree_base<Key,vbtree_map_base<Key,T,Comp>,Traits,Comp>::value_type& value)
       {
         return vbtree_base<Key,vbtree_map_base<Key,T,Comp>,Traits,Comp>::m_insert_non_unique(
-          value);
+          key, value);
       }
 
       template <class InputIterator>
-      void insert(InputIterator first, InputIterator last)
+      void insert(InputIterator begin, InputIterator end)
       {
-        for (; first != last; ++first)
+        for (; begin != end; ++begin)
           vbtree_base<Key,vbtree_map_base<Key,T,Comp>,Traits,Comp>::m_insert_non_unique(
-            *first);
+            begin->key(), begin->mapped_value()););
       }
     };
 
