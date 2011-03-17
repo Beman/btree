@@ -29,7 +29,11 @@
 
 /*
 
+  ****** WARNING: Multi-map, set, support is disabled until unique map, set, working *****
+
   TODO:
+
+  * vbtree_unit_test.cpp: move erase tests out of insert test.
 
   * Add static_assert Key, T are is_trivially_copyable
 
@@ -40,6 +44,16 @@
 
   * advance_by_size should dispatch on iterator type and use more efficient
     algorithm if random access (I.E. fixed size)
+
+  * header() shouldn't be part of the public interface.
+      - Add individual get, and where appropriate, set, functions.
+      - Move header file to detail.
+
+  * For multi-containers, consider branch pages with the same number of P and K entries,
+    where the invariant then becomes Kn <= Keys in Pn 
+
+  * For multi-containers, add a test case of a deep tree with all the same key. Then
+    test erasing various elements.
 
 */
 
@@ -548,6 +562,15 @@ private:
   }
 
   //------------------------ branch data formats and operations ------------------------//
+
+      //----------------------------- branch invariants ----------------------------//
+      //                                                                            //
+      //  Unique containers:  Pn < Kn <= Pn+1   Keys in Pn are < Kn                 //
+      //                                        Kn <= Keys in Pn+1                  //
+      //                                                                            //
+      //  Multi containers:                                                         //
+      //                                                                            //
+      //----------------------------------------------------------------------------//
 
   typedef detail::branch_value<page_id_type, key_type>  branch_value_type;
   typedef detail::dynamic_iterator<branch_value_type>   branch_iterator;
