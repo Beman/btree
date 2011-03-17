@@ -737,9 +737,9 @@ private:
 protected:
 
   std::pair<const_iterator, bool>
-    m_insert_unique(const value_type& value);
+    m_insert_unique(const key_type& key, const mapped_type& mapped_value);
   const_iterator
-    m_insert_non_unique(const value_type& value);
+    m_insert_non_unique(const key_type& key, const mapped_type& mapped_value);
   // Remark: Insert after any elements with equivalent keys, per C++ standard
 
   void m_open(const boost::filesystem::path& p, flags::bitmask flgs, std::size_t pg_sz);
@@ -777,7 +777,8 @@ private:
   // postcondition: parent pointers are set, all the way up the chain to the root
   btree_page_ptr m_new_page(boost::uint16_t lv);
   void  m_new_root();
-  const_iterator m_leaf_insert(iterator insert_iter, const value_type& value);
+  const_iterator m_leaf_insert(iterator insert_iter, const key_type& key
+    const mapped_type& mapped_value);
   void  m_branch_insert(btree_page* pg, branch_iterator element,
     const key_type& k, page_id_type id);
 
@@ -1487,17 +1488,19 @@ vbtree_base<Key,Base,Traits,Comp>::erase(const_iterator first, const_iterator la
 
 template <class Key, class Base, class Traits, class Comp>   
 std::pair<typename vbtree_base<Key,Base,Traits,Comp>::const_iterator, bool>
-vbtree_base<Key,Base,Traits,Comp>::m_insert_unique(const value_type& value)
+vbtree_base<Key,Base,Traits,Comp>::m_insert_unique(const key_type& key,
+  const mapped_type& mapped_value)
 {
   BOOST_ASSERT_MSG(is_open(), "insert() on unopen btree");
-  iterator insert_point = m_lower_page_bound(key(value));
+  iterator insert_point = m_lower_page_bound(key);
 
   bool unique = insert_point.m_element == insert_point.m_page->leaf().end()
-                || key_comp()(key(value), key(*insert_point))
-                || key_comp()(key(*insert_point), key(value));
+                || key_comp()(key, key(*insert_point))
+                || key_comp()(key(*insert_point), key);
 
   if (unique)
-    return std::pair<const_iterator, bool>(m_leaf_insert(insert_point, value), true);
+    return std::pair<const_iterator, bool>(m_leaf_insert(insert_point, key, mapped_value),
+      true);
 
   return std::pair<const_iterator, bool>(
     const_iterator(insert_point.m_page, insert_point.m_element), false); 
@@ -1507,11 +1510,12 @@ vbtree_base<Key,Base,Traits,Comp>::m_insert_unique(const value_type& value)
 
 template <class Key, class Base, class Traits, class Comp>   
 inline typename vbtree_base<Key,Base,Traits,Comp>::const_iterator
-vbtree_base<Key,Base,Traits,Comp>::m_insert_non_unique(const value_type& value)
+vbtree_base<Key,Base,Traits,Comp>::m_insert_non_unique(const key_type& key,
+  const mapped_type& mapped_value)
 {
   BOOST_ASSERT_MSG(is_open(), "erase() on unopen btree");
-  iterator insert_point = m_upper_page_bound(key(value));
-  return m_leaf_insert(insert_point, value);
+  iterator insert_point = m_upper_page_bound(key);
+  return m_leaf_insert(insert_point, key, mapped_value);
 }
 
 //--------------------------------- m_lower_page_bound() -------------------------------//

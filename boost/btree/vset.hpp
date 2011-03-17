@@ -40,6 +40,8 @@ namespace boost
 
       BOOST_STATIC_ASSERT_MSG( !boost::is_pointer<Key>::value, "Key must not be a pointer type");
 
+      typedef Key mapped_type;
+
       // <Key,Comp> is required by GCC but not by VC++
       explicit vbtree_set(const Comp& comp = Comp())
         : vbtree_base<Key,vbtree_set_base<Key,Comp>,Traits,Comp>(comp) {}
@@ -52,7 +54,7 @@ namespace boost
             flags::user(flgs) | flags::key_only, pg_sz, comp) {}
 
       template <class InputIterator>
-      vbtree_set(InputIterator first, InputIterator last,
+      vbtree_set(InputIterator begin, InputIterator end,
         const boost::filesystem::path& p,
         flags::bitmask flgs = flags::read_only,
         std::size_t pg_sz = default_page_size,  // ignored if existing file
@@ -60,8 +62,9 @@ namespace boost
       : vbtree_base<Key,vbtree_set_base<Key,Comp>,Traits,Comp>(p,
           flags::user(flgs) | flags::key_only, pg_sz, comp)
       {
-        for (; first != last; ++first)
-          vbtree_base<Key,vbtree_set_base<Key,Comp>,Traits,Comp>::m_insert_unique(*first);
+        for (; begin != end; ++begin)
+          vbtree_base<Key,vbtree_set_base<Key,Comp>,Traits,Comp>::m_insert_unique(
+            *begin, *begin);
       }
  
       void open(const boost::filesystem::path& p,
@@ -77,14 +80,15 @@ namespace boost
       insert(const typename vbtree_base<Key,vbtree_set_base<Key,Comp>,Traits,Comp>::value_type& value)
       {
         return vbtree_base<Key,vbtree_set_base<Key,Comp>,Traits,Comp>::m_insert_unique(
-          value);
+          value, value);
       }
 
       template <class InputIterator>
-      void insert(InputIterator first, InputIterator last)
+      void insert(InputIterator begin, InputIterator end)
       {
-        for (; first != last; ++first) 
-          vbtree_base<Key,vbtree_set_base<Key,Comp>,Traits,Comp>::m_insert_unique(*first);
+        for (; begin != end; ++begin) 
+          vbtree_base<Key,vbtree_set_base<Key,Comp>,Traits,Comp>::m_insert_unique(
+            *begin, *begin);
       }
     };
 
@@ -101,6 +105,8 @@ namespace boost
 
       BOOST_STATIC_ASSERT_MSG( !boost::is_pointer<Key>::value, "Key must not be a pointer type");
 
+      typedef Key mapped_type;
+
       // <Key,Comp> is required by GCC but not by VC++
       explicit vbtree_multiset(const Comp& comp = Comp())
         : vbtree_base<Key,vbtree_set_base<Key,Comp>,Traits,Comp>(comp) {}
@@ -113,7 +119,7 @@ namespace boost
             flags::user(flgs) | flags::key_only | flags::multi, pg_sz, comp) {}
 
       template <class InputIterator>
-      vbtree_multiset(InputIterator first, InputIterator last,
+      vbtree_multiset(InputIterator begin, InputIterator end,
         const boost::filesystem::path& p,
         flags::bitmask flgs = flags::read_only,
         std::size_t pg_sz = default_page_size,  // ignored if existing file
@@ -121,9 +127,9 @@ namespace boost
       : vbtree_base<Key,vbtree_set_base<Key,Comp>,Traits,Comp>(p,
           flags::user(flgs) | flags::key_only | flags::multi, pg_sz, comp)
       {
-        for (; first != last; ++first)
+        for (; begin != end; ++begin)
           vbtree_base<Key,vbtree_set_base<Key,Comp>,Traits,Comp>::m_insert_non_unique(
-            *first);
+            *begin, *begin);
       }
 
       void open(const boost::filesystem::path& p,
@@ -139,15 +145,15 @@ namespace boost
       insert(const typename vbtree_base<Key,vbtree_set_base<Key,Comp>,Traits,Comp>::value_type& value)
       {
         return vbtree_base<Key,vbtree_set_base<Key,Comp>,Traits,Comp>::m_insert_non_unique(
-          value);
+          value, value);
       }
 
       template <class InputIterator>
-      void insert(InputIterator first, InputIterator last)
+      void insert(InputIterator begin, InputIterator end)
       {
-        for (; first != last; ++first) 
+        for (; begin != end; ++begin) 
           vbtree_base<Key,vbtree_set_base<Key,Comp>,Traits,Comp>::m_insert_non_unique(
-            *first);
+            *begin, *begin);
       }
     };
 
