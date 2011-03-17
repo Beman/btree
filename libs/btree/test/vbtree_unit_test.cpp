@@ -677,53 +677,56 @@ void insert_tests(BTree& bt)
 
   bt.dump_dot(std::cout);
 
-  cur = bt.find(0x0C);
-  cur = bt.erase(cur);
+  //cur = bt.find(0x0C);
+  //cur = bt.erase(cur);
 
-  BOOST_TEST_EQ(cur->key().x, 0x0D);
-  BOOST_TEST_EQ(bt.size(), 4U);
+  //BOOST_TEST_EQ(cur->key().x, 0x0D);
+  //BOOST_TEST_EQ(bt.size(), 4U);
 
-  cur = bt.find(0x0B);
-  cur = bt.erase(cur);
+  //cur = bt.find(0x0B);
+  //cur = bt.erase(cur);
 
-  BOOST_TEST_EQ(cur->key().x, 0x0D);
-  BOOST_TEST_EQ(bt.size(), 3U);
+  //BOOST_TEST_EQ(cur->key().x, 0x0D);
+  //BOOST_TEST_EQ(bt.size(), 3U);
+  //
+  //bt.dump_dot(std::cout);
 
-  cur = bt.find(0x0E);
-  cur = bt.erase(cur);
+  //cur = bt.find(0x0E);
+  //cur = bt.erase(cur);
 
-  BOOST_TEST(cur == bt.end());
-  BOOST_TEST_EQ(bt.size(), 2U);
-  BOOST_TEST_EQ(bt.header().root_page_id(), 2U);
-  BOOST_TEST_EQ(bt.header().root_level(), 1);
+  //BOOST_TEST(cur == bt.end());
+  //BOOST_TEST_EQ(bt.size(), 2U);
+  //BOOST_TEST_EQ(bt.header().root_page_id(), 2U);
+  //BOOST_TEST_EQ(bt.header().root_level(), 1);
 
-  cur = bt.find(0x0A);
-  cur = bt.erase(cur);
+  //cur = bt.find(0x0A);
+  //cur = bt.erase(cur);
 
-  BOOST_TEST(cur != bt.end());
-  BOOST_TEST_EQ(cur->key().x, 0x0D);
-  BOOST_TEST(bt.begin() == cur);
-  BOOST_TEST_EQ(bt.size(), 1U);
-  BOOST_TEST_EQ(bt.header().root_page_id(), 3U);
-  BOOST_TEST_EQ(bt.header().root_level(), 0);
+  //BOOST_TEST(cur != bt.end());
+  //BOOST_TEST_EQ(cur->key().x, 0x0D);
+  //BOOST_TEST(bt.begin() == cur);
+  //BOOST_TEST_EQ(bt.size(), 1U);
+  //BOOST_TEST_EQ(bt.header().root_page_id(), 3U);
+  //BOOST_TEST_EQ(bt.header().root_level(), 0);
 
-  cur = bt.find(0x0D);
-  cur = bt.erase(cur);
+  //cur = bt.find(0x0D);
+  //cur = bt.erase(cur);
 
-  BOOST_TEST(cur == bt.end());
-  BOOST_TEST(bt.begin() == bt.end());
-  BOOST_TEST_EQ(bt.size(), 0U);
-  BOOST_TEST_EQ(bt.header().root_page_id(), 3U);
-  BOOST_TEST_EQ(bt.header().root_level(), 0);
-
+  //BOOST_TEST(cur == bt.end());
+  //BOOST_TEST(bt.begin() == bt.end());
+  //BOOST_TEST_EQ(bt.size(), 0U);
+  //BOOST_TEST_EQ(bt.header().root_page_id(), 3U);
+  //BOOST_TEST_EQ(bt.header().root_level(), 0);
 
   //for (int i = 0xff01; i <= 0xff01+20; ++i )
   //{
-  //  element.first.x = i;
-  //  element.second = i;
+  //  element.key(i);
+  //  element.mapped_value(i);
   //  bt.insert(element);
   //}
   //BOOST_TEST_EQ(bt.size(), 21U);
+  //
+  //bt.dump_dot(std::cout);
 
   //for (int i = 0xff01; i <= 0xff01+20; i += 2 )
   //{
@@ -778,6 +781,7 @@ VT make_value(int i);
 template<> btree::vbtree_value<const fat, const int>
 make_value<btree::vbtree_value<const fat, const int> >(int i)
 {
+  std::cout << "make_value " << i << std::endl;
   return fat_int_value(i);
 }
 
@@ -785,9 +789,9 @@ template<> int
 make_value<int>(int i)
 { return i; }
 
-template<> fat
-make_value<fat>(int i)
-{ return fat(i); }
+//template<> fat
+//make_value<fat>(int i)
+//{ return fat(i); }
 
 template <class BTree>
 void find_and_bounds_tests(BTree& bt)
@@ -796,9 +800,8 @@ void find_and_bounds_tests(BTree& bt)
 
   for (int i = 1; i < 18; i += 2)
   {
-    //typename BTree::value_type v = make_value<typename BTree::value_type>(i);
-    //bt.insert(v);
     bt.insert(make_value<typename BTree::value_type>(i));
+    std::cout << " size is " << bt.size() << std::endl;
   }
 
   BOOST_TEST_EQ(bt.size(), 9U);
@@ -813,6 +816,8 @@ void find_and_bounds_tests(BTree& bt)
 
     BOOST_TEST_EQ(bt.size(), 22U);
   }
+
+  bt.dump_dot(std::cout);
 
   //             i =   0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18
   const int  lwr[] = { 1, 1, 3, 3, 5, 5, 7, 7, 9, 9, 11, 11, 13, 13, 15, 15, 17, 17, -1};
@@ -855,13 +860,13 @@ void find_and_bounds()
     find_and_bounds_tests(set);
   }
 
-  {
-    btree::vbtree_multiset<int> multiset("find_and_bounds_multiset.btr",
-      btree::flags::truncate, 128);
-    BOOST_TEST(multiset.header().flags() == (btree::flags::key_only | btree::flags::multi));
-    multiset.max_cache_pages(0);  // maximum stress
-    find_and_bounds_tests(multiset);
-  }
+  //{
+  //  btree::vbtree_multiset<int> multiset("find_and_bounds_multiset.btr",
+  //    btree::flags::truncate, 128);
+  //  BOOST_TEST(multiset.header().flags() == (btree::flags::key_only | btree::flags::multi));
+  //  multiset.max_cache_pages(0);  // maximum stress
+  //  find_and_bounds_tests(multiset);
+  //}
 
   //  these tests use a value type that is large relative to the page size, thus stressing
   //  the code by causing a lot of page splits 
@@ -874,13 +879,13 @@ void find_and_bounds()
     find_and_bounds_tests(map);
   }
 
-  {
-    btree::vbtree_multimap<fat, int> multimap("find_and_bounds_multimap.btr",
-      btree::flags::truncate, 128);
-    BOOST_TEST(multimap.header().flags() == btree::flags::multi);
-    multimap.max_cache_pages(0);  // maximum stress
-    find_and_bounds_tests(multimap);
-  }
+  //{
+  //  btree::vbtree_multimap<fat, int> multimap("find_and_bounds_multimap.btr",
+  //    btree::flags::truncate, 128);
+  //  BOOST_TEST(multimap.header().flags() == btree::flags::multi);
+  //  multimap.max_cache_pages(0);  // maximum stress
+  //  find_and_bounds_tests(multimap);
+  //}
 
   cout << "    find_and_bounds complete" << endl;
 }
@@ -1055,7 +1060,7 @@ int cpp_main(int, char*[])
   //alignment();
   insert();
   //insert_non_unique();
-  //find_and_bounds();
+  find_and_bounds();
   //erase();
   //iteration();
   //multi();
