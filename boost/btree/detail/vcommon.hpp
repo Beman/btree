@@ -277,14 +277,13 @@ namespace detail
   template <class ForwardIterator>
   ForwardIterator advance_by_size(ForwardIterator begin, std::size_t max_sz)
   {
+    BOOST_ASSERT(max_sz);
     std::size_t sz = 0;
-    for(;;)
+    do
     {
       sz += dynamic_size(*begin);
-      if (sz > max_sz)
-        break;
       ++begin;
-    }
+    } while (sz <= max_sz);
     return begin;
   }
 
@@ -1262,8 +1261,8 @@ vbtree_base<Key,Base,Traits,Comp>::m_branch_insert(
     if (&split_begin->key() < insert_begin)
     {
       pg = pg2.get();
-      BOOST_ASSERT(false);
-//      insert_begin = pg2->branch().begin() + char_distance(split_begin, insert_begin);
+      insert_begin = reinterpret_cast<key_type*>(char_ptr(&pg2->branch().begin()->key())
+        + char_distance(&split_begin->key(), insert_begin));
     }
   }
 
@@ -1513,9 +1512,12 @@ vbtree_base<Key,Base,Traits,Comp>::m_lower_page_bound(const key_type& k)
     branch_iterator low
       = std::lower_bound(pg->branch().begin(), pg->branch().end(), k, branch_comp());
 
+    if (!key_comp()(k, low->key()))  // if k isn't less that low->key(), it is equal
+      ++low;                         // and so must be incremented; this follows from
+                                     // the branch page invariant
+
     // create the ephemeral child->parent list
-    btree_page_ptr child_pg;
-    child_pg = m_mgr.read(low->page_id());  // mapped_value() is page_id
+    btree_page_ptr child_pg = m_mgr.read(low->page_id());
     child_pg->parent(pg.get());
     child_pg->parent_element(low);
 #   ifndef NDEBUG
@@ -1545,6 +1547,9 @@ vbtree_base<Key,Base,Traits,Comp>::lower_bound(const key_type& k) const
   {
     branch_iterator low
       = std::lower_bound(pg->branch().begin(), pg->branch().end(), k, branch_comp());
+    if (!key_comp()(k, low->key()))  // if k isn't less that low->key(), it is equal
+      ++low;                         // and so must be incremented; this follows from
+                                     // the branch page invariant
     pg = m_mgr.read(low->page_id());
   }
 
