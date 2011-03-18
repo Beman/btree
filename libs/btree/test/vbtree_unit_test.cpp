@@ -59,7 +59,7 @@ namespace
     return os;
   }
 
-  class c_str_pair : public btree::vbtree_value<const int, const int>
+  class c_str_pair
   {
   public:
     static const std::size_t max_size = 256;
@@ -314,25 +314,8 @@ void  single_insert()
 
     btree_type x(p, btree::flags::read_write, 128);
 
-    class my_pair : public btree::vbtree_value<const int, const int>
-    {
-    public:
-      int _key;
-      int _mapped;
-    };
-
-    my_pair mp;
-
-    BOOST_TEST_EQ(btree::dynamic_size(mp), sizeof(mp._key) + sizeof(mp._mapped));
-
-    mp._key = 123;
-    mp._mapped = 456;
-
-    BOOST_TEST_EQ(mp.key(), 123);
-    BOOST_TEST_EQ(mp.mapped_value(), 456);
-
-    std::pair<btree_type::const_iterator, bool> result;
-    result = x.insert(mp);
+    std::pair<btree_type::const_iterator, bool> result
+      = x.insert(123, 456);
 
     BOOST_TEST_EQ(x.size(), 1);
     BOOST_TEST(result.second);
@@ -350,29 +333,17 @@ void open_existing()
   cout << "  open_existing..." << endl;
   fs::path p("btree_map.btree");
 
-  class my_pair : public btree::vbtree_value<const fat, const int>
-  {
-  public:
-    fat key;
-    int mapped;
-  };
-
-  my_pair mp;
-
-  BOOST_TEST_EQ(btree::dynamic_size(mp), sizeof(mp.key) + sizeof(mp.mapped));
-  std::cout << sizeof(mp.key) << ' ' << sizeof(mp.mapped) << ' '
-            << sizeof(mp) << ' ' << btree::dynamic_size(mp) << '\n';
-
   {
     fs::remove(p);
     btree::vbtree_map<fat, int> bt(p, btree::flags::truncate, 128);
 
-    mp.key = 5; mp.mapped = 0x55;
-    bt.insert(mp);
-    mp.key = 4; mp.mapped = 0x44;
-    bt.insert(mp);
-    mp.key = 6; mp.mapped = 0x66;
-    bt.insert(mp);
+    fat key = 5;
+    int mapped = 0x55;
+    bt.insert(key, mapped);
+    key = 4; mapped = 0x44;
+    bt.insert(key, mapped);
+    key = 6; mapped = 0x66;
+    bt.insert(key, mapped);
   }
 
   btree::vbtree_map<fat, int> bt2(p);
@@ -542,19 +513,6 @@ void insert_tests(BTree& bt)
   cout << "  testing \"" << bt.file_path().string() << "\" ..." << endl;
   cout << '\n' << bt.manager() << '\n';
 
-  class my_vbtree_value : public btree::vbtree_value<const fat, const int>
-  {
-  public:
-    const fat& key() const          {return _key;}
-    void       key(int k)           {_key.x = k;}
-    int        mapped_value() const {return _mapped_value;}
-    void       mapped_value(int v)  {_mapped_value = v;}
-
-  private:
-    fat _key;
-    int _mapped_value;
-  };
-
   BOOST_TEST(bt.size() == 0U);
   BOOST_TEST(bt.empty());
   BOOST_TEST(!bt.read_only());
@@ -567,66 +525,61 @@ void insert_tests(BTree& bt)
   BOOST_TEST(begin == end);
   BOOST_TEST(bt.find(fat(0)) == bt.end());
 
-  my_vbtree_value element;
-
-  element.key(0x0C);
-  element.mapped_value(0xCCCCCCCC);
-
-  BOOST_TEST(element.key() == fat(0x0C));
-  BOOST_TEST(element.mapped_value() == 0xCCCCCCCC);
+  typename BTree::key_type key(0x0C);
+  typename BTree::mapped_type mapped_value(0xCCCCCCCC);
 
   std::pair<typename BTree::const_iterator, bool> result;
 
-  result = bt.insert(element);
+  result = bt.insert(key, mapped_value);
   BOOST_TEST(result.second);
-  BOOST_TEST(result.first->key() == element.key());
-  BOOST_TEST(result.first->mapped_value() == element.mapped_value());
+  BOOST_TEST(result.first->key() == key);
+  BOOST_TEST_EQ(result.first->mapped_value(), mapped_value);
   BOOST_TEST(bt.size() == 1U);
   BOOST_TEST(!bt.empty());
   BOOST_TEST(bt.begin() != bt.end());
-  cur = bt.find(element.key());
+  cur = bt.find(key);
   BOOST_TEST(cur != bt.end());
-  BOOST_TEST(cur->key() == element.key());
-  BOOST_TEST(cur->mapped_value() == element.mapped_value());
+  BOOST_TEST(cur->key() == key);
+  BOOST_TEST(cur->mapped_value() == mapped_value);
   BOOST_TEST(bt.find(fat(0)) == bt.end());
   BOOST_TEST(bt.find(fat(1000)) == bt.end());
 
-  element.key(0x0A);
-  element.mapped_value(0xAAAAAAAA);
-  result = bt.insert(element);
+  key = 0x0A;
+  mapped_value = 0xAAAAAAAA;
+  result = bt.insert(key, mapped_value);
   BOOST_TEST(result.second);
-  BOOST_TEST_EQ(result.first->key().x, element.key().x);
-  BOOST_TEST_EQ(result.first->mapped_value(), element.mapped_value());
+  BOOST_TEST_EQ(result.first->key().x, key.x);
+  BOOST_TEST_EQ(result.first->mapped_value(), mapped_value);
   BOOST_TEST_EQ(bt.find(0x0A)->key().x, 0x0A);
   BOOST_TEST_EQ(bt.find(0x0C)->key().x, 0x0C);
 
-  element.key(0x0E);
-  element.mapped_value(0xEEEEEEEE);
-  result = bt.insert(element);
+  key = 0x0E;
+  mapped_value = 0xEEEEEEEE;
+  result = bt.insert(key, mapped_value);
   BOOST_TEST(result.second);
-  BOOST_TEST_EQ(result.first->key().x, element.key().x);
-  BOOST_TEST_EQ(result.first->mapped_value(), element.mapped_value());
+  BOOST_TEST_EQ(result.first->key().x, key.x);
+  BOOST_TEST_EQ(result.first->mapped_value(), mapped_value);
   BOOST_TEST_EQ(bt.find(0x0E)->key().x, 0x0E);
   BOOST_TEST_EQ(bt.find(0x0A)->key().x, 0x0A);
   BOOST_TEST_EQ(bt.find(0x0C)->key().x, 0x0C);
 
-  element.key(0x0B);
-  element.mapped_value(0xBBBBBBBB);
-  result = bt.insert(element);
+  key = 0x0B;
+  mapped_value = 0xBBBBBBBB;
+  result = bt.insert(key, mapped_value);
   BOOST_TEST(result.second);
-  BOOST_TEST_EQ(result.first->key().x, element.key().x);
-  BOOST_TEST_EQ(result.first->mapped_value(), element.mapped_value());
+  BOOST_TEST_EQ(result.first->key().x, key.x);
+  BOOST_TEST_EQ(result.first->mapped_value(), mapped_value);
   BOOST_TEST_EQ(bt.find(0x0B)->key().x, 0x0B);
   BOOST_TEST_EQ(bt.find(0x0E)->key().x, 0x0E);
   BOOST_TEST_EQ(bt.find(0x0A)->key().x, 0x0A);
   BOOST_TEST_EQ(bt.find(0x0C)->key().x, 0x0C);
 
-  element.key(0x0D);
-  element.mapped_value(0xDDDDDDDD);
-  result = bt.insert(element);
+  key = 0x0D;
+  mapped_value = 0xDDDDDDDD;
+  result = bt.insert(key, mapped_value);
   BOOST_TEST(result.second);
-  BOOST_TEST_EQ(result.first->key().x, element.key().x);
-  BOOST_TEST_EQ(result.first->mapped_value(), element.mapped_value());
+  BOOST_TEST_EQ(result.first->key().x, key.x);
+  BOOST_TEST_EQ(result.first->mapped_value(), mapped_value);
   BOOST_TEST_EQ(bt.find(0x0D)->key().x, 0x0D);
   BOOST_TEST_EQ(bt.find(0x0B)->key().x, 0x0B);
   BOOST_TEST_EQ(bt.find(0x0E)->key().x, 0x0E);
