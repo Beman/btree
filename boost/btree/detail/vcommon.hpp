@@ -29,7 +29,7 @@
 
 /*
 
-  ****** WARNING: Multi-map, set, support is disabled until unique map, set, working *****
+  ****** WARNING: multimap and multiset support is disabled until unique map, set, working *****
 
   TODO:
 
@@ -38,6 +38,9 @@
   * Add static_assert Key, T are is_trivially_copyable
 
   * Add check for trying to insert a value sized >= 1/4 (page size - begin)
+
+  * map, multi_map, insert(key, mapped_value) can be confused with template insert?
+    Use enable_if?
 
   * If not variable size, one or both internal iterators should be random access tag,
     including case where leaf is fwd, but branch is random
@@ -154,12 +157,20 @@ class vbtree_set_base
 {
 public:
   typedef Key   value_type;
+  typedef Key   mapped_type;
   typedef Comp  value_compare;
 
   const Key& key(const value_type& v) const {return v;}  // really handy, so expose
 
   static std::size_t key_size() { return -1; }
   static std::size_t mapped_size() { return -1; }
+
+protected:
+  void m_memcpy_value(value_type* dest, const Key* k, std::size_t key_sz,
+    const Key*, std::size_t)
+  {
+    std::memcpy(dest, k, key_sz);
+  }
 };
 
 //--------------------------------------------------------------------------------------//
@@ -171,6 +182,7 @@ class vbtree_map_base
 {
 public:
   typedef vbtree_value<const Key, const T>  value_type;
+  typedef T                                 mapped_type;
 
   const Key& key(const value_type& v) const  // really handy, so expose
     {return v.key();}
@@ -192,6 +204,14 @@ public:
   private:
     Comp    m_comp;
   };
+
+protected:
+  void m_memcpy_value(value_type* dest, const Key* k, std::size_t key_sz,
+    const T* mapped_v, std::size_t mapped_sz)
+  {
+    std::memcpy(dest, k, key_sz);
+    std::memcpy(reinterpret_cast<char*>(dest) + key_sz, mapped_v, mapped_sz);
+  }
 
 };
 
@@ -340,6 +360,7 @@ public:
   // types:
   typedef Key                                   key_type;
   typedef typename Base::value_type             value_type;
+  typedef typename Base::mapped_type            mapped_type;
   typedef Comp                                  key_compare;
   typedef typename Base::value_compare          value_compare; 
   typedef value_type&                           reference;
@@ -737,9 +758,9 @@ private:
 protected:
 
   std::pair<const_iterator, bool>
-    m_insert_unique(const key_type& key, const mapped_type& mapped_value);
+    m_insert_unique(const key_type& k, const mapped_type& mv);
   const_iterator
-    m_insert_non_unique(const key_type& key, const mapped_type& mapped_value);
+    m_insert_non_unique(const key_type& k, const mapped_type& mv);
   // Remark: Insert after any elements with equivalent keys, per C++ standard
 
   void m_open(const boost::filesystem::path& p, flags::bitmask flgs, std::size_t pg_sz);
@@ -777,7 +798,7 @@ private:
   // postcondition: parent pointers are set, all the way up the chain to the root
   btree_page_ptr m_new_page(boost::uint16_t lv);
   void  m_new_root();
-  const_iterator m_leaf_insert(iterator insert_iter, const key_type& key
+  const_iterator m_leaf_insert(iterator insert_iter, const key_type& key,
     const mapped_type& mapped_value);
   void  m_branch_insert(btree_page* pg, branch_iterator element,
     const key_type& k, page_id_type id);
@@ -1108,9 +1129,13 @@ vbtree_base<Key,Base,Traits,Comp>::m_new_root()
 template <class Key, class Base, class Traits, class Comp>   
 typename vbtree_base<Key,Base,Traits,Comp>::const_iterator
 vbtree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter,
-  const value_type& value)
+  const key_type& key, const mapped_type& mapped_value)
 {
-  std::size_t          value_size = dynamic_size(value);
+  std::size_t          key_size= dynamic_size(key);
+  std::size_t          mapped_size = header().flags() & btree:flags::key_only
+    ? 0
+    ? dynamic_size(mapped_value);
+  std::size_t          value_size = key_size + mapped_size;;
   btree_page_ptr       pg = insert_iter.m_page;
   leaf_iterator        insert_begin = insert_iter.m_element;
   btree_page_ptr       pg2;
@@ -1152,7 +1177,7 @@ vbtree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter,
     if (m_ok_to_pack)  // have all inserts been ordered and no erases occurred?
     {
       // pack optimization: instead of splitting pg, just put value alone on pg2
-      std::memcpy(&*pg2->leaf().begin(), &value, value_size);  // insert value
+      m_memcpy(&*pg2->leaf().begin(), &key, key_size, mapped_value, mapped_size);  // insert value
       pg2->size(value_size);
       BOOST_ASSERT(pg->parent()->page_id() == pg->parent_page_id()); // max_cache_size logic OK?
       m_branch_insert(pg->parent(), pg->parent_element(),
@@ -1190,7 +1215,7 @@ vbtree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter,
   BOOST_ASSERT(&*insert_begin <= &*pg->leaf().end());
   std::memmove(char_ptr(&*insert_begin) + value_size,
     &*insert_begin, char_distance(&*insert_begin, &*pg->leaf().end()));  // make room
-  std::memcpy(&*insert_begin, &value, value_size);   // insert value
+  m_memcpy(&*insert_begin, &key, key_size, mapped_value, mapped_size);  // insert value
   pg->size(pg->size() + value_size);
 
   // if there is a new page, its initial key and page_id are inserted into parent
@@ -1488,19 +1513,18 @@ vbtree_base<Key,Base,Traits,Comp>::erase(const_iterator first, const_iterator la
 
 template <class Key, class Base, class Traits, class Comp>   
 std::pair<typename vbtree_base<Key,Base,Traits,Comp>::const_iterator, bool>
-vbtree_base<Key,Base,Traits,Comp>::m_insert_unique(const key_type& key,
-  const mapped_type& mapped_value)
+vbtree_base<Key,Base,Traits,Comp>::m_insert_unique(const key_type& k,
+  const mapped_type& mv)
 {
   BOOST_ASSERT_MSG(is_open(), "insert() on unopen btree");
-  iterator insert_point = m_lower_page_bound(key);
+  iterator insert_point = m_lower_page_bound(k);
 
   bool unique = insert_point.m_element == insert_point.m_page->leaf().end()
-                || key_comp()(key, key(*insert_point))
-                || key_comp()(key(*insert_point), key);
+                || key_comp()(k, key(*insert_point))
+                || key_comp()(key(*insert_point), k);
 
   if (unique)
-    return std::pair<const_iterator, bool>(m_leaf_insert(insert_point, key, mapped_value),
-      true);
+    return std::pair<const_iterator, bool>(m_leaf_insert(insert_point, k, mv), true);
 
   return std::pair<const_iterator, bool>(
     const_iterator(insert_point.m_page, insert_point.m_element), false); 

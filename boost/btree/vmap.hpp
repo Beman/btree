@@ -41,8 +41,6 @@ namespace boost
       BOOST_STATIC_ASSERT_MSG( !boost::is_pointer<Key>::value, "Key must not be a pointer type");
       BOOST_STATIC_ASSERT_MSG( !boost::is_pointer<T>::value, "T must not be a pointer type");
 
-      typedef T  mapped_type;
-
       // <Key,T,Comp> is required by GCC but not by VC++
       explicit vbtree_map(const Comp& comp = Comp())
         : vbtree_base<Key,vbtree_map_base<Key,T,Comp>,Traits,Comp>(comp) {}
@@ -78,7 +76,7 @@ namespace boost
 
       // typename vbtree_base<Key,vbtree_map_base<Key,T,Comp>,Traits,Comp>:: is required by GCC but not VC++
       std::pair<typename vbtree_base<Key,vbtree_map_base<Key,T,Comp>,Traits,Comp>::const_iterator, bool>
-      insert(const K& key, const T& mapped_value)
+      insert(const Key& key, const T& mapped_value)
       {
         return vbtree_base<Key,vbtree_map_base<Key,T,Comp>,Traits,Comp>::m_insert_unique(
           key, mapped_value);
@@ -107,8 +105,6 @@ namespace boost
       BOOST_STATIC_ASSERT_MSG( !boost::is_pointer<Key>::value, "Key must not be a pointer type");
       BOOST_STATIC_ASSERT_MSG( !boost::is_pointer<T>::value, "T must not be a pointer type");
 
-      typedef T  mapped_type;
-
       // <Key,T,Comp> is required by GCC but not by VC++
       explicit vbtree_multimap(const Comp& comp = Comp())
         : vbtree_base<Key,vbtree_map_base<Key,T,Comp>,Traits,Comp>(comp) {}
@@ -131,7 +127,7 @@ namespace boost
       {
         for (; begin != end; ++begin)
           vbtree_base<Key,vbtree_map_base<Key,T,Comp>,Traits,Comp>::m_insert_non_unique(
-            begin->key(), begin->mapped_value()););
+            begin->key(), begin->mapped_value());
       }
 
       void open(const boost::filesystem::path& p,
@@ -144,10 +140,10 @@ namespace boost
 
       // typename vbtree_base<Key,vbtree_map_base<Key,T,Comp>,Traits,Comp>:: is required by GCC but not VC++
       typename vbtree_base<Key,vbtree_map_base<Key,T,Comp>,Traits,Comp>::const_iterator
-      insert(const typename vbtree_base<Key,vbtree_map_base<Key,T,Comp>,Traits,Comp>::value_type& value)
+      insert(const Key& key, const T& mapped_value)
       {
         return vbtree_base<Key,vbtree_map_base<Key,T,Comp>,Traits,Comp>::m_insert_non_unique(
-          key, value);
+          key, mapped_value);
       }
 
       template <class InputIterator>
@@ -155,7 +151,7 @@ namespace boost
       {
         for (; begin != end; ++begin)
           vbtree_base<Key,vbtree_map_base<Key,T,Comp>,Traits,Comp>::m_insert_non_unique(
-            begin->key(), begin->mapped_value()););
+            begin->key(), begin->mapped_value());
       }
     };
 

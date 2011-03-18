@@ -40,8 +40,6 @@ namespace boost
 
       BOOST_STATIC_ASSERT_MSG( !boost::is_pointer<Key>::value, "Key must not be a pointer type");
 
-      typedef Key mapped_type;
-
       // <Key,Comp> is required by GCC but not by VC++
       explicit vbtree_set(const Comp& comp = Comp())
         : vbtree_base<Key,vbtree_set_base<Key,Comp>,Traits,Comp>(comp) {}
@@ -104,8 +102,6 @@ namespace boost
     public:
 
       BOOST_STATIC_ASSERT_MSG( !boost::is_pointer<Key>::value, "Key must not be a pointer type");
-
-      typedef Key mapped_type;
 
       // <Key,Comp> is required by GCC but not by VC++
       explicit vbtree_multiset(const Comp& comp = Comp())
