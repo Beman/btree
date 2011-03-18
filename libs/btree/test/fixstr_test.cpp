@@ -8,7 +8,10 @@
 #include <boost/config/warning_disable.hpp>
 
 #include <boost/btree/detail/fixstr.hpp>
-#include <boost/detail/lightweight_test.hpp>
+#include <boost/detail/lightweight_main.hpp>
+#include <boost/detail/lightweight_test.hpp> 
+
+#include <iostream>
 
 namespace
 {
@@ -268,7 +271,7 @@ namespace
   }
 }
 
-int main()
+int cpp_main(int, char *[])
 {
   default_construct();
   construct_from_c_str();

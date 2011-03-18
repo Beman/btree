@@ -15,8 +15,11 @@
 #include <boost/btree/detail/fixstr.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/detail/lightweight_main.hpp>
+
 #include <string>
 #include <iostream>
+#include <boost/detail/lightweight_test.hpp>
 #include <fstream>
 #include <cstdlib>  // for atol()
 #include <cstring>  // for strcmp(), strncmp()
@@ -722,7 +725,9 @@ namespace
 
 }  // unnamed namespace
 
-int main(int argc, char *argv[])
+//--------------------------------------------------------------------------------------//
+
+int cpp_main(int argc, char *argv[])
 {
   for (int a = 0; a < argc; ++a)
   {
@@ -819,23 +824,7 @@ int main(int argc, char *argv[])
     return 1;
   }
 
-  try
-  {
-    tests();
-  }
-
-  catch (const std::runtime_error& ex)
-  {
-    cout << "\n*************** exception  ******************\n"
-         << ex.what() << endl;
-    return 1;
-  }
-  catch (...)
-  {
-    cout << "\n*************** exception  ******************\n"
-         << "of a type not derived from std::runtime_error" << endl;
-    return 1;
-  }
+  tests();
 
   cout << "all test cycles complete" << endl;
   return 0;

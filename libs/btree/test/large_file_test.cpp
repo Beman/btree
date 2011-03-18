@@ -6,6 +6,7 @@
 //  See http://www.boost.org/LICENSE_1_0.txt
 
 #include <boost/btree/detail/binary_file.hpp>
+#include <boost/detail/lightweight_main.hpp>
 #include <boost/cstdint.hpp>
 #include <boost/filesystem.hpp>
 #include <iostream>
@@ -15,7 +16,7 @@ using namespace boost::filesystem;
 using std::cout;
 using std::endl;
 
-int main(int argc, char* argv[])
+int cpp_main(int argc, char* argv[])
 {
   if (argc < 2)
   {

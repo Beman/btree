@@ -15,7 +15,8 @@
 
 #include <boost/btree/detail/buffer_manager.hpp>
 #include <boost/filesystem/v3/operations.hpp>
-#include <boost/detail/lightweight_test.hpp>
+#include <boost/detail/lightweight_main.hpp>
+#include <boost/detail/lightweight_test.hpp> 
 
 #include <iostream>
 #include <iomanip>
@@ -308,9 +309,9 @@ namespace
 
 } // unnamed namespace
 
-//  main  ------------------------------------------------------------------------------//
+//  cpp_main  --------------------------------------------------------------------------//
 
-int main(int argc, char * argv[])
+int cpp_main(int argc, char * argv[])
 {
   iterator_to_test();
   buffer_test();
