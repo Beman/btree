@@ -751,7 +751,8 @@ void find_and_bounds_tests(BTree& bt)
   for (int i = 1; i < 18; i += 2)
   {
     do_fb_insert(bt, i);
-    std::cout << "   size is " << bt.size() << std::endl;
+    //std::cout << "   size is " << bt.size() << std::endl;
+    //bt.dump_dot(std::cout);
   }
 
   BOOST_TEST_EQ(bt.size(), 9U);
@@ -778,6 +779,10 @@ void find_and_bounds_tests(BTree& bt)
 
   for (int i = 0; i <= 18; ++i)
   {
+    //std::cout << "lower_bound " << i << " is " <<
+    //  (bt.lower_bound(i) == bt.end() ? 99999 : bt.lower_bound(i)->key()) << std::endl;
+
+
     BOOST_TEST((bt.lower_bound(i) != bt.end() && bt.key(*bt.lower_bound(i)) == lwr[i])
       || (bt.lower_bound(i) == bt.end() && lwr[i] == -1));
 
