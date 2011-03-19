@@ -719,53 +719,50 @@ void insert()
 
 //---------------------------------- find_and_bounds -----------------------------------//
 
-class fat_int_value : public btree::vbtree_value<const fat, const int>
-{
-public:
-  fat_int_value(int i) : _fat(i), _int(i << 8) {}
-private:
-  fat _fat;
-  int _int;
-};
+typedef btree::vbtree_set<int> fb_set_type;
+typedef btree::vbtree_multiset<int> fb_multiset_type;
+typedef btree::vbtree_map<fat, int> fb_map_type;
+typedef btree::vbtree_multimap<fat, int> fb_multimap_type;
 
-template <class VT>
-VT make_value(int i);
-
-template<> btree::vbtree_value<const fat, const int>
-make_value<btree::vbtree_value<const fat, const int> >(int i)
+void do_fb_insert(fb_set_type& bt, int i)
 {
-  std::cout << "make_value " << i << std::endl;
-  return fat_int_value(i);
+  bt.insert(i);
 }
-
-template<> int
-make_value<int>(int i)
-{ return i; }
-
-//template<> fat
-//make_value<fat>(int i)
-//{ return fat(i); }
+void do_fb_insert(fb_multiset_type& bt, int i)
+{
+  bt.insert(i);
+}
+void do_fb_insert(fb_map_type& bt, int i)
+{
+  fat k(i);
+  bt.insert(k, i*100);
+}
+void do_fb_insert(fb_multimap_type& bt, int i)
+{
+  fat k(i);
+  bt.insert(k, i*100);
+}
 
 template <class BTree>
 void find_and_bounds_tests(BTree& bt)
 {
-  cout << "  testing \"" << bt.file_path().string() << "\" ..." << endl;
+  cout << "    testing \"" << bt.file_path().string() << "\" ..." << endl;
 
   for (int i = 1; i < 18; i += 2)
   {
-    bt.insert(make_value<typename BTree::value_type>(i));
-    std::cout << " size is " << bt.size() << std::endl;
+    do_fb_insert(bt, i);
+    std::cout << "   size is " << bt.size() << std::endl;
   }
 
   BOOST_TEST_EQ(bt.size(), 9U);
 
   if (bt.header().flags() & btree::flags::multi)
   {
-    bt.insert(make_value<typename BTree::value_type>(3));
-    bt.insert(make_value<typename BTree::value_type>(7));
-    bt.insert(make_value<typename BTree::value_type>(7));
+    do_fb_insert(bt, 3);
+    do_fb_insert(bt, 7);
+    do_fb_insert(bt, 7);
     for (int i = 0; i < 10; ++i)
-      bt.insert(make_value<typename BTree::value_type>(15));
+          do_fb_insert(bt, 15);
 
     BOOST_TEST_EQ(bt.size(), 22U);
   }
@@ -798,7 +795,7 @@ void find_and_bounds_tests(BTree& bt)
 //    cout << "      i = " << i << ", bt.count(i) = " << bt.count(i) <<endl;
   }
 
-  cout << "  testing \"" << bt.file_path().string() << "\" complete" << endl;
+  cout << "    testing \"" << bt.file_path().string() << "\" complete" << endl;
 }
 
 void find_and_bounds()
@@ -806,15 +803,14 @@ void find_and_bounds()
   cout << "  find_and_bounds..." << endl;
 
   {
-    btree::vbtree_set<int> set("find_and_bounds_set.btr",
-      btree::flags::truncate, 128);
+    fb_set_type set("find_and_bounds_set.btr", btree::flags::truncate, 128);
     BOOST_TEST(set.header().flags() == btree::flags::key_only);
     set.max_cache_pages(0);  // maximum stress
     find_and_bounds_tests(set);
   }
 
   //{
-  //  btree::vbtree_multiset<int> multiset("find_and_bounds_multiset.btr",
+  //  fb_multiset_type multiset("find_and_bounds_multiset.btr",
   //    btree::flags::truncate, 128);
   //  BOOST_TEST(multiset.header().flags() == (btree::flags::key_only | btree::flags::multi));
   //  multiset.max_cache_pages(0);  // maximum stress
@@ -825,7 +821,7 @@ void find_and_bounds()
   //  the code by causing a lot of page splits 
 
   {
-    btree::vbtree_map<fat, int> map("find_and_bounds_map.btr",
+    fb_map_type map("find_and_bounds_map.btr",
       btree::flags::truncate, 128);
     BOOST_TEST(map.header().flags() == 0);
     map.max_cache_pages(0);  // maximum stress
@@ -833,7 +829,7 @@ void find_and_bounds()
   }
 
   //{
-  //  btree::vbtree_multimap<fat, int> multimap("find_and_bounds_multimap.btr",
+  //  fb_multimap_type multimap("find_and_bounds_multimap.btr",
   //    btree::flags::truncate, 128);
   //  BOOST_TEST(multimap.header().flags() == btree::flags::multi);
   //  multimap.max_cache_pages(0);  // maximum stress

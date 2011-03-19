@@ -718,10 +718,6 @@ private:
     : public boost::iterator_facade<iterator_type<T>, T, bidirectional_traversal_tag>
   {
 
-    BOOST_STATIC_ASSERT_MSG(boost::is_const<T>::value,
-      "Internal logic error: T must be const since iterators reference a proxy"
-      " inside the iterator itself");
-
   public:
     iterator_type(): m_element(0) {}
     iterator_type(buffer_ptr p, leaf_iterator e)
@@ -1129,12 +1125,12 @@ vbtree_base<Key,Base,Traits,Comp>::m_new_root()
 template <class Key, class Base, class Traits, class Comp>   
 typename vbtree_base<Key,Base,Traits,Comp>::const_iterator
 vbtree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter,
-  const key_type& key, const mapped_type& mapped_value)
+  const key_type& key_, const mapped_type& mapped_value_)
 {
-  std::size_t          key_size= dynamic_size(key);
-  std::size_t          mapped_size = header().flags() & btree:flags::key_only
+  std::size_t          key_size= dynamic_size(key_);
+  std::size_t          mapped_size = (header().flags() & btree::flags::key_only)
     ? 0
-    ? dynamic_size(mapped_value);
+    : dynamic_size(mapped_value_);
   std::size_t          value_size = key_size + mapped_size;;
   btree_page_ptr       pg = insert_iter.m_page;
   leaf_iterator        insert_begin = insert_iter.m_element;
@@ -1177,7 +1173,7 @@ vbtree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter,
     if (m_ok_to_pack)  // have all inserts been ordered and no erases occurred?
     {
       // pack optimization: instead of splitting pg, just put value alone on pg2
-      m_memcpy(&*pg2->leaf().begin(), &key, key_size, mapped_value, mapped_size);  // insert value
+      m_memcpy_value(&*pg2->leaf().begin(), &key_, key_size, &mapped_value_, mapped_size);  // insert value
       pg2->size(value_size);
       BOOST_ASSERT(pg->parent()->page_id() == pg->parent_page_id()); // max_cache_size logic OK?
       m_branch_insert(pg->parent(), pg->parent_element(),
@@ -1215,7 +1211,7 @@ vbtree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter,
   BOOST_ASSERT(&*insert_begin <= &*pg->leaf().end());
   std::memmove(char_ptr(&*insert_begin) + value_size,
     &*insert_begin, char_distance(&*insert_begin, &*pg->leaf().end()));  // make room
-  m_memcpy(&*insert_begin, &key, key_size, mapped_value, mapped_size);  // insert value
+  m_memcpy_value(&*insert_begin, &key_, key_size, &mapped_value_, mapped_size);  // insert value
   pg->size(pg->size() + value_size);
 
   // if there is a new page, its initial key and page_id are inserted into parent
