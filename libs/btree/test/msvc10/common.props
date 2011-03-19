@@ -10,7 +10,7 @@
   <ItemDefinitionGroup>
     <ClCompile>
       <AdditionalIncludeDirectories>$(BOOST_SANDBOX)/endian;../../../../..;$(BOOST_TRUNK);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>BOOST_FILESYSTEM_VERSION=3;BOOST_SYSTEM_NO_DEPRECATED;BOOST_ALL_NO_LIB;BOOST_ALL_DYN_LINK;BOOST_LIGHTWEIGHT_TEST_OSTREAM=std::cout;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>BOOST_FILESYSTEM_VERSION=3;BOOST_SYSTEM_NO_DEPRECATED;BOOST_ALL_NO_LIB;BOOST_ALL_DYN_LINK;BOOST_LIGHTWEIGHT_TEST_OSTREAM=std::cout;BOOST_ASSERT_MSG_OSTREAM=std::cout;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <WarningLevel>Level4</WarningLevel>
     </ClCompile>
   </ItemDefinitionGroup>

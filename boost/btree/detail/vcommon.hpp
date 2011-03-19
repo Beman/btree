@@ -1559,7 +1559,8 @@ vbtree_base<Key,Base,Traits,Comp>::m_lower_page_bound(const key_type& k)
     branch_iterator low
       = std::lower_bound(pg->branch().begin(), pg->branch().end(), k, branch_comp());
 
-    if (!key_comp()(k, low->key()))  // if k isn't less that low->key(), it is equal
+    if (low != pg->branch().end()
+      && !key_comp()(k, low->key()))  // if k isn't less that low->key(), it is equal
       ++low;                         // and so must be incremented; this follows from
                                      // the branch page invariant
 
@@ -1594,7 +1595,8 @@ vbtree_base<Key,Base,Traits,Comp>::lower_bound(const key_type& k) const
   {
     branch_iterator low
       = std::lower_bound(pg->branch().begin(), pg->branch().end(), k, branch_comp());
-    if (!key_comp()(k, low->key()))  // if k isn't less that low->key(), it is equal
+    if (low != pg->branch().end()
+      && !key_comp()(k, low->key())) // if k isn't less that low->key(), it is equal
       ++low;                         // and so must be incremented; this follows from
                                      // the branch page invariant
     pg = m_mgr.read(low->page_id());
