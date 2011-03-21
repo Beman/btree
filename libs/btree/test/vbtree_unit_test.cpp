@@ -630,69 +630,72 @@ void insert_tests(BTree& bt)
 
   bt.dump_dot(std::cout);
 
-  //cur = bt.find(0x0C);
-  //cur = bt.erase(cur);
+  cur = bt.find(0x0C);
+  BOOST_TEST(cur != bt.end());
+  cur = bt.erase(cur);
 
-  //BOOST_TEST_EQ(cur->key().x, 0x0D);
-  //BOOST_TEST_EQ(bt.size(), 4U);
+  BOOST_TEST_EQ(cur->key().x, 0x0D);
+  BOOST_TEST_EQ(bt.size(), 4U);
 
-  //cur = bt.find(0x0B);
-  //cur = bt.erase(cur);
+  cur = bt.find(0x0B);
+  BOOST_TEST(cur != bt.end());
+  cur = bt.erase(cur);
 
-  //BOOST_TEST_EQ(cur->key().x, 0x0D);
-  //BOOST_TEST_EQ(bt.size(), 3U);
-  //
-  //bt.dump_dot(std::cout);
+  BOOST_TEST_EQ(cur->key().x, 0x0D);
+  BOOST_TEST_EQ(bt.size(), 3U);
+  
+  bt.dump_dot(std::cout);
 
-  //cur = bt.find(0x0E);
-  //cur = bt.erase(cur);
+  cur = bt.find(0x0E);
+  BOOST_TEST(cur != bt.end());
+  cur = bt.erase(cur);
 
-  //BOOST_TEST(cur == bt.end());
-  //BOOST_TEST_EQ(bt.size(), 2U);
-  //BOOST_TEST_EQ(bt.header().root_page_id(), 2U);
-  //BOOST_TEST_EQ(bt.header().root_level(), 1);
+  BOOST_TEST(cur == bt.end());
+  BOOST_TEST_EQ(bt.size(), 2U);
+  BOOST_TEST_EQ(bt.header().root_page_id(), 2U);
+  BOOST_TEST_EQ(bt.header().root_level(), 1);
 
-  //cur = bt.find(0x0A);
-  //cur = bt.erase(cur);
+  cur = bt.find(0x0A);
+  cur = bt.erase(cur);
 
-  //BOOST_TEST(cur != bt.end());
-  //BOOST_TEST_EQ(cur->key().x, 0x0D);
-  //BOOST_TEST(bt.begin() == cur);
-  //BOOST_TEST_EQ(bt.size(), 1U);
-  //BOOST_TEST_EQ(bt.header().root_page_id(), 3U);
-  //BOOST_TEST_EQ(bt.header().root_level(), 0);
+  BOOST_TEST(cur != bt.end());
+  BOOST_TEST_EQ(cur->key().x, 0x0D);
+  BOOST_TEST(bt.begin() == cur);
+  BOOST_TEST_EQ(bt.size(), 1U);
+  BOOST_TEST_EQ(bt.header().root_page_id(), 3U);
+  BOOST_TEST_EQ(bt.header().root_level(), 0);
 
-  //cur = bt.find(0x0D);
-  //cur = bt.erase(cur);
+  cur = bt.find(0x0D);
+  cur = bt.erase(cur);
 
-  //BOOST_TEST(cur == bt.end());
-  //BOOST_TEST(bt.begin() == bt.end());
-  //BOOST_TEST_EQ(bt.size(), 0U);
-  //BOOST_TEST_EQ(bt.header().root_page_id(), 3U);
-  //BOOST_TEST_EQ(bt.header().root_level(), 0);
+  BOOST_TEST(cur == bt.end());
+  BOOST_TEST(bt.begin() == bt.end());
+  BOOST_TEST_EQ(bt.size(), 0U);
+  BOOST_TEST_EQ(bt.header().root_page_id(), 3U);
+  BOOST_TEST_EQ(bt.header().root_level(), 0);
 
-  //for (int i = 0xff01; i <= 0xff01+20; ++i )
-  //{
-  //  element.key(i);
-  //  element.mapped_value(i);
-  //  bt.insert(element);
-  //}
-  //BOOST_TEST_EQ(bt.size(), 21U);
-  //
-  //bt.dump_dot(std::cout);
+  for (int i = 0xff01; i <= 0xff01+20; ++i )
+  {
+    key = i;
+    mapped_value = i * 100;
+    bt.insert(key, mapped_value);
+  }
+  BOOST_TEST_EQ(bt.size(), 21U);
+  
+  bt.dump_dot(std::cout);
 
-  //for (int i = 0xff01; i <= 0xff01+20; i += 2 )
-  //{
-  //  BOOST_TEST_EQ(bt.erase(i), 1U);
-  //  BOOST_TEST_EQ(bt.erase(i), 0U);
-  //}
-  //BOOST_TEST_EQ(bt.size(), 10U);
+  for (int i = 0xff01; i <= 0xff01+20; i += 2 )
+  {
+    BOOST_TEST_EQ(bt.erase(i), 1U);
+    BOOST_TEST_EQ(bt.erase(i), 0U);
+  }
+  BOOST_TEST_EQ(bt.size(), 10U);
 
-  //for (int i = 0xff01; i <= 0xff01+30; ++i )  // many of these won't exist
-  //{
-  //  bt.erase(i);
-  //}
-  //BOOST_TEST_EQ(bt.size(), 0U);
+  for (int i = 0xff01; i <= 0xff01+30; ++i )  // many of these won't exist
+  {
+    bt.erase(i);
+  }
+  BOOST_TEST_EQ(bt.size(), 0U);
 
   bt.flush();
   cout << '\n' << bt << '\n';

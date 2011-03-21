@@ -33,6 +33,9 @@
 
   TODO:
 
+  * implement emplace(). Howard speculates emplace() makes the map/multimap insert()
+    key, mapped_value overload unnecessary. 
+
   * vbtree_unit_test.cpp: move erase tests out of insert test.
 
   * Add static_assert Key, T are is_trivially_copyable
@@ -1449,8 +1452,9 @@ void vbtree_base<Key,Base,Traits,Comp>::m_erase_branch_value(
   {
     // value that is not on a end pseudo-element-only page
     branch_value_type* erase_point = &*element;
-    std::size_t erase_sz = dynamic_size(*erase_point);
-    std::size_t move_sz = char_ptr(&*pg->leaf().end())
+    std::size_t erase_sz = sizeof(page_id_type) + 
+      dynamic_size(erase_point->key());
+    std::size_t move_sz = char_ptr(&*pg->branch().end())
       - (char_ptr(erase_point) + erase_sz) + sizeof(page_id_type); 
     std::memmove(erase_point, char_ptr(erase_point) + erase_sz, move_sz);
     pg->size(pg->size() - erase_sz);
@@ -1545,6 +1549,22 @@ vbtree_base<Key,Base,Traits,Comp>::m_insert_non_unique(const key_type& key,
 //  invariants. Also, m_element of the returned iterator will be m_page->leaf().end() if
 //  appropriate, rather than a pointer to the first element on the next page.
 
+//  Analysis; consider a branch page with these entries:
+//
+//     P0, K0="B", P1, K1="D", P2, K2="F", P3, ---
+//     ----------  ----------  ----------  ------------------
+//     element 0   element 1   element 2   end pseudo-element
+//
+//  Search key:  A  B  C  D  E  F  G
+//  lower_bound  
+//   element     0  0  1  1  2  2  3
+//  child_pg->   0  0  1  1  2  2  3
+//   parent_element
+//  Child page:  P0 P1 P1 P2 P2 P3 P3
+//
+//  Note well: the element returned by lower_bound becomes the child_pg element,
+//  but the child page for equal keys comes from the ++lower_bound element
+
 template <class Key, class Base, class Traits, class Comp>   
 typename vbtree_base<Key,Base,Traits,Comp>::iterator
 vbtree_base<Key,Base,Traits,Comp>::m_lower_page_bound(const key_type& k)
@@ -1559,15 +1579,18 @@ vbtree_base<Key,Base,Traits,Comp>::m_lower_page_bound(const key_type& k)
     branch_iterator low
       = std::lower_bound(pg->branch().begin(), pg->branch().end(), k, branch_comp());
 
+    branch_iterator element(low);     // &element->key() is the insert point for
+                                      // inserts and the erase point for erases
+
     if (low != pg->branch().end()
       && !key_comp()(k, low->key()))  // if k isn't less that low->key(), it is equal
-      ++low;                         // and so must be incremented; this follows from
-                                     // the branch page invariant
+      ++low;                          // and so must be incremented; this follows from
+                                      // the branch page invariant
 
     // create the ephemeral child->parent list
     btree_page_ptr child_pg = m_mgr.read(low->page_id());
     child_pg->parent(pg.get());
-    child_pg->parent_element(low);
+    child_pg->parent_element(element);
 #   ifndef NDEBUG
     child_pg->parent_page_id(pg->page_id());
 #   endif
@@ -1595,6 +1618,7 @@ vbtree_base<Key,Base,Traits,Comp>::lower_bound(const key_type& k) const
   {
     branch_iterator low
       = std::lower_bound(pg->branch().begin(), pg->branch().end(), k, branch_comp());
+
     if (low != pg->branch().end()
       && !key_comp()(k, low->key())) // if k isn't less that low->key(), it is equal
       ++low;                         // and so must be incremented; this follows from
