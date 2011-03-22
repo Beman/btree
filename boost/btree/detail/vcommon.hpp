@@ -124,33 +124,6 @@ template <class T> struct less
   bool operator()(const T& x, const T& y) const { return x < y; }
 };
 
-////  partial specialization to poison pointer that hasn't been fully specialized
-//template <class T> struct less<const T*>
-//{
-//  typedef T first_argument_type;
-//  typedef T second_argument_type;
-//  typedef bool result_type;
-//  bool operator()(const T& x, const T& y) const;
-//};
-
-////  full specialization for C strings
-//template <> struct less<char*>
-//{
-//  typedef const char* first_argument_type;
-//  typedef const char* second_argument_type;
-//  typedef bool result_type;
-//  bool operator()(const char* x, const char* y) const { return std::strcmp(x, y) < 0; }
-//};
-//
-////  full specialization for C strings
-//template <> struct less<const char*>
-//{
-//  typedef const char* first_argument_type;
-//  typedef const char* second_argument_type;
-//  typedef bool result_type;
-//  bool operator()(const char* x, const char* y) const { return std::strcmp(x, y) < 0; }
-//};
-
 //--------------------------------------------------------------------------------------//
 //                             class vbtree_set_base                                    //
 //--------------------------------------------------------------------------------------//
@@ -803,7 +776,7 @@ private:
     const key_type& k, page_id_type id);
 
   struct branch_value_type;
-  void  m_erase_branch_value(btree_page* pg, branch_iterator value);
+  void  m_erase_branch_value(btree_page* pg, branch_iterator value, page_id_type erasee);
   void  m_free_page(btree_page* pg)
   {
     pg->needs_write(true);
@@ -1370,7 +1343,7 @@ vbtree_base<Key,Base,Traits,Comp>::erase(const_iterator pos)
 
     BOOST_ASSERT(low.m_page->parent()->page_id() \
       == low.m_page->parent_page_id()); // max_cache_size logic OK?
-    m_erase_branch_value(low.m_page->parent(), low.m_page->parent_element());
+    m_erase_branch_value(low.m_page->parent(), low.m_page->parent_element(), pos.m_page->page_id());
 
     m_hdr.decrement_element_count();
 
@@ -1436,29 +1409,41 @@ vbtree_base<Key,Base,Traits,Comp>::erase(const_iterator pos)
 
 template <class Key, class Base, class Traits, class Comp>   
 void vbtree_base<Key,Base,Traits,Comp>::m_erase_branch_value(
-  btree_page* pg, branch_iterator element)
+  btree_page* pg, branch_iterator element, page_id_type erasee)
 {
   BOOST_ASSERT(pg->is_branch());
+  BOOST_ASSERT(&*element >= &*pg->branch().begin());
+  BOOST_ASSERT(&*element < &*pg->branch().end());
+
   if (pg->empty()) // end pseudo-element only element on page?
-                   // i.e. the entire sub-tree is now empty
+                   // i.e. after the erase, the entire sub-tree will be empty
   {
     BOOST_ASSERT(pg->level() != header().root_level());
     BOOST_ASSERT(pg->parent()->page_id() == pg->parent_page_id()); // max_cache_size logic OK?
     m_erase_branch_value(pg->parent(),
-      pg->parent_element()); // erase parent value pointing to pg
+      pg->parent_element(), pg->page_id()); // erase parent value pointing to pg
     m_free_page(pg); // move page to free page list
   }
   else
   {
-    // value that is not on a end pseudo-element-only page
-    branch_value_type* erase_point = &*element;
-    std::size_t erase_sz = sizeof(page_id_type) + 
-      dynamic_size(erase_point->key());
-    std::size_t move_sz = char_ptr(&*pg->branch().end())
-      - (char_ptr(erase_point) + erase_sz) + sizeof(page_id_type); 
+    void* erase_point;
+  
+    if (element != pg->branch().begin() || erasee != element->page_id())
+    {
+      BOOST_ASSERT(erasee == (element+1)->page_id());
+      erase_point = &element->key();
+    }
+    else
+    {
+      BOOST_ASSERT(erasee == element->page_id());
+      erase_point = &element->page_id();
+    }
+    std::size_t erase_sz = dynamic_size(element->key()) + sizeof(page_id_type); 
+    std::size_t move_sz = char_distance(
+      char_ptr(erase_point)+erase_sz, &pg->branch().end()->key());
     std::memmove(erase_point, char_ptr(erase_point) + erase_sz, move_sz);
     pg->size(pg->size() - erase_sz);
-    std::memset(char_ptr(&pg->leaf().end()) + sizeof(page_id_type), 0, erase_sz);
+    std::memset(char_ptr(&pg->branch().end()) + sizeof(page_id_type), 0, erase_sz);
     pg->needs_write(true);
 
     while (pg->level()   // not the leaf (which can happen if iteration reaches leaf)
