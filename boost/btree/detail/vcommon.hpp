@@ -1430,7 +1430,7 @@ void vbtree_base<Key,Base,Traits,Comp>::m_erase_branch_value(
 {
   BOOST_ASSERT(pg->is_branch());
   BOOST_ASSERT(&*element >= &*pg->branch().begin());
-  BOOST_ASSERT(&*element < &*pg->branch().end());
+  BOOST_ASSERT(&*element <= &*pg->branch().end());  // equal to end if pseudo-element only
 
   if (pg->empty()) // end pseudo-element only element on page?
                    // i.e. after the erase, the entire sub-tree will be empty

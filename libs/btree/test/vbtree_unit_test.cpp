@@ -628,6 +628,7 @@ void insert_tests(BTree& bt)
 
   // erase tests
 
+  cout << "\n  erase all elements" << endl;
   cur = bt.find(0x0C);
   BOOST_TEST(cur != bt.end());
   cur = bt.erase(cur);
@@ -674,19 +675,22 @@ void insert_tests(BTree& bt)
   
   bt.dump_dot(std::cout);
 
+  cout << "\n  add enough elements to force branch page splits" << endl;
   for (int i = 1; i <= 21; ++i )
   {
- std::cout << "\n inserting " << i << std::endl;
+// std::cout << "\n inserting " << i << std::endl;
     key = i;
     mapped_value = i * 100;
     bt.insert(key, mapped_value);
-std::cout << "root is page " << bt.header().root_page_id() << '\n'; 
-  bt.dump_dot(std::cout);
+//std::cout << "root is page " << bt.header().root_page_id() << '\n'; 
+  //bt.dump_dot(std::cout);
   }
   BOOST_TEST_EQ(bt.size(), 21U);
   
+  cout << "root is page " << bt.header().root_page_id() << '\n'; 
   bt.dump_dot(std::cout);
 
+  cout << "\n  erase every other element" << endl;
   for (int i = 1; i <= 21; i += 2 )
   {
     BOOST_TEST_EQ(bt.erase(i), 1U);
@@ -694,9 +698,16 @@ std::cout << "root is page " << bt.header().root_page_id() << '\n';
   }
   BOOST_TEST_EQ(bt.size(), 10U);
 
+  cout << "root is page " << bt.header().root_page_id() << '\n'; 
+  bt.dump_dot(std::cout);
+
+  cout << "\n  erase remaining elements and attempt to erase nonexistant elements" << endl;
   for (int i = 1; i <= 31; ++i )  // many of these won't exist
   {
+    cout << "\n  erase " << i << endl;
     bt.erase(i);
+    cout << "root is page " << bt.header().root_page_id() << '\n'; 
+    bt.dump_dot(std::cout);
   }
   BOOST_TEST_EQ(bt.size(), 0U);
 
