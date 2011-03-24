@@ -61,6 +61,8 @@
   * For multi-containers, add a test case of a deep tree with all the same key. Then
     test erasing various elements.
 
+  * Pack optimization should apply to branches too. 
+
 */
 
 namespace boost
@@ -208,6 +210,12 @@ namespace detail
     dynamic_iterator(T* ptr, std::size_t sz)
       : m_ptr(reinterpret_cast<T*>(reinterpret_cast<char*>(ptr) + sz)) {m_begin = ptr;}
 
+    bool operator<(const dynamic_iterator& rhs) const
+    {
+      BOOST_ASSERT(m_begin == rhs.m_begin);  // on the same page
+      return m_ptr < rhs.m_ptr;
+    }
+
   private:
     friend class boost::iterator_core_access;
 
@@ -216,7 +224,10 @@ namespace detail
 
     T& dereference() const  { return *m_ptr; }
  
-    bool equal(const dynamic_iterator& rhs) const { return m_ptr == rhs.m_ptr; }
+    bool equal(const dynamic_iterator& rhs) const
+    { 
+      return m_ptr == rhs.m_ptr;
+    }
 
     void increment()
     {
@@ -288,13 +299,13 @@ namespace detail
   ForwardIterator advance_by_size(ForwardIterator begin, std::size_t max_sz)
   {
     BOOST_ASSERT(max_sz);
-    std::size_t sz = 0;
-    do
+    ForwardIterator prior;
+    for (std::size_t sz = 0; sz <= max_sz; sz += dynamic_size(*begin)) 
     {
-      sz += dynamic_size(*begin);
+      prior = begin;
       ++begin;
-    } while (sz <= max_sz);
-    return begin;
+    }
+    return prior;
   }
 
 }  // namespace detail
@@ -1160,6 +1171,7 @@ vbtree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter,
     // split page pg by moving half the elements, by size, to page p2
     leaf_iterator split_begin(detail::advance_by_size(pg->leaf().begin(),
       pg->leaf().size() / 2));
+    ++split_begin; // for leaves, prefer more aggressive split begin
     std::size_t split_sz = char_distance(&*split_begin, &*pg->leaf().end());
 
     // TODO: if the insert point will fall on the new page, it would be faster to
@@ -1231,6 +1243,7 @@ vbtree_base<Key,Base,Traits,Comp>::m_branch_insert(
   if (pg->size() + insert_size > m_max_branch_size)  // no room on page?
   {
     //  no room on page, so page must be split
+std::cout << "Splitting branch\n";
 
     if (pg->level() == m_hdr.root_level()) // splitting the root?
       m_new_root();  // create a new root
@@ -1244,6 +1257,7 @@ vbtree_base<Key,Base,Traits,Comp>::m_branch_insert(
     branch_iterator split_begin(unsplit_end+1);
     std::size_t split_sz = char_distance(&*split_begin, char_ptr(&*pg->branch().end()) 
       + sizeof(page_id_type));  // include the end pseudo-element page_id
+    BOOST_ASSERT(split_sz > sizeof(page_id_type));
 
     // TODO: if the insert point will fall on the new page, it would be faster to
     // copy the portion before the insert point, copy the value being inserted, and
@@ -1278,8 +1292,11 @@ vbtree_base<Key,Base,Traits,Comp>::m_branch_insert(
       char_distance(&unsplit_end->key(), &pg->branch().end()->key())); 
     pg->size(char_distance(&*pg->branch().begin(), &*unsplit_end));
 
-    // adjust pg and insert_begin if they now fall on the new page due to the split
-    if (&split_begin->key() < insert_begin)
+    // adjust pg and insert_begin if they now fall on the new page due to the split; note
+    // that if the insertion point element is the same as the split begin element, the
+    // insertion must occur on the original page because otherwise the key to be inserted
+    // would have to have been promoted, and that would needlessly complicate promotion.
+    if (split_begin < element)
     {
       pg = pg2.get();
       insert_begin = reinterpret_cast<key_type*>(char_ptr(&pg2->branch().begin()->key())
