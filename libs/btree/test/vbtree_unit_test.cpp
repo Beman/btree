@@ -674,26 +674,27 @@ void insert_tests(BTree& bt)
   
   bt.dump_dot(std::cout);
 
-  for (int i = 0xff01; i <= 0xff01+20; ++i )
+  for (int i = 1; i <= 21; ++i )
   {
+ std::cout << "\n inserting " << i << std::endl;
     key = i;
     mapped_value = i * 100;
     bt.insert(key, mapped_value);
-  
+std::cout << "root is page " << bt.header().root_page_id() << '\n'; 
   bt.dump_dot(std::cout);
   }
   BOOST_TEST_EQ(bt.size(), 21U);
   
   bt.dump_dot(std::cout);
 
-  for (int i = 0xff01; i <= 0xff01+20; i += 2 )
+  for (int i = 1; i <= 21; i += 2 )
   {
     BOOST_TEST_EQ(bt.erase(i), 1U);
     BOOST_TEST_EQ(bt.erase(i), 0U);
   }
   BOOST_TEST_EQ(bt.size(), 10U);
 
-  for (int i = 0xff01; i <= 0xff01+30; ++i )  // many of these won't exist
+  for (int i = 1; i <= 31; ++i )  // many of these won't exist
   {
     bt.erase(i);
   }
