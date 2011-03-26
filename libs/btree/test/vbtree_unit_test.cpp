@@ -661,8 +661,6 @@ void insert_tests(BTree& bt)
   BOOST_TEST_EQ(bt.size(), 1U);
   BOOST_TEST_EQ(bt.header().root_page_id(), 4U);
   BOOST_TEST_EQ(bt.header().root_level(), 0);
-  
-  bt.dump_dot(std::cout);
 
   cur = bt.find(0x0D);
   cur = bt.erase(cur);
@@ -687,8 +685,8 @@ void insert_tests(BTree& bt)
   }
   BOOST_TEST_EQ(bt.size(), 21U);
   
-  cout << "root is page " << bt.header().root_page_id() << '\n'; 
-  bt.dump_dot(std::cout);
+  //cout << "root is page " << bt.header().root_page_id() << '\n'; 
+  //bt.dump_dot(std::cout);
 
   cout << "\n  erase every other element" << endl;
   for (int i = 1; i <= 21; i += 2 )
@@ -698,16 +696,16 @@ void insert_tests(BTree& bt)
   }
   BOOST_TEST_EQ(bt.size(), 10U);
 
-  cout << "root is page " << bt.header().root_page_id() << '\n'; 
-  bt.dump_dot(std::cout);
+  //cout << "root is page " << bt.header().root_page_id() << '\n'; 
+  //bt.dump_dot(std::cout);
 
   cout << "\n  erase remaining elements and attempt to erase nonexistant elements" << endl;
   for (int i = 1; i <= 31; ++i )  // many of these won't exist
   {
-    cout << "\n  erase " << i << endl;
+    //cout << "\n  erase " << i << endl;
     bt.erase(i);
-    cout << "root is page " << bt.header().root_page_id() << '\n'; 
-    bt.dump_dot(std::cout);
+    //cout << "root is page " << bt.header().root_page_id() << '\n'; 
+    //bt.dump_dot(std::cout);
   }
   BOOST_TEST_EQ(bt.size(), 0U);
 
@@ -831,13 +829,13 @@ void find_and_bounds()
     find_and_bounds_tests(set);
   }
 
-  //{
-  //  fb_multiset_type multiset("find_and_bounds_multiset.btr",
-  //    btree::flags::truncate, 128);
-  //  BOOST_TEST(multiset.header().flags() == (btree::flags::key_only | btree::flags::multi));
-  //  multiset.max_cache_pages(0);  // maximum stress
-  //  find_and_bounds_tests(multiset);
-  //}
+  {
+    fb_multiset_type multiset("find_and_bounds_multiset.btr",
+      btree::flags::truncate, 128);
+    BOOST_TEST(multiset.header().flags() == (btree::flags::key_only | btree::flags::multi));
+    multiset.max_cache_pages(0);  // maximum stress
+    find_and_bounds_tests(multiset);
+  }
 
   //  these tests use a value type that is large relative to the page size, thus stressing
   //  the code by causing a lot of page splits 
@@ -850,68 +848,74 @@ void find_and_bounds()
     find_and_bounds_tests(map);
   }
 
-  //{
-  //  fb_multimap_type multimap("find_and_bounds_multimap.btr",
-  //    btree::flags::truncate, 128);
-  //  BOOST_TEST(multimap.header().flags() == btree::flags::multi);
-  //  multimap.max_cache_pages(0);  // maximum stress
-  //  find_and_bounds_tests(multimap);
-  //}
+  {
+    fb_multimap_type multimap("find_and_bounds_multimap.btr",
+      btree::flags::truncate, 128);
+    BOOST_TEST(multimap.header().flags() == btree::flags::multi);
+    multimap.max_cache_pages(0);  // maximum stress
+    find_and_bounds_tests(multimap);
+  }
 
   cout << "    find_and_bounds complete" << endl;
 }
 
-////---------------------------------- insert_non_unique -----------------------------------//
-//
-//template <class BTree>
-//void insert_non_unique_tests(BTree& bt)
-//{
-//  BOOST_TEST(bt.header().flags() & btree::flags::multi);
-//  
-//  typename BTree::const_iterator result;
-//
-//  const int n = 12;
-//  cout << "  testing with " << n << " equal elements ..." << endl;
-//
-//  for (int i = 1; i <= n; ++i)
-//  {
-//    result = bt.insert(std::make_pair(3, i));
-//    BOOST_TEST_EQ(bt.size(), static_cast<unsigned>(i));
-//    BOOST_TEST_EQ(result->first.x, 3);
-//    BOOST_TEST_EQ(result->second, i);
-//    
-//    int j = 0;
-//    for (typename BTree::const_iterator_range range = bt.equal_range(3);
-//         range.first != range.second; ++range.first)
-//    {
-//      ++j;
-//      BOOST_TEST_EQ(range.first->first.x, 3);
-//      BOOST_TEST_EQ(range.first->second, j);
-//    }
-//    BOOST_TEST_EQ(j, i);
-//  }
-//
-//  cout << "  testing \"" << bt.file_path().string() << "\" complete" << endl;
-//}
-//
-//void insert_non_unique()
-//{
-//  cout << "  insert_non_unique..." << endl;
-//
-//  //  these tests use a value type that is large relative to the page size, thus stressing
-//  //  the code by causing a lot of page splits 
-//
-//  {
-//    fs::path map_path("non_unique.btr");
-//    btree::vbtree_multimap<fat, int> multimap(map_path,
-//      btree::flags::truncate, 128);
-//    multimap.max_cache_pages(0);  // maximum stress
-//    insert_non_unique_tests(multimap);
-//  }
-//
-//  cout << "    insert_non_unique complete" << endl;
-//}
-//
+//---------------------------------- insert_non_unique -----------------------------------//
+
+template <class BTree>
+void insert_non_unique_tests(BTree& bt)
+{
+  BOOST_TEST(bt.header().flags() & btree::flags::multi);
+  
+  typename BTree::const_iterator result;
+
+  const int n = 12;
+  cout << "  testing with " << n << " equal elements ..." << endl;
+
+  fat k;
+
+  for (int i = 1; i <= n; ++i)
+  {
+    result = bt.insert(k = 3, i);
+    BOOST_TEST_EQ(bt.size(), static_cast<unsigned>(i));
+    BOOST_TEST_EQ(result->key().x, 3);
+    BOOST_TEST_EQ(result->mapped_value(), i);
+
+    cout << "root is page " << bt.header().root_page_id() << '\n'; 
+    bt.dump_dot(std::cout);
+   
+    int j = 0;
+    for (typename BTree::const_iterator_range range = bt.equal_range(3);
+         range.first != range.second; ++range.first)
+    {
+      cout << range.first->key().x << ", " << range.first->mapped_value() << endl;
+      ++j;
+      BOOST_TEST_EQ(range.first->key().x, 3);
+      BOOST_TEST_EQ(range.first->mapped_value(), j);
+    }
+    BOOST_TEST_EQ(j, i);
+  }
+
+  cout << "  testing \"" << bt.file_path().string() << "\" complete" << endl;
+}
+
+void insert_non_unique()
+{
+  cout << "  insert_non_unique..." << endl;
+
+  //  these tests use a value type that is large relative to the page size, thus stressing
+  //  the code by causing a lot of page splits 
+
+  {
+    fs::path map_path("non_unique.btr");
+    btree::vbtree_multimap<fat, int> multimap(map_path,
+      btree::flags::truncate, 128);
+    multimap.max_cache_pages(0);  // maximum stress
+    insert_non_unique_tests(multimap);
+  }
+
+  cout << "    insert_non_unique complete" << endl;
+}
+
 ////-------------------------------------- erase -----------------------------------------//
 //
 //void erase()
@@ -951,34 +955,39 @@ void find_and_bounds()
 //  cout << "  parent_pointer_lifetime..." << endl;
 //  cout << "    parent_pointer_lifetime complete" << endl;
 //}
-//
-////-------------------------------- pack_optimization -----------------------------------//
-//
-//void pack_optimization()
-//{
-//  cout << "  pack_optimization..." << endl;
-//
-//  typedef std::pair<int, int> value_type;
-//  const int page_sz = 128;
-//  const int overhead = 12;
-//  const int per_page = (page_sz - overhead) / sizeof(value_type);
-//  const int n = per_page * 2;  // sufficient to distinguish if pack optimization works
-//
-//  btree::vbtree_map<int, int> np("not_packed.btr", btree::flags::truncate, page_sz);
-//  for (int i=n; i > 0; --i)
-//    np.insert(std::make_pair(i, 0xffffff00+i));
-//
-//  BOOST_TEST_EQ(np.header().page_count(), 5U);
-//
-//  btree::vbtree_map<int, int> p("packed.btr", btree::flags::truncate, page_sz);
-//  for (int i=1; i <= n; ++i)
-//    p.insert(std::make_pair(i, 0xffffff00+i));
-//
-//  BOOST_TEST_EQ(p.header().page_count(), 4U);
-//
-//  cout << "    pack_optimization complete" << endl;
-//}
-//
+
+//-------------------------------- pack_optimization -----------------------------------//
+
+void pack_optimization()
+{
+  cout << "  pack_optimization..." << endl;
+
+  typedef std::pair<int, int> value_type;
+  const int page_sz = 128;
+  const int overhead = 12;
+  const int per_page = (page_sz - overhead) / sizeof(value_type);
+  const int n = per_page * 2;  // sufficient to distinguish if pack optimization works
+
+  btree::vbtree_map<int, int> np("not_packed.btr", btree::flags::truncate, page_sz);
+  for (int i=n; i > 0; --i)
+    np.insert(i, 0xffffff00+i);
+
+  cout << "\nroot is page " << np.header().root_page_id() << '\n'; 
+  np.dump_dot(std::cout);
+  
+  btree::vbtree_map<int, int> p("packed.btr", btree::flags::truncate, page_sz);
+  for (int i=1; i <= n; ++i)
+    p.insert(i, 0xffffff00+i);
+
+  cout << "\nroot is page " << p.header().root_page_id() << '\n'; 
+  p.dump_dot(std::cout);
+
+  BOOST_TEST_EQ(np.size(), p.size());
+  BOOST_TEST(p.header().page_count() < np.header().page_count());
+
+  cout << "    pack_optimization complete" << endl;
+}
+
 ////-------------------------------------  fixstr ----------------------------------------//
 //
 //void  fixstr()
@@ -1030,14 +1039,14 @@ int cpp_main(int, char*[])
   small_variable_set();
   //alignment();
   insert();
-  //insert_non_unique();
+  insert_non_unique();
   find_and_bounds();
   //erase();
   //iteration();
   //multi();
   //parent_pointer_to_split_page();
   //parent_pointer_lifetime();
-  //pack_optimization();
+  pack_optimization();
   //fixstr();
   
 
