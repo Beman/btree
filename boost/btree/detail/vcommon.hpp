@@ -1621,7 +1621,8 @@ vbtree_base<Key,Base,Traits,Comp>::lower_bound(const key_type& k) const
     branch_iterator low
       = std::lower_bound(pg->branch().begin(), pg->branch().end(), k, branch_comp());
 
-    if (low != pg->branch().end()
+    if ((header().flags() & btree::flags::multi) == 0
+      && low != pg->branch().end()
       && !key_comp()(k, low->key())) // if k isn't less that low->key(), it is equal
       ++low;                         // and so must be incremented; this follows from
                                      // the branch page invariant
@@ -1635,7 +1636,7 @@ vbtree_base<Key,Base,Traits,Comp>::lower_bound(const key_type& k) const
   if (low != pg->leaf().end())
     return const_iterator(pg, low);
 
-  // lower bound is first element on next page
+  // lower bound is first element on next page; this may happen for non-unique containers
   if (!pg->leaf().next_page_id())
     return end();
   pg = m_mgr.read(pg->leaf().next_page_id());
