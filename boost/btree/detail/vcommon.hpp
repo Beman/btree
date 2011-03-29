@@ -29,8 +29,6 @@
 
 /*
 
-  ****** WARNING: multimap and multiset support is disabled until unique map, set, working *****
-
   TODO:
 
   * implement emplace(). Howard speculates emplace() makes the map/multimap insert()
@@ -1292,11 +1290,8 @@ std::cout << "Splitting branch\n";
       char_distance(&unsplit_end->key(), &pg->branch().end()->key())); 
     pg->size(char_distance(&*pg->branch().begin(), &*unsplit_end));
 
-    // adjust pg and insert_begin if they now fall on the new page due to the split; note
-    // that if the insertion point element is the same as the split begin element, the
-    // insertion must occur on the original page because otherwise the key to be inserted
-    // would have to have been promoted, and that would needlessly complicate promotion.
-    if (split_begin < element)
+    // adjust pg and insert_begin if they now fall on the new page due to the split
+    if (&*split_begin <= &*element)
     {
       pg = pg2.get();
       insert_begin = reinterpret_cast<key_type*>(char_ptr(&pg2->branch().begin()->key())
