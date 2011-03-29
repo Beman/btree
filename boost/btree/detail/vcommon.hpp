@@ -568,11 +568,11 @@ private:
 
       //----------------------------- branch invariants ----------------------------//
       //                                                                            //
-      //  Unique containers:  Pn < Kn <= Pn+1   Keys in Pn are < Kn                 //
-      //                                        Kn <= Keys in Pn+1                  //
+      //  Unique containers:      Pn < Kn <= Pn+1   Keys in Pn are < Kn             //
+      //                                            Kn <= Keys in Pn+1              //
       //                                                                            //
-      //  Multi containers:                                                         //
-      //                                                                            //
+      //  Non-unique containers:  Pn <= Kn <= Pn+1  Keys in Pn are <= Kn            //
+      //                                            Kn <= Keys in Pn+1              //
       //----------------------------------------------------------------------------//
 
   typedef detail::branch_value<page_id_type, key_type>  branch_value_type;
@@ -1538,6 +1538,9 @@ vbtree_base<Key,Base,Traits,Comp>::m_insert_non_unique(const key_type& key,
 
 //--------------------------------- m_lower_page_bound() -------------------------------//
 
+//  m_lower_page_bound is called for unique container inserts, or erases on any container;
+//  m_lower_page_bound is never called for non-unique container inserts.
+
 //  Differs from lower_bound() in that a trail of parent page and element pointers is left
 //  behind, allowing inserts and erases to walk back up the tree to maintain the branch
 //  invariants. Also, m_element of the returned iterator will be m_page->leaf().end() if
@@ -1559,6 +1562,7 @@ vbtree_base<Key,Base,Traits,Comp>::m_insert_non_unique(const key_type& key,
 //  Note well: the element returned by lower_bound becomes the child_pg element,
 //  but the child page for equal keys comes from the ++lower_bound element
 
+
 template <class Key, class Base, class Traits, class Comp>   
 typename vbtree_base<Key,Base,Traits,Comp>::iterator
 vbtree_base<Key,Base,Traits,Comp>::m_lower_page_bound(const key_type& k)
@@ -1579,7 +1583,7 @@ vbtree_base<Key,Base,Traits,Comp>::m_lower_page_bound(const key_type& k)
     if (low != pg->branch().end()
       && !key_comp()(k, low->key()))  // if k isn't less that low->key(), it is equal
       ++low;                          // and so must be incremented; this follows from
-                                      // the branch page invariant
+                                      // the branch page invariant for unique containers
 
     // create the ephemeral child->parent list
     btree_page_ptr child_pg = m_mgr.read(low->page_id());
