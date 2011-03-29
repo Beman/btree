@@ -774,24 +774,24 @@ void find_and_bounds_tests(BTree& bt)
 
   if (bt.header().flags() & btree::flags::multi)
   {
-    cout << "root is page " << bt.header().root_page_id() << '\n'; 
-    bt.dump_dot(std::cout);
-    cout << "insert 3" << endl;
+    //cout << "root is page " << bt.header().root_page_id() << '\n'; 
+    //bt.dump_dot(std::cout);
+    //cout << "insert 3" << endl;
     do_fb_insert(bt, 3);
-    cout << "root is page " << bt.header().root_page_id() << '\n'; 
-    bt.dump_dot(std::cout);
-    cout << "insert 7" << endl;
+    //cout << "root is page " << bt.header().root_page_id() << '\n'; 
+    //bt.dump_dot(std::cout);
+    //cout << "insert 7" << endl;
     do_fb_insert(bt, 7);
-    cout << "root is page " << bt.header().root_page_id() << '\n'; 
-    bt.dump_dot(std::cout);
-    cout << "insert 5" << endl;
+    //cout << "root is page " << bt.header().root_page_id() << '\n'; 
+    //bt.dump_dot(std::cout);
+    //cout << "insert 7" << endl;
     do_fb_insert(bt, 7);
     for (int i = 0; i < 10; ++i)
     {
-      cout << "root is page " << bt.header().root_page_id() << '\n'; 
-      bt.dump_dot(std::cout);
+      //cout << "root is page " << bt.header().root_page_id() << '\n'; 
+      //bt.dump_dot(std::cout);
 
-      cout << "insert 15" << endl;
+      //cout << "insert 15" << endl;
       do_fb_insert(bt, 15);
     }
     cout << "root is page " << bt.header().root_page_id() << '\n'; 
