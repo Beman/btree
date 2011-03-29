@@ -95,7 +95,7 @@ namespace boost
         preload     = 0x10, // existing file read to preload O/S file cache
 
         // bitmasks set by implemenation, ignored if passed in by user:
-        multi       = 4,    // multimap or multiset; non-uniqueness allowed
+        unique      = 4,    // multimap or multiset; non-uniqueness allowed
         key_only    = 8     // set or multiset
       };
 
