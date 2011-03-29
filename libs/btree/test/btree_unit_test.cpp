@@ -507,7 +507,7 @@ void find_and_bounds_tests(BTree& bt)
 
   BOOST_TEST_EQ(bt.size(), 9U);
 
-  if (bt.header().flags() & btree::flags::multi)
+  if (!(bt.header().flags() & btree::flags::unique))
   {
     bt.insert(make_value<typename BTree::value_type>(3));
     bt.insert(make_value<typename BTree::value_type>(7));
@@ -536,7 +536,7 @@ void find_and_bounds_tests(BTree& bt)
     BOOST_TEST((bt.find(i) != bt.end() && bt.key(*bt.find(i)) == fnd[i])
       || (bt.find(i) == bt.end() && fnd[i] == -1));
 
-    if (bt.header().flags() & btree::flags::multi)
+    if (!(bt.header().flags() & btree::flags::unique))
       BOOST_TEST(bt.count(i) == cnt[i]);
     else
       BOOST_TEST(bt.count(i) == (cnt[i] ? 1 : 0));
@@ -557,7 +557,8 @@ void find_and_bounds()
   {
     btree::btree_map<fat, int> map("find_and_bounds_map.btr",
       btree::flags::truncate, 128);
-    BOOST_TEST(map.header().flags() == 0);
+    BOOST_TEST(map.header().flags() & btree::flags::unique);
+    BOOST_TEST(!(map.header().flags() & btree::flags::key_only));
     map.max_cache_pages(0);  // maximum stress
     find_and_bounds_tests(map);
   }
@@ -565,7 +566,8 @@ void find_and_bounds()
   {
     btree::btree_multimap<fat, int> multimap("find_and_bounds_multimap.btr",
       btree::flags::truncate, 128);
-    BOOST_TEST(multimap.header().flags() == btree::flags::multi);
+    BOOST_TEST(!(multimap.header().flags() & btree::flags::unique));
+    BOOST_TEST(!(multimap.header().flags() & btree::flags::key_only));
     multimap.max_cache_pages(0);  // maximum stress
     find_and_bounds_tests(multimap);
   }
@@ -573,6 +575,7 @@ void find_and_bounds()
   {
     btree::btree_set<int> set("find_and_bounds_set.btr",
       btree::flags::truncate, 128);
+    BOOST_TEST(set.header().flags() & btree::flags::unique);
     BOOST_TEST(set.header().flags() == btree::flags::key_only);
     set.max_cache_pages(0);  // maximum stress
     find_and_bounds_tests(set);
@@ -581,7 +584,8 @@ void find_and_bounds()
   {
     btree::btree_multiset<int> multiset("find_and_bounds_multiset.btr",
       btree::flags::truncate, 128);
-    BOOST_TEST(multiset.header().flags() == (btree::flags::key_only | btree::flags::multi));
+    BOOST_TEST(!(multiset.header().flags() & btree::flags::unique));
+    BOOST_TEST(multiset.header().flags() == btree::flags::key_only);
     multiset.max_cache_pages(0);  // maximum stress
     find_and_bounds_tests(multiset);
   }

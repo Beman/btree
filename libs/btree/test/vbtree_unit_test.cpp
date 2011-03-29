@@ -772,7 +772,7 @@ void find_and_bounds_tests(BTree& bt)
 
   BOOST_TEST_EQ(bt.size(), 9U);
 
-  if (bt.header().flags() & btree::flags::multi)
+  if (!(bt.header().flags() & btree::flags::unique))
   {
     //cout << "root is page " << bt.header().root_page_id() << '\n'; 
     //bt.dump_dot(std::cout);
@@ -825,10 +825,10 @@ void find_and_bounds_tests(BTree& bt)
     BOOST_TEST((bt.find(i) != bt.end() && bt.key(*bt.find(i)) == fnd[i])
       || (bt.find(i) == bt.end() && fnd[i] == -1));
 
-    if (bt.header().flags() & btree::flags::multi)
-      BOOST_TEST(bt.count(i) == cnt[i]);
-    else
+    if (bt.header().flags() & btree::flags::unique)
       BOOST_TEST(bt.count(i) == (cnt[i] ? 1 : 0));
+    else
+      BOOST_TEST(bt.count(i) == cnt[i]);
 
 //    cout << "      i = " << i << ", bt.count(i) = " << bt.count(i) <<endl;
   }
@@ -842,7 +842,8 @@ void find_and_bounds()
 
   {
     fb_set_type set("find_and_bounds_set.btr", btree::flags::truncate, 128);
-    BOOST_TEST(set.header().flags() == btree::flags::key_only);
+    BOOST_TEST(set.header().flags() & btree::flags::unique);
+    BOOST_TEST(set.header().flags() & btree::flags::key_only);
     set.max_cache_pages(0);  // maximum stress
     find_and_bounds_tests(set);
   }
@@ -850,7 +851,8 @@ void find_and_bounds()
   {
     fb_multiset_type multiset("find_and_bounds_multiset.btr",
       btree::flags::truncate, 128);
-    BOOST_TEST(multiset.header().flags() == (btree::flags::key_only | btree::flags::multi));
+    BOOST_TEST(!(multiset.header().flags() & btree::flags::unique));
+    BOOST_TEST(multiset.header().flags() & btree::flags::key_only);
     multiset.max_cache_pages(0);  // maximum stress
     find_and_bounds_tests(multiset);
   }
@@ -861,7 +863,8 @@ void find_and_bounds()
   {
     fb_map_type map("find_and_bounds_map.btr",
       btree::flags::truncate, 128);
-    BOOST_TEST(map.header().flags() == 0);
+    BOOST_TEST(map.header().flags() & btree::flags::unique);
+    BOOST_TEST(!(map.header().flags() & btree::flags::key_only));
     map.max_cache_pages(0);  // maximum stress
     find_and_bounds_tests(map);
   }
@@ -869,7 +872,8 @@ void find_and_bounds()
   {
     fb_multimap_type multimap("find_and_bounds_multimap.btr",
       btree::flags::truncate, 128);
-    BOOST_TEST(multimap.header().flags() == btree::flags::multi);
+    BOOST_TEST(!(multimap.header().flags() & btree::flags::unique));
+    BOOST_TEST(!(multimap.header().flags() & btree::flags::key_only));
     multimap.max_cache_pages(0);  // maximum stress
     find_and_bounds_tests(multimap);
   }
@@ -882,7 +886,7 @@ void find_and_bounds()
 template <class BTree>
 void insert_non_unique_tests(BTree& bt)
 {
-  BOOST_TEST(bt.header().flags() & btree::flags::multi);
+  BOOST_TEST(!(bt.header().flags() & btree::flags::unique));
   
   typename BTree::const_iterator result;
 

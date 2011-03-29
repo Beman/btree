@@ -50,7 +50,7 @@ namespace boost
           std::size_t pg_sz = default_page_size,  // ignored if existing file
           const Comp& comp = Comp())
         : vbtree_base<Key,vbtree_map_base<Key,T,Comp>,Traits,Comp>(p,
-            flags::user(flgs), pg_sz, comp) {}
+            flags::user(flgs) | flags::unique, pg_sz, comp) {}
 
       template <class InputIterator>
       vbtree_map(InputIterator begin, InputIterator end,
@@ -59,7 +59,7 @@ namespace boost
         std::size_t pg_sz = default_page_size,  // ignored if existing file
         const Comp& comp = Comp())
       : vbtree_base<Key,vbtree_map_base<Key,T,Comp>,Traits,Comp>(p,
-          flags::user(flgs), pg_sz, comp)
+          flags::user(flgs) | flags::unique, pg_sz, comp)
       {
         for (; begin != end; ++begin)
           vbtree_base<Key,vbtree_map_base<Key,T,Comp>,Traits,Comp>::m_insert_unique(
@@ -71,7 +71,7 @@ namespace boost
         std::size_t pg_sz = default_page_size) // pg_sz ignored if existing file
       {
         vbtree_base<Key,vbtree_map_base<Key,T,Comp>,Traits,Comp>::m_open(p,
-          flags::user(flgs), pg_sz);
+          flags::user(flgs) | flags::unique, pg_sz);
       }
 
       // typename vbtree_base<Key,vbtree_map_base<Key,T,Comp>,Traits,Comp>:: is required by GCC but not VC++
@@ -114,7 +114,7 @@ namespace boost
           std::size_t pg_sz = default_page_size,  // ignored if existing file
           const Comp& comp = Comp())
         : vbtree_base<Key,vbtree_map_base<Key,T,Comp>,Traits,Comp>(p,
-            flags::user(flgs) | flags::multi, pg_sz, comp) {}
+            flags::user(flgs), pg_sz, comp) {}
 
       template <class InputIterator>
       vbtree_multimap(InputIterator begin, InputIterator end,
@@ -123,7 +123,7 @@ namespace boost
           std::size_t pg_sz = default_page_size,  // ignored if existing file
           const Comp& comp = Comp())
         : vbtree_base<Key,vbtree_map_base<Key,T,Comp>,Traits,Comp>(p,
-            flags::user(flgs) | flags::multi, pg_sz, comp)
+            flags::user(flgs), pg_sz, comp)
       {
         for (; begin != end; ++begin)
           vbtree_base<Key,vbtree_map_base<Key,T,Comp>,Traits,Comp>::m_insert_non_unique(
@@ -135,7 +135,7 @@ namespace boost
       std::size_t pg_sz = default_page_size) // pg_sz ignored if existing file
       {
         vbtree_base<Key,vbtree_map_base<Key,T,Comp>,Traits,Comp>::m_open(p,
-          flgs | flags::multi, pg_sz);
+          flags::user(flgs), pg_sz);
       }
 
       // typename vbtree_base<Key,vbtree_map_base<Key,T,Comp>,Traits,Comp>:: is required by GCC but not VC++

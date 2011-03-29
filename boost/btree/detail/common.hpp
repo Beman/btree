@@ -1034,7 +1034,7 @@ btree_base<Key,Base,Traits,Comp>::m_branch_insert(
   pg->size(pg->size()+1);
 
 #ifndef NDEBUG
-  if (!(m_hdr.flags() & btree::flags::multi))
+  if (m_hdr.flags() & btree::flags::unique)
   {
     key_type prev_key = 0;
     for(const branch_value_type* beg = pg->branch_begin(); beg != pg->branch_end(); ++beg)
@@ -1222,11 +1222,11 @@ btree_base<Key,Base,Traits,Comp>::m_insert_unique(const value_type& value)
   BOOST_ASSERT_MSG(is_open(), "insert() on unopen btree");
   iterator insert_point = m_lower_page_bound(key(value));
 
-  bool unique = insert_point.m_element == insert_point.m_page->leaf_end()
+  bool is_unique = insert_point.m_element == insert_point.m_page->leaf_end()
                 || key_comp()(key(value), key(*insert_point.m_element))
                 || key_comp()(key(*insert_point.m_element), key(value));
 
-  if (unique)
+  if (is_unique)
     return std::pair<const_iterator, bool>(m_leaf_insert(insert_point, value), true);
 
   return std::pair<const_iterator, bool>(
@@ -1304,7 +1304,7 @@ btree_base<Key,Base,Traits,Comp>::lower_bound(const key_type& k) const
 
     pg = (low == pg->branch_end()        // all keys on page < search key
           || key_comp()(k, low->key)   // search key < low key
-          || ((m_hdr.flags() & btree::flags::multi)
+          || (!(m_hdr.flags() & btree::flags::unique)
               && !key_comp()(low->key, k) ))  // non-unique && search key == low key
       ? m_mgr.read((low-1)->page_id)
       : m_mgr.read(low->page_id);

@@ -53,9 +53,6 @@
       - Add individual get, and where appropriate, set, functions.
       - Move header file to detail.
 
-  * For multi-containers, consider branch pages with the same number of P and K entries,
-    where the invariant then becomes Kn <= Keys in Pn 
-
   * For multi-containers, add a test case of a deep tree with all the same key. Then
     test erasing various elements.
 
@@ -1309,7 +1306,7 @@ std::cout << "Splitting branch\n";
   pg->size(pg->size() + insert_size);
 
 #ifndef NDEBUG
-  if (!(m_hdr.flags() & btree::flags::multi))
+  if (m_hdr.flags() & btree::flags::unique)
   {
     branch_iterator cur = pg->branch().begin();
     key_type prev_key = cur->key();
@@ -1516,11 +1513,11 @@ vbtree_base<Key,Base,Traits,Comp>::m_insert_unique(const key_type& k,
   BOOST_ASSERT_MSG(is_open(), "insert() on unopen btree");
   iterator insert_point = m_lower_page_bound(k);
 
-  bool unique = insert_point.m_element == insert_point.m_page->leaf().end()
+  bool is_unique = insert_point.m_element == insert_point.m_page->leaf().end()
                 || key_comp()(k, key(*insert_point))
                 || key_comp()(key(*insert_point), k);
 
-  if (unique)
+  if (is_unique)
     return std::pair<const_iterator, bool>(m_leaf_insert(insert_point, k, mv), true);
 
   return std::pair<const_iterator, bool>(
@@ -1616,7 +1613,7 @@ vbtree_base<Key,Base,Traits,Comp>::lower_bound(const key_type& k) const
     branch_iterator low
       = std::lower_bound(pg->branch().begin(), pg->branch().end(), k, branch_comp());
 
-    if ((header().flags() & btree::flags::multi) == 0
+    if ((header().flags() & btree::flags::unique)
       && low != pg->branch().end()
       && !key_comp()(k, low->key())) // if k isn't less that low->key(), it is equal
       ++low;                         // and so must be incremented; this follows from
