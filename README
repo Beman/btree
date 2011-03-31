@@ -1,11 +1,5 @@
-vflip is a branch of branch "vbase2".
+tree-walk is a branch of vflip.
 
-The key insight is that by exchanging the order of branch_value_type data members, P0 can be eliminated. This may eliminate some complex and error prone special case code.
+The leaf page sequence list will be eliminated. Iteration will be done by tree walk.
 
-It would work this way:
-
-* branch_value_type members would be ordered page_id_type, key_type.
-
-* The end iterator would be dereferenceable to obtain the page_id. In other words, the extra page_id_type value is at the end, rather than the beginning of the sequence.
-
-* Code should be simpler since it is never necessary to decrement begin(), which may have made sense in C or assembler, but is really tricky in C++.
+The tree walk approach has been under consideration from the very start. It is being explored now because non-unique erase(iterator), and to a lesser extent other non-unique modifying operations, need live parent pointers. That implies either adding branch sequence lists or tree walking. Tree walking may be simpler, and saves precious disk page real estate.
