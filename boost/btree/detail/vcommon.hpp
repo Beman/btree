@@ -31,6 +31,9 @@
 
   TODO:
 
+  * btree_page_ptr dtor, mod functs, needs to free parent if use_count() == 1. Need
+    to figure out test for correct operation.
+
   * implement emplace(). Howard speculates emplace() makes the map/multimap insert()
     key, mapped_value overload unnecessary. 
 
@@ -609,6 +612,8 @@ private:
 
   class branch_page;
 
+  //----------------------------------- btree_page -------------------------------------//
+
   class btree_page : public buffer
   {
   public:
@@ -618,13 +623,8 @@ private:
 
     page_id_type       page_id() const                 {return page_id_type(buffer_id());}
 
-    //----------------------------------------------------------------------------------//
-    // WARNING: The child->parent list is ephemeral, and is only valid when it has been //
-    // established (by m_lower_page/m_upper_page) during insert and erase operations.   //
-    // Once those operations are complete, child->parent list pointers are not valid.   //
-    //----------------------------------------------------------------------------------//
-    btree_page*        parent()                          {return m_parent;}
-    void               parent(btree_page* p)             {m_parent = p;}
+    btree_page*        parent()                          {return m_parent.get();}
+    void               parent(btree_page_ptr& p)         {m_parent = p;}
     branch_iterator    parent_element()                  {return m_parent_element;}
     void               parent_element(branch_iterator p) {m_parent_element = p;}
 #   ifndef NDEBUG
@@ -644,16 +644,11 @@ private:
     bool               empty() const         {return leaf().m_size == 0;}
 
   private:
-    btree_page*         m_parent;   // by definition, the parent is a branch page.
-                                    // rationale for raw pointer: (1) elminate overhead
-                                    // of revisiting pages to do btree_page_ptr::reset()
-                                    // (2) allows single m_upper/m_lower_page search
-                                    // function to cover both modifying and non-modifying
-                                    // uses.
-    branch_iterator  m_parent_element;
+    btree_page_ptr     m_parent;          // by definition, the parent is a branch page.
+    branch_iterator    m_parent_element;
 # ifndef NDEBUG
-    page_id_type        m_parent_page_id;  // allows assert that m_parent has not been
-                                           // overwritten by faulty max_cache_pages
+    page_id_type       m_parent_page_id;  // allows assert that m_parent has not been
+                                          // overwritten by faultylogic
 # endif
   };
 
@@ -664,6 +659,14 @@ private:
   public:
 
     btree_page_ptr() : buffer_ptr() {}
+    //~btree_page_ptr()
+    //{
+    //  if (get() && get()->use_count() == 1)
+    //  {
+    //    if (get()->parent().get())
+    //      get()->parent().reset();
+    //  }
+    //}
     btree_page_ptr(btree_page& p) : buffer_ptr(p) {}
     btree_page_ptr(buffer& p) : buffer_ptr(p) {}
     btree_page_ptr(const btree_page_ptr& r) : buffer_ptr(r) {} 
@@ -1092,9 +1095,9 @@ vbtree_base<Key,Base,Traits,Comp>::m_new_root()
   m_root->size(0);  // the end pseudo-element doesn't count as an element
   // TODO: why maintain the child->parent list? By the time m_new_root() is called,
   // hasn't the need passed?
-  m_root->parent(0);  
+  m_root->parent(btree_page_ptr());  
   m_root->parent_element(branch_iterator());
-  old_root->parent(m_root.get());
+  old_root->parent(m_root);
   old_root->parent_element(m_root->branch().begin());
 # ifndef NDEBUG
   m_root->parent_page_id(page_id_type(0));
@@ -1538,13 +1541,14 @@ vbtree_base<Key,Base,Traits,Comp>::m_insert_non_unique(const key_type& key,
 
 //--------------------------------- m_lower_page_bound() -------------------------------//
 
-//  m_lower_page_bound is called for unique container inserts, or erases on any container;
-//  m_lower_page_bound is never called for non-unique container inserts.
-
-//  Differs from lower_bound() in that a trail of parent page and element pointers is left
-//  behind, allowing inserts and erases to walk back up the tree to maintain the branch
-//  invariants. Also, m_element of the returned iterator will be m_page->leaf().end() if
-//  appropriate, rather than a pointer to the first element on the next page.
+//  m_lower_page_bound() differs from lower_bound() in that if the search key is not
+//  present and the first key greater than the search key is the first key on a leaf
+//  other than the first leaf, the returned iterator points to the end element of
+//  the leaf prior to the leaf whose first element is the true lower bound.
+//
+//  Those semantics are useful because the returned iterator is pointing to the insertion
+//  point for unique inserts and does not miss the first key in a series of non-unique
+//  keys that do not begin on a page boundary.
 
 //  Analysis; consider a branch page with these entries:
 //
@@ -1553,21 +1557,16 @@ vbtree_base<Key,Base,Traits,Comp>::m_insert_non_unique(const key_type& key,
 //     element 0   element 1   element 2   end pseudo-element
 //
 //  Search key:  A  B  C  D  E  F  G
-//  lower_bound  
-//   element     0  0  1  1  2  2  3
-//  child_pg->   0  0  1  1  2  2  3
+//  std::lower_bound  
+//   element     0  0  1  1  2  2  end pseudo-element
+//  child_pg->   0  0  1  1  2  2  end pseudo-element
 //   parent_element
 //  Child page:  P0 P1 P1 P2 P2 P3 P3
-//
-//  Note well: the element returned by lower_bound becomes the child_pg element,
-//  but the child page for equal keys comes from the ++lower_bound element
 
 
 template <class Key, class Base, class Traits, class Comp>   
 typename vbtree_base<Key,Base,Traits,Comp>::iterator
 vbtree_base<Key,Base,Traits,Comp>::m_lower_page_bound(const key_type& k)
-// returned iterator::m_element may be the 
-// past-the-end Value* for iterator::m_page
 {
   btree_page_ptr pg = m_root;
 
@@ -1577,17 +1576,16 @@ vbtree_base<Key,Base,Traits,Comp>::m_lower_page_bound(const key_type& k)
     branch_iterator low
       = std::lower_bound(pg->branch().begin(), pg->branch().end(), k, branch_comp());
 
-    branch_iterator element(low);     // &element->key() is the insert point for
-                                      // inserts and the erase point for erases
+    branch_iterator element(low);
 
     if (low != pg->branch().end()
       && !key_comp()(k, low->key()))  // if k isn't less that low->key(), it is equal
       ++low;                          // and so must be incremented; this follows from
                                       // the branch page invariant for unique containers
 
-    // create the ephemeral child->parent list
+    // create the child->parent list
     btree_page_ptr child_pg = m_mgr.read(low->page_id());
-    child_pg->parent(pg.get());
+    child_pg->parent(pg);
     child_pg->parent_element(element);
 #   ifndef NDEBUG
     child_pg->parent_page_id(pg->page_id());
@@ -1622,7 +1620,16 @@ vbtree_base<Key,Base,Traits,Comp>::lower_bound(const key_type& k) const
       && !key_comp()(k, low->key())) // if k isn't less that low->key(), it is equal
       ++low;                         // and so must be incremented; this follows from
                                      // the branch page invariant
-    pg = m_mgr.read(low->page_id());
+
+    // create the child->parent list
+    btree_page_ptr child_pg = m_mgr.read(low->page_id());
+    child_pg->parent(pg);
+    child_pg->parent_element(low);
+#   ifndef NDEBUG
+    child_pg->parent_page_id(pg->page_id());
+#   endif
+
+    pg = child_pg;
   }
 
   //  search leaf
@@ -1659,20 +1666,16 @@ vbtree_base<Key,Base,Traits,Comp>::m_upper_page_bound(const key_type& k)
   {
     branch_iterator up
       = std::upper_bound(pg->branch().begin(), pg->branch().end(), k, branch_comp());
-    //if (up == pg->branch().end()        // all keys on page < search key, so up
-    //                                  // must point to last value on page
-    //  || key_comp()(k, up->key))      // search key < up key, so up
-    //                                  // must point to P0 pseudo-value
-    //  --up;
 
-    // create the ephemeral child->parent list
+    // create the child->parent list
     btree_page_ptr child_pg;
     child_pg = m_mgr.read(up->page_id());
-    child_pg->parent(pg.get());
+    child_pg->parent(pg);
     child_pg->parent_element(up);
 #   ifndef NDEBUG
     child_pg->parent_page_id(pg->page_id());
 #   endif
+
     pg = child_pg;
   }
 
@@ -1698,11 +1701,16 @@ vbtree_base<Key,Base,Traits,Comp>::upper_bound(const key_type& k) const
     branch_iterator up
       = std::upper_bound(pg->branch().begin(), pg->branch().end(), k, branch_comp());
 
-    //pg = (up == pg->branch().end()        // all keys on page < search key
-    //      || key_comp()(k, up->key()))    // search key < up key
-    //  ? m_mgr.read(prior_page_id(up))
-    //  : m_mgr.read(up->page_id);
-    pg = m_mgr.read(up->page_id());
+    // create the child->parent list
+    btree_page_ptr child_pg;
+    child_pg = m_mgr.read(up->page_id());
+    child_pg->parent(pg);
+    child_pg->parent_element(up);
+#   ifndef NDEBUG
+    child_pg->parent_page_id(pg->page_id());
+#   endif
+
+    pg = child_pg;
   }
 
   //  search leaf
