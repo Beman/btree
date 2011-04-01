@@ -643,6 +643,43 @@ private:
     void               size(std::size_t sz)  {leaf().m_size = sz;}    // ditto
     bool               empty() const         {return leaf().m_size == 0;}
 
+    btree_page_ptr     next_page()  // return next page at current level
+    {
+      if (!parent())              // if this is the root, there is no next page
+        return btree_page_ptr();
+
+      btree_page_ptr   par(m_parent);
+      branch_iterator  par_element(m_parent_element);
+
+      if (par_element != par->branch().end())
+      {
+        ++par_element;
+      }
+      else
+      {
+        par = parent()->next_page();
+        if (!par)
+          return par;
+        par_element = par->branch().begin();
+      }
+
+      btree_page_ptr pg(manager().read(par_element->page_id()));
+      if (pg->use_count() == 1)
+      {
+        pg->parent(par);
+        pg->parent_element(par_element);
+#       ifndef NDEBUG
+        pg->parent_page_id(par->page_id());
+#       endif
+      }
+      else
+      {
+        BOOST_ASSERT(pg->m_parent == par);
+        BOOST_ASSERT(pg->m_parent_element == par_element);
+      }
+      return pg;
+    }
+
   private:
     btree_page_ptr     m_parent;          // by definition, the parent is a branch page.
     branch_iterator    m_parent_element;
@@ -1031,9 +1068,22 @@ vbtree_base<Key,Base,Traits,Comp>::begin() const
   BOOST_ASSERT_MSG(is_open(), "begin() on unopen btree");
   if (empty())
     return end();
-  BOOST_ASSERT(header().first_page_id());                     
-  btree_page_ptr pg(m_mgr.read(header().first_page_id()));
-  BOOST_ASSERT(pg->is_leaf());
+  btree_page_ptr pg = m_root;
+
+  // work down the tree until a leaf is reached
+  while (pg->is_branch())
+  {
+    // create the child->parent list
+    btree_page_ptr child_pg = m_mgr.read(pg->branch().begin()->page_id());
+    child_pg->parent(pg);
+    child_pg->parent_element(pg->branch().begin());
+#   ifndef NDEBUG
+    child_pg->parent_page_id(pg->page_id());
+#   endif
+
+    pg = child_pg;
+  }
+
   return const_iterator(pg, pg->leaf().begin());
 }
 
@@ -1852,13 +1902,20 @@ vbtree_base<Key,Base,Traits,Comp>::iterator_type<T>::increment()
 
   if (++m_element != m_page->leaf().end())
     return;
+
+  std::cout << "next_page_id() is " << m_page->leaf().next_page_id() << std::endl;
+
+  typename vbtree_base::btree_page_ptr next_page = m_page->next_page();
+
   if (m_page->leaf().next_page_id())
   {  
     m_page = m_page->manager().read(m_page->leaf().next_page_id());
+    BOOST_ASSERT(m_page == next_page);
     m_element = m_page->leaf().begin();
   }
   else // end() reached
   {
+    BOOST_ASSERT(!next_page);
     *this = reinterpret_cast<const vbtree_base<Key,Base,Traits,Comp>*>
         (m_page->manager().owner())->m_end_iterator;
   }
