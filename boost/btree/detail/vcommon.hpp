@@ -31,8 +31,14 @@
 
   TODO:
 
+  * erase() is correct for unique containers, but not for non-unique containers. Decide
+    what to do about non-unique containers. Might have to first count the offset from
+    first of the key, then for return find and increment to the new offset. Potentially
+    O(2*offset) complexity.
+  
   * btree_page_ptr dtor, mod functs, needs to free parent if use_count() == 1. Need
-    to figure out test for correct operation.
+    to figure out test for correct operation. Also, several calls to m_free_page()
+    commented out in erase, erase branch, code.
 
   * implement emplace(). Howard speculates emplace() makes the map/multimap insert()
     key, mapped_value overload unnecessary. 
@@ -806,7 +812,7 @@ private:
     m_hdr.endian_flip_if_needed();
   }
 
-  iterator m_lower_page_bound(const key_type& k);
+  iterator m_special_lower_bound(const key_type& k)const;
   // returned iterator::m_element is the insertion point, and thus may be the 
   // past-the-end leaf_iterator for iterator::m_page
   // postcondition: parent pointers are set, all the way up the chain to the root
@@ -1387,84 +1393,62 @@ vbtree_base<Key,Base,Traits,Comp>::erase(const_iterator pos)
   BOOST_ASSERT(&*pos.m_element >= &*pos.m_page->leaf().begin());
 
   m_ok_to_pack = false;  // TODO: is this too conservative?
+  pos.m_page->needs_write(true);
+  m_hdr.decrement_element_count();
+
+  key_type nxt_key;
+  const_iterator nxt(pos);
+  ++nxt;
+  if (nxt != end())
+    nxt_key = key(*nxt);
 
   if (pos.m_page->page_id() != m_root->page_id()  // not root?
     && (pos.m_page->size() == dynamic_size(*pos.m_page->leaf().begin())))  // only 1 value on page?
   {
     // erase a single value leaf page that is not the root
-    
-    // establish the parent chain back to the root; the parent chain must be established
-    // since the page may have been reached by iteration, and also because any existing
-    // parent chain might have been invalidated by inserts or erases of common ancestors.
 
-    iterator low = m_lower_page_bound(key(*pos));
-    BOOST_ASSERT(low.m_page->page_id() == pos.m_page->page_id());
-    BOOST_ASSERT(low.m_element == pos.m_element);
+    BOOST_ASSERT(pos.m_page->parent()->page_id() \
+      == pos.m_page->parent_page_id()); // max_cache_size logic OK?
 
-    low.m_page->needs_write(true);
-
-    BOOST_ASSERT(low.m_page->parent()->page_id() \
-      == low.m_page->parent_page_id()); // max_cache_size logic OK?
-    m_erase_branch_value(low.m_page->parent(), low.m_page->parent_element(), pos.m_page->page_id());
-
-    m_hdr.decrement_element_count();
-
-    ++pos;  // increment iterator to be returned before killing the page
-    BOOST_ASSERT(pos.m_page != low.m_page);  // logic check: ++pos moved to next page
+    m_erase_branch_value(pos.m_page->parent(), pos.m_page->parent_element(),
+      pos.m_page->page_id());
 
     // cut the page out of the page sequence list
     btree_page_ptr link_pg;
-    if (low.m_page->leaf().prior_page_id())
+    if (pos.m_page->leaf().prior_page_id())
     {
-      link_pg = m_mgr.read(low.m_page->leaf().prior_page_id()); // prior page
-      link_pg->leaf().next_page_id(low.m_page->leaf().next_page_id());
+      link_pg = m_mgr.read(pos.m_page->leaf().prior_page_id()); // prior page
+      link_pg->leaf().next_page_id(pos.m_page->leaf().next_page_id());
       link_pg->needs_write(true);
     }
     else
-      m_hdr.first_page_id(low.m_page->leaf().next_page_id());
-    if (low.m_page->leaf().next_page_id())
+      m_hdr.first_page_id(pos.m_page->leaf().next_page_id());
+    if (pos.m_page->leaf().next_page_id())
     {
-      link_pg = m_mgr.read(low.m_page->leaf().next_page_id()); // next page
-      link_pg->leaf().prior_page_id(low.m_page->leaf().prior_page_id());
+      link_pg = m_mgr.read(pos.m_page->leaf().next_page_id()); // next page
+      link_pg->leaf().prior_page_id(pos.m_page->leaf().prior_page_id());
       link_pg->needs_write(true);
     }
     else
-      m_hdr.last_page_id(low.m_page->leaf().prior_page_id());
+      m_hdr.last_page_id(pos.m_page->leaf().prior_page_id());
 
-    m_free_page(low.m_page.get());  // add page to free page list
-
-    return pos;
+//    m_free_page(pos.m_page.get());  // add page to free page list
   }
-
-  // erase an element from a leaf with multiple elements or erase the only element
-  // on a leaf that is also the root; these use the same logic because they do not remove
-  // the page from the tree.
-
-  value_type* erase_point = &*pos.m_element;
-  std::size_t erase_sz = dynamic_size(*erase_point);
-  std::size_t move_sz = char_ptr(&*pos.m_page->leaf().end())
-    - (char_ptr(erase_point) + erase_sz); 
-  std::memmove(erase_point, char_ptr(erase_point) + erase_sz, move_sz);
-  pos.m_page->size(pos.m_page->size() - erase_sz);
-  std::memset(&*pos.m_page->leaf().end(), 0, erase_sz);
-  m_hdr.decrement_element_count();
-  pos.m_page->needs_write(true);
-
-  if (erase_point == &*pos.m_page->leaf().end())  // was the element before the old end()
-                                                  // just erased?
+  else
   {
-    if (pos.m_page->empty())  // is the page empty, implying the page is an empty root?
-    {
-      BOOST_ASSERT(empty());  // "erase a single value leaf page that is not the root"
-                              // logic as start of function should have taken care of
-                              // cases that don't empty the tree
-      return end();
-    }
+    // erase an element from a leaf with multiple elements or erase the only element
+    // on a leaf that is also the root; these use the same logic because they do not remove
+    // the page from the tree.
 
-    --pos.m_element;  // make pos incrementable so ++pos can be used to advance to next page
-    ++pos;            // advance to first element on next page
+    value_type* erase_point = &*pos.m_element;
+    std::size_t erase_sz = dynamic_size(*erase_point);
+    std::size_t move_sz = char_ptr(&*pos.m_page->leaf().end())
+      - (char_ptr(erase_point) + erase_sz); 
+    std::memmove(erase_point, char_ptr(erase_point) + erase_sz, move_sz);
+    pos.m_page->size(pos.m_page->size() - erase_sz);
+    std::memset(&*pos.m_page->leaf().end(), 0, erase_sz);
   }
-  return pos; 
+  return nxt == end() ? nxt : find(nxt_key);
 }
 
 //------------------------------ m_erase_branch_value() --------------------------------//
@@ -1516,7 +1500,7 @@ void vbtree_base<Key,Base,Traits,Comp>::m_erase_branch_value(
       m_hdr.root_page_id(pg->branch().end()->page_id());
       m_root = m_mgr.read(header().root_page_id());
       m_hdr.decrement_root_level();
-      m_free_page(pg); // move page to free page list
+//      m_free_page(pg); // move page to free page list
       pg = m_root.get();
     }
   }
@@ -1564,7 +1548,7 @@ vbtree_base<Key,Base,Traits,Comp>::m_insert_unique(const key_type& k,
   const mapped_type& mv)
 {
   BOOST_ASSERT_MSG(is_open(), "insert() on unopen btree");
-  iterator insert_point = m_lower_page_bound(k);
+  iterator insert_point = m_special_lower_bound(k);
 
   bool is_unique = insert_point.m_element == insert_point.m_page->leaf().end()
                 || key_comp()(k, key(*insert_point))
@@ -1584,39 +1568,77 @@ inline typename vbtree_base<Key,Base,Traits,Comp>::const_iterator
 vbtree_base<Key,Base,Traits,Comp>::m_insert_non_unique(const key_type& key,
   const mapped_type& mapped_value)
 {
-  BOOST_ASSERT_MSG(is_open(), "erase() on unopen btree");
+  BOOST_ASSERT_MSG(is_open(), "insert() on unopen btree");
   iterator insert_point = m_upper_page_bound(key);
   return m_leaf_insert(insert_point, key, mapped_value);
 }
 
-//--------------------------------- m_lower_page_bound() -------------------------------//
-
-//  m_lower_page_bound() differs from lower_bound() in that if the search key is not
-//  present and the first key greater than the search key is the first key on a leaf
-//  other than the first leaf, the returned iterator points to the end element of
-//  the leaf prior to the leaf whose first element is the true lower bound.
+////--------------------------------- m_lower_page_bound() -------------------------------//
 //
-//  Those semantics are useful because the returned iterator is pointing to the insertion
-//  point for unique inserts and does not miss the first key in a series of non-unique
-//  keys that do not begin on a page boundary.
-
-//  Analysis; consider a branch page with these entries:
+////  m_lower_page_bound() differs from lower_bound() in that if the search key is not
+////  present and the first key greater than the search key is the first key on a leaf
+////  other than the first leaf, the returned iterator points to the end element of
+////  the leaf prior to the leaf whose first element is the true lower bound.
+////
+////  Those semantics are useful because the returned iterator is pointing to the insertion
+////  point for unique inserts and does not miss the first key in a series of non-unique
+////  keys that do not begin on a page boundary.
 //
-//     P0, K0="B", P1, K1="D", P2, K2="F", P3, ---
-//     ----------  ----------  ----------  ------------------
-//     element 0   element 1   element 2   end pseudo-element
+////  Analysis; consider a branch page with these entries:
+////
+////     P0, K0="B", P1, K1="D", P2, K2="F", P3, ---
+////     ----------  ----------  ----------  ------------------
+////     element 0   element 1   element 2   end pseudo-element
+////
+////  Search key:  A  B  C  D  E  F  G
+////  std::lower_bound  
+////   element     0  0  1  1  2  2  end pseudo-element
+////  child_pg->   0  0  1  1  2  2  end pseudo-element
+////   parent_element
+////  Child page:  P0 P1 P1 P2 P2 P3 P3
 //
-//  Search key:  A  B  C  D  E  F  G
-//  std::lower_bound  
-//   element     0  0  1  1  2  2  end pseudo-element
-//  child_pg->   0  0  1  1  2  2  end pseudo-element
-//   parent_element
-//  Child page:  P0 P1 P1 P2 P2 P3 P3
+//
+//template <class Key, class Base, class Traits, class Comp>   
+//typename vbtree_base<Key,Base,Traits,Comp>::iterator
+//vbtree_base<Key,Base,Traits,Comp>::m_lower_page_bound(const key_type& k)
+//{
+//  btree_page_ptr pg = m_root;
+//
+//  // search branches down the tree until a leaf is reached
+//  while (pg->is_branch())
+//  {
+//    branch_iterator low
+//      = std::lower_bound(pg->branch().begin(), pg->branch().end(), k, branch_comp());
+//
+//    branch_iterator element(low);
+//
+//    if (low != pg->branch().end()
+//      && !key_comp()(k, low->key()))  // if k isn't less that low->key(), it is equal
+//      ++low;                          // and so must be incremented; this follows from
+//                                      // the branch page invariant for unique containers
+//
+//    // create the child->parent list
+//    btree_page_ptr child_pg = m_mgr.read(low->page_id());
+//    child_pg->parent(pg);
+//    child_pg->parent_element(element);
+//#   ifndef NDEBUG
+//    child_pg->parent_page_id(pg->page_id());
+//#   endif
+//    pg = child_pg;
+//  }
+//
+//  //  search leaf
+//  leaf_iterator low
+//    = std::lower_bound(pg->leaf().begin(), pg->leaf().end(), k, value_comp());
+//
+//  return iterator(pg, low);
+//}
 
+//----------------------------- m_special_lower_bound() --------------------------------//
 
 template <class Key, class Base, class Traits, class Comp>   
 typename vbtree_base<Key,Base,Traits,Comp>::iterator
-vbtree_base<Key,Base,Traits,Comp>::m_lower_page_bound(const key_type& k)
+vbtree_base<Key,Base,Traits,Comp>::m_special_lower_bound(const key_type& k) const
 {
   btree_page_ptr pg = m_root;
 
@@ -1626,20 +1648,20 @@ vbtree_base<Key,Base,Traits,Comp>::m_lower_page_bound(const key_type& k)
     branch_iterator low
       = std::lower_bound(pg->branch().begin(), pg->branch().end(), k, branch_comp());
 
-    branch_iterator element(low);
-
-    if (low != pg->branch().end()
-      && !key_comp()(k, low->key()))  // if k isn't less that low->key(), it is equal
-      ++low;                          // and so must be incremented; this follows from
-                                      // the branch page invariant for unique containers
+    if ((header().flags() & btree::flags::unique)
+      && low != pg->branch().end()
+      && !key_comp()(k, low->key())) // if k isn't less that low->key(), it is equal
+      ++low;                         // and so must be incremented; this follows from
+                                     // the branch page invariant for unique containers
 
     // create the child->parent list
     btree_page_ptr child_pg = m_mgr.read(low->page_id());
     child_pg->parent(pg);
-    child_pg->parent_element(element);
+    child_pg->parent_element(low);
 #   ifndef NDEBUG
     child_pg->parent_page_id(pg->page_id());
 #   endif
+
     pg = child_pg;
   }
 
@@ -1657,43 +1679,25 @@ typename vbtree_base<Key,Base,Traits,Comp>::const_iterator
 vbtree_base<Key,Base,Traits,Comp>::lower_bound(const key_type& k) const
 {
   BOOST_ASSERT_MSG(is_open(), "lower_bound() on unopen btree");
-  btree_page_ptr pg = m_root;
 
-  // search branches down the tree until a leaf is reached
-  while (pg->is_branch())
+  const_iterator low = m_special_lower_bound(k);
+
+  if (low.m_element != low.m_page->leaf().end())
+    return low;
+
+  if (low.m_page->leaf().begin() == low.m_page->leaf().end())
   {
-    branch_iterator low
-      = std::lower_bound(pg->branch().begin(), pg->branch().end(), k, branch_comp());
-
-    if ((header().flags() & btree::flags::unique)
-      && low != pg->branch().end()
-      && !key_comp()(k, low->key())) // if k isn't less that low->key(), it is equal
-      ++low;                         // and so must be incremented; this follows from
-                                     // the branch page invariant
-
-    // create the child->parent list
-    btree_page_ptr child_pg = m_mgr.read(low->page_id());
-    child_pg->parent(pg);
-    child_pg->parent_element(low);
-#   ifndef NDEBUG
-    child_pg->parent_page_id(pg->page_id());
-#   endif
-
-    pg = child_pg;
+    BOOST_ASSERT(empty());
+    return end();
   }
 
-  //  search leaf
-  leaf_iterator low
-    = std::lower_bound(pg->leaf().begin(), pg->leaf().end(), k, value_comp());
-
-  if (low != pg->leaf().end())
-    return const_iterator(pg, low);
-
-  // lower bound is first element on next page; this may happen for non-unique containers
-  if (!pg->leaf().next_page_id())
+  if (!low.m_page->leaf().next_page_id())
     return end();
-  pg = m_mgr.read(pg->leaf().next_page_id());
-  return const_iterator(pg, pg->leaf().begin());
+
+  // lower bound is first element on next page; this can happen only for non-unique trees
+  BOOST_ASSERT((header().flags() & btree::flags::unique) == 0);
+  btree_page_ptr pg = m_mgr.read(pg->leaf().next_page_id());
+  return const_iterator(pg, low.m_page->leaf().begin());
 }
 
 //--------------------------------- m_upper_page_bound() -------------------------------//

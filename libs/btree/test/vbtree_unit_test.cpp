@@ -284,6 +284,13 @@ void construct_new_test(BT& bt, const fs::path& p)
   BOOST_TEST(bt.page_size() == btree::default_page_size);  // the default
   BOOST_TEST(bt.file_path() == p);
 
+  BOOST_TEST(bt.begin() == bt.end());
+
+  BT::key_type k;
+  BOOST_TEST(bt.lower_bound(k) == bt.end());
+  BOOST_TEST(bt.upper_bound(k) == bt.end());
+  BOOST_TEST(bt.find(k) == bt.end());
+
   bt.close();
   BOOST_TEST(!bt.is_open());
 }
@@ -587,8 +594,6 @@ void insert_tests(BTree& bt)
   BOOST_TEST_EQ(bt.find(0x0C)->key().x, 0x0C);
   bt.flush();
 
-  bt.dump_dot(std::cout);
-
   BOOST_TEST_EQ(bt.size(), 5U);
 
   BOOST_TEST_EQ(bt.find(0x0A)->key().x, 0x0A);
@@ -645,6 +650,8 @@ void insert_tests(BTree& bt)
 
   cur = bt.find(0x0E);
   BOOST_TEST(cur != bt.end());
+  cout << "root is page " << bt.header().root_page_id() << '\n'; 
+  bt.dump_dot(std::cout);
   cur = bt.erase(cur);
 
   BOOST_TEST(cur == bt.end());
