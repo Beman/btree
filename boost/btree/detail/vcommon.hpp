@@ -31,7 +31,7 @@
 
   TODO:
 
-  * erase() is correct for unique containers, but not for non-unique containers. Decide
+  * erase() return is correct for unique containers, but not for non-unique containers. Decide
     what to do about non-unique containers. Might have to first count the offset from
     first of the key, then for return find and increment to the new offset. Potentially
     O(2*offset) complexity.
@@ -670,19 +670,19 @@ private:
       }
 
       btree_page_ptr pg(manager().read(par_element->page_id()));
-      if (pg->use_count() == 1)
-      {
+      //if (pg->use_count() == 1)
+      //{
         pg->parent(par);
         pg->parent_element(par_element);
 #       ifndef NDEBUG
         pg->parent_page_id(par->page_id());
 #       endif
-      }
-      else
-      {
-        BOOST_ASSERT(pg->m_parent == par);
-        BOOST_ASSERT(pg->m_parent_element == par_element);
-      }
+      //}
+      //else
+      //{
+      //  BOOST_ASSERT(pg->m_parent == par);
+      //  BOOST_ASSERT(pg->m_parent_element == par_element);
+      //}
       return pg;
     }
 
@@ -812,11 +812,11 @@ private:
     m_hdr.endian_flip_if_needed();
   }
 
-  iterator m_special_lower_bound(const key_type& k)const;
+  iterator m_special_lower_bound(const key_type& k) const;
   // returned iterator::m_element is the insertion point, and thus may be the 
   // past-the-end leaf_iterator for iterator::m_page
   // postcondition: parent pointers are set, all the way up the chain to the root
-  iterator m_upper_page_bound(const key_type& k);
+  iterator m_special_upper_bound(const key_type& k) const;
   // returned iterator::m_element is the insertion point, and thus may be the 
   // past-the-end leaf_iterator for iterator::m_page
   // postcondition: parent pointers are set, all the way up the chain to the root
@@ -1396,14 +1396,14 @@ vbtree_base<Key,Base,Traits,Comp>::erase(const_iterator pos)
   pos.m_page->needs_write(true);
   m_hdr.decrement_element_count();
 
-  key_type nxt_key;
+  key_type nxt_key;  // save next key to be able to find() iterator to be returned
   const_iterator nxt(pos);
   ++nxt;
   if (nxt != end())
     nxt_key = key(*nxt);
 
   if (pos.m_page->page_id() != m_root->page_id()  // not root?
-    && (pos.m_page->size() == dynamic_size(*pos.m_page->leaf().begin())))  // only 1 value on page?
+    && (pos.m_page->size() == dynamic_size(*pos.m_page->leaf().begin())))  // only 1 element on page?
   {
     // erase a single value leaf page that is not the root
 
@@ -1460,6 +1460,7 @@ void vbtree_base<Key,Base,Traits,Comp>::m_erase_branch_value(
   BOOST_ASSERT(pg->is_branch());
   BOOST_ASSERT(&*element >= &*pg->branch().begin());
   BOOST_ASSERT(&*element <= &*pg->branch().end());  // equal to end if pseudo-element only
+  BOOST_ASSERT(erasee == element->page_id());
 
   if (pg->empty()) // end pseudo-element only element on page?
                    // i.e. after the erase, the entire sub-tree will be empty
@@ -1474,14 +1475,13 @@ void vbtree_base<Key,Base,Traits,Comp>::m_erase_branch_value(
   {
     void* erase_point;
   
-    if (element != pg->branch().begin() || erasee != element->page_id())
+    if (element != pg->branch().begin())
     {
-      BOOST_ASSERT(erasee == (element+1)->page_id());
+      --element;
       erase_point = &element->key();
     }
     else
     {
-      BOOST_ASSERT(erasee == element->page_id());
       erase_point = &element->page_id();
     }
     std::size_t erase_sz = dynamic_size(element->key()) + sizeof(page_id_type); 
@@ -1498,8 +1498,10 @@ void vbtree_base<Key,Base,Traits,Comp>::m_erase_branch_value(
     {
       // make the end pseudo-element the new root and then free this page
       m_hdr.root_page_id(pg->branch().end()->page_id());
-      m_root = m_mgr.read(header().root_page_id());
       m_hdr.decrement_root_level();
+      m_root = m_mgr.read(header().root_page_id());
+      m_root->parent(btree_page_ptr());
+      m_root->parent_element(branch_iterator());
 //      m_free_page(pg); // move page to free page list
       pg = m_root.get();
     }
@@ -1569,7 +1571,7 @@ vbtree_base<Key,Base,Traits,Comp>::m_insert_non_unique(const key_type& key,
   const mapped_type& mapped_value)
 {
   BOOST_ASSERT_MSG(is_open(), "insert() on unopen btree");
-  iterator insert_point = m_upper_page_bound(key);
+  iterator insert_point = m_special_upper_bound(key);
   return m_leaf_insert(insert_point, key, mapped_value);
 }
 
@@ -1694,24 +1696,16 @@ vbtree_base<Key,Base,Traits,Comp>::lower_bound(const key_type& k) const
   if (!low.m_page->leaf().next_page_id())
     return end();
 
-  // lower bound is first element on next page; this can happen only for non-unique trees
-  BOOST_ASSERT((header().flags() & btree::flags::unique) == 0);
-  btree_page_ptr pg = m_mgr.read(pg->leaf().next_page_id());
-  return const_iterator(pg, low.m_page->leaf().begin());
+  // lower bound is first element on next page
+  btree_page_ptr pg = m_mgr.read(low.m_page->leaf().next_page_id());
+  return const_iterator(pg, pg->leaf().begin());
 }
 
-//--------------------------------- m_upper_page_bound() -------------------------------//
-
-//  Differs from upper_bound() in that a trail of parent page and element pointers is left
-//  behind, allowing inserts and erases to walk back up the tree to maintain the branch
-//  invariants. Also, m_element of the returned iterator will be m_page->leaf().end() if
-//  appropriate, rather than a pointer to the first element on the next page.
+//------------------------------ m_special_upper_bound() -------------------------------//
 
 template <class Key, class Base, class Traits, class Comp>   
 typename vbtree_base<Key,Base,Traits,Comp>::iterator
-vbtree_base<Key,Base,Traits,Comp>::m_upper_page_bound(const key_type& k)
-// returned iterator::m_element may be the 
-// past-the-end Value* for iterator::m_page
+vbtree_base<Key,Base,Traits,Comp>::m_special_upper_bound(const key_type& k) const
 {
   btree_page_ptr pg = m_root;
 
@@ -1722,8 +1716,7 @@ vbtree_base<Key,Base,Traits,Comp>::m_upper_page_bound(const key_type& k)
       = std::upper_bound(pg->branch().begin(), pg->branch().end(), k, branch_comp());
 
     // create the child->parent list
-    btree_page_ptr child_pg;
-    child_pg = m_mgr.read(up->page_id());
+    btree_page_ptr child_pg = m_mgr.read(up->page_id());
     child_pg->parent(pg);
     child_pg->parent_element(up);
 #   ifndef NDEBUG
@@ -1747,37 +1740,17 @@ typename vbtree_base<Key,Base,Traits,Comp>::const_iterator
 vbtree_base<Key,Base,Traits,Comp>::upper_bound(const key_type& k) const
 {
   BOOST_ASSERT_MSG(is_open(), "upper_bound() on unopen btree");
-  btree_page_ptr pg = m_root;
 
-  // search branches down the tree until a leaf is reached
-  while (pg->is_branch())
-  {
-    branch_iterator up
-      = std::upper_bound(pg->branch().begin(), pg->branch().end(), k, branch_comp());
+  const_iterator up = m_special_upper_bound(k);
 
-    // create the child->parent list
-    btree_page_ptr child_pg;
-    child_pg = m_mgr.read(up->page_id());
-    child_pg->parent(pg);
-    child_pg->parent_element(up);
-#   ifndef NDEBUG
-    child_pg->parent_page_id(pg->page_id());
-#   endif
-
-    pg = child_pg;
-  }
-
-  //  search leaf
-  leaf_iterator up
-    = std::upper_bound(pg->leaf().begin(), pg->leaf().end(), k, value_comp());
-
-  if (up != pg->leaf().end())
-    return const_iterator(pg, up);
+  if (up.m_element != up.m_page->leaf().end())
+    return up;
 
   // upper bound is first element on next page
-  if (!pg->leaf().next_page_id())
+  if (!up.m_page->leaf().next_page_id())
     return end();
-  pg = m_mgr.read(pg->leaf().next_page_id());
+
+  btree_page_ptr pg = m_mgr.read(up.m_page->leaf().next_page_id());
   return const_iterator(pg, pg->leaf().begin());
 }
 

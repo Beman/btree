@@ -604,6 +604,8 @@ void insert_tests(BTree& bt)
 
   cur = begin = end = empty_iterator;
   cout << '\n' << bt.manager() << '\n';
+  cout << "\nroot is page " << bt.header().root_page_id() << ", size() " << bt.size() << '\n'; 
+  bt.dump_dot(std::cout);
 
   cur = bt.begin();
   BOOST_TEST_EQ(cur->key().x, 0x0A);
@@ -636,6 +638,7 @@ void insert_tests(BTree& bt)
   cout << "\n  erase all elements" << endl;
   cur = bt.find(0x0C);
   BOOST_TEST(cur != bt.end());
+  cout << "    erase " << cur->key() << endl;
   cur = bt.erase(cur);
 
   BOOST_TEST_EQ(cur->key().x, 0x0D);
@@ -643,6 +646,7 @@ void insert_tests(BTree& bt)
 
   cur = bt.find(0x0B);
   BOOST_TEST(cur != bt.end());
+  cout << "    erase " << cur->key() << endl;
   cur = bt.erase(cur);
 
   BOOST_TEST_EQ(cur->key().x, 0x0D);
@@ -650,8 +654,11 @@ void insert_tests(BTree& bt)
 
   cur = bt.find(0x0E);
   BOOST_TEST(cur != bt.end());
-  cout << "root is page " << bt.header().root_page_id() << '\n'; 
-  bt.dump_dot(std::cout);
+
+  //cout << "root is page " << bt.header().root_page_id() << '\n'; 
+  //bt.dump_dot(std::cout);
+
+  cout << "    erase " << cur->key() << endl;
   cur = bt.erase(cur);
 
   BOOST_TEST(cur == bt.end());
@@ -660,6 +667,8 @@ void insert_tests(BTree& bt)
   BOOST_TEST_EQ(bt.header().root_level(), 1);
 
   cur = bt.find(0x0A);
+  BOOST_TEST(cur != bt.end());
+  cout << "    erase " << cur->key() << endl;
   cur = bt.erase(cur);
 
   BOOST_TEST(cur != bt.end());
@@ -670,6 +679,13 @@ void insert_tests(BTree& bt)
   BOOST_TEST_EQ(bt.header().root_level(), 0);
 
   cur = bt.find(0x0D);
+
+  //cout << "root is page " << bt.header().root_page_id() << '\n'; 
+  //bt.dump_dot(std::cout);
+
+  BOOST_TEST(cur != bt.end());
+
+  cout << "    erase " << cur->key() << endl;
   cur = bt.erase(cur);
 
   BOOST_TEST(cur == bt.end());
@@ -678,7 +694,8 @@ void insert_tests(BTree& bt)
   BOOST_TEST_EQ(bt.header().root_page_id(), 4U);
   BOOST_TEST_EQ(bt.header().root_level(), 0);
   
-  bt.dump_dot(std::cout);
+  //cout << "root is page " << bt.header().root_page_id() << '\n'; 
+  //bt.dump_dot(std::cout);
 
   cout << "\n  add enough elements to force branch page splits" << endl;
   for (int i = 1; i <= 21; ++i )
@@ -692,8 +709,8 @@ void insert_tests(BTree& bt)
   }
   BOOST_TEST_EQ(bt.size(), 21U);
   
-  //cout << "root is page " << bt.header().root_page_id() << '\n'; 
-  //bt.dump_dot(std::cout);
+  cout << "root is page " << bt.header().root_page_id() << '\n'; 
+  bt.dump_dot(std::cout);
 
   cout << "\n  erase every other element" << endl;
   for (int i = 1; i <= 21; i += 2 )
@@ -703,16 +720,18 @@ void insert_tests(BTree& bt)
   }
   BOOST_TEST_EQ(bt.size(), 10U);
 
-  //cout << "root is page " << bt.header().root_page_id() << '\n'; 
-  //bt.dump_dot(std::cout);
+  cout << "root is page " << bt.header().root_page_id() << '\n'; 
+  bt.dump_dot(std::cout);
 
   cout << "\n  erase remaining elements and attempt to erase nonexistant elements" << endl;
   for (int i = 1; i <= 31; ++i )  // many of these won't exist
   {
-    //cout << "\n  erase " << i << endl;
-    bt.erase(i);
-    //cout << "root is page " << bt.header().root_page_id() << '\n'; 
-    //bt.dump_dot(std::cout);
+    cout << "\n  erase " << i << endl;
+    typename BTree::size_type ct
+      = bt.erase(i);
+    cout << "     erase count " << ct << ", size() " << bt.size() << endl;
+    cout << "root is page " << bt.header().root_page_id() << '\n'; 
+    bt.dump_dot(std::cout);
   }
   BOOST_TEST_EQ(bt.size(), 0U);
 
@@ -808,6 +827,7 @@ void find_and_bounds_tests(BTree& bt)
     BOOST_TEST_EQ(bt.size(), 22U);
   }
 
+  cout << "root is page " << bt.header().root_page_id() << '\n'; 
   bt.dump_dot(std::cout);
 
   //             i =   0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18
@@ -819,8 +839,8 @@ void find_and_bounds_tests(BTree& bt)
 
   for (int i = 0; i <= 18; ++i)
   {
-    //std::cout << "lower_bound " << i << " is " <<
-    //  (bt.lower_bound(i) == bt.end() ? 99999 : bt.lower_bound(i)->key()) << std::endl;
+    std::cout << "lower_bound " << i << " is " <<
+      (bt.lower_bound(i) == bt.end() ? 99999 : bt.key(*bt.lower_bound(i))) << std::endl;
 
 
     BOOST_TEST((bt.lower_bound(i) != bt.end() && bt.key(*bt.lower_bound(i)) == lwr[i])
