@@ -31,6 +31,8 @@
 
   TODO:
 
+  * replace insert(key, mapped_value) with insert_emplace?
+
   * erase() return is correct for unique containers, but not for non-unique containers. Decide
     what to do about non-unique containers. Might have to first count the offset from
     first of the key, then for return find and increment to the new offset. Potentially
@@ -65,7 +67,9 @@
   * For multi-containers, add a test case of a deep tree with all the same key. Then
     test erasing various elements.
 
-  * Pack optimization should apply to branches too. 
+  * Pack optimization should apply to branches too.
+
+  * m_set_max_cache_pages() needs to be reviewed for correctness.
 
 */
 
@@ -541,10 +545,10 @@ private:
   {
     friend class vbtree_base;
   public:
-    page_id_type   prior_page_id() const           {return m_prior_page_id;}
-    void           prior_page_id(page_id_type id)  {m_prior_page_id = id;}
-    page_id_type   next_page_id() const            {return m_next_page_id;}
-    void           next_page_id(page_id_type id)   {m_next_page_id = id;}
+    //page_id_type   prior_page_id() const           {return m_prior_page_id;}
+    //void           prior_page_id(page_id_type id)  {m_prior_page_id = id;}
+    //page_id_type   next_page_id() const            {return m_next_page_id;}
+    //void           next_page_id(page_id_type id)   {m_next_page_id = id;}
     leaf_iterator  begin()      { return leaf_iterator(m_value);}
     leaf_iterator  end()        { return leaf_iterator(m_value, size()); }
 
@@ -558,8 +562,8 @@ private:
     }
 
     //  private:
-    page_id_type     m_next_page_id;   // page sequence fwd list; 0 for end
-    page_id_type     m_prior_page_id;  // page sequence bwd list; 0 for end
+    //page_id_type     m_next_page_id;   // page sequence fwd list; 0 for end
+    //page_id_type     m_prior_page_id;  // page sequence bwd list; 0 for end
     leaf_value_type  m_value[1];
   };
 
@@ -871,8 +875,8 @@ private:
     pg->needs_write(true);
     pg->level(0xFFFE);
     pg->size(0);
-    pg->leaf().prior_page_id(page_id_type());
-    pg->leaf().next_page_id(page_id_type(m_hdr.free_page_list_head_id()));
+    //pg->leaf().prior_page_id(page_id_type());
+    pg->branch().begin()->page_id() = page_id_type(m_hdr.free_page_list_head_id());
     m_hdr.free_page_list_head_id(pg->page_id());
   }
 
@@ -1069,8 +1073,8 @@ vbtree_base<Key,Base,Traits,Comp>::m_open(const boost::filesystem::path& p,
     m_hdr.last_page_id(m_root->page_id());
     m_root->level(0);
     m_root->size(0);
-    m_root->leaf().prior_page_id(page_id_type(0));
-    m_root->leaf().next_page_id(page_id_type(0));
+    //m_root->leaf().prior_page_id(page_id_type(0));
+    //m_root->leaf().next_page_id(page_id_type(0));
   }
   m_set_max_cache_pages();
 }
@@ -1156,7 +1160,7 @@ vbtree_base<Key,Base,Traits,Comp>::m_new_page(boost::uint16_t lv)
   {
     pg = m_mgr.read(m_hdr.free_page_list_head_id());
     BOOST_ASSERT(pg->level() == 0xFFFE);  // free page list entry
-    m_hdr.free_page_list_head_id(pg->leaf().next_page_id());
+    m_hdr.free_page_list_head_id(pg->branch().begin()->page_id());
   }
   else
   {
@@ -1234,17 +1238,7 @@ vbtree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter,
         && (insert_begin != pg->leaf().end() || pg->page_id() != header().last_page_id()))
       m_ok_to_pack = false;  // conditions for pack optimization not met
 
-    // insert the new page into the leaf sequence lists
-    pg2->leaf().prior_page_id(pg->page_id());
-    pg2->leaf().next_page_id(pg->leaf().next_page_id());
-    pg->leaf().next_page_id(pg2->page_id());
-    if (pg2->leaf().next_page_id())
-    {
-      const btree_page_ptr next_page(m_mgr.read(pg2->leaf().next_page_id()));
-      next_page->leaf().prior_page_id(pg2->page_id());
-      next_page->needs_write(true);
-    }
-    else 
+    if (pg->page_id() == header().last_page_id())
       m_hdr.last_page_id(pg2->page_id());
 
     // apply pack optimization if applicable
@@ -1447,27 +1441,21 @@ vbtree_base<Key,Base,Traits,Comp>::erase(const_iterator pos)
     BOOST_ASSERT(pos.m_page->parent()->page_id() \
       == pos.m_page->parent_page_id()); // max_cache_size logic OK?
 
+    if (pos.m_page->page_id() == header().first_page_id())
+    {
+      btree_page_ptr nxt_page(pos.m_page->next_page());
+      BOOST_ASSERT(nxt_page);
+      m_hdr.first_page_id(nxt_page->page_id());
+    }
+    if (pos.m_page->page_id() == header().last_page_id())
+    {
+      btree_page_ptr prr_page(pos.m_page->prior_page());
+      BOOST_ASSERT(prr_page);
+      m_hdr.last_page_id(prr_page->page_id());
+    }
+
     m_erase_branch_value(pos.m_page->parent(), pos.m_page->parent_element(),
       pos.m_page->page_id());
-
-    // cut the page out of the page sequence list
-    btree_page_ptr link_pg;
-    if (pos.m_page->leaf().prior_page_id())
-    {
-      link_pg = m_mgr.read(pos.m_page->leaf().prior_page_id()); // prior page
-      link_pg->leaf().next_page_id(pos.m_page->leaf().next_page_id());
-      link_pg->needs_write(true);
-    }
-    else
-      m_hdr.first_page_id(pos.m_page->leaf().next_page_id());
-    if (pos.m_page->leaf().next_page_id())
-    {
-      link_pg = m_mgr.read(pos.m_page->leaf().next_page_id()); // next page
-      link_pg->leaf().prior_page_id(pos.m_page->leaf().prior_page_id());
-      link_pg->needs_write(true);
-    }
-    else
-      m_hdr.last_page_id(pos.m_page->leaf().prior_page_id());
 
 //    m_free_page(pos.m_page.get());  // add page to free page list
   }
@@ -1635,43 +1623,6 @@ vbtree_base<Key,Base,Traits,Comp>::m_insert_non_unique(const key_type& key,
 ////  child_pg->   0  0  1  1  2  2  end pseudo-element
 ////   parent_element
 ////  Child page:  P0 P1 P1 P2 P2 P3 P3
-//
-//
-//template <class Key, class Base, class Traits, class Comp>   
-//typename vbtree_base<Key,Base,Traits,Comp>::iterator
-//vbtree_base<Key,Base,Traits,Comp>::m_lower_page_bound(const key_type& k)
-//{
-//  btree_page_ptr pg = m_root;
-//
-//  // search branches down the tree until a leaf is reached
-//  while (pg->is_branch())
-//  {
-//    branch_iterator low
-//      = std::lower_bound(pg->branch().begin(), pg->branch().end(), k, branch_comp());
-//
-//    branch_iterator element(low);
-//
-//    if (low != pg->branch().end()
-//      && !key_comp()(k, low->key()))  // if k isn't less that low->key(), it is equal
-//      ++low;                          // and so must be incremented; this follows from
-//                                      // the branch page invariant for unique containers
-//
-//    // create the child->parent list
-//    btree_page_ptr child_pg = m_mgr.read(low->page_id());
-//    child_pg->parent(pg);
-//    child_pg->parent_element(element);
-//#   ifndef NDEBUG
-//    child_pg->parent_page_id(pg->page_id());
-//#   endif
-//    pg = child_pg;
-//  }
-//
-//  //  search leaf
-//  leaf_iterator low
-//    = std::lower_bound(pg->leaf().begin(), pg->leaf().end(), k, value_comp());
-//
-//  return iterator(pg, low);
-//}
 
 //----------------------------- m_special_lower_bound() --------------------------------//
 
@@ -1730,12 +1681,9 @@ vbtree_base<Key,Base,Traits,Comp>::lower_bound(const key_type& k) const
     return end();
   }
 
-  if (!low.m_page->leaf().next_page_id())
-    return end();
-
   // lower bound is first element on next page
-  btree_page_ptr pg = m_mgr.read(low.m_page->leaf().next_page_id());
-  return const_iterator(pg, pg->leaf().begin());
+  btree_page_ptr pg = low.m_page->next_page();
+  return pg ? const_iterator(pg, pg->leaf().begin()) : end();
 }
 
 //------------------------------ m_special_upper_bound() -------------------------------//
@@ -1784,11 +1732,8 @@ vbtree_base<Key,Base,Traits,Comp>::upper_bound(const key_type& k) const
     return up;
 
   // upper bound is first element on next page
-  if (!up.m_page->leaf().next_page_id())
-    return end();
-
-  btree_page_ptr pg = m_mgr.read(up.m_page->leaf().next_page_id());
-  return const_iterator(pg, pg->leaf().begin());
+  btree_page_ptr pg = up.m_page->next_page();
+  return pg ? const_iterator(pg, pg->leaf().begin()) : end();
 }
 
 //------------------------------------- find() -----------------------------------------//
@@ -1919,19 +1864,18 @@ vbtree_base<Key,Base,Traits,Comp>::iterator_type<T>::increment()
 
   //std::cout << "next_page_id() is " << m_page->leaf().next_page_id() << std::endl;
 
-  typename vbtree_base::btree_page_ptr next_page = m_page->next_page();
+  btree_page_ptr pg(m_page);
+  m_page = m_page->next_page();
 
-  if (m_page->leaf().next_page_id())
+  if (m_page)
   {  
-    m_page = m_page->manager().read(m_page->leaf().next_page_id());
-    BOOST_ASSERT(m_page == next_page);
     m_element = m_page->leaf().begin();
+    BOOST_ASSERT(m_element != m_page->leaf().end());
   }
   else // end() reached
   {
-    BOOST_ASSERT(!next_page);
     *this = reinterpret_cast<const vbtree_base<Key,Base,Traits,Comp>*>
-        (m_page->manager().owner())->m_end_iterator;
+        (pg->manager().owner())->m_end_iterator;
   }
 }
 
@@ -1948,19 +1892,19 @@ vbtree_base<Key,Base,Traits,Comp>::iterator_type<T>::decrement()
     --m_element;
   else
   {
-    typename vbtree_base::btree_page_ptr prior_page = m_page->prior_page();
-    if (m_page->leaf().prior_page_id())
+    btree_page_ptr pg(m_page);
+    m_page = m_page->prior_page();
+
+    if (m_page)
     {  
-      m_page = m_page->manager().read(m_page->leaf().prior_page_id());
-      BOOST_ASSERT(prior_page == m_page);
       m_element = m_page->leaf().end();
+      BOOST_ASSERT(m_element != m_page->leaf().begin());
       --m_element;
     }
     else // end() reached
     {
-      BOOST_ASSERT(!prior_page);
       *this = reinterpret_cast<const vbtree_base<Key,Base,Traits,Comp>*>
-          (m_page->manager().owner())->m_end_iterator;
+          (pg->manager().owner())->m_end_iterator;
     }
   }
 }
