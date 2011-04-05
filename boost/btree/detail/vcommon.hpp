@@ -1457,7 +1457,7 @@ vbtree_base<Key,Base,Traits,Comp>::erase(const_iterator pos)
     m_erase_branch_value(pos.m_page->parent(), pos.m_page->parent_element(),
       pos.m_page->page_id());
 
-//    m_free_page(pos.m_page.get());  // add page to free page list
+    m_free_page(pos.m_page.get());  // add page to free page list
   }
   else
   {
@@ -1527,7 +1527,7 @@ void vbtree_base<Key,Base,Traits,Comp>::m_erase_branch_value(
       m_root = m_mgr.read(header().root_page_id());
       m_root->parent(btree_page_ptr());
       m_root->parent_element(branch_iterator());
-//      m_free_page(pg); // move page to free page list
+      m_free_page(pg); // move page to free page list
       pg = m_root.get();
     }
   }
