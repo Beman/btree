@@ -17,6 +17,7 @@
 #include <boost/btree/header.hpp>
 #include <boost/filesystem/path.hpp>
 #include <boost/btree/detail/vcommon.hpp>
+#include <boost/assert.hpp>
 #include <boost/static_assert.hpp>
 #include <boost/type_traits/is_pointer.hpp>
 
@@ -61,8 +62,12 @@ namespace boost
           flags::user(flgs) | flags::key_only | flags::unique, pg_sz, comp)
       {
         for (; begin != end; ++begin)
+        {
+          BOOST_ASSERT_MSG(dynamic_size(*begin) < page_size()/3,
+            "value size too large for page size");
           vbtree_base<Key,vbtree_set_base<Key,Comp>,Traits,Comp>::m_insert_unique(
             *begin, *begin);
+        }
       }
  
       void open(const boost::filesystem::path& p,
@@ -77,6 +82,8 @@ namespace boost
       std::pair<typename vbtree_base<Key,vbtree_set_base<Key,Comp>,Traits,Comp>::const_iterator, bool>
       insert(const typename vbtree_base<Key,vbtree_set_base<Key,Comp>,Traits,Comp>::value_type& value)
       {
+        BOOST_ASSERT_MSG(dynamic_size(value) < page_size()/3,
+          "value size too large for page size");
         return vbtree_base<Key,vbtree_set_base<Key,Comp>,Traits,Comp>::m_insert_unique(
           value, value);
       }
@@ -84,9 +91,13 @@ namespace boost
       template <class InputIterator>
       void insert(InputIterator begin, InputIterator end)
       {
-        for (; begin != end; ++begin) 
+        for (; begin != end; ++begin)
+        {
+          BOOST_ASSERT_MSG(dynamic_size(*begin) < page_size()/3,
+            "value size too large for page size");
           vbtree_base<Key,vbtree_set_base<Key,Comp>,Traits,Comp>::m_insert_unique(
             *begin, *begin);
+        }
       }
     };
 
@@ -124,8 +135,12 @@ namespace boost
           flags::user(flgs) | flags::key_only, pg_sz, comp)
       {
         for (; begin != end; ++begin)
+        {
+          BOOST_ASSERT_MSG(dynamic_size(*begin) < page_size()/3,
+            "value size too large for page size");
           vbtree_base<Key,vbtree_set_base<Key,Comp>,Traits,Comp>::m_insert_non_unique(
             *begin, *begin);
+        }
       }
 
       void open(const boost::filesystem::path& p,
@@ -140,6 +155,8 @@ namespace boost
       typename vbtree_base<Key,vbtree_set_base<Key,Comp>,Traits,Comp>::const_iterator
       insert(const typename vbtree_base<Key,vbtree_set_base<Key,Comp>,Traits,Comp>::value_type& value)
       {
+        BOOST_ASSERT_MSG(dynamic_size(value) < page_size()/3,
+          "value size too large for page size");
         return vbtree_base<Key,vbtree_set_base<Key,Comp>,Traits,Comp>::m_insert_non_unique(
           value, value);
       }
@@ -148,8 +165,12 @@ namespace boost
       void insert(InputIterator begin, InputIterator end)
       {
         for (; begin != end; ++begin) 
+        {
+          BOOST_ASSERT_MSG(dynamic_size(*begin) < page_size()/3,
+            "value size too large for page size");
           vbtree_base<Key,vbtree_set_base<Key,Comp>,Traits,Comp>::m_insert_non_unique(
             *begin, *begin);
+        }
       }
     };
 
