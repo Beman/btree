@@ -17,7 +17,8 @@
 
 #include <boost/btree/vmap.hpp>
 #include <boost/btree/vset.hpp>
-#include <boost/btree/detail/fixstr.hpp>
+#include <boost/btree/support/fixstr.hpp>
+#include <boost/btree/support/strbuf.hpp>
 #include <boost/detail/lightweight_main.hpp>
 #include <boost/detail/lightweight_test.hpp>
 #include <boost/cstdint.hpp>
@@ -59,100 +60,33 @@ namespace
     return os;
   }
 
-  class c_str_pair
-  {
-  public:
-    static const std::size_t max_size = 256;
+  //class c_str_pair
+  //{
+  //public:
+  //  static const std::size_t max_size = 256;
 
-    c_str_pair(const char* key, const char* mapped)
-    {
-      std::size_t key_sz = std::strlen(key);
-      if (key_sz > max_size-2)
-        key_sz = max_size-2;
-      std::memcpy(_buf, key, key_sz);
-      _buf[key_sz] = '\0';
-      ++key_sz;
+  //  c_str_pair(const char* key, const char* mapped)
+  //  {
+  //    std::size_t key_sz = std::strlen(key);
+  //    if (key_sz > max_size-2)
+  //      key_sz = max_size-2;
+  //    std::memcpy(_buf, key, key_sz);
+  //    _buf[key_sz] = '\0';
+  //    ++key_sz;
 
-      std::size_t mapped_sz = std::strlen(mapped);
-      if (mapped_sz > max_size-(1+key_sz))
-        mapped_sz = max_size-(1+key_sz);
-      std::memcpy(_buf+key_sz+1, mapped, mapped_sz);
-      _buf[key_sz+1+mapped_sz] = '\0';
-    }
+  //    std::size_t mapped_sz = std::strlen(mapped);
+  //    if (mapped_sz > max_size-(1+key_sz))
+  //      mapped_sz = max_size-(1+key_sz);
+  //    std::memcpy(_buf+key_sz+1, mapped, mapped_sz);
+  //    _buf[key_sz+1+mapped_sz] = '\0';
+  //  }
 
-  private:
-    char _buf[max_size];
-  };
+  //private:
+  //  char _buf[max_size];
+  //};
 
-  class c_string_buf
-  {
-  public:
-    static const std::size_t max_size = 255;
-
-    c_string_buf() : _size(0) {_buf[0] = '\0';}
-    
-    c_string_buf(const char* s)
-    {
-      std::size_t sz = std::strlen(s);
-      if (sz > max_size)
-        sz = max_size;
-      std::memcpy(_buf, s, sz);
-      _buf[sz] = '\0';
-      _size = sz;
-    }
-
-    c_string_buf(const c_string_buf& s)
-    {
-      std::strcpy(_buf, s._buf);
-      _size = s._size;
-    }
-
-    c_string_buf& operator=(const char* s)
-    {
-      std::size_t sz = std::strlen(s);
-      if (sz > max_size)
-        sz = max_size;
-      std::memcpy(_buf, s, sz);
-      _buf[sz] = '\0';
-      _size = sz;
-      return *this;
-    }
-
-    c_string_buf& operator=(const c_string_buf& s)
-    {
-      std::strcpy(_buf, s._buf);  // self-assignment is harmless
-      _size = s._size;
-      return *this;
-    }
-
-    std::size_t  size() const  {return _size + 1 + sizeof(_size);}
-    const char*  c_str() const {return _buf;}
-
-    bool operator==(const c_string_buf& rhs) const {return std::strcmp(_buf, rhs._buf) == 0;}
-    bool operator!=(const c_string_buf& rhs) const {return std::strcmp(_buf, rhs._buf) != 0;}
-    bool operator< (const c_string_buf& rhs) const {return std::strcmp(_buf, rhs._buf) < 0;}
-    bool operator<=(const c_string_buf& rhs) const {return std::strcmp(_buf, rhs._buf) <= 0;}
-    bool operator> (const c_string_buf& rhs) const {return std::strcmp(_buf, rhs._buf) > 0;}
-    bool operator>=(const c_string_buf& rhs) const {return std::strcmp(_buf, rhs._buf) >= 0;}
-
-  private:
-    boost::uint8_t  _size;  // std::strlen(_buf); for speed, particularly on large strings 
-    char            _buf[max_size+1];
-  };
-
-  std::ostream& operator<<(std::ostream& os, const c_string_buf& x)
-  {
-    os << x.c_str();
-    return os;
-  }
 
 }  // unnamed namespace
-
-namespace boost { namespace btree {
-
-inline std::size_t dynamic_size(const c_string_buf& csb)  {return csb.size();}
-
-}}
 
 namespace {
 
@@ -376,9 +310,9 @@ void small_variable_set()
 
   fs::path p("btree_set.btree");
   fs::remove(p);
-  btree::vbtree_set<c_string_buf> bt(p, btree::flags::truncate, 128);
+  btree::vbtree_set<btree::strbuf> bt(p, btree::flags::truncate, 128);
 
-  c_string_buf stuff;
+  btree::strbuf stuff;
 
   stuff = "now";
   bt.insert(stuff);
