@@ -9,12 +9,12 @@
 #include <cstring>
 #include <boost/assert.hpp>
 
-#ifndef BOOST_FIXSTR_HPP
-#define BOOST_FIXSTR_HPP
+#ifndef BOOST_BTREE_FIXSTR_HPP
+#define BOOST_BTREE_FIXSTR_HPP
 
 namespace boost
 {
-namespace detail
+namespace btree
 {
 
   template <unsigned MaxSize>
@@ -67,4 +67,4 @@ namespace detail
 }
 }
 
-#endif  // BOOST_FIXSTR_HPP
+#endif  // BOOST_BTREE_FIXSTR_HPP

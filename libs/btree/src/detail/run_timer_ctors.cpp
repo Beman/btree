@@ -20,7 +20,7 @@
 // the library is being built (possibly exporting rather than importing code)
 #define BOOST_BTREE_SOURCE 
 
-#include <boost/btree/detail/timer.hpp>
+#include <boost/btree/support/timer.hpp>
 #include <iostream>
 
 namespace boost

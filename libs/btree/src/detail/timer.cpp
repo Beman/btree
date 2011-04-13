@@ -13,7 +13,7 @@
 // the library is being built (possibly exporting rather than importing code)
 #define BOOST_BTREE_SOURCE 
 
-#include <boost/btree/detail/timer.hpp>
+#include <boost/btree/support/timer.hpp>
 #include <boost/system/system_error.hpp>
 #include <boost/io/ios_state.hpp>
 #include <boost/throw_exception.hpp>
