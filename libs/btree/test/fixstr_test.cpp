@@ -7,7 +7,7 @@
 
 #include <boost/config/warning_disable.hpp>
 
-#include <boost/btree/detail/fixstr.hpp>
+#include <boost/btree/support/fixstr.hpp>
 #include <boost/detail/lightweight_main.hpp>
 #include <boost/detail/lightweight_test.hpp> 
 
@@ -17,7 +17,7 @@ namespace
 {
   void default_construct()
   {
-    boost::detail::fixstr<5> x;
+    boost::btree::fixstr<5> x;
     
     BOOST_TEST_EQ(x.size(), 0U);
     BOOST_TEST_EQ(x.max_size(), 5U);
@@ -28,19 +28,19 @@ namespace
 
   void construct_from_c_str()
   {
-    boost::detail::fixstr<5> x0("");
+    boost::btree::fixstr<5> x0("");
     BOOST_TEST_EQ(x0.size(), 0U);
     BOOST_TEST(x0.empty());
     BOOST_TEST_EQ(std::strlen(x0.c_str()), 0U);
     BOOST_TEST_EQ(std::memcmp(x0.c_str(),"\0\0\0\0\0\0", 6), 0 );
     
-    boost::detail::fixstr<5> x3("abc");
+    boost::btree::fixstr<5> x3("abc");
     BOOST_TEST_EQ(x3.size(), 3U);
     BOOST_TEST(!x3.empty());
     BOOST_TEST_EQ(std::strlen(x3.c_str()), 3U);
     BOOST_TEST_EQ(std::memcmp(x3.c_str(),"abc\0\0\0", 6), 0 );
     
-    boost::detail::fixstr<5> x5("abcdef");
+    boost::btree::fixstr<5> x5("abcdef");
     BOOST_TEST_EQ(x5.size(), 5U);
     BOOST_TEST(!x5.empty());
     BOOST_TEST_EQ(std::strlen(x5.c_str()), 5U);
@@ -52,127 +52,127 @@ namespace
 
   void construct_from_string()
   {
-    boost::detail::fixstr<5> x0(std::string(""));
+    boost::btree::fixstr<5> x0(std::string(""));
     BOOST_TEST_EQ(std::memcmp(x0.c_str(),"\0\0\0\0\0\0", 6), 0 );
     
-    boost::detail::fixstr<5> x3(std::string("abc"));
+    boost::btree::fixstr<5> x3(std::string("abc"));
     BOOST_TEST_EQ(std::memcmp(x3.c_str(),"abc\0\0\0", 6), 0 );
     
-    boost::detail::fixstr<5> x5(std::string("abcdef"));
+    boost::btree::fixstr<5> x5(std::string("abcdef"));
     BOOST_TEST_EQ(std::memcmp(x5.c_str(),"abcde\0", 6), 0 );
   }
 
   void copy_construct()
   {
-    boost::detail::fixstr<5> y0("");
-    boost::detail::fixstr<5> x0(y0);
+    boost::btree::fixstr<5> y0("");
+    boost::btree::fixstr<5> x0(y0);
     BOOST_TEST_EQ(std::memcmp(x0.c_str(),"\0\0\0\0\0\0", 6), 0 );
     
-    boost::detail::fixstr<5> y3("abc");
-    boost::detail::fixstr<5> x3(y3);
+    boost::btree::fixstr<5> y3("abc");
+    boost::btree::fixstr<5> x3(y3);
     BOOST_TEST_EQ(std::memcmp(x3.c_str(),"abc\0\0\0", 6), 0 );
     
-    boost::detail::fixstr<5> y5("abcdef");
-    boost::detail::fixstr<5> x5(y5);
+    boost::btree::fixstr<5> y5("abcdef");
+    boost::btree::fixstr<5> x5(y5);
     BOOST_TEST_EQ(std::memcmp(x5.c_str(),"abcde\0", 6), 0 );
   }
 
   void copy_assign()
   {
-    boost::detail::fixstr<5> y0("");
-    boost::detail::fixstr<5> x0 = y0;
+    boost::btree::fixstr<5> y0("");
+    boost::btree::fixstr<5> x0 = y0;
     BOOST_TEST_EQ(std::memcmp(x0.c_str(),"\0\0\0\0\0\0", 6), 0 );
     
-    boost::detail::fixstr<5> y3("abc");
-    boost::detail::fixstr<5> x3 = y3;
+    boost::btree::fixstr<5> y3("abc");
+    boost::btree::fixstr<5> x3 = y3;
     BOOST_TEST_EQ(std::memcmp(x3.c_str(),"abc\0\0\0", 6), 0 );
     
-    boost::detail::fixstr<5> y5("abcdef");
-    boost::detail::fixstr<5> x5 = y5;
+    boost::btree::fixstr<5> y5("abcdef");
+    boost::btree::fixstr<5> x5 = y5;
     BOOST_TEST_EQ(std::memcmp(x5.c_str(),"abcde\0", 6), 0 );
   }
 
   void copy_from_c_str()
   {
-    boost::detail::fixstr<5> x0("xxx");
+    boost::btree::fixstr<5> x0("xxx");
     x0 = "";
     BOOST_TEST_EQ(std::memcmp(x0.c_str(),"\0\0\0\0\0\0", 6), 0 );
     
-    boost::detail::fixstr<5> x3("xxxxx");
+    boost::btree::fixstr<5> x3("xxxxx");
     x3 = "abc";
     BOOST_TEST_EQ(std::memcmp(x3.c_str(),"abc\0\0\0", 6), 0 );
     
-    boost::detail::fixstr<5> x5("xxx");
+    boost::btree::fixstr<5> x5("xxx");
     x5 = "abcdef";
     BOOST_TEST_EQ(std::memcmp(x5.c_str(),"abcde\0", 6), 0 );
   }
 
   void copy_from_string()
   {
-    boost::detail::fixstr<5> x0("xxx");
+    boost::btree::fixstr<5> x0("xxx");
     x0 = std::string("");
     BOOST_TEST_EQ(std::memcmp(x0.c_str(),"\0\0\0\0\0\0", 6), 0 );
     
-    boost::detail::fixstr<5> x3("xxxxx");
+    boost::btree::fixstr<5> x3("xxxxx");
     x3 = std::string("abc");
     BOOST_TEST_EQ(std::memcmp(x3.c_str(),"abc\0\0\0", 6), 0 );
     
-    boost::detail::fixstr<5> x5("xxx");
+    boost::btree::fixstr<5> x5("xxx");
     x5 = std::string("abcdef");
     BOOST_TEST_EQ(std::memcmp(x5.c_str(),"abcde\0", 6), 0 );
   }
 
   void append_from_c_str()
   {
-    boost::detail::fixstr<5> x0("ab");
+    boost::btree::fixstr<5> x0("ab");
     x0 += "";
     BOOST_TEST_EQ(std::memcmp(x0.c_str(),"ab\0\0\0\0", 6), 0 );
     
-    boost::detail::fixstr<5> x3("ab");
+    boost::btree::fixstr<5> x3("ab");
     x3 += "c";
     BOOST_TEST_EQ(std::memcmp(x3.c_str(),"abc\0\0\0", 6), 0 );
     
-    boost::detail::fixstr<5> x5("abc");
+    boost::btree::fixstr<5> x5("abc");
     x5 += "def";
     BOOST_TEST_EQ(std::memcmp(x5.c_str(),"abcde\0", 6), 0 );
   }
 
   void append_from_string()
   {
-    boost::detail::fixstr<5> x0("ab");
+    boost::btree::fixstr<5> x0("ab");
     x0 += std::string("");
     BOOST_TEST_EQ(std::memcmp(x0.c_str(),"ab\0\0\0\0", 6), 0 );
     
-    boost::detail::fixstr<5> x3("ab");
+    boost::btree::fixstr<5> x3("ab");
     x3 += std::string("c");
     BOOST_TEST_EQ(std::memcmp(x3.c_str(),"abc\0\0\0", 6), 0 );
     
-    boost::detail::fixstr<5> x5("abc");
+    boost::btree::fixstr<5> x5("abc");
     x5 += std::string("def");
     BOOST_TEST_EQ(std::memcmp(x5.c_str(),"abcde\0", 6), 0 );
   }
 
   void clear()
   {
-    boost::detail::fixstr<5> x0("");
+    boost::btree::fixstr<5> x0("");
     x0.clear();
     BOOST_TEST_EQ(std::memcmp(x0.c_str(),"\0\0\0\0\0\0", 6), 0 );
     
-    boost::detail::fixstr<5> x3("abc");
+    boost::btree::fixstr<5> x3("abc");
     x3.clear();
     BOOST_TEST_EQ(std::memcmp(x3.c_str(),"\0\0\0\0\0\0", 6), 0 );
     
-    boost::detail::fixstr<5> x5("abcdef");
+    boost::btree::fixstr<5> x5("abcdef");
     x5.clear();
     BOOST_TEST_EQ(std::memcmp(x5.c_str(),"\0\0\0\0\0\0", 6), 0 );
   }
 
   void operator_square_brackets_const()
   {
-    const boost::detail::fixstr<5> x0("");
+    const boost::btree::fixstr<5> x0("");
     BOOST_TEST_EQ(x0[0], '\0');
     
-    const boost::detail::fixstr<5> x3("abc");
+    const boost::btree::fixstr<5> x3("abc");
     BOOST_TEST_EQ(x3[0], 'a');
     BOOST_TEST_EQ(x3[1], 'b');
     BOOST_TEST_EQ(x3[2], 'c');
@@ -181,10 +181,10 @@ namespace
 
   void operator_square_brackets()
   {
-    const boost::detail::fixstr<5> x0("");
+    const boost::btree::fixstr<5> x0("");
     BOOST_TEST_EQ(x0[0], '\0');
     
-    boost::detail::fixstr<5> x3("abc");
+    boost::btree::fixstr<5> x3("abc");
     x3[0] = 'x';
     x3[1] = 'y';
     x3[2] = 'z';
@@ -196,22 +196,22 @@ namespace
 
   void string()
   {
-    boost::detail::fixstr<5> x0("");
+    boost::btree::fixstr<5> x0("");
     BOOST_TEST_EQ(x0.string(), std::string(""));
     
-    boost::detail::fixstr<5> x3("abc");
+    boost::btree::fixstr<5> x3("abc");
     BOOST_TEST_EQ(x3.string(), std::string("abc"));
     
-    boost::detail::fixstr<5> x5("abcdef");
+    boost::btree::fixstr<5> x5("abcdef");
     BOOST_TEST_EQ(x5.string(), std::string("abcde"));
   }
 
   void relationals()
   {
-    boost::detail::fixstr<5> nul("");
-    boost::detail::fixstr<5> a("a");
-    boost::detail::fixstr<5> aa("aa");
-    boost::detail::fixstr<5> b("b");
+    boost::btree::fixstr<5> nul("");
+    boost::btree::fixstr<5> a("a");
+    boost::btree::fixstr<5> aa("aa");
+    boost::btree::fixstr<5> b("b");
 
     BOOST_TEST(nul == nul);
     BOOST_TEST(!(nul != nul));

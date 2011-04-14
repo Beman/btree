@@ -11,8 +11,8 @@
 #include <map>
 #include <boost/random.hpp>
 #include <boost/cstdint.hpp>
-#include <boost/btree/detail/timer.hpp>
-#include <boost/btree/detail/fixstr.hpp>
+#include <boost/btree/support/timer.hpp>
+#include <boost/btree/support/fixstr.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/detail/lightweight_main.hpp>
@@ -257,7 +257,7 @@ namespace
         cout << element.first << ',';
 
       pair<stl_type::iterator, bool> stl_result = stl.insert(element);
-      pair<bt_type::const_iterator, bool> bt_result = bt.insert(element);
+      pair<bt_type::const_iterator, bool> bt_result = bt.insert(element.first, element.second);
 
       if (stl_result.second != bt_result.second)
       {
@@ -292,16 +292,16 @@ namespace
       if (verbose)
         cout << stl_itr->first << ',';
 
-      if (stl_itr->first != bt_itr->first)
+      if (stl_itr->first != bt_itr->key())
       {
         cout << "stl_itr->first " << stl_itr->first << " != "
-              << "bt_itr->first " << bt_itr->first << endl;
+              << "bt_itr->key() " << bt_itr->key() << endl;
         throw runtime_error("iteration: first check failure");
       }
-      if (stl_itr->second != bt_itr->second)
+      if (stl_itr->second != bt_itr->mapped_value())
       {
         cout << "stl_itr->second " << stl_itr->second << " != "
-              << "bt_itr->second " << bt_itr->second << endl;
+              << "bt_itr->mapped_type() " << bt_itr->mapped_value() << endl;
         throw runtime_error("iteration: second check failure");
       }
       ++iterate_forward_count;
@@ -326,16 +326,16 @@ namespace
     {
       --stl_itr;
       --bt_itr;
-      if (stl_itr->first != bt_itr->first)
+      if (stl_itr->first != bt_itr->key())
       {
         cout << "stl_itr->first " << stl_itr->first << " != "
-              << "bt_itr->first " << bt_itr->first << endl;
+              << "bt_itr->key() " << bt_itr->key() << endl;
         throw runtime_error("backward iteration: first check failure");
       }
-      if (stl_itr->second != bt_itr->second)
+      if (stl_itr->second != bt_itr->mapped_value())
       {
         cout << "stl_itr->second " << stl_itr->second << " != "
-              << "bt_itr->second " << bt_itr->second << endl;
+              << "bt_itr->mapped_value() " << bt_itr->mapped_value() << endl;
         throw runtime_error("backward iteration: second check failure");
       }
       ++iterate_backward_count;
@@ -410,16 +410,16 @@ namespace
         throw runtime_error("find: failed to find key");
       }
 
-      if (stl_result->first != bt_result->first)
+      if (stl_result->first != bt_result->key())
       {
         cout << "stl_result->first " << stl_result->first << " != "
-              << "bt_result->first " << bt_result->first << endl;
+              << "bt_result->key() " << bt_result->key() << endl;
         throw runtime_error("find: first check failure");
       }
-      if (stl_result->second != bt_result->second)
+      if (stl_result->second != bt_result->mapped_value())
       {
         cout << "stl_result->second " << stl_result->second << " != "
-              << "bt_result->second " << bt_result->second << endl;
+              << "bt_result->mapped_value() " << bt_result->mapped_value() << endl;
         throw runtime_error("find: second check failure");
       }
       ++find_success_count;
@@ -443,11 +443,11 @@ namespace
       }
       if (stl_result == stl.end())
         ++find_fail_count;
-      else if (bt_result->first == k)
+      else if (bt_result->key() == k)
         ++find_success_count;
       else
       {
-        cout << "bt finds " << bt_result->first << ", but should be " << k << endl;
+        cout << "bt finds " << bt_result->key() << ", but should be " << k << endl;
         throw runtime_error("find: wrong iterator");
       }
     }
@@ -487,16 +487,16 @@ namespace
         throw runtime_error("lower_bound: unexpected bt.end()");
       }
 
-      if (stl_result->first != bt_result->first)
+      if (stl_result->first != bt_result->key())
       {
         cout << "stl_result->first " << stl_result->first << " != "
-              << "bt_result->first " << bt_result->first << endl;
+              << "bt_result->key() " << bt_result->key() << endl;
         throw runtime_error("lower_bound: first check failure");
       }
-      if (stl_result->second != bt_result->second)
+      if (stl_result->second != bt_result->mapped_value())
       {
         cout << "stl_result->second " << stl_result->second << " != "
-              << "bt_result->second " << bt_result->second << endl;
+              << "bt_result->mapped_value() " << bt_result->mapped_value() << endl;
         throw runtime_error("lower_bound: second check failure");
       }
       ++lower_bound_exist_count;
@@ -520,16 +520,16 @@ namespace
       }
       if (stl_result != stl.end() && bt_result != bt.end())
       {
-        if (stl_result->first != bt_result->first)
+        if (stl_result->first != bt_result->key())
         {
           cout << "stl_result->first " << stl_result->first << " != "
-                << "bt_result->first " << bt_result->first << endl;
+                << "bt_result->key() " << bt_result->key() << endl;
           throw runtime_error("lower_bound may exist: first check failure");
         }
-        if (stl_result->second != bt_result->second)
+        if (stl_result->second != bt_result->mapped_value())
         {
           cout << "stl_result->second " << stl_result->second << " != "
-                << "bt_result->second " << bt_result->second << endl;
+                << "bt_result->mapped_value() " << bt_result->mapped_value() << endl;
           throw runtime_error("lower_bound may exist: second check failure");
         }
       }
@@ -561,7 +561,7 @@ namespace
 
       if (stl_result == stl.end() && bt_result != bt.end())
       {
-        cout << "stl upper_bound()==end(), but bt upper_bounds " << bt_result->first
+        cout << "stl upper_bound()==end(), but bt upper_bounds " << bt_result->key()
              << " for key " << stl_itr->first << endl;
         throw runtime_error("upper_bound: results inconsistent");
       }
@@ -573,16 +573,16 @@ namespace
       }
       if (stl_result != stl.end() && bt_result != bt.end())
       {
-        if (stl_result->first != bt_result->first)
+        if (stl_result->first != bt_result->key())
         {
           cout << "stl_result->first " << stl_result->first << " != "
-                << "bt_result->first " << bt_result->first << endl;
+                << "bt_result->key() " << bt_result->key() << endl;
           throw runtime_error("upper_bound key exists: first check failure");
         }
-        if (stl_result->second != bt_result->second)
+        if (stl_result->second != bt_result->mapped_value())
         {
           cout << "stl_result->second " << stl_result->second << " != "
-                << "bt_result->second " << bt_result->second << endl;
+                << "bt_result->second " << bt_result->mapped_value() << endl;
           throw runtime_error("upper_bound key exists: second check failure");
         }
       }
@@ -600,7 +600,7 @@ namespace
 
       if (stl_result == stl.end() && bt_result != bt.end())
       {
-        cout << "stl upper_bound()==end(), but bt upper_bounds " << bt_result->first
+        cout << "stl upper_bound()==end(), but bt upper_bounds " << bt_result->key()
              << " for k " << k << endl;
         throw runtime_error("upper_bound: results inconsistent");
       }
@@ -612,16 +612,16 @@ namespace
       }
       if (stl_result != stl.end() && bt_result != bt.end())
       {
-        if (stl_result->first != bt_result->first)
+        if (stl_result->first != bt_result->key())
         {
           cout << "stl_result->first " << stl_result->first << " != "
-                << "bt_result->first " << bt_result->first << endl;
+                << "bt_result->key() " << bt_result->key() << endl;
           throw runtime_error("upper_bound may exist: first check failure");
         }
-        if (stl_result->second != bt_result->second)
+        if (stl_result->second != bt_result->mapped_value())
         {
           cout << "stl_result->second " << stl_result->second << " != "
-                << "bt_result->second " << bt_result->second << endl;
+                << "bt_result->mapped_value() " << bt_result->mapped_value() << endl;
           throw runtime_error("upper_bound may exist: second check failure");
         }
       }
