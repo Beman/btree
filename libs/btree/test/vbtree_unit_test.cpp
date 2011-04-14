@@ -22,6 +22,7 @@
 #include <boost/detail/lightweight_main.hpp>
 #include <boost/detail/lightweight_test.hpp>
 #include <boost/cstdint.hpp>
+#include <boost/random.hpp>
 
 #include <iostream>
 #include <iomanip>
@@ -59,32 +60,6 @@ namespace
     os << f.x;
     return os;
   }
-
-  //class c_str_pair
-  //{
-  //public:
-  //  static const std::size_t max_size = 256;
-
-  //  c_str_pair(const char* key, const char* mapped)
-  //  {
-  //    std::size_t key_sz = std::strlen(key);
-  //    if (key_sz > max_size-2)
-  //      key_sz = max_size-2;
-  //    std::memcpy(_buf, key, key_sz);
-  //    _buf[key_sz] = '\0';
-  //    ++key_sz;
-
-  //    std::size_t mapped_sz = std::strlen(mapped);
-  //    if (mapped_sz > max_size-(1+key_sz))
-  //      mapped_sz = max_size-(1+key_sz);
-  //    std::memcpy(_buf+key_sz+1, mapped, mapped_sz);
-  //    _buf[key_sz+1+mapped_sz] = '\0';
-  //  }
-
-  //private:
-  //  char _buf[max_size];
-  //};
-
 
 }  // unnamed namespace
 
@@ -537,9 +512,9 @@ void insert_tests(BTree& bt)
   BOOST_TEST_EQ(bt.find(0x0E)->key().x, 0x0E);
 
   cur = begin = end = empty_iterator;
-  cout << '\n' << bt.manager() << '\n';
-  cout << "\nroot is page " << bt.header().root_page_id() << ", size() " << bt.size() << '\n'; 
-  bt.dump_dot(std::cout);
+  //cout << '\n' << bt.manager() << '\n';
+  //cout << "\nroot is page " << bt.header().root_page_id() << ", size() " << bt.size() << '\n'; 
+  //bt.dump_dot(std::cout);
 
   cur = bt.begin();
   BOOST_TEST_EQ(cur->key().x, 0x0A);
@@ -643,8 +618,8 @@ void insert_tests(BTree& bt)
   }
   BOOST_TEST_EQ(bt.size(), 21U);
   
-  cout << "root is page " << bt.header().root_page_id() << '\n'; 
-  bt.dump_dot(std::cout);
+  //cout << "root is page " << bt.header().root_page_id() << '\n'; 
+  //bt.dump_dot(std::cout);
 
   cout << "\n  erase every other element" << endl;
   for (int i = 1; i <= 21; i += 2 )
@@ -654,18 +629,18 @@ void insert_tests(BTree& bt)
   }
   BOOST_TEST_EQ(bt.size(), 10U);
 
-  cout << "root is page " << bt.header().root_page_id() << '\n'; 
-  bt.dump_dot(std::cout);
+  //cout << "root is page " << bt.header().root_page_id() << '\n'; 
+  //bt.dump_dot(std::cout);
 
   cout << "\n  erase remaining elements and attempt to erase nonexistant elements" << endl;
   for (int i = 1; i <= 31; ++i )  // many of these won't exist
   {
-    cout << "\n  erase " << i << endl;
+    //cout << "\n  erase " << i << endl;
     typename BTree::size_type ct
       = bt.erase(i);
-    cout << "     erase count " << ct << ", size() " << bt.size() << endl;
-    cout << "root is page " << bt.header().root_page_id() << '\n'; 
-    bt.dump_dot(std::cout);
+    //cout << "     erase count " << ct << ", size() " << bt.size() << endl;
+    //cout << "root is page " << bt.header().root_page_id() << '\n'; 
+    //bt.dump_dot(std::cout);
   }
   BOOST_TEST_EQ(bt.size(), 0U);
 
@@ -754,15 +729,15 @@ void find_and_bounds_tests(BTree& bt)
       //cout << "insert 15" << endl;
       do_fb_insert(bt, 15);
     }
-    cout << "root is page " << bt.header().root_page_id() << '\n'; 
-    bt.dump_dot(std::cout);
+    //cout << "root is page " << bt.header().root_page_id() << '\n'; 
+    //bt.dump_dot(std::cout);
 
 
     BOOST_TEST_EQ(bt.size(), 22U);
   }
 
-  cout << "root is page " << bt.header().root_page_id() << '\n'; 
-  bt.dump_dot(std::cout);
+  //cout << "root is page " << bt.header().root_page_id() << '\n'; 
+  //bt.dump_dot(std::cout);
 
   //             i =   0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18
   const int  lwr[] = { 1, 1, 3, 3, 5, 5, 7, 7, 9, 9, 11, 11, 13, 13, 15, 15, 17, 17, -1};
@@ -773,8 +748,8 @@ void find_and_bounds_tests(BTree& bt)
 
   for (int i = 0; i <= 18; ++i)
   {
-    std::cout << "lower_bound " << i << " is " <<
-      (bt.lower_bound(i) == bt.end() ? 99999 : bt.key(*bt.lower_bound(i))) << std::endl;
+    //std::cout << "lower_bound " << i << " is " <<
+    //  (bt.lower_bound(i) == bt.end() ? 99999 : bt.key(*bt.lower_bound(i))) << std::endl;
 
 
     BOOST_TEST((bt.lower_bound(i) != bt.end() && bt.key(*bt.lower_bound(i)) == lwr[i])
@@ -863,14 +838,14 @@ void insert_non_unique_tests(BTree& bt)
     BOOST_TEST_EQ(result->key().x, 3);
     BOOST_TEST_EQ(result->mapped_value(), i);
 
-    cout << "root is page " << bt.header().root_page_id() << '\n'; 
-    bt.dump_dot(std::cout);
+    //cout << "root is page " << bt.header().root_page_id() << '\n'; 
+    //bt.dump_dot(std::cout);
    
     int j = 0;
     for (typename BTree::const_iterator_range range = bt.equal_range(3);
          range.first != range.second; ++range.first)
     {
-      cout << range.first->key().x << ", " << range.first->mapped_value() << endl;
+      //cout << range.first->key().x << ", " << range.first->mapped_value() << endl;
       ++j;
       BOOST_TEST_EQ(range.first->key().x, 3);
       BOOST_TEST_EQ(range.first->mapped_value(), j);
@@ -897,6 +872,43 @@ void insert_non_unique()
   }
 
   cout << "    insert_non_unique complete" << endl;
+}
+
+//--------------------------------  update_test  --------------------------------------//
+
+void update_test()
+{
+  cout << "  update_test..." << endl;
+
+  typedef btree::vbtree_map<fat, int> bt_type;
+  bt_type bt("update.btr", btree::flags::truncate, 128);
+
+  boost::mt19937 rng;
+  boost::uniform_int<> million(1,1000000);
+  boost::variate_generator<boost::mt19937&, boost::uniform_int<> >
+           random_value(rng, million);
+
+  for (int n = 1; n < 1000; ++n)
+  {
+    bt.insert(fat(random_value()), n);
+  }
+
+  for (bt_type::iterator itr = bt.begin(); itr != bt.end(); ++itr)
+  {
+//    cout << "    " << itr->key() << "," << itr->mapped_value() << '\n';
+    int n = itr->mapped_value();
+    bt_type::iterator new_itr =  bt.update(itr, -n);
+    BOOST_TEST(itr == new_itr);
+    BOOST_TEST(new_itr->mapped_value() == -n);
+  }
+
+  for (bt_type::iterator itr = bt.begin(); itr != bt.end(); ++itr)
+  {
+//    cout << "    " << itr->key() << "," << itr->mapped_value() << '\n';
+    BOOST_TEST(itr->mapped_value() <= 0);
+  }
+
+  cout << "     update_test complete" << endl;
 }
 
 ////-------------------------------------- erase -----------------------------------------//
@@ -1025,6 +1037,7 @@ int cpp_main(int, char*[])
   insert_non_unique();
   find_and_bounds();
   //erase();
+  update_test();
   //iteration();
   //multi();
   //parent_pointer_to_split_page();
