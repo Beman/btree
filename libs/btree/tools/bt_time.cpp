@@ -9,7 +9,7 @@
 
 #include <boost/btree/map.hpp>
 #include <boost/random.hpp>
-#include <boost/btree/detail/timer.hpp>
+#include <boost/btree/support/timer.hpp>
 #include <boost/detail/lightweight_test.hpp> 
 
 #include <iostream>
@@ -83,8 +83,7 @@ namespace
         {
           if (lg && i % lg == 0)
             std::cout << i << std::endl; 
-          typename BT::value_type element(key(), i);
-          bt.insert(element);
+          bt.insert(key(), i);
         }
         insert_tm = t.stop();
         t.report();
@@ -106,7 +105,7 @@ namespace
 #       if !defined(NDEBUG)
           if (itr == bt.end())
             throw std::runtime_error("btree find() returned end()");
-          if (itr->first != k)
+          if (itr->key() != k)
             throw std::runtime_error("btree find() returned wrong iterator");
 #       endif 
         }
@@ -125,9 +124,9 @@ namespace
           ++itr)
         {
           ++count;
-          if (itr->first <= prior_key)
+          if (itr->key() <= prior_key)
             throw std::runtime_error("btree iteration sequence error");
-          prior_key = itr->first;
+          prior_key = itr->key();
         }
         iterate_tm = t.stop();
         t.report();
