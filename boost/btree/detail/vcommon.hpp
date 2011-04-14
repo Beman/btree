@@ -33,6 +33,9 @@
 
   * replace insert(key, mapped_value) with insert_emplace?
 
+  * implement emplace(). Howard speculates emplace() makes the map/multimap insert()
+    key, mapped_value overload unnecessary. 
+
   * erase() return is correct for unique containers, but not for non-unique containers. Decide
     what to do about non-unique containers. Might have to first count the offset from
     first of the key, then for return find and increment to the new offset. Potentially
@@ -42,14 +45,11 @@
     to figure out test for correct operation. Also, several calls to m_free_page()
     commented out in erase, erase branch, code.
 
-  * implement emplace(). Howard speculates emplace() makes the map/multimap insert()
-    key, mapped_value overload unnecessary. 
-
   * vbtree_unit_test.cpp: move erase tests out of insert test.
 
-  * Add static_assert Key, T are is_trivially_copyable
+  * Upgrade m_update() to allow new dynamic size different from old dynamic size
 
-  * Add check for trying to insert a value sized >= 1/4 (page size - begin)
+  * Add static_assert Key, T are is_trivially_copyable
 
   * map, multi_map, insert(key, mapped_value) can be confused with template insert?
     Use enable_if?
@@ -70,6 +70,12 @@
   * Pack optimization should apply to branches too.
 
   * m_set_max_cache_pages() needs to be reviewed for correctness.
+
+  * Either add code to align mapped() or add a requirement that PID, K does not
+    require alignment.
+
+  * Add a function (apply(key, mapped_value)?) that inserts if key not present,
+    updates if present.
 
 */
 
@@ -276,9 +282,6 @@ namespace detail
   };
 
   //--------------------------------- branch_value -------------------------------------//
-
-  // TODO: either add code to align mapped() or add a requirement that PID, K does not
-  // require alignment.
 
   template <class PID, class K>
   class branch_value
@@ -824,9 +827,12 @@ protected:
 
   std::pair<const_iterator, bool>
     m_insert_unique(const key_type& k, const mapped_type& mv);
+
   const_iterator
     m_insert_non_unique(const key_type& k, const mapped_type& mv);
   // Remark: Insert after any elements with equivalent keys, per C++ standard
+
+  iterator m_update(iterator itr, const mapped_type& mv);
 
   void m_open(const boost::filesystem::path& p, flags::bitmask flgs, std::size_t pg_sz);
 
@@ -857,10 +863,12 @@ private:
   // returned iterator::m_element is the insertion point, and thus may be the 
   // past-the-end leaf_iterator for iterator::m_page
   // postcondition: parent pointers are set, all the way up the chain to the root
+
   iterator m_special_upper_bound(const key_type& k) const;
   // returned iterator::m_element is the insertion point, and thus may be the 
   // past-the-end leaf_iterator for iterator::m_page
   // postcondition: parent pointers are set, all the way up the chain to the root
+
   btree_page_ptr m_new_page(boost::uint16_t lv);
   void  m_new_root();
   const_iterator m_leaf_insert(iterator insert_iter, const key_type& key,
@@ -1328,7 +1336,7 @@ vbtree_base<Key,Base,Traits,Comp>::m_branch_insert(
   if (pg->size() + insert_size > m_max_branch_size)  // no room on page?
   {
     //  no room on page, so page must be split
-std::cout << "Splitting branch\n";
+//std::cout << "Splitting branch\n";
 
     if (pg->level() == m_hdr.root_level()) // splitting the root?
       m_new_root();  // create a new root
@@ -1588,7 +1596,7 @@ vbtree_base<Key,Base,Traits,Comp>::m_insert_unique(const key_type& k,
     const_iterator(insert_point.m_page, insert_point.m_element), false); 
 }
 
-//-------------------------------- m_insert_non_unique() -------------------------------//
+//------------------------------- m_insert_non_unique() --------------------------------//
 
 template <class Key, class Base, class Traits, class Comp>   
 inline typename vbtree_base<Key,Base,Traits,Comp>::const_iterator
@@ -1598,6 +1606,21 @@ vbtree_base<Key,Base,Traits,Comp>::m_insert_non_unique(const key_type& key,
   BOOST_ASSERT_MSG(is_open(), "insert() on unopen btree");
   iterator insert_point = m_special_upper_bound(key);
   return m_leaf_insert(insert_point, key, mapped_value);
+}
+
+//----------------------------------- m_update() ---------------------------------------//
+
+template <class Key, class Base, class Traits, class Comp>   
+typename vbtree_base<Key,Base,Traits,Comp>::iterator
+vbtree_base<Key,Base,Traits,Comp>::m_update(iterator itr,
+  const mapped_type& new_mapped_value)
+{
+  BOOST_ASSERT_MSG(dynamic_size(new_mapped_value) == dynamic_size(itr->mapped_value()),
+    "dynamic_size of the new mapped value must be equal dynamic_size of the old value");
+  itr.m_page->needs_write(true);
+  std::memcpy(const_cast<mapped_type*>(&itr->mapped_value()),
+    &new_mapped_value, dynamic_size(new_mapped_value));
+  return itr;
 }
 
 ////--------------------------------- m_lower_page_bound() -------------------------------//

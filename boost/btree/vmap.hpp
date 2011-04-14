@@ -100,7 +100,19 @@ namespace boost
             begin->key(), begin->mapped_value());
         }
       }
-    };
+
+       // typename vbtree_base<Key,vbtree_map_base<Key,T,Comp>,Traits,Comp>:: is required by GCC but not VC++
+      typename vbtree_base<Key,vbtree_map_base<Key,T,Comp>,Traits,Comp>::iterator
+      update(typename vbtree_base<Key,vbtree_map_base<Key,T,Comp>,Traits,Comp>::iterator itr,
+        const T& mapped_value)
+      {
+        BOOST_ASSERT_MSG(dynamic_size(itr->key())+dynamic_size(mapped_value)
+          < page_size()/3, "value size too large for page size");
+        return vbtree_base<Key,vbtree_map_base<Key,T,Comp>,Traits,Comp>::m_update(
+          itr, mapped_value);
+      }
+
+     };
 
 //--------------------------------------------------------------------------------------//
 //                               class vbtree_multimap                                  //
@@ -173,6 +185,17 @@ namespace boost
           vbtree_base<Key,vbtree_map_base<Key,T,Comp>,Traits,Comp>::m_insert_non_unique(
             begin->key(), begin->mapped_value());
         }
+      }
+
+       // typename vbtree_base<Key,vbtree_map_base<Key,T,Comp>,Traits,Comp>:: is required by GCC but not VC++
+      typename vbtree_base<Key,vbtree_map_base<Key,T,Comp>,Traits,Comp>::iterator
+      update(typename vbtree_base<Key,vbtree_map_base<Key,T,Comp>,Traits,Comp>::iterator itr,
+        const T& mapped_value)
+      {
+        BOOST_ASSERT_MSG(dynamic_size(itr->key())+dynamic_size(mapped_value)
+          < page_size()/3, "value size too large for page size");
+        return vbtree_base<Key,vbtree_map_base<Key,T,Comp>,Traits,Comp>::m_update(
+          itr, mapped_value);
       }
     };
 
