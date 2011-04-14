@@ -16,7 +16,7 @@
 #include <boost/cstdint.hpp>
 #include <boost/btree/header.hpp>
 #include <boost/filesystem/path.hpp>
-#include <boost/btree/detail/vcommon.hpp>
+#include <boost/btree/detail/common.hpp> // common to all 4 btree_* containers
 #include <boost/assert.hpp>
 #include <boost/static_assert.hpp>
 #include <boost/type_traits/is_pointer.hpp>
@@ -29,43 +29,43 @@ namespace boost
     //  endian traits are the default since they don't require page_id_type alignment
 
 //--------------------------------------------------------------------------------------//
-//                                class vbtree_set                                      //
+//                                class btree_set                                       //
 //--------------------------------------------------------------------------------------//
 
     template <class Key, class Traits = default_endian_traits,
               class Comp = btree::less<Key> >
-    class vbtree_set
-      : public vbtree_base<Key, vbtree_set_base<Key,Comp>, Traits, Comp>
+    class btree_set
+      : public btree_base<Key, btree_set_base<Key,Comp>, Traits, Comp>
     {
     public:
 
       BOOST_STATIC_ASSERT_MSG( !boost::is_pointer<Key>::value, "Key must not be a pointer type");
 
       // <Key,Comp> is required by GCC but not by VC++
-      explicit vbtree_set(const Comp& comp = Comp())
-        : vbtree_base<Key,vbtree_set_base<Key,Comp>,Traits,Comp>(comp) {}
+      explicit btree_set(const Comp& comp = Comp())
+        : btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>(comp) {}
 
-      explicit vbtree_set(const boost::filesystem::path& p,
+      explicit btree_set(const boost::filesystem::path& p,
           flags::bitmask flgs = flags::read_only,
           std::size_t pg_sz = default_page_size,  // ignored if existing file
           const Comp& comp = Comp())
-        : vbtree_base<Key,vbtree_set_base<Key,Comp>,Traits,Comp>(p,
+        : btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>(p,
             flags::user(flgs) | flags::key_only | flags::unique, pg_sz, comp) {}
 
       template <class InputIterator>
-      vbtree_set(InputIterator begin, InputIterator end,
+      btree_set(InputIterator begin, InputIterator end,
         const boost::filesystem::path& p,
         flags::bitmask flgs = flags::read_only,
         std::size_t pg_sz = default_page_size,  // ignored if existing file
         const Comp& comp = Comp())
-      : vbtree_base<Key,vbtree_set_base<Key,Comp>,Traits,Comp>(p,
+      : btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>(p,
           flags::user(flgs) | flags::key_only | flags::unique, pg_sz, comp)
       {
         for (; begin != end; ++begin)
         {
           BOOST_ASSERT_MSG(dynamic_size(*begin) < page_size()/3,
             "value size too large for page size");
-          vbtree_base<Key,vbtree_set_base<Key,Comp>,Traits,Comp>::m_insert_unique(
+          btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::m_insert_unique(
             *begin, *begin);
         }
       }
@@ -74,17 +74,17 @@ namespace boost
         flags::bitmask flgs = flags::read_only,
         std::size_t pg_sz = default_page_size) // pg_sz ignored if existing file
       {
-        vbtree_base<Key,vbtree_set_base<Key,Comp>,Traits,Comp>::m_open(p,
+        btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::m_open(p,
           flags::user(flgs) | flags::key_only | flags::unique, pg_sz);
       }
 
-      // typename vbtree_base<Key,vbtree_set_base<Key,Comp>,Traits,Comp>:: is required by GCC but not VC++
-      std::pair<typename vbtree_base<Key,vbtree_set_base<Key,Comp>,Traits,Comp>::const_iterator, bool>
-      insert(const typename vbtree_base<Key,vbtree_set_base<Key,Comp>,Traits,Comp>::value_type& value)
+      // typename btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>:: is required by GCC but not VC++
+      std::pair<typename btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::const_iterator, bool>
+      insert(const typename btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::value_type& value)
       {
         BOOST_ASSERT_MSG(dynamic_size(value) < page_size()/3,
           "value size too large for page size");
-        return vbtree_base<Key,vbtree_set_base<Key,Comp>,Traits,Comp>::m_insert_unique(
+        return btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::m_insert_unique(
           value, value);
       }
 
@@ -95,50 +95,50 @@ namespace boost
         {
           BOOST_ASSERT_MSG(dynamic_size(*begin) < page_size()/3,
             "value size too large for page size");
-          vbtree_base<Key,vbtree_set_base<Key,Comp>,Traits,Comp>::m_insert_unique(
+          btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::m_insert_unique(
             *begin, *begin);
         }
       }
     };
 
 //--------------------------------------------------------------------------------------//
-//                              class vbtree_multiset                                   //
+//                              class btree_multiset                                    //
 //--------------------------------------------------------------------------------------//
 
     template <class Key, class Traits = default_endian_traits,
               class Comp = btree::less<Key> >              
-    class vbtree_multiset
-      : public vbtree_base<Key, vbtree_set_base<Key,Comp>, Traits, Comp>
+    class btree_multiset
+      : public btree_base<Key, btree_set_base<Key,Comp>, Traits, Comp>
     {
     public:
 
       BOOST_STATIC_ASSERT_MSG( !boost::is_pointer<Key>::value, "Key must not be a pointer type");
 
       // <Key,Comp> is required by GCC but not by VC++
-      explicit vbtree_multiset(const Comp& comp = Comp())
-        : vbtree_base<Key,vbtree_set_base<Key,Comp>,Traits,Comp>(comp) {}
+      explicit btree_multiset(const Comp& comp = Comp())
+        : btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>(comp) {}
 
-      explicit vbtree_multiset(const boost::filesystem::path& p,
+      explicit btree_multiset(const boost::filesystem::path& p,
           flags::bitmask flgs = flags::read_only,
           std::size_t pg_sz = default_page_size,  // ignored if existing file
           const Comp& comp = Comp())
-        : vbtree_base<Key,vbtree_set_base<Key,Comp>,Traits,Comp>(p,
+        : btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>(p,
             flags::user(flgs) | flags::key_only, pg_sz, comp) {}
 
       template <class InputIterator>
-      vbtree_multiset(InputIterator begin, InputIterator end,
+      btree_multiset(InputIterator begin, InputIterator end,
         const boost::filesystem::path& p,
         flags::bitmask flgs = flags::read_only,
         std::size_t pg_sz = default_page_size,  // ignored if existing file
         const Comp& comp = Comp())
-      : vbtree_base<Key,vbtree_set_base<Key,Comp>,Traits,Comp>(p,
+      : btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>(p,
           flags::user(flgs) | flags::key_only, pg_sz, comp)
       {
         for (; begin != end; ++begin)
         {
           BOOST_ASSERT_MSG(dynamic_size(*begin) < page_size()/3,
             "value size too large for page size");
-          vbtree_base<Key,vbtree_set_base<Key,Comp>,Traits,Comp>::m_insert_non_unique(
+          btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::m_insert_non_unique(
             *begin, *begin);
         }
       }
@@ -147,17 +147,17 @@ namespace boost
         flags::bitmask flgs = flags::read_only,
         std::size_t pg_sz = default_page_size) // pg_sz ignored if existing file
       {
-         vbtree_base<Key,vbtree_set_base<Key,Comp>,Traits,Comp>::m_open(p,
+         btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::m_open(p,
           flags::user(flgs) | flags::key_only, pg_sz);
       }
 
-      // typename vbtree_base<Key,vbtree_set_base<Key,Comp>,Traits,Comp>:: is required by GCC but not VC++
-      typename vbtree_base<Key,vbtree_set_base<Key,Comp>,Traits,Comp>::const_iterator
-      insert(const typename vbtree_base<Key,vbtree_set_base<Key,Comp>,Traits,Comp>::value_type& value)
+      // typename btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>:: is required by GCC but not VC++
+      typename btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::const_iterator
+      insert(const typename btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::value_type& value)
       {
         BOOST_ASSERT_MSG(dynamic_size(value) < page_size()/3,
           "value size too large for page size");
-        return vbtree_base<Key,vbtree_set_base<Key,Comp>,Traits,Comp>::m_insert_non_unique(
+        return btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::m_insert_non_unique(
           value, value);
       }
 
@@ -168,7 +168,7 @@ namespace boost
         {
           BOOST_ASSERT_MSG(dynamic_size(*begin) < page_size()/3,
             "value size too large for page size");
-          vbtree_base<Key,vbtree_set_base<Key,Comp>,Traits,Comp>::m_insert_non_unique(
+          btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::m_insert_non_unique(
             *begin, *begin);
         }
       }

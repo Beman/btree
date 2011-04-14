@@ -1,4 +1,4 @@
-//  vbtree_unit_test.cpp  ------------------------------------------------------//
+//  btree_unit_test.cpp  ---------------------------------------------------------------//
 
 //  Copyright Beman Dawes 2006, 2010
 
@@ -15,8 +15,8 @@
 //                                                                                      //
 //--------------------------------------------------------------------------------------//
 
-#include <boost/btree/vmap.hpp>
-#include <boost/btree/vset.hpp>
+#include <boost/btree/map.hpp>
+#include <boost/btree/set.hpp>
 #include <boost/btree/support/fixstr.hpp>
 #include <boost/btree/support/strbuf.hpp>
 #include <boost/detail/lightweight_main.hpp>
@@ -79,35 +79,35 @@ void instantiate()
 {
   cout << "  instantiate..." << endl;
   {
-    btree::vbtree_map<fat, int> x;
+    btree::btree_map<fat, int> x;
     instantiate_test(x);
   }
   {
-    btree::vbtree_multimap<fat, int> x;
+    btree::btree_multimap<fat, int> x;
     instantiate_test(x);
   }
   {
-    btree::vbtree_set<int> x;
+    btree::btree_set<int> x;
     instantiate_test(x);
   }
   {
-    btree::vbtree_multiset<int> x;
+    btree::btree_multiset<int> x;
     instantiate_test(x);
   }
   {
-    btree::vbtree_map<fat, int, btree::default_big_endian_traits> x;
+    btree::btree_map<fat, int, btree::default_big_endian_traits> x;
     instantiate_test(x);
   }
   {
-    btree::vbtree_multimap<fat, int, btree::default_little_endian_traits> x;
+    btree::btree_multimap<fat, int, btree::default_little_endian_traits> x;
     instantiate_test(x);
   }
   {
-    btree::vbtree_set<int, btree::default_little_endian_traits> x;
+    btree::btree_set<int, btree::default_little_endian_traits> x;
     instantiate_test(x);
   }
   {
-    btree::vbtree_multiset<int, btree::default_big_endian_traits> x;
+    btree::btree_multiset<int, btree::default_big_endian_traits> x;
     instantiate_test(x);
   }
   cout << "    instantiate complete" << endl;
@@ -122,7 +122,7 @@ void types_test()
   //  test std::set and std::map to add insight into types
 
   typedef std::set<int>                  std_set;
-  typedef btree::vbtree_set<int>         bt_set;
+  typedef btree::btree_set<int>         bt_set;
 
   BOOST_TEST((boost::is_same<std_set::key_type, int>::value));
   BOOST_TEST((boost::is_same< bt_set::key_type, int>::value));
@@ -145,7 +145,7 @@ void types_test()
   BOOST_TEST((boost::is_same< bt_set::const_iterator::reference, int const&>::value));
 
   typedef std::map<int, long>            std_map;
-  typedef btree::vbtree_map<int, long>   bt_map;
+  typedef btree::btree_map<int, long>   bt_map;
 
   BOOST_TEST((boost::is_same<std_map::key_type, int>::value));
   BOOST_TEST((boost::is_same< bt_map::key_type, int>::value));
@@ -154,29 +154,29 @@ void types_test()
   BOOST_TEST((boost::is_same< bt_map::mapped_type, long>::value));
 
   BOOST_TEST((boost::is_same<std_map::value_type, std::pair<const int, long> >::value));
-  BOOST_TEST((boost::is_same< bt_map::value_type, btree::vbtree_value<const int, const long> >::value));
+  BOOST_TEST((boost::is_same< bt_map::value_type, btree::btree_value<const int, const long> >::value));
 
   // reference is "lvalue of T" where T is value_type
   BOOST_TEST((boost::is_same<std_map::reference,
     std::pair<const int, long>& >::value));
   BOOST_TEST((boost::is_same< bt_map::reference,
-    btree::vbtree_value<const int, const long>& >::value));
+    btree::btree_value<const int, const long>& >::value));
 
   // const_reference is "const lvalue of T" where T is value_type
   BOOST_TEST((boost::is_same<std_map::const_reference,
     const std::pair<const int, long>& >::value));
   BOOST_TEST((boost::is_same< bt_map::const_reference,
-    const btree::vbtree_value<const int, const long>& >::value));
+    const btree::btree_value<const int, const long>& >::value));
 
   BOOST_TEST((boost::is_same<std_map::iterator::reference,
     std::pair<const int, long>& >::value));
   BOOST_TEST((boost::is_same< bt_map::iterator::reference,
-    const btree::vbtree_value<const int, const long>& >::value));
+    const btree::btree_value<const int, const long>& >::value));
 
   BOOST_TEST((boost::is_same<std_map::const_iterator::reference,
     const std::pair<const int, long>& >::value));
   BOOST_TEST((boost::is_same< bt_map::const_iterator::reference,
-    const btree::vbtree_value<const int, const long>& >::value));
+    const btree::btree_value<const int, const long>& >::value));
 
   cout << "    types_test complete" << endl;
 }
@@ -209,7 +209,7 @@ void construct_new()
   cout << "  construct_new..." << endl;
   {
     fs::path p("btree_map.btree");
-    btree::vbtree_map<fat, int> x(p, btree::flags::truncate);
+    btree::btree_map<fat, int> x(p, btree::flags::truncate);
     construct_new_test(x, p);
   }
 
@@ -226,7 +226,7 @@ void  single_insert()
     fs::path p("btree_map.btree");
     fs::remove(p);
 
-    typedef btree::vbtree_map<int, int> btree_type;
+    typedef btree::btree_map<int, int> btree_type;
 
     btree_type x(p, btree::flags::read_write, 128);
 
@@ -251,7 +251,7 @@ void open_existing()
 
   {
     fs::remove(p);
-    btree::vbtree_map<fat, int> bt(p, btree::flags::truncate, 128);
+    btree::btree_map<fat, int> bt(p, btree::flags::truncate, 128);
 
     fat key = 5;
     int mapped = 0x55;
@@ -262,7 +262,7 @@ void open_existing()
     bt.insert(key, mapped);
   }
 
-  btree::vbtree_map<fat, int> bt2(p);
+  btree::btree_map<fat, int> bt2(p);
   BOOST_TEST(bt2.is_open());
   BOOST_TEST(!bt2.empty());
   BOOST_TEST_EQ(bt2.size(), 3U);
@@ -285,7 +285,7 @@ void small_variable_set()
 
   fs::path p("btree_set.btree");
   fs::remove(p);
-  btree::vbtree_set<btree::strbuf> bt(p, btree::flags::truncate, 128);
+  btree::btree_set<btree::strbuf> bt(p, btree::flags::truncate, 128);
 
   btree::strbuf stuff;
 
@@ -365,7 +365,7 @@ void small_variable_set()
 //{
 //  cout << "  compare_function_objects..." << endl;
 //  {
-//    btree::vbtree_set<int> bt;
+//    btree::btree_set<int> bt;
 //
 //    int i2 = 2;
 //    int i1 = 1;
@@ -379,7 +379,7 @@ void small_variable_set()
 //  }
 //
 //  {
-//    btree::vbtree_map<int, long> bt;
+//    btree::btree_map<int, long> bt;
 //
 //    int i2 = 2;
 //    int i1 = 1;
@@ -388,7 +388,7 @@ void small_variable_set()
 //    BOOST_TEST(!bt.key_comp()(&i1, &i1));
 //    BOOST_TEST(!bt.key_comp()(&i2, &i1));
 //
-//    struct my_pair : public btree::vbtree_value<const int, const long>
+//    struct my_pair : public btree::btree_value<const int, const long>
 //    {
 //      int first;
 //      int second;
@@ -404,10 +404,10 @@ void small_variable_set()
 //  }
 //
 //  //{
-//  //  btree::vbtree_multimap x;
+//  //  btree::btree_multimap x;
 //  //}
 //  //{
-//  //  btree::vbtree_multiset x;
+//  //  btree::btree_multiset x;
 //  //}
 //
 //  cout << "    compare_function_objects complete" << endl;
@@ -659,7 +659,7 @@ void insert()
 
   {
     fs::path map_path("btree_map.btree");
-    btree::vbtree_map<fat, int> map(map_path, btree::flags::truncate, 128);
+    btree::btree_map<fat, int> map(map_path, btree::flags::truncate, 128);
     map.max_cache_pages(0);  // maximum stress
     insert_tests(map);
   }
@@ -669,10 +669,10 @@ void insert()
 
 //---------------------------------- find_and_bounds -----------------------------------//
 
-typedef btree::vbtree_set<int> fb_set_type;
-typedef btree::vbtree_multiset<int> fb_multiset_type;
-typedef btree::vbtree_map<fat, int> fb_map_type;
-typedef btree::vbtree_multimap<fat, int> fb_multimap_type;
+typedef btree::btree_set<int> fb_set_type;
+typedef btree::btree_multiset<int> fb_multiset_type;
+typedef btree::btree_map<fat, int> fb_map_type;
+typedef btree::btree_multimap<fat, int> fb_multimap_type;
 
 void do_fb_insert(fb_set_type& bt, int i)
 {
@@ -865,7 +865,7 @@ void insert_non_unique()
 
   {
     fs::path map_path("non_unique.btr");
-    btree::vbtree_multimap<fat, int> multimap(map_path,
+    btree::btree_multimap<fat, int> multimap(map_path,
       btree::flags::truncate, 128);
     multimap.max_cache_pages(0);  // maximum stress
     insert_non_unique_tests(multimap);
@@ -880,7 +880,7 @@ void update_test()
 {
   cout << "  update_test..." << endl;
 
-  typedef btree::vbtree_map<fat, int> bt_type;
+  typedef btree::btree_map<fat, int> bt_type;
   bt_type bt("update.btr", btree::flags::truncate, 128);
 
   boost::mt19937 rng;
@@ -963,14 +963,14 @@ void pack_optimization()
   const int per_page = (page_sz - overhead) / sizeof(value_type);
   const int n = per_page * 2;  // sufficient to distinguish if pack optimization works
 
-  btree::vbtree_map<int, int> np("not_packed.btr", btree::flags::truncate, page_sz);
+  btree::btree_map<int, int> np("not_packed.btr", btree::flags::truncate, page_sz);
   for (int i=n; i > 0; --i)
     np.insert(i, 0xffffff00+i);
 
   cout << "\nroot is page " << np.header().root_page_id() << '\n'; 
   np.dump_dot(std::cout);
   
-  btree::vbtree_map<int, int> p("packed.btr", btree::flags::truncate, page_sz);
+  btree::btree_map<int, int> p("packed.btr", btree::flags::truncate, page_sz);
   for (int i=1; i <= n; ++i)
     p.insert(i, 0xffffff00+i);
 
@@ -990,7 +990,7 @@ void pack_optimization()
 //  cout << "  fixstr..." << endl;
 //
 //  typedef boost::detail::fixstr<15>       str_t;
-//  typedef btree::vbtree_map<str_t, str_t>  map_t;
+//  typedef btree::btree_map<str_t, str_t>  map_t;
 //
 //  map_t bt("fixstr.btr", btree::flags::truncate);
 //
@@ -1049,19 +1049,19 @@ int cpp_main(int, char*[])
   //{
   //  cout << "btree_multimap tests..." << endl;
   //  fs::path multimap_path("btree_multimap.btree");
-  //  btree::vbtree_multimap<int,long> multimap(multimap_path, btree::flags::truncate);
+  //  btree::btree_multimap<int,long> multimap(multimap_path, btree::flags::truncate);
   //}
 
   //{
   //  cout << "btree_set tests..." << endl;
   //  fs::path set_path("btree_set.btree");
-  //  btree::vbtree_set<int,long> set(set_path, btree::flags::truncate);
+  //  btree::btree_set<int,long> set(set_path, btree::flags::truncate);
   //}
 
   //{
   //  cout << "btree_multiset tests..." << endl;
   //  fs::path multiset_path("btree_multiset.btree");
-  //  btree::vbtree_multiset<int,long> multiset(multiset_path, btree::flags::truncate);
+  //  btree::btree_multiset<int,long> multiset(multiset_path, btree::flags::truncate);
   //}
 
   cout << "all tests complete" << endl;
