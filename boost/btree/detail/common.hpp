@@ -45,7 +45,7 @@
     to figure out test for correct operation. Also, several calls to m_free_page()
     commented out in erase, erase branch, code.
 
-  * vbtree_unit_test.cpp: move erase tests out of insert test.
+  * btree_unit_test.cpp: move erase tests out of insert test.
 
   * Upgrade m_update() to allow new dynamic size different from old dynamic size
 
@@ -99,13 +99,13 @@ namespace btree
 template <class T>
 inline std::size_t dynamic_size(const T&) { return sizeof(T); }
 
-//--------------------------------- vbtree_value ---------------------------------------//
+//--------------------------------- btree_value ---------------------------------------//
 
 // TODO: either add code to align mapped() or add a requirement that T2 does not
 // require alignment.
 
 template <class T1, class T2>
-class vbtree_value
+class btree_value
 {
 public:
   T1& key() const   { return *reinterpret_cast<const T1*>(this); }
@@ -121,14 +121,14 @@ public:
 };
 
 template <class T1, class T2>
-std::ostream& operator<<(std::ostream& os, const vbtree_value<T1, T2>& x)
+std::ostream& operator<<(std::ostream& os, const btree_value<T1, T2>& x)
 {
   os << x.key() << ',' << x.mapped_value();
   return os;
 }
 
 template <class T1, class T2>
-inline std::size_t dynamic_size(const vbtree_value<T1, T2>& x) {return x.dynamic_size();}
+inline std::size_t dynamic_size(const btree_value<T1, T2>& x) {return x.dynamic_size();}
 
 //  less function object class
 
@@ -141,11 +141,11 @@ template <class T> struct less
 };
 
 //--------------------------------------------------------------------------------------//
-//                             class vbtree_set_base                                    //
+//                             class btree_set_base                                    //
 //--------------------------------------------------------------------------------------//
 
 template <class Key, class Comp>
-class vbtree_set_base
+class btree_set_base
 {
 public:
   typedef Key   value_type;
@@ -166,14 +166,14 @@ protected:
 };
 
 //--------------------------------------------------------------------------------------//
-//                             class vbtree_map_base                                    //
+//                             class btree_map_base                                    //
 //--------------------------------------------------------------------------------------//
 
 template <class Key, class T, class Comp>
-class vbtree_map_base
+class btree_map_base
 {
 public:
-  typedef vbtree_value<const Key, const T>  value_type;
+  typedef btree_value<const Key, const T>  value_type;
   typedef T                                 mapped_type;
 
   const Key& key(const value_type& v) const  // really handy, so expose
@@ -326,18 +326,18 @@ std::size_t dynamic_size(const detail::branch_value<PID, K>& v) {return v.dynami
 
 //--------------------------------------------------------------------------------------//
 //                                                                                      //
-//                                 class vbtree_base                                    //
+//                                 class btree_base                                    //
 //                                                                                      //
 //                  a B+ tree with leaf-sequence doubly-linked list                     //
 //                                                                                      //
 //--------------------------------------------------------------------------------------//
 
 template  <class Key,
-           class Base,  // vbtree_map_base or vbtree_set_base
+           class Base,  // btree_map_base or btree_set_base
            class Traits,
            class Comp>
 
-class vbtree_base : public Base, private noncopyable
+class btree_base : public Base, private noncopyable
 {
 private:
   class btree_page;
@@ -384,12 +384,12 @@ public:
 
   // construct/destroy:
 
-  vbtree_base(const Comp& comp);
+  btree_base(const Comp& comp);
 
-  vbtree_base(const boost::filesystem::path& p, flags::bitmask flgs, std::size_t pg_sz,
+  btree_base(const boost::filesystem::path& p, flags::bitmask flgs, std::size_t pg_sz,
              const Comp& comp);
 
-  ~vbtree_base();
+  ~btree_base();
 
   //  file operations:
 
@@ -546,7 +546,7 @@ private:
 
  class leaf_data : public btree_data
   {
-    friend class vbtree_base;
+    friend class btree_base;
   public:
     //page_id_type   prior_page_id() const           {return m_prior_page_id;}
     //void           prior_page_id(page_id_type id)  {m_prior_page_id = id;}
@@ -793,19 +793,19 @@ private:
   public:
     iterator_type(): m_element(0) {}
     iterator_type(buffer_ptr p, leaf_iterator e)
-      : m_page(static_cast<typename vbtree_base::btree_page_ptr>(p)),
+      : m_page(static_cast<typename btree_base::btree_page_ptr>(p)),
         m_element(e) {}
 
   private:
     iterator_type(buffer_ptr p)  // used solely to setup the end iterator
-      : m_page(static_cast<typename vbtree_base::btree_page_ptr>(p)),
+      : m_page(static_cast<typename btree_base::btree_page_ptr>(p)),
         m_element(0) {}
 
     friend class boost::iterator_core_access;
-    friend class vbtree_base;
+    friend class btree_base;
    
-    typename vbtree_base::btree_page_ptr  m_page; 
-    typename vbtree_base::leaf_iterator   m_element;  // 0 for end iterator
+    typename btree_base::btree_page_ptr  m_page; 
+    typename btree_base::leaf_iterator   m_element;  // 0 for end iterator
 
     T& dereference() const  { return *m_element; }
  
@@ -911,7 +911,7 @@ private:
   class branch_compare
 //    : public std::binary_function<branch_value_type, key_type, bool>
   {
-    friend class vbtree_base;
+    friend class btree_base;
   protected:
     Comp    m_comp;
     branch_compare() {}
@@ -938,7 +938,7 @@ private:
   branch_compare
     branch_comp() const { return m_branch_comp; }
 
-};  // class vbtree_base
+};  // class btree_base
 
 
 //--------------------------------------------------------------------------------------//
@@ -947,7 +947,7 @@ private:
 
 template <class Key, class Base, class Traits, class Comp>   
 std::ostream& operator<<(std::ostream& os,
-  const vbtree_base<Key,Base,Traits,Comp>& bt)
+  const btree_base<Key,Base,Traits,Comp>& bt)
 {
   os << "B+ tree \"" << bt.file_path().string() << "\"\n"
      << bt.header().element_count() << " records\n"  
@@ -961,13 +961,13 @@ std::ostream& operator<<(std::ostream& os,
 }
 
 //--------------------------------------------------------------------------------------//
-//                          class vbtree_base implementation                             //
+//                          class btree_base implementation                             //
 //--------------------------------------------------------------------------------------//
 
 //------------------------------ construct without open --------------------------------//
 
 template <class Key, class Base, class Traits, class Comp>
-vbtree_base<Key,Base,Traits,Comp>::vbtree_base(const Comp& comp)
+btree_base<Key,Base,Traits,Comp>::btree_base(const Comp& comp)
   : m_mgr(m_page_alloc), m_comp(comp), m_value_comp(comp), m_branch_comp(comp)
 { 
   m_mgr.owner(this);
@@ -980,7 +980,7 @@ vbtree_base<Key,Base,Traits,Comp>::vbtree_base(const Comp& comp)
 //------------------------------- construct with open ----------------------------------//
 
 template <class Key, class Base, class Traits, class Comp>
-vbtree_base<Key,Base,Traits,Comp>::vbtree_base(const boost::filesystem::path& p,
+btree_base<Key,Base,Traits,Comp>::btree_base(const boost::filesystem::path& p,
   flags::bitmask flgs, std::size_t pg_sz, const Comp& comp)
   : m_mgr(m_page_alloc), m_comp(comp), m_value_comp(comp), m_branch_comp(comp)
 { 
@@ -997,7 +997,7 @@ vbtree_base<Key,Base,Traits,Comp>::vbtree_base(const boost::filesystem::path& p,
 //----------------------------------- destructor ---------------------------------------//
 
 template <class Key, class Base, class Traits, class Comp>
-vbtree_base<Key,Base,Traits,Comp>::~vbtree_base()
+btree_base<Key,Base,Traits,Comp>::~btree_base()
 {
   try { close(); }
   catch (...) {}
@@ -1006,7 +1006,7 @@ vbtree_base<Key,Base,Traits,Comp>::~vbtree_base()
 //------------------------------------- close ------------------------------------------//
 
 template <class Key, class Base, class Traits, class Comp>
-void vbtree_base<Key,Base,Traits,Comp>::close()
+void btree_base<Key,Base,Traits,Comp>::close()
 {
   if (is_open())
   {
@@ -1019,7 +1019,7 @@ void vbtree_base<Key,Base,Traits,Comp>::close()
 
 template <class Key, class Base, class Traits, class Comp>
 void
-vbtree_base<Key,Base,Traits,Comp>::m_open(const boost::filesystem::path& p,
+btree_base<Key,Base,Traits,Comp>::m_open(const boost::filesystem::path& p,
   flags::bitmask flgs, std::size_t pg_sz) 
 {
   BOOST_ASSERT(!is_open());
@@ -1091,7 +1091,7 @@ vbtree_base<Key,Base,Traits,Comp>::m_open(const boost::filesystem::path& p,
 
 template <class Key, class Base, class Traits, class Comp>
 void
-vbtree_base<Key,Base,Traits,Comp>::clear()
+btree_base<Key,Base,Traits,Comp>::clear()
 {
   BOOST_ASSERT_MSG(is_open(), "can't clear() unopen btree");
   for (buffer_manager::buffer_set_type::iterator itr = m_mgr.buffer_set.begin();
@@ -1117,8 +1117,8 @@ vbtree_base<Key,Base,Traits,Comp>::clear()
 //------------------------------------- begin() ----------------------------------------//
 
 template <class Key, class Base, class Traits, class Comp>
-typename vbtree_base<Key,Base,Traits,Comp>::const_iterator
-vbtree_base<Key,Base,Traits,Comp>::begin() const
+typename btree_base<Key,Base,Traits,Comp>::const_iterator
+btree_base<Key,Base,Traits,Comp>::begin() const
 {
   BOOST_ASSERT_MSG(is_open(), "begin() on unopen btree");
   if (empty())
@@ -1145,8 +1145,8 @@ vbtree_base<Key,Base,Traits,Comp>::begin() const
 //-------------------------------------- last() ---------------------------------------//
 
 template <class Key, class Base, class Traits, class Comp>
-typename vbtree_base<Key,Base,Traits,Comp>::const_iterator
-vbtree_base<Key,Base,Traits,Comp>::last() const
+typename btree_base<Key,Base,Traits,Comp>::const_iterator
+btree_base<Key,Base,Traits,Comp>::last() const
 {
   BOOST_ASSERT_MSG(is_open(), "last() on unopen btree");
   if (empty())
@@ -1160,8 +1160,8 @@ vbtree_base<Key,Base,Traits,Comp>::last() const
 //---------------------------------- m_new_page() --------------------------------------//
 
 template <class Key, class Base, class Traits, class Comp>   
-typename vbtree_base<Key,Base,Traits,Comp>::btree_page_ptr 
-vbtree_base<Key,Base,Traits,Comp>::m_new_page(boost::uint16_t lv)
+typename btree_base<Key,Base,Traits,Comp>::btree_page_ptr 
+btree_base<Key,Base,Traits,Comp>::m_new_page(boost::uint16_t lv)
 {
   btree_page_ptr pg;
   if (m_hdr.free_page_list_head_id())
@@ -1187,7 +1187,7 @@ vbtree_base<Key,Base,Traits,Comp>::m_new_page(boost::uint16_t lv)
 
 template <class Key, class Base, class Traits, class Comp>   
 void
-vbtree_base<Key,Base,Traits,Comp>::m_new_root()
+btree_base<Key,Base,Traits,Comp>::m_new_root()
 { 
   // create a new root containing only the P0 pseudo-element
   btree_page_ptr old_root = m_root;
@@ -1213,8 +1213,8 @@ vbtree_base<Key,Base,Traits,Comp>::m_new_root()
 //---------------------------------- m_leaf_insert() -----------------------------------//
 
 template <class Key, class Base, class Traits, class Comp>   
-typename vbtree_base<Key,Base,Traits,Comp>::const_iterator
-vbtree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter,
+typename btree_base<Key,Base,Traits,Comp>::const_iterator
+btree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter,
   const key_type& key_, const mapped_type& mapped_value_)
 {
   std::size_t          key_size= dynamic_size(key_);
@@ -1319,7 +1319,7 @@ vbtree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter,
 
 template <class Key, class Base, class Traits, class Comp>   
 void
-vbtree_base<Key,Base,Traits,Comp>::m_branch_insert(
+btree_base<Key,Base,Traits,Comp>::m_branch_insert(
   btree_page* pg1, branch_iterator element, const key_type& k, page_id_type id) 
 {
   std::size_t       k_size = dynamic_size(k);
@@ -1421,8 +1421,8 @@ vbtree_base<Key,Base,Traits,Comp>::m_branch_insert(
 //------------------------------------- erase() ----------------------------------------//
 
 template <class Key, class Base, class Traits, class Comp>   
-typename vbtree_base<Key,Base,Traits,Comp>::const_iterator
-vbtree_base<Key,Base,Traits,Comp>::erase(const_iterator pos)
+typename btree_base<Key,Base,Traits,Comp>::const_iterator
+btree_base<Key,Base,Traits,Comp>::erase(const_iterator pos)
 {
   BOOST_ASSERT_MSG(is_open(), "erase() on unopen btree");
   BOOST_ASSERT_MSG(pos != end(), "erase() on end iterator");
@@ -1487,7 +1487,7 @@ vbtree_base<Key,Base,Traits,Comp>::erase(const_iterator pos)
 //------------------------------ m_erase_branch_value() --------------------------------//
 
 template <class Key, class Base, class Traits, class Comp>   
-void vbtree_base<Key,Base,Traits,Comp>::m_erase_branch_value(
+void btree_base<Key,Base,Traits,Comp>::m_erase_branch_value(
   btree_page* pg, branch_iterator element, page_id_type erasee)
 {
   BOOST_ASSERT(pg->is_branch());
@@ -1542,8 +1542,8 @@ void vbtree_base<Key,Base,Traits,Comp>::m_erase_branch_value(
 }
 
 template <class Key, class Base, class Traits, class Comp>   
-typename vbtree_base<Key,Base,Traits,Comp>::size_type
-vbtree_base<Key,Base,Traits,Comp>::erase(const key_type& k)
+typename btree_base<Key,Base,Traits,Comp>::size_type
+btree_base<Key,Base,Traits,Comp>::erase(const key_type& k)
 {
   BOOST_ASSERT_MSG(is_open(), "erase() on unopen btree");
   size_type count = 0;
@@ -1558,8 +1558,8 @@ vbtree_base<Key,Base,Traits,Comp>::erase(const key_type& k)
 }
 
 template <class Key, class Base, class Traits, class Comp>   
-typename vbtree_base<Key,Base,Traits,Comp>::const_iterator 
-vbtree_base<Key,Base,Traits,Comp>::erase(const_iterator first, const_iterator last)
+typename btree_base<Key,Base,Traits,Comp>::const_iterator 
+btree_base<Key,Base,Traits,Comp>::erase(const_iterator first, const_iterator last)
 {
   BOOST_ASSERT_MSG(is_open(), "erase() on unopen btree");
   // caution: last must be revalidated when on the same page as first
@@ -1578,8 +1578,8 @@ vbtree_base<Key,Base,Traits,Comp>::erase(const_iterator first, const_iterator la
 //--------------------------------- m_insert_unique() ----------------------------------//
 
 template <class Key, class Base, class Traits, class Comp>   
-std::pair<typename vbtree_base<Key,Base,Traits,Comp>::const_iterator, bool>
-vbtree_base<Key,Base,Traits,Comp>::m_insert_unique(const key_type& k,
+std::pair<typename btree_base<Key,Base,Traits,Comp>::const_iterator, bool>
+btree_base<Key,Base,Traits,Comp>::m_insert_unique(const key_type& k,
   const mapped_type& mv)
 {
   BOOST_ASSERT_MSG(is_open(), "insert() on unopen btree");
@@ -1599,8 +1599,8 @@ vbtree_base<Key,Base,Traits,Comp>::m_insert_unique(const key_type& k,
 //------------------------------- m_insert_non_unique() --------------------------------//
 
 template <class Key, class Base, class Traits, class Comp>   
-inline typename vbtree_base<Key,Base,Traits,Comp>::const_iterator
-vbtree_base<Key,Base,Traits,Comp>::m_insert_non_unique(const key_type& key,
+inline typename btree_base<Key,Base,Traits,Comp>::const_iterator
+btree_base<Key,Base,Traits,Comp>::m_insert_non_unique(const key_type& key,
   const mapped_type& mapped_value)
 {
   BOOST_ASSERT_MSG(is_open(), "insert() on unopen btree");
@@ -1611,8 +1611,8 @@ vbtree_base<Key,Base,Traits,Comp>::m_insert_non_unique(const key_type& key,
 //----------------------------------- m_update() ---------------------------------------//
 
 template <class Key, class Base, class Traits, class Comp>   
-typename vbtree_base<Key,Base,Traits,Comp>::iterator
-vbtree_base<Key,Base,Traits,Comp>::m_update(iterator itr,
+typename btree_base<Key,Base,Traits,Comp>::iterator
+btree_base<Key,Base,Traits,Comp>::m_update(iterator itr,
   const mapped_type& new_mapped_value)
 {
   BOOST_ASSERT_MSG(dynamic_size(new_mapped_value) == dynamic_size(itr->mapped_value()),
@@ -1650,8 +1650,8 @@ vbtree_base<Key,Base,Traits,Comp>::m_update(iterator itr,
 //----------------------------- m_special_lower_bound() --------------------------------//
 
 template <class Key, class Base, class Traits, class Comp>   
-typename vbtree_base<Key,Base,Traits,Comp>::iterator
-vbtree_base<Key,Base,Traits,Comp>::m_special_lower_bound(const key_type& k) const
+typename btree_base<Key,Base,Traits,Comp>::iterator
+btree_base<Key,Base,Traits,Comp>::m_special_lower_bound(const key_type& k) const
 {
   btree_page_ptr pg = m_root;
 
@@ -1688,8 +1688,8 @@ vbtree_base<Key,Base,Traits,Comp>::m_special_lower_bound(const key_type& k) cons
 //---------------------------------- lower_bound() -------------------------------------//
 
 template <class Key, class Base, class Traits, class Comp>   
-typename vbtree_base<Key,Base,Traits,Comp>::const_iterator
-vbtree_base<Key,Base,Traits,Comp>::lower_bound(const key_type& k) const
+typename btree_base<Key,Base,Traits,Comp>::const_iterator
+btree_base<Key,Base,Traits,Comp>::lower_bound(const key_type& k) const
 {
   BOOST_ASSERT_MSG(is_open(), "lower_bound() on unopen btree");
 
@@ -1712,8 +1712,8 @@ vbtree_base<Key,Base,Traits,Comp>::lower_bound(const key_type& k) const
 //------------------------------ m_special_upper_bound() -------------------------------//
 
 template <class Key, class Base, class Traits, class Comp>   
-typename vbtree_base<Key,Base,Traits,Comp>::iterator
-vbtree_base<Key,Base,Traits,Comp>::m_special_upper_bound(const key_type& k) const
+typename btree_base<Key,Base,Traits,Comp>::iterator
+btree_base<Key,Base,Traits,Comp>::m_special_upper_bound(const key_type& k) const
 {
   btree_page_ptr pg = m_root;
 
@@ -1744,8 +1744,8 @@ vbtree_base<Key,Base,Traits,Comp>::m_special_upper_bound(const key_type& k) cons
 //---------------------------------- upper_bound() -------------------------------------//
 
 template <class Key, class Base, class Traits, class Comp>   
-typename vbtree_base<Key,Base,Traits,Comp>::const_iterator
-vbtree_base<Key,Base,Traits,Comp>::upper_bound(const key_type& k) const
+typename btree_base<Key,Base,Traits,Comp>::const_iterator
+btree_base<Key,Base,Traits,Comp>::upper_bound(const key_type& k) const
 {
   BOOST_ASSERT_MSG(is_open(), "upper_bound() on unopen btree");
 
@@ -1762,8 +1762,8 @@ vbtree_base<Key,Base,Traits,Comp>::upper_bound(const key_type& k) const
 //------------------------------------- find() -----------------------------------------//
 
 template <class Key, class Base, class Traits, class Comp>   
-typename vbtree_base<Key,Base,Traits,Comp>::const_iterator
-vbtree_base<Key,Base,Traits,Comp>::find(const key_type& k) const
+typename btree_base<Key,Base,Traits,Comp>::const_iterator
+btree_base<Key,Base,Traits,Comp>::find(const key_type& k) const
 {
   BOOST_ASSERT_MSG(is_open(), "find() on unopen btree");
   const_iterator low = lower_bound(k);
@@ -1775,8 +1775,8 @@ vbtree_base<Key,Base,Traits,Comp>::find(const key_type& k) const
 //------------------------------------ count() -----------------------------------------//
 
 template <class Key, class Base, class Traits, class Comp>   
-typename vbtree_base<Key,Base,Traits,Comp>::size_type
-vbtree_base<Key,Base,Traits,Comp>::count(const key_type& k) const
+typename btree_base<Key,Base,Traits,Comp>::size_type
+btree_base<Key,Base,Traits,Comp>::count(const key_type& k) const
 {
   BOOST_ASSERT_MSG(is_open(), "lower_bound() on unopen btree");
   size_type count = 0;
@@ -1791,7 +1791,7 @@ vbtree_base<Key,Base,Traits,Comp>::count(const key_type& k) const
 //----------------------------------- dump_dot -----------------------------------------//
 
 template <class Key, class Base, class Traits, class Comp>   
-void vbtree_base<Key,Base,Traits,Comp>::dump_dot(std::ostream& os) const
+void btree_base<Key,Base,Traits,Comp>::dump_dot(std::ostream& os) const
 {
   BOOST_ASSERT_MSG(is_open(), "dump_dot() on unopen btree");
   os << "digraph btree {\n"
@@ -1874,9 +1874,9 @@ void swap(common_base<Key,T,Comp,GetKey>& x,
 template <class Key, class Base, class Traits, class Comp>
 template <class T>
 void
-vbtree_base<Key,Base,Traits,Comp>::iterator_type<T>::increment()
+btree_base<Key,Base,Traits,Comp>::iterator_type<T>::increment()
 {
-  BOOST_ASSERT_MSG(m_element != typename vbtree_base::leaf_iterator(0),
+  BOOST_ASSERT_MSG(m_element != typename btree_base::leaf_iterator(0),
     "increment of end iterator"); 
   BOOST_ASSERT(m_page);
   BOOST_ASSERT(&*m_element >= &*m_page->leaf().begin());
@@ -1897,7 +1897,7 @@ vbtree_base<Key,Base,Traits,Comp>::iterator_type<T>::increment()
   }
   else // end() reached
   {
-    *this = reinterpret_cast<const vbtree_base<Key,Base,Traits,Comp>*>
+    *this = reinterpret_cast<const btree_base<Key,Base,Traits,Comp>*>
         (pg->manager().owner())->m_end_iterator;
   }
 }
@@ -1905,11 +1905,11 @@ vbtree_base<Key,Base,Traits,Comp>::iterator_type<T>::increment()
 template <class Key, class Base, class Traits, class Comp>
 template <class T>
 void
-vbtree_base<Key,Base,Traits,Comp>::iterator_type<T>::decrement()
+btree_base<Key,Base,Traits,Comp>::iterator_type<T>::decrement()
 {
-  if (*this == reinterpret_cast<const vbtree_base<Key,Base,Traits,Comp>*>
+  if (*this == reinterpret_cast<const btree_base<Key,Base,Traits,Comp>*>
         (m_page->manager().owner())->end())
-    *this = reinterpret_cast<vbtree_base<Key,Base,Traits,Comp>*>
+    *this = reinterpret_cast<btree_base<Key,Base,Traits,Comp>*>
         (m_page->manager().owner())->last();
   else if (m_element != m_page->leaf().begin())
     --m_element;
@@ -1926,7 +1926,7 @@ vbtree_base<Key,Base,Traits,Comp>::iterator_type<T>::decrement()
     }
     else // end() reached
     {
-      *this = reinterpret_cast<const vbtree_base<Key,Base,Traits,Comp>*>
+      *this = reinterpret_cast<const btree_base<Key,Base,Traits,Comp>*>
           (pg->manager().owner())->m_end_iterator;
     }
   }
