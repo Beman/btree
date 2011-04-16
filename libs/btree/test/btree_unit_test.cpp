@@ -23,6 +23,7 @@
 #include <boost/detail/lightweight_test.hpp>
 #include <boost/cstdint.hpp>
 #include <boost/random.hpp>
+#include <boost/btree/support/random_string.hpp>
 
 #include <iostream>
 #include <iomanip>
@@ -1024,6 +1025,7 @@ void  _test()
 
 int cpp_main(int, char*[])
 {
+
   instantiate();
   types_test();
   //btree_less();
