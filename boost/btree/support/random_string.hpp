@@ -8,42 +8,47 @@
 #ifndef BOOST_RANDOM_STRING_HPP       
 #define BOOST_RANDOM_STRING_HPP
 
-#include <cstddef>
+#include <cstdlib>
 #include <string>
 #include <boost/random.hpp>
+#include <boost/smart_ptr/shared_ptr.hpp>
 
 namespace boost
 {
   class random_string
   {
   public:
-    random_string(std::size_t min_len_, std::size_t max_len_,
-            int min_char_ = ' ', int max_char_ = '~')
-            : m_min_len(min_len_), m_max_len(max_len_),
-              m_min_char(min_char_), m_max_char(max_char) {}
+    random_string(int min_len, int max_len,
+            int min_char = ' ', int max_char = '~')
+    {
+      m_char_dist.reset(new uniform_int<> (min_char, max_char));
+      m_char.reset(new variate_generator<rand48&, uniform_int<> >
+        (m_char_rng, *m_char_dist));
 
+      m_len_dist.reset(new uniform_int<> (min_len, max_len));
+      m_len.reset(new variate_generator<rand48&, uniform_int<> >
+        (m_len_rng, *m_len_dist));
+    }
     std::string operator()();
 
     void seed(int x) {m_char_rng.seed(x);}
 
   private:
-    std::size_t           m_min_len, m_max_len;
-    int                   m_min_char, m_max_char;
-    boost::rand48         m_char_rng;
-    boost::uniform_int<>  m_char_dist(m_min_char, m_max_char);
-    boost::variate_generator<boost::rand48&, boost::uniform_int<> >
-                          m_char(m_char_rng, m_char_dist);
-    boost::rand48         m_len_rng;
-    boost::uniform_int<>  m_len_dist(m_min_char, m_max_char);
-    boost::variate_generator<boost::rand48&, boost::uniform_int<> >
-                          m_len(m_len_rng, m_len_dist);
+
+    rand48  m_char_rng;
+    shared_ptr<uniform_int<> >  m_char_dist;
+    shared_ptr<variate_generator<rand48&, uniform_int<> > >  m_char;
+
+    rand48  m_len_rng;
+    shared_ptr<uniform_int<> >  m_len_dist;
+    shared_ptr<variate_generator<rand48&, uniform_int<> > >  m_len;
   };
 
   std::string random_string::operator()()
   {
     std::string s;
-    for (std::size_t len = m_len(); len > 0; --len);
-      s += m_char();
+    for (int len = m_len->operator()(); len > 0; --len)
+      s += m_char->operator()();
     return s;
   }
 
