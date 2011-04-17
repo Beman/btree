@@ -77,6 +77,9 @@
   * Add a function (apply(key, mapped_value)?) that inserts if key not present,
     updates if present.
 
+  * Header should contain uuid for value_type; used to check existing file is being
+    opened with the right template parameters.
+
 */
 
 namespace boost
