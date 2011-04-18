@@ -5,14 +5,14 @@
 <meta name="GENERATOR" content="Microsoft FrontPage 5.0">
 <meta name="ProgId" content="FrontPage.Editor.Document">
 <meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
-<title>Boost B</title>
+<title>Boost B-Tree Timings</title>
 </head>
 
 <body>
 
-<h1><span style="font-weight: 400">Boost B-Tree Library</span></h1>
+<h1><span style="font-weight: 400">Boost [Proposed] B-Tree Library</span></h1>
 <p>Revised:
-<!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->20 September 2010<!--webbot bot="Timestamp" endspan i-checksum="39615" --></p>
+<!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->18 April 2011<!--webbot bot="Timestamp" endspan i-checksum="28293" --></p>
 <h2>Some preliminary timings</h2>
 <p>Timings were done with <code>bt_time.cpp</code>; see <code>libs/btree/tools</code>. 
 The system was an Intel Core i7 CPU at 2.80 GHz with 8 gigabytes of main memory, 
@@ -105,6 +105,14 @@ std::map</code>.</p>
   <td align="right">46.66s</td>  <td align="right">11.12</td>
 </tr>
 <tr>
+  <td>1u</td>
+  <td><code>bt_time 5000000 -stl -p4096 -c32 -native -html</code></td>
+  <td align="right">40.16s</td>  <td align="right">10.48</td>
+  <td align="right">29.45s</td>  <td align="right">8.22</td>
+  <td align="right">0.09s</td>  <td align="right">0.45</td>
+  <td align="right">46.77s</td>  <td align="right">10.91</td>
+</tr>
+<tr>
   <td>2</td>
   <td><code>bt_time 5000000 -stl -p4096 -c1000 -native -html</code></td>
   <td align="right">29.36s</td>  <td align="right">7.56</td>
@@ -113,12 +121,28 @@ std::map</code>.</p>
   <td align="right">37.61s</td>  <td align="right">8.93</td>
 </tr>
 <tr>
+  <td>2u</td>
+  <td><code>bt_time 5000000 -stl -p4096 -c1000 -native -html</code></td>
+  <td align="right">34.13s</td>  <td align="right">8.86</td>
+  <td align="right">27.43s</td>  <td align="right">7.65</td>
+  <td align="right">0.08s</td>  <td align="right">0.41</td>
+  <td align="right">44.67s</td>  <td align="right">10.15</td>
+</tr>
+<tr>
   <td>3</td>
   <td><code>bt_time 5000000 -stl -p4096 -c10000 -native -html</code></td>
   <td align="right">3.99s</td>  <td align="right">1.06</td>
   <td align="right" bgcolor="#99FF66">3.24s</td>  <td align="right" bgcolor="#99FF66">0.93</td>
   <td align="right" bgcolor="#99FF66">0.05s</td>  <td align="right" bgcolor="#99FF66">0.25</td>
   <td align="right" bgcolor="#99FF66">3.76s</td>  <td align="right" bgcolor="#99FF66">0.90</td>
+</tr>
+<tr>
+  <td>3u</td>
+  <td><code>bt_time 5000000 -stl -p4096 -c10000 -native -html</code></td>
+  <td align="right">6.51s</td>  <td align="right">1.67</td>
+  <td align="right">5.67s</td>  <td align="right">1.58</td>
+  <td align="right">0.04s</td>  <td align="right">0.21</td>
+  <td align="right">7.68s</td>  <td align="right">1.76</td>
 </tr>
 <tr>
   <td>4</td>
@@ -136,6 +160,22 @@ std::map</code>.</p>
   <td align="right" bgcolor="#99FF66">0.06s</td>  <td align="right" bgcolor="#99FF66">0.33</td>
   <td align="right" bgcolor="#99FF66">3.76s</td>  <td align="right" bgcolor="#99FF66">0.89</td>
 </tr>
+<tr>
+  <td>5u</td>
+  <td><code>bt_time 5000000 -stl -p4096 -c10000 -little -html</code></td>
+  <td align="right">6.65s</td>  <td align="right">1.70</td>
+  <td align="right">5.79s</td>  <td align="right">1.63</td>
+  <td align="right">0.04s</td>  <td align="right">0.26</td>
+  <td align="right">7.80s</td>  <td align="right">1.82</td>
+</tr>
+<tr>
+  <td>5uleaf</td>
+  <td><code>bt_time 5000000 -stl -p4096 -c10000 -little -html</code></td>
+  <td align="right">5.44s</td>  <td align="right">1.42</td>
+  <td align="right">4.51s</td>  <td align="right">1.27</td>
+  <td align="right">0.04s</td>  <td align="right">0.22</td>
+  <td align="right">6.76s</td>  <td align="right">1.62</td>
+</tr>
 </table>
 </pre><h2>Conclusions</h2><h3>Program cache matters a lot</h3><p>The only difference between tests 1, 2, and 3 is that 1 caches a maximum of 32 pages,  2 caches 1000 pages (about 1/8 of the total file), while test 3 uses a cache large 
 enough to hold the entire file. Yet test 3 ran nearly an order of magnitude faster than test 1 for inserts, finds, and erases.</p>
@@ -145,27 +185,27 @@ data type while 4 and 5 used big and little endian integers, respectively. The h
 <h2>bt_test command line arguments</h2><p>Here is the explanation of the command line arguments:</p>
 <blockquote>
   <pre>Usage: bt_time n [Options]
-  &nbsp; &nbsp; &nbsp; &nbsp;The argument n specifies the number of test cases to run
-  &nbsp; &nbsp; &nbsp; &nbsp;Options:
-  &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; path&nbsp;&nbsp;&nbsp;&nbsp; Specifies the test file path; default test.btree
-  &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -s#&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Seed for random number generator; default 1
-  &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -p#&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Page size (>=128); default 512
-  &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Small page sizes are useful for stress testing
-  &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -c#&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Cache size; default 16 pages
-  &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -l#&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; log progress every # actions; default is to not log
-  &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -xc&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; No create; use file from prior -xe run
-  &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -xi&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; No insert test; forces -xc and doesn't do inserts
-  &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -xf&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; No find test
-  &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -xi&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; No iterate test
-  &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -xe&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; No erase test; use to save file intact
-  &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -v&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Verbose output statistics
-  &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -stl&nbsp;&nbsp;&nbsp;&nbsp; Also run the tests against std::map
-  &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -r&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Read entire file to preload operating system disk cache;
-  &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; only applicable if -xc option is active
-  &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -big&nbsp;&nbsp;&nbsp;&nbsp; Use btree::default_big_endian_traits
-  &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -little&nbsp; Use btree::default_little_endian_traits
-  &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -native&nbsp; Use btree::default_native_traits; this is the default
-  &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -html&nbsp;&nbsp;&nbsp; Output html table of results to cerr</blockquote>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;The argument n specifies the number of test cases to run
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;Options:
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; path&nbsp;&nbsp;&nbsp;&nbsp; Specifies the test file path; default test.btree
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -s#&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Seed for random number generator; default 1
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -p#&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Page size (>=128); default 512
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Small page sizes are useful for stress testing
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -c#&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Cache size; default 16 pages
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -l#&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; log progress every # actions; default is to not log
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -xc&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; No create; use file from prior -xe run
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -xi&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; No insert test; forces -xc and doesn't do inserts
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -xf&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; No find test
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -xi&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; No iterate test
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -xe&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; No erase test; use to save file intact
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -v&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Verbose output statistics
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -stl&nbsp;&nbsp;&nbsp;&nbsp; Also run the tests against std::map
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -r&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Read entire file to preload operating system disk cache;
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; only applicable if -xc option is active
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -big&nbsp;&nbsp;&nbsp;&nbsp; Use btree::default_big_endian_traits
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -little&nbsp; Use btree::default_little_endian_traits
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -native&nbsp; Use btree::default_native_traits; this is the default
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -html&nbsp;&nbsp;&nbsp; Output html table of results to cerr</blockquote>
 </body>
 
 </html>

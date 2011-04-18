@@ -7,6 +7,7 @@
 
 #include <string>
 #include <cstring>
+#include <boost/type_traits/integral_constant.hpp>
 #include <boost/assert.hpp>
 
 #ifndef BOOST_BTREE_STRBUF_HPP
@@ -81,6 +82,7 @@ namespace btree
   }
 
   inline std::size_t dynamic_size(const strbuf& sb)  {return sb.size();}
+  template<> struct has_dynamic_size<strbuf> : public true_type{};
 
 }  // namespace btree
 }  // namespace boost

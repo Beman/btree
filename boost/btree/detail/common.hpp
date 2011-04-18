@@ -17,6 +17,8 @@
 #include <boost/static_assert.hpp>
 #include <boost/type_traits/is_const.hpp>
 #include <boost/type_traits/remove_const.hpp>
+#include <boost/type_traits/integral_constant.hpp>
+#include <boost/mpl/if.hpp>
 #include <cstddef>     // for size_t
 #include <cstring>
 #include <cassert>
@@ -102,6 +104,9 @@ namespace btree
 template <class T>
 inline std::size_t dynamic_size(const T&) { return sizeof(T); }
 
+template <class T>
+struct has_dynamic_size : public false_type{};
+
 //--------------------------------- btree_value ---------------------------------------//
 
 // TODO: either add code to align mapped() or add a requirement that T2 does not
@@ -140,7 +145,11 @@ template <class T> struct less
   typedef T first_argument_type;
   typedef T second_argument_type;
   typedef bool result_type;
-  bool operator()(const T& x, const T& y) const { return x < y; }
+  bool operator()(const T& x, const T& y) const
+  {
+//    std::cout << "*** " << x << " < " << y << " is " << (x < y) << std::endl;
+    return x < y;
+  }
 };
 
 //--------------------------------------------------------------------------------------//
@@ -214,7 +223,7 @@ namespace detail
 {
   //-------------------------------- dynamic_iterator ----------------------------------//
   //
-  //  Pointers to elements on a page aren't useful as iterators because the elements are
+  //  Raw pointers to elements on a page won't work as iterators if the elements are
   //  variable length. dynamic_iterator provides the correct semantics.
 
   template <class T>
@@ -280,6 +289,64 @@ namespace detail
     {
       BOOST_ASSERT(false);   // is this function ever used?
       return 0;
+    }
+
+  };
+
+  //-------------------------------- pointer_iterator ----------------------------------//
+  //
+  //  Raw pointer wrapper providing the same interface as dynamic_pointer, but as
+  //  a random access rather than bidirctional iterator.
+
+  template <class T>
+  class pointer_iterator
+    : public boost::iterator_facade<pointer_iterator<T>, T, random_access_traversal_tag>
+  {
+  public:
+    pointer_iterator() : m_ptr(0) {} 
+    explicit pointer_iterator(T* ptr) : m_ptr(ptr) {}
+    pointer_iterator(T* ptr, std::size_t sz)
+      : m_ptr(reinterpret_cast<T*>(reinterpret_cast<char*>(ptr) + sz)) {}
+
+    bool operator<(const pointer_iterator& rhs) const  {return m_ptr < rhs.m_ptr;}
+
+  private:
+    friend class boost::iterator_core_access;
+
+    T* m_ptr;    // the pointer
+
+    T& dereference() const  { return *m_ptr; }
+ 
+    bool equal(const pointer_iterator& rhs) const {return m_ptr == rhs.m_ptr;}
+
+    void increment()
+    {
+      m_ptr = reinterpret_cast<T*>(reinterpret_cast<char*>(m_ptr)
+        + btree::dynamic_size(*m_ptr));
+    }
+    void decrement()
+    {
+      m_ptr = reinterpret_cast<T*>(reinterpret_cast<char*>(m_ptr)
+        - btree::dynamic_size(*m_ptr));
+    }
+    void advance(std::ptrdiff_t n)
+    {
+//std::cout << "\n***advance " << n << std::endl;
+      m_ptr = reinterpret_cast<T*>(reinterpret_cast<char*>(m_ptr)
+        + n * static_cast<std::ptrdiff_t>(btree::dynamic_size(*m_ptr)));
+    }
+
+    std::ptrdiff_t distance_to(const pointer_iterator& rhs) const
+    {
+//std::cout << "\n***distance_to std " << std::distance(m_ptr, rhs.m_ptr) << std::endl;
+//std::cout << "***distance_to size "
+//  << static_cast<std::ptrdiff_t>(btree::dynamic_size(*m_ptr)) << std::endl;
+//std::cout << "***distance_to " << std::distance(m_ptr, rhs.m_ptr)
+//  / static_cast<std::ptrdiff_t>(btree::dynamic_size(*m_ptr)) << std::endl;
+
+      return std::distance(reinterpret_cast<const char*>(m_ptr),
+        reinterpret_cast<const char*>(rhs.m_ptr))
+        / static_cast<std::ptrdiff_t>(btree::dynamic_size(*m_ptr));
     }
 
   };
@@ -382,8 +449,15 @@ public:
   typedef typename Traits::page_size_type       page_size_type;
   typedef typename Traits::page_level_type      page_level_type;
 
-  typedef value_type                                 leaf_value_type;
-  typedef detail::dynamic_iterator<leaf_value_type>  leaf_iterator;
+  // TODO: why are these being exposed:
+  typedef value_type                            leaf_value_type;
+  //typedef detail::dynamic_iterator<leaf_value_type>  leaf_iterator;
+  //typedef detail::pointer_iterator<leaf_value_type>  leaf_iterator;
+  typedef typename boost::mpl::if_<
+    typename boost::btree::has_dynamic_size<leaf_value_type>::type,
+             detail::dynamic_iterator<leaf_value_type>,
+             detail::pointer_iterator<leaf_value_type>  
+             >::type                            leaf_iterator;
 
   // construct/destroy:
 
@@ -1682,8 +1756,13 @@ btree_base<Key,Base,Traits,Comp>::m_special_lower_bound(const key_type& k) const
   }
 
   //  search leaf
+//  leaf_iterator b = pg->leaf().begin();
+//  std::cout << "***begin " << b.m_ptr << std::endl;
+//  leaf_iterator e = pg->leaf().end();
+//  std::cout << "***end " << e.m_ptr << std::endl;
   leaf_iterator low
     = std::lower_bound(pg->leaf().begin(), pg->leaf().end(), k, value_comp());
+//  std::cout << "***low " << low.m_ptr << std::endl;
 
   return iterator(pg, low);
 }
