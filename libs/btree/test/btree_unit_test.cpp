@@ -1087,7 +1087,7 @@ int cpp_main(int, char*[])
   single_insert();
   open_existing();
   small_variable_set();
-//  small_variable_map();
+  small_variable_map();
   //alignment();
   insert();
   insert_non_unique();
