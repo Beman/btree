@@ -233,6 +233,7 @@ void  single_insert()
 
     std::pair<btree_type::const_iterator, bool> result
       = x.insert(123, 456);
+    x.dump_dot(std::cout);
 
     BOOST_TEST_EQ(x.size(), 1);
     BOOST_TEST(result.second);
@@ -252,25 +253,27 @@ void open_existing()
 
   {
     fs::remove(p);
-    btree::btree_map<fat, int> bt(p, btree::flags::truncate, 128);
+    btree::btree_map<int, int> bt(p, btree::flags::truncate, 128);
 
-    fat key = 5;
+    int key = 5;
     int mapped = 0x55;
     bt.insert(key, mapped);
+    bt.dump_dot(std::cout);
     key = 4; mapped = 0x44;
     bt.insert(key, mapped);
+    bt.dump_dot(std::cout);
     key = 6; mapped = 0x66;
     bt.insert(key, mapped);
+    bt.dump_dot(std::cout);
   }
 
-  btree::btree_map<fat, int> bt2(p);
+  btree::btree_map<int, int> bt2(p);
   BOOST_TEST(bt2.is_open());
   BOOST_TEST(!bt2.empty());
   BOOST_TEST_EQ(bt2.size(), 3U);
   BOOST_TEST_EQ(bt2.page_size(), 128U);
   BOOST_TEST_EQ(bt2.header().element_count(), 3U);
   BOOST_TEST_EQ(bt2.header().page_size(), 128U);
-
   bt2.dump_dot(std::cout);
 
   // TODO: test each header value
