@@ -322,6 +322,56 @@ void small_variable_set()
   cout << "    small_variable_set complete" << endl;
 }
 
+//--------------------------------- small_variable_map ---------------------------------//
+
+void small_variable_map()
+{
+  cout << "  small_variable_map..." << endl;
+
+  fs::path p("btree_map.btree");
+  fs::remove(p);
+  btree::btree_map<btree::strbuf, btree::strbuf> bt(p, btree::flags::truncate, 128);
+
+  btree::strbuf key;
+  btree::strbuf value;
+
+  key = "now";
+  value = "won";
+  bt.insert(key, value);
+  key = "is";
+  value = "si";
+  bt.insert(key, value);
+  key = "the";
+  value = "eht";
+  bt.insert(key, value);
+  key = "time";
+  value = "emit";
+  bt.insert(key, value);
+  key = "when";
+  value = "nehw";
+  bt.insert(key, value);
+  key = "all";
+  value = "lla";
+  bt.insert(key, value);
+  key = "good";
+  value = "doog";
+  bt.insert(key, value);
+  key = "...";
+  value = "...";
+  bt.insert(key, value);
+
+  BOOST_TEST(bt.is_open());
+  BOOST_TEST(!bt.empty());
+  BOOST_TEST_EQ(bt.size(), 8U);
+  BOOST_TEST_EQ(bt.page_size(), 128U);
+  BOOST_TEST_EQ(bt.header().element_count(), 8U);
+  BOOST_TEST_EQ(bt.header().page_size(), 128U);
+
+  bt.dump_dot(std::cout);
+
+  cout << "    small_variable_map complete" << endl;
+}
+
 ////------------------------------- btree_less ---------------------------------------------//
 //
 //void btree_less()
@@ -1037,6 +1087,7 @@ int cpp_main(int, char*[])
   single_insert();
   open_existing();
   small_variable_set();
+//  small_variable_map();
   //alignment();
   insert();
   insert_non_unique();
