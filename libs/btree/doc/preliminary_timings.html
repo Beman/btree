@@ -160,7 +160,7 @@ std::map</code>.</p>
 enough to hold the entire file. Yet test 3 ran nearly an order of magnitude faster than test 1 for inserts, finds, and erases.</p>
 <h3>Hardware cache matters a lot</h3><p>Why is iteration over the entire B-tree so fast relative to the other operations, and relative to <code>std::map</code>? A B-tree orders entries sequentially in blocks of memory, and that takes maximum advantage of hardware cache-lines.</p>
 <h3>Endianess doesn't matter much at all</h3><p>The only difference between test 3, 4, and 5 is that 3 used native integers as the implementation infrastructure 
-data type while 4 and 5 used big and little endian integers, respectively. The high cost of endian (rather than native) operations is almost completely buried by the cost of other operations, as reflected in the relatively little difference in times between these tests.</p>
+data type while 4 and 5 used big and little endian integers, respectively. The higher cost of endian (rather than native) operations is almost completely buried by the cost of other operations, as reflected in the relatively little difference in times between these tests.</p>
 <h2>bt_test command line arguments</h2><p>Here is the explanation of the command line arguments:</p>
 <blockquote>
   <pre>Usage: bt_time n [Options]

@@ -19,6 +19,7 @@
 #include <boost/type_traits/remove_const.hpp>
 #include <boost/type_traits/integral_constant.hpp>
 #include <boost/mpl/if.hpp>
+#include <boost/mpl/if.hpp>
 #include <cstddef>     // for size_t
 #include <cstring>
 #include <cassert>
@@ -451,8 +452,11 @@ public:
 
   // TODO: why are these being exposed:
   typedef value_type                            leaf_value_type;
-  typedef typename boost::mpl::if_<
-    typename boost::btree::has_dynamic_size<leaf_value_type>::type,
+  typedef typename boost::mpl::or_<
+    typename boost::btree::has_dynamic_size<key_type>::type,
+    typename boost::btree::has_dynamic_size<mapped_type>::type
+             >::type                            leaf_iterator_selector;
+  typedef typename boost::mpl::if_<leaf_iterator_selector,
              detail::dynamic_iterator<leaf_value_type>,
              detail::pointer_iterator<leaf_value_type>  
              >::type                            leaf_iterator;
