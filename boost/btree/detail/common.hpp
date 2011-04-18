@@ -451,8 +451,6 @@ public:
 
   // TODO: why are these being exposed:
   typedef value_type                            leaf_value_type;
-  //typedef detail::dynamic_iterator<leaf_value_type>  leaf_iterator;
-  //typedef detail::pointer_iterator<leaf_value_type>  leaf_iterator;
   typedef typename boost::mpl::if_<
     typename boost::btree::has_dynamic_size<leaf_value_type>::type,
              detail::dynamic_iterator<leaf_value_type>,
@@ -461,11 +459,10 @@ public:
 
   // construct/destroy:
 
+  // TODO: why are these being exposed:
   btree_base(const Comp& comp);
-
   btree_base(const boost::filesystem::path& p, flags::bitmask flgs, std::size_t pg_sz,
              const Comp& comp);
-
   ~btree_base();
 
   //  file operations:
@@ -669,7 +666,12 @@ private:
       //----------------------------------------------------------------------------//
 
   typedef detail::branch_value<page_id_type, key_type>  branch_value_type;
-  typedef detail::dynamic_iterator<branch_value_type>   branch_iterator;
+//  typedef detail::dynamic_iterator<branch_value_type>   branch_iterator;
+  typedef typename boost::mpl::if_<
+    typename boost::btree::has_dynamic_size<key_type>::type,
+             detail::dynamic_iterator<branch_value_type>,
+             detail::pointer_iterator<branch_value_type>  
+             >::type                            branch_iterator;
 
   class branch_data : public btree_data
   {
