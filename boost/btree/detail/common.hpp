@@ -53,9 +53,6 @@
   * map, multi_map, insert(key, mapped_value) can be confused with template insert?
     Use enable_if?
 
-  * advance_by_size should dispatch on iterator type and use more efficient
-    algorithm if random access (I.E. fixed size)
-
   * header() shouldn't be part of the public interface.
       - Add individual get, and where appropriate, set, functions.
       - Move header file to detail.
@@ -257,6 +254,18 @@ namespace detail
       return m_ptr < rhs.m_ptr;
     }
 
+    void advance_by_size(std::size_t max_sz)
+    {
+      BOOST_ASSERT(max_sz);
+      T* prior;
+      for (std::size_t sz = 0; sz <= max_sz; sz += dynamic_size(*m_ptr)) 
+      {
+        prior = m_ptr;
+        increment();
+      }
+      m_ptr = prior;
+    }
+
   private:
     friend class boost::iterator_core_access;
 
@@ -325,6 +334,14 @@ namespace detail
 
     bool operator<(const pointer_iterator& rhs) const  {return m_ptr < rhs.m_ptr;}
 
+    void advance_by_size(std::size_t max_sz)
+    {
+      BOOST_ASSERT(max_sz);
+      std::ptrdiff_t n = max_sz / btree::dynamic_size(*m_ptr);
+      m_ptr = reinterpret_cast<T*>(reinterpret_cast<char*>(m_ptr)
+        + n * static_cast<std::ptrdiff_t>(btree::dynamic_size(*m_ptr)));
+    }
+
   private:
     friend class boost::iterator_core_access;
 
@@ -381,21 +398,6 @@ namespace detail
       return sizeof(PID) + btree::dynamic_size(key());
     }
   };
-
-  //------------------------------- advance_by_size ------------------------------------//
-
-  template <class ForwardIterator>
-  ForwardIterator advance_by_size(ForwardIterator begin, std::size_t max_sz)
-  {
-    BOOST_ASSERT(max_sz);
-    ForwardIterator prior;
-    for (std::size_t sz = 0; sz <= max_sz; sz += dynamic_size(*begin)) 
-    {
-      prior = begin;
-      ++begin;
-    }
-    return prior;
-  }
 
 }  // namespace detail
 
@@ -1298,8 +1300,8 @@ btree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter,
     }
 
     // split page pg by moving half the elements, by size, to page p2
-    leaf_iterator split_begin(detail::advance_by_size(pg->leaf().begin(),
-      pg->leaf().size() / 2));
+    leaf_iterator split_begin(pg->leaf().begin());
+    split_begin.advance_by_size(pg->leaf().size() / 2);
     ++split_begin; // for leaves, prefer more aggressive split begin
     std::size_t split_sz = char_distance(&*split_begin, &*pg->leaf().end());
 
@@ -1381,8 +1383,8 @@ btree_base<Key,Base,Traits,Comp>::m_branch_insert(
 
     // split page pg by moving half the elements, by size, to page p2
 
-    branch_iterator unsplit_end(detail::advance_by_size(pg->branch().begin(),
-      pg->branch().size() / 2));
+   branch_iterator unsplit_end(pg->branch().begin());
+    unsplit_end.advance_by_size(pg->branch().size() / 2);
     branch_iterator split_begin(unsplit_end+1);
     std::size_t split_sz = char_distance(&*split_begin, char_ptr(&*pg->branch().end()) 
       + sizeof(page_id_type));  // include the end pseudo-element page_id
