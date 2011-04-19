@@ -44,10 +44,6 @@
     first of the key, then for return find and increment to the new offset. Potentially
     O(2*offset) complexity.
   
-  * btree_page_ptr dtor, mod functs, needs to free parent if use_count() == 1. Need
-    to figure out test for correct operation. Also, several calls to m_free_page()
-    commented out in erase, erase branch, code.
-
   * btree_unit_test.cpp: move erase tests out of insert test.
 
   * Upgrade m_update() to allow new dynamic size different from old dynamic size
@@ -56,9 +52,6 @@
 
   * map, multi_map, insert(key, mapped_value) can be confused with template insert?
     Use enable_if?
-
-  * If not variable size, one or both internal iterators should be random access tag,
-    including case where leaf is fwd, but branch is random
 
   * advance_by_size should dispatch on iterator type and use more efficient
     algorithm if random access (I.E. fixed size)
@@ -72,7 +65,9 @@
 
   * Pack optimization should apply to branches too.
 
-  * m_set_max_cache_pages() needs to be reviewed for correctness.
+  * m_set_max_cache_pages() needs to be reviewed. Is it needed at all? The comment is
+    totally outdated. Won't everything just work? Make sure there is a test to verify
+    that exceeding max_cache_pages is harmless.
 
   * Either add code to align mapped() or add a requirement that PID, K does not
     require alignment.
@@ -139,6 +134,10 @@ std::ostream& operator<<(std::ostream& os, const btree_value<T1, T2>& x)
 template <class T1, class T2>
 inline std::size_t dynamic_size(const btree_value<T1, T2>& x) {return x.dynamic_size();}
 
+//--------------------------------------------------------------------------------------//
+//                             general support functions                                //
+//--------------------------------------------------------------------------------------//
+
 //  less function object class
 
 template <class T> struct less
@@ -153,8 +152,23 @@ template <class T> struct less
   }
 };
 
+//  append
+//
+//  important optimization side-effect: resulting tree will be packed; at each level, all
+//  pages except the last will have as many elements as will fit on the page
+
+template <class Btree>
+void append(const Btree& from, const Btree& to)
+{
+  BOOST_ASSERT_MSG(from.is_open(), "append() requires 'from' btree be open");
+  BOOST_ASSERT_MSG(to.is_open(), "append() requires 'to' btree be open");
+  for (Btree::iterator it = from.begin(); it != from.end(); ++it)
+    to.insert(*it);
+}
+
+
 //--------------------------------------------------------------------------------------//
-//                             class btree_set_base                                    //
+//                               class btree_set_base                                   //
 //--------------------------------------------------------------------------------------//
 
 template <class Key, class Comp>
@@ -332,19 +346,12 @@ namespace detail
     }
     void advance(std::ptrdiff_t n)
     {
-//std::cout << "\n***advance " << n << std::endl;
       m_ptr = reinterpret_cast<T*>(reinterpret_cast<char*>(m_ptr)
         + n * static_cast<std::ptrdiff_t>(btree::dynamic_size(*m_ptr)));
     }
 
     std::ptrdiff_t distance_to(const pointer_iterator& rhs) const
     {
-//std::cout << "\n***distance_to std " << std::distance(m_ptr, rhs.m_ptr) << std::endl;
-//std::cout << "***distance_to size "
-//  << static_cast<std::ptrdiff_t>(btree::dynamic_size(*m_ptr)) << std::endl;
-//std::cout << "***distance_to " << std::distance(m_ptr, rhs.m_ptr)
-//  / static_cast<std::ptrdiff_t>(btree::dynamic_size(*m_ptr)) << std::endl;
-
       return std::distance(reinterpret_cast<const char*>(m_ptr),
         reinterpret_cast<const char*>(rhs.m_ptr))
         / static_cast<std::ptrdiff_t>(btree::dynamic_size(*m_ptr));
@@ -626,10 +633,6 @@ private:
   {
     friend class btree_base;
   public:
-    //page_id_type   prior_page_id() const           {return m_prior_page_id;}
-    //void           prior_page_id(page_id_type id)  {m_prior_page_id = id;}
-    //page_id_type   next_page_id() const            {return m_next_page_id;}
-    //void           next_page_id(page_id_type id)   {m_next_page_id = id;}
     leaf_iterator  begin()      { return leaf_iterator(m_value);}
     leaf_iterator  end()        { return leaf_iterator(m_value, size()); }
 
@@ -643,8 +646,6 @@ private:
     }
 
     //  private:
-    //page_id_type     m_next_page_id;   // page sequence fwd list; 0 for end
-    //page_id_type     m_prior_page_id;  // page sequence bwd list; 0 for end
     leaf_value_type  m_value[1];
   };
 
@@ -670,12 +671,11 @@ private:
       //----------------------------------------------------------------------------//
 
   typedef detail::branch_value<page_id_type, key_type>  branch_value_type;
-//  typedef detail::dynamic_iterator<branch_value_type>   branch_iterator;
   typedef typename boost::mpl::if_<
     typename boost::btree::has_dynamic_size<key_type>::type,
              detail::dynamic_iterator<branch_value_type>,
              detail::pointer_iterator<branch_value_type>  
-             >::type                            branch_iterator;
+             >::type                                    branch_iterator;
 
   class branch_data : public btree_data
   {
@@ -695,16 +695,6 @@ private:
 //  private:
     branch_value_type  m_value[1];
   };
-
-  ////  Access to (itr-1)->page_id on branch pages may be expensive since it may be a
-  ////  ForwardIterator, and won't work at all for access to PO given begin(). The fix
-  ////  is a function that knows what to do.
-  //page_id_type prior_page_id(branch_iterator itr) const
-  //{
-  //  // page_id_type must be unaligned || key_type must have same or stronger alignment
-  //  return *reinterpret_cast<const page_id_type*>(
-  //    reinterpret_cast<const char*>(&*itr) - sizeof(page_id_type));
-  //}
 
   class branch_page;
 
@@ -760,19 +750,11 @@ private:
       }
 
       btree_page_ptr pg(manager().read(par_element->page_id()));
-      //if (pg->use_count() == 1)
-      //{
-        pg->parent(par);
-        pg->parent_element(par_element);
-#       ifndef NDEBUG
-        pg->parent_page_id(par->page_id());
-#       endif
-      //}
-      //else
-      //{
-      //  BOOST_ASSERT(pg->m_parent == par);
-      //  BOOST_ASSERT(pg->m_parent_element == par_element);
-      //}
+      pg->parent(par);
+      pg->parent_element(par_element);
+#     ifndef NDEBUG
+      pg->parent_page_id(par->page_id());
+#     endif
       return pg;
     }
 
@@ -797,19 +779,11 @@ private:
       }
 
       btree_page_ptr pg(manager().read(par_element->page_id()));
-      //if (pg->use_count() == 1)
-      //{
-        pg->parent(par);
-        pg->parent_element(par_element);
-#       ifndef NDEBUG
-        pg->parent_page_id(par->page_id());
-#       endif
-      //}
-      //else
-      //{
-      //  BOOST_ASSERT(pg->m_parent == par);
-      //  BOOST_ASSERT(pg->m_parent_element == par_element);
-      //}
+      pg->parent(par);
+      pg->parent_element(par_element);
+#     ifndef NDEBUG
+      pg->parent_page_id(par->page_id());
+#     endif
       return pg;
     }
 
@@ -829,14 +803,6 @@ private:
   public:
 
     btree_page_ptr() : buffer_ptr() {}
-    //~btree_page_ptr()
-    //{
-    //  if (get() && get()->use_count() == 1)
-    //  {
-    //    if (get()->parent().get())
-    //      get()->parent().reset();
-    //  }
-    //}
     btree_page_ptr(btree_page& p) : buffer_ptr(p) {}
     btree_page_ptr(buffer& p) : buffer_ptr(p) {}
     btree_page_ptr(const btree_page_ptr& r) : buffer_ptr(r) {} 
@@ -966,7 +932,6 @@ private:
     pg->needs_write(true);
     pg->level(0xFFFE);
     pg->size(0);
-    //pg->leaf().prior_page_id(page_id_type());
     pg->branch().begin()->page_id() = page_id_type(m_hdr.free_page_list_head_id());
     m_hdr.free_page_list_head_id(pg->page_id());
   }
@@ -1107,9 +1072,6 @@ btree_base<Key,Base,Traits,Comp>::m_open(const boost::filesystem::path& p,
 {
   BOOST_ASSERT(!is_open());
   BOOST_ASSERT(pg_sz >= sizeof(btree::header_page));
-// TODO: need max_value_type_size like the old lib95 btree
-//  BOOST_ASSERT(pg_sz / sizeof(value_type) >= 3);
-//  BOOST_ASSERT(pg_sz / sizeof(branch_value_type) >= 3);
 
   oflag::bitmask open_flags = oflag::in;
   if (flgs & flags::read_write)
@@ -1131,10 +1093,6 @@ btree_base<Key,Base,Traits,Comp>::m_open(const boost::filesystem::path& p,
       BOOST_BTREE_THROW(std::runtime_error(file_path().string()+" isn't a btree"));
     if (m_hdr.big_endian() != (Traits::header_endianness == integer::endianness::big))
       BOOST_BTREE_THROW(std::runtime_error(file_path().string()+" has wrong endianness"));
-    //if (m_hdr.key_size() != Base::key_size())
-    //  BOOST_BTREE_THROW(std::runtime_error(file_path().string()+" has wrong key_type size"));
-    //if (m_hdr.mapped_size() != Base::mapped_size())
-    //  BOOST_BTREE_THROW(std::runtime_error(file_path().string()+" has wrong mapped_type size"));
     m_mgr.data_size(m_hdr.page_size());
     m_root = m_mgr.read(m_hdr.root_page_id());
   }
@@ -1146,9 +1104,7 @@ btree_base<Key,Base,Traits,Comp>::m_open(const boost::filesystem::path& p,
     m_hdr.user_c_str("");
     m_hdr.page_size(pg_sz);
     m_hdr.key_size(Base::key_size());
-//    BOOST_ASSERT(m_hdr.key_size() == Base::key_size());  // fails if key_type too large
     m_hdr.mapped_size(Base::mapped_size());
-//    BOOST_ASSERT(m_hdr.mapped_size() == Base::mapped_size());  // fails if mapped_type too large
     m_hdr.increment_page_count();  // i.e. the header itself
     m_mgr.new_buffer();  // force a buffer write, thus zeroing the header for its full size
     flush();
@@ -1164,8 +1120,6 @@ btree_base<Key,Base,Traits,Comp>::m_open(const boost::filesystem::path& p,
     m_hdr.last_page_id(m_root->page_id());
     m_root->level(0);
     m_root->size(0);
-    //m_root->leaf().prior_page_id(page_id_type(0));
-    //m_root->leaf().next_page_id(page_id_type(0));
   }
   m_set_max_cache_pages();
 }
@@ -1191,7 +1145,6 @@ btree_base<Key,Base,Traits,Comp>::clear()
   m_hdr.root_level(0);
   m_hdr.page_count(0);
   m_hdr.free_page_list_head_id(0);
-
 
   m_mgr.close();
 
@@ -1706,35 +1659,32 @@ btree_base<Key,Base,Traits,Comp>::m_update(iterator itr,
   return itr;
 }
 
-////--------------------------------- m_lower_page_bound() -------------------------------//
-//
-////  m_lower_page_bound() differs from lower_bound() in that if the search key is not
-////  present and the first key greater than the search key is the first key on a leaf
-////  other than the first leaf, the returned iterator points to the end element of
-////  the leaf prior to the leaf whose first element is the true lower bound.
-////
-////  Those semantics are useful because the returned iterator is pointing to the insertion
-////  point for unique inserts and does not miss the first key in a series of non-unique
-////  keys that do not begin on a page boundary.
-//
-////  Analysis; consider a branch page with these entries:
-////
-////     P0, K0="B", P1, K1="D", P2, K2="F", P3, ---
-////     ----------  ----------  ----------  ------------------
-////     element 0   element 1   element 2   end pseudo-element
-////
-////  Search key:  A  B  C  D  E  F  G
-////  std::lower_bound  
-////   element     0  0  1  1  2  2  end pseudo-element
-////  child_pg->   0  0  1  1  2  2  end pseudo-element
-////   parent_element
-////  Child page:  P0 P1 P1 P2 P2 P3 P3
-
 //----------------------------- m_special_lower_bound() --------------------------------//
 
 template <class Key, class Base, class Traits, class Comp>   
 typename btree_base<Key,Base,Traits,Comp>::iterator
 btree_base<Key,Base,Traits,Comp>::m_special_lower_bound(const key_type& k) const
+//  m_special_lower_bound() differs from lower_bound() in that if the search key is not
+//  present and the first key greater than the search key is the first key on a leaf
+//  other than the first leaf, the returned iterator points to the end element of
+//  the leaf prior to the leaf whose first element is the true lower bound.
+//
+//  Those semantics are useful because the returned iterator is pointing to the insertion
+//  point for unique inserts and does not miss the first key in a series of non-unique
+//  keys that do not begin on a page boundary.
+
+//  Analysis; consider a branch page with these entries:
+//
+//     P0, K0="B", P1, K1="D", P2, K2="F", P3, ---
+//     ----------  ----------  ----------  ------------------
+//     element 0   element 1   element 2   end pseudo-element
+//
+//  Search key:  A  B  C  D  E  F  G
+//  std::lower_bound  
+//   element     0  0  1  1  2  2  end pseudo-element
+//  child_pg->   0  0  1  1  2  2  end pseudo-element
+//   parent_element
+//  Child page:  P0 P1 P1 P2 P2 P3 P3
 {
   btree_page_ptr pg = m_root;
 
@@ -1762,13 +1712,8 @@ btree_base<Key,Base,Traits,Comp>::m_special_lower_bound(const key_type& k) const
   }
 
   //  search leaf
-//  leaf_iterator b = pg->leaf().begin();
-//  std::cout << "***begin " << b.m_ptr << std::endl;
-//  leaf_iterator e = pg->leaf().end();
-//  std::cout << "***end " << e.m_ptr << std::endl;
   leaf_iterator low
     = std::lower_bound(pg->leaf().begin(), pg->leaf().end(), k, value_comp());
-//  std::cout << "***low " << low.m_ptr << std::endl;
 
   return iterator(pg, low);
 }
@@ -1972,8 +1917,6 @@ btree_base<Key,Base,Traits,Comp>::iterator_type<T>::increment()
 
   if (++m_element != m_page->leaf().end())
     return;
-
-  //std::cout << "next_page_id() is " << m_page->leaf().next_page_id() << std::endl;
 
   btree_page_ptr pg(m_page);
   m_page = m_page->next_page();
