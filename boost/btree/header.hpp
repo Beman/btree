@@ -154,23 +154,15 @@ namespace boost
       char                m_user_c_str[32];   // '\0' filled and terminated
 
     public:
-      header_page() :
-        m_marker(0xBBBBBBBB),
-        m_endianness(0), 
-        m_major_version(btree::major_version),
-        m_minor_version(btree::minor_version),   
-        m_element_count(0),
-        m_page_size(0),
-        m_flags(0),
-        m_root_page_id(0),
-        m_first_page_id(0),
-        m_last_page_id(0),
-        m_page_count(0),
-        m_free_page_list_head_id(0),
-        m_root_level(0),
-        m_key_size(0),
-        m_mapped_size(0)
-      {}
+      header_page() { clear(); }
+
+      void clear()
+      {
+        std::memset(this, 0, sizeof(header_page));
+        m_marker = 0xBBBBBBBB;
+        m_major_version = btree::major_version;
+        m_minor_version = btree::minor_version;   
+      }
 
       //  "permanent" members that do not change over the life of the file
       bool             marker_ok() const             { return m_marker == 0xBBBBBBBB; }
