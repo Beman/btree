@@ -100,19 +100,19 @@ inline std::size_t dynamic_size(const T&) { return sizeof(T); }
 template <class T>
 struct has_dynamic_size : public false_type{};
 
-//--------------------------------- btree_value ---------------------------------------//
+//--------------------------------- map_value ------------------------------------------//
 
 // TODO: either add code to align mapped() or add a requirement that T2 does not
 // require alignment.
 
 template <class T1, class T2>
-class btree_value
+class map_value
 {
 public:
-  T1& key() const   { return *reinterpret_cast<const T1*>(this); }
+  const T1& key() const   { return *reinterpret_cast<const T1*>(this); }
   const T2& mapped_value() const
   {
-    return *reinterpret_cast<T2*>(reinterpret_cast<const char*>(this)
+    return *reinterpret_cast<const T2*>(reinterpret_cast<const char*>(this)
              + btree::dynamic_size(key()));
   }
   std::size_t dynamic_size() const
@@ -122,14 +122,14 @@ public:
 };
 
 template <class T1, class T2>
-std::ostream& operator<<(std::ostream& os, const btree_value<T1, T2>& x)
+std::ostream& operator<<(std::ostream& os, const map_value<T1, T2>& x)
 {
   os << x.key() << ',' << x.mapped_value();
   return os;
 }
 
 template <class T1, class T2>
-inline std::size_t dynamic_size(const btree_value<T1, T2>& x) {return x.dynamic_size();}
+inline std::size_t dynamic_size(const map_value<T1, T2>& x) {return x.dynamic_size();}
 
 //--------------------------------------------------------------------------------------//
 //                             general support functions                                //
@@ -165,7 +165,7 @@ void append(const Btree& from, const Btree& to)
 
 
 //--------------------------------------------------------------------------------------//
-//                               class btree_set_base                                   //
+//                                class btree_set_base                                  //
 //--------------------------------------------------------------------------------------//
 
 template <class Key, class Comp>
@@ -190,15 +190,15 @@ protected:
 };
 
 //--------------------------------------------------------------------------------------//
-//                             class btree_map_base                                    //
+//                               class btree_map_base                                   //
 //--------------------------------------------------------------------------------------//
 
 template <class Key, class T, class Comp>
 class btree_map_base
 {
 public:
-  typedef btree_value<const Key, const T>  value_type;
-  typedef T                                 mapped_type;
+  typedef map_value<Key, T>  value_type;
+  typedef T                              mapped_type;
 
   const Key& key(const value_type& v) const  // really handy, so expose
     {return v.key();}
@@ -489,9 +489,6 @@ public:
   
   // iterators:
 
-  iterator  writable(const_iterator& iter)  {iter.m_page->m_needs_write(true);
-                                              return iterator(iter.m_page, iter.m_element);
-                                            }
   const_iterator     begin() const;
   const_iterator     end() const            { return m_end_iterator; }
   const_iterator     last() const;
@@ -1100,6 +1097,7 @@ btree_base<Key,Base,Traits,Comp>::m_open(const boost::filesystem::path& p,
   }
   else
   { // new or truncated file
+    m_hdr.clear();
     m_hdr.big_endian(Traits::header_endianness == integer::endianness::big);
     m_hdr.flags(flgs & ~(btree::flags::read_write | btree::flags::truncate));
     m_hdr.splash_c_str("boost.org btree");

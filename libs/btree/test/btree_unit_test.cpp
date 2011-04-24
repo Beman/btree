@@ -155,29 +155,29 @@ void types_test()
   BOOST_TEST((boost::is_same< bt_map::mapped_type, long>::value));
 
   BOOST_TEST((boost::is_same<std_map::value_type, std::pair<const int, long> >::value));
-  BOOST_TEST((boost::is_same< bt_map::value_type, btree::btree_value<const int, const long> >::value));
+  BOOST_TEST((boost::is_same< bt_map::value_type, btree::map_value<int, long> >::value));
 
   // reference is "lvalue of T" where T is value_type
   BOOST_TEST((boost::is_same<std_map::reference,
     std::pair<const int, long>& >::value));
   BOOST_TEST((boost::is_same< bt_map::reference,
-    btree::btree_value<const int, const long>& >::value));
+    btree::map_value<int, long>& >::value));
 
   // const_reference is "const lvalue of T" where T is value_type
   BOOST_TEST((boost::is_same<std_map::const_reference,
     const std::pair<const int, long>& >::value));
   BOOST_TEST((boost::is_same< bt_map::const_reference,
-    const btree::btree_value<const int, const long>& >::value));
+    const btree::map_value<int, long>& >::value));
 
   BOOST_TEST((boost::is_same<std_map::iterator::reference,
     std::pair<const int, long>& >::value));
   BOOST_TEST((boost::is_same< bt_map::iterator::reference,
-    const btree::btree_value<const int, const long>& >::value));
+    const btree::map_value<int, long>& >::value));
 
   BOOST_TEST((boost::is_same<std_map::const_iterator::reference,
     const std::pair<const int, long>& >::value));
   BOOST_TEST((boost::is_same< bt_map::const_iterator::reference,
-    const btree::btree_value<const int, const long>& >::value));
+    const btree::map_value<int, long>& >::value));
 
   cout << "    types_test complete" << endl;
 }
@@ -442,7 +442,7 @@ void small_variable_map()
 //    BOOST_TEST(!bt.key_comp()(&i1, &i1));
 //    BOOST_TEST(!bt.key_comp()(&i2, &i1));
 //
-//    struct my_pair : public btree::btree_value<const int, const long>
+//    struct my_pair : public btree::map_value<const int, const long>
 //    {
 //      int first;
 //      int second;
@@ -1063,6 +1063,51 @@ void pack_optimization()
 //  cout << "     fixstr complete" << endl;
 //}
 
+//-----------------------------  reopen_btree_object_test  -----------------------------//
+
+//  the use case reproduced here failed in another program
+
+void  reopen_btree_object_test()
+{
+  cout << "  reopen_btree_object_test..." << endl;
+
+  const int n = 1;
+  cout << "    inserting " << n << " btree elements..." << endl;
+
+  std::string path("reopen.btree");
+  std::string path2("reopen.btree.2");
+  typedef btree::btree_map<long, long> map_type;
+  map_type bt(path, btree::flags::truncate, 128);
+  rand48  rng;
+  uniform_int<long> n_dist(0, n);
+  variate_generator<rand48&, uniform_int<long> > key(rng, n_dist);
+  const int seed = 1;
+  rng.seed(seed);
+
+  for (long i = 1; i <= n; ++i)
+  {
+    bt.insert(key(), i);
+  }
+
+  cout << "    copying " << bt.size() << " elements..." << endl;
+
+  bt.close();
+  fs::remove(path2);
+  fs::rename(path, path2);
+  map_type bt2(path2);
+  bt.open(path, btree::flags::truncate, 128);
+  for (map_type::iterator it = bt2.begin(); it != bt2.end(); ++it)
+    bt.insert(it->key(), it->mapped_value());
+  BOOST_TEST_EQ(bt.size(), bt2.size());
+  bt2.close();
+  bt.close();
+  cout << "  " << path2 << " file_size: " << fs::file_size(path2) << '\n';
+  cout << "  " << path << "  file_size: " << fs::file_size(path) << '\n';
+  BOOST_TEST_EQ(fs::file_size(path2), fs::file_size(path));
+
+  cout << "     reopen_btree_object_test complete" << endl;
+}
+
 //-------------------------------------  _test  ----------------------------------------//
 
 void  _test()
@@ -1099,6 +1144,7 @@ int cpp_main(int, char*[])
   //parent_pointer_to_split_page();
   //parent_pointer_lifetime();
   pack_optimization();
+  //reopen_btree_object_test();
   //fixstr();
   
 
