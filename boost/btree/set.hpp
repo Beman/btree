@@ -82,6 +82,7 @@ namespace boost
       std::pair<typename btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::const_iterator, bool>
       insert(const typename btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::value_type& value)
       {
+        BOOST_ASSERT_MSG(!read_only(), "insert() on read only btree");
         BOOST_ASSERT_MSG(dynamic_size(value) < page_size()/3,
           "value size too large for page size");
         return btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::m_insert_unique(
@@ -91,6 +92,7 @@ namespace boost
       template <class InputIterator>
       void insert(InputIterator begin, InputIterator end)
       {
+        BOOST_ASSERT_MSG(!read_only(), "insert() on read only btree");
         for (; begin != end; ++begin)
         {
           BOOST_ASSERT_MSG(dynamic_size(*begin) < page_size()/3,
@@ -155,6 +157,7 @@ namespace boost
       typename btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::const_iterator
       insert(const typename btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::value_type& value)
       {
+        BOOST_ASSERT_MSG(!read_only(), "insert() on read only btree");
         BOOST_ASSERT_MSG(dynamic_size(value) < page_size()/3,
           "value size too large for page size");
         return btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::m_insert_non_unique(
@@ -164,6 +167,7 @@ namespace boost
       template <class InputIterator>
       void insert(InputIterator begin, InputIterator end)
       {
+        BOOST_ASSERT_MSG(!read_only(), "insert() on read only btree");
         for (; begin != end; ++begin) 
         {
           BOOST_ASSERT_MSG(dynamic_size(*begin) < page_size()/3,

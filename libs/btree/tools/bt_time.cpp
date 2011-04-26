@@ -11,7 +11,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/random.hpp>
 #include <boost/btree/support/timer.hpp>
-#include <boost/detail/lightweight_test.hpp> 
+#include <boost/detail/lightweight_main.hpp>
 
 #include <iostream>
 #include <string>
@@ -106,16 +106,15 @@ namespace
         {
           bt_new.insert(it->key(), it->mapped_value());
         }
-        cout << "bt_old.size() " << bt_old.size() << std::endl;
-        cout << "bt_new.size() " << bt_new.size() << std::endl;
+        cout << "  bt_old.size() " << bt_old.size() << std::endl;
+        cout << "  bt_new.size() " << bt_new.size() << std::endl;
         BOOST_ASSERT(bt_new.size() == bt_old.size());
         bt_old.close();
         bt_new.close();
-        //bt.flush();
         t.report();
-        cout << "  " << path_org << " size: " << fs::file_size(path_org) << '\n';
-        cout << "  " << path << "     size: " << fs::file_size(path) << '\n';
-        bt.open(path);
+        cout << "  " << path_org << " file size: " << fs::file_size(path_org) << '\n';
+        cout << "  " << path << "     file size: " << fs::file_size(path) << '\n';
+        bt.open(path, btree::flags::read_write);
       }
 
       if (do_find)
@@ -195,6 +194,8 @@ namespace
         cout << '\n' << bt << endl;
         cout << bt.manager() << endl;
       }
+
+      bt.close();
     }
 
     typedef std::map<long, long>  stl_type;
@@ -345,7 +346,7 @@ namespace
 
 //-------------------------------------- main()  ---------------------------------------//
 
-int main(int argc, char * argv[]) 
+int cpp_main(int argc, char * argv[]) 
 {
   for (int a = 0; a < argc; ++a)
   {

@@ -149,6 +149,7 @@ buffer* buffer_manager::m_prepare_buffer(buffer_id_type pg_id)
 
 buffer_ptr buffer_manager::new_buffer()
 {
+  BOOST_ASSERT(is_open());
   BOOST_ASSERT(data_size());
   ++m_new_buffer_requests;
   buffer* pg = m_prepare_buffer(m_buffer_count++);
@@ -162,6 +163,7 @@ buffer_ptr buffer_manager::new_buffer()
 
 buffer_ptr buffer_manager::read(buffer_id_type pg_id)
 {
+  BOOST_ASSERT(is_open());
   BOOST_ASSERT(data_size());
   BOOST_ASSERT(pg_id < buffer_count());
 
@@ -195,6 +197,7 @@ buffer_ptr buffer_manager::read(buffer_id_type pg_id)
 
 void buffer_manager::write(buffer& pg)
 {
+  BOOST_ASSERT(is_open());
   BOOST_ASSERT(pg.buffer_id() < buffer_count());
   seek(pg.buffer_id()*data_size());
   binary_file::write(pg.data(), data_size());
@@ -206,12 +209,12 @@ void buffer_manager::write(buffer& pg)
 
 bool buffer_manager::flush()
 {
+  BOOST_ASSERT(is_open());
   bool buffer_written = false;
   for (buffers_type::iterator itr = buffers.begin();
     itr != buffers.end();
     ++itr)
   {
-    const buffer* b = &*itr;
     if (itr->needs_write())
     {
       write(*itr);
