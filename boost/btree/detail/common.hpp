@@ -62,9 +62,9 @@
 
   * Pack optimization should apply to branches too.
 
-  * m_set_max_cache_pages() needs to be reviewed. Is it needed at all? The comment is
-    totally outdated. Won't everything just work? Make sure there is a test to verify
-    that exceeding max_cache_pages is harmless.
+  //* m_set_max_cache_pages() needs to be reviewed. Is it needed at all? The comment is
+  //  totally outdated. Won't everything just work? Make sure there is a test to verify
+  //  that exceeding max_cache_pages is harmless.
 
   * Either add code to align mapped() or add a requirement that PID, K does not
     require alignment.
@@ -526,8 +526,8 @@ public:
   std::size_t   max_cache_pages() const     { return m_mgr.max_cache_buffers(); }
   void          max_cache_pages(std::size_t m)
                                             {
-                                              m_mgr.max_cache_buffers(m);
-                                              m_set_max_cache_pages();
+                                              m_mgr.max_cache_size(m);
+                                              //m_set_max_cache_pages();
                                             }
 
   //  The following element access functions are not provided. Returning references is
@@ -748,7 +748,7 @@ private:
         par_element = par->branch().begin();
       }
 
-      btree_page_ptr pg(manager().read(par_element->page_id()));
+      btree_page_ptr pg(manager()->read(par_element->page_id()));
       pg->parent(par);
       pg->parent_element(par_element);
 #     ifndef NDEBUG
@@ -777,7 +777,7 @@ private:
         par_element = par->branch().end();
       }
 
-      btree_page_ptr pg(manager().read(par_element->page_id()));
+      btree_page_ptr pg(manager()->read(par_element->page_id()));
       pg->parent(par);
       pg->parent_element(par_element);
 #     ifndef NDEBUG
@@ -935,23 +935,23 @@ private:
     m_hdr.free_page_list_head_id(pg->page_id());
   }
 
-  void m_set_max_cache_pages()
-  {
-    // To ensure that the ephemeral child->parent list of btree_pages remains valid during
-    // inserts and erases, the minimum size of max_cache_pages must be set large enough
-    // that pages in the list are never overwritten.
-    //
-    // The worst case is believed to be when an insert is done, and every page from the leaf
-    // to the root is full.
+  //void m_set_max_cache_pages()
+  //{
+  //  // To ensure that the ephemeral child->parent list of btree_pages remains valid during
+  //  // inserts and erases, the minimum size of max_cache_pages must be set large enough
+  //  // that pages in the list are never overwritten.
+  //  //
+  //  // The worst case is believed to be when an insert is done, and every page from the leaf
+  //  // to the root is full.
 
-    std::size_t minimum_cache_pages =
-      (m_hdr.levels()) * 2  // two pages per level to handle the splits
-      + 2                   // previous and next pages accessed to update sequence list
-      + 2;                  // safety margin
-   
-    if (m_mgr.max_cache_buffers() < minimum_cache_pages)
-      m_mgr.max_cache_buffers(minimum_cache_pages);
-  }
+  //  std::size_t minimum_cache_pages =
+  //    (m_hdr.levels()) * 2  // two pages per level to handle the splits
+  //    + 2                   // previous and next pages accessed to update sequence list
+  //    + 2;                  // safety margin
+  // 
+  //  if (m_mgr.max_cache_buffers() < minimum_cache_pages)
+  //    m_mgr.max_cache_buffers(minimum_cache_pages);
+  //}
 
   //-------------------------------- branch_compare ------------------------------------//
 
@@ -1121,7 +1121,7 @@ btree_base<Key,Base,Traits,Comp>::m_open(const boost::filesystem::path& p,
     m_root->level(0);
     m_root->size(0);
   }
-  m_set_max_cache_pages();
+//  m_set_max_cache_pages();
 }
 
 //------------------------------------- clear() ----------------------------------------//
@@ -1229,7 +1229,7 @@ btree_base<Key,Base,Traits,Comp>::m_new_root()
   btree_page_ptr old_root = m_root;
   page_id_type old_root_id(m_root->page_id());
   m_hdr.increment_root_level();
-  m_set_max_cache_pages();
+//  m_set_max_cache_pages();
   m_root = m_new_page(m_hdr.root_level());
   m_hdr.root_page_id(m_root->page_id());
   m_root->branch().begin()->page_id() = old_root_id;
@@ -1929,7 +1929,7 @@ btree_base<Key,Base,Traits,Comp>::iterator_type<T>::increment()
   else // end() reached
   {
     *this = reinterpret_cast<const btree_base<Key,Base,Traits,Comp>*>
-        (pg->manager().owner())->m_end_iterator;
+        (pg->manager()->owner())->m_end_iterator;
   }
 }
 
@@ -1939,9 +1939,9 @@ void
 btree_base<Key,Base,Traits,Comp>::iterator_type<T>::decrement()
 {
   if (*this == reinterpret_cast<const btree_base<Key,Base,Traits,Comp>*>
-        (m_page->manager().owner())->end())
+        (m_page->manager()->owner())->end())
     *this = reinterpret_cast<btree_base<Key,Base,Traits,Comp>*>
-        (m_page->manager().owner())->last();
+        (m_page->manager()->owner())->last();
   else if (m_element != m_page->leaf().begin())
     --m_element;
   else
@@ -1958,7 +1958,7 @@ btree_base<Key,Base,Traits,Comp>::iterator_type<T>::decrement()
     else // end() reached
     {
       *this = reinterpret_cast<const btree_base<Key,Base,Traits,Comp>*>
-          (pg->manager().owner())->m_end_iterator;
+          (pg->manager()->owner())->m_end_iterator;
     }
   }
 }

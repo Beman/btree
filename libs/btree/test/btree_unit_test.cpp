@@ -1144,7 +1144,7 @@ int cpp_main(int, char*[])
   //parent_pointer_to_split_page();
   //parent_pointer_lifetime();
   pack_optimization();
-  //reopen_btree_object_test();
+  reopen_btree_object_test();
   //fixstr();
   
 

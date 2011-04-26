@@ -8,6 +8,7 @@
 //  See http://www.boost.org/libs/btree for documentation.
 
 #include <boost/btree/map.hpp>
+#include <boost/filesystem.hpp>
 #include <boost/random.hpp>
 #include <boost/btree/support/timer.hpp>
 #include <boost/detail/lightweight_test.hpp> 
@@ -19,6 +20,7 @@
 #include <map>
 
 using namespace boost;
+namespace fs = boost::filesystem;
 using std::cout;
 using std::cerr;
 using std::endl;
@@ -35,6 +37,7 @@ namespace
   bool do_create (true);
   bool do_preload (false);
   bool do_insert (true);
+  bool do_pack (false);
   bool do_find (true);
   bool do_iterate (true);
   bool do_erase (true);
@@ -43,6 +46,7 @@ namespace
   bool html (false);
   const int places = 2;
   std::string path("bt_time.btree");
+  std::string path_org("bt_time.btree.org");
   BOOST_SCOPED_ENUM(integer::endianness) whichaway = integer::endianness::native;
 
   btree::times_t insert_tm;
@@ -87,6 +91,31 @@ namespace
         }
         insert_tm = t.stop();
         t.report();
+      }
+
+      if (do_pack)
+      {
+        cout << "\npacking btree..." << endl;
+        bt.close();
+        fs::remove(path_org);
+        fs::rename(path, path_org);
+        t.start();
+        BT bt_old(path_org);
+        BT bt_new(path, btree::flags::truncate, page_sz);
+        for (BT::iterator it = bt_old.begin(); it != bt_old.end(); ++it)
+        {
+          bt_new.insert(it->key(), it->mapped_value());
+        }
+        cout << "bt_old.size() " << bt_old.size() << std::endl;
+        cout << "bt_new.size() " << bt_new.size() << std::endl;
+        BOOST_ASSERT(bt_new.size() == bt_old.size());
+        bt_old.close();
+        bt_new.close();
+        //bt.flush();
+        t.report();
+        cout << "  " << path_org << " size: " << fs::file_size(path_org) << '\n';
+        cout << "  " << path << "     size: " << fs::file_size(path) << '\n';
+        bt.open(path);
       }
 
       if (do_find)
@@ -367,6 +396,8 @@ int main(int argc, char * argv[])
         initial_n = atol( argv[2]+2 );
       else if ( *(argv[2]+1) == 'l' )
         lg = atol( argv[2]+2 );
+      else if ( *(argv[2]+1) == 'k' )
+        do_pack = true;
       else if ( *(argv[2]+1) == 'r' )
         do_preload = true;
       else if ( *(argv[2]+1) == 'v' )
@@ -396,6 +427,7 @@ int main(int argc, char * argv[])
       "   -xf      No find test\n"
       "   -xi      No iterate test\n"
       "   -xe      No erase test; use to save file intact\n"
+      "   -k       Pack tree after insert test\n"
       "   -v       Verbose output statistics\n"
       "   -stl     Also run the tests against std::map\n"
       "   -r       Read entire file to preload operating system disk cache;\n"

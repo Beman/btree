@@ -1,4 +1,4 @@
-//  shared_buffer_manager_test.cpp ----------------------------------------------------------//
+//  buffer_manager_test.cpp ------------------------------------------------------------//
 
 //  Copyright Beman Dawes 2010
 
@@ -12,6 +12,7 @@
 #include <boost/config/warning_disable.hpp>
 
 #define BOOST_FILESYSTEM_VERSION 3
+#define BOOST_BUFFER_MANAGER_TEST
 
 #include <boost/btree/detail/buffer_manager.hpp>
 #include <boost/filesystem/v3/operations.hpp>
@@ -39,14 +40,14 @@ namespace
 
     buffer pg (1);
 
-    buffer_manager::buffer_set_type set;
+    buffer_manager::buffers_type set;
 
     set.insert(pg);
     BOOST_TEST(&*set.begin() == &pg);
     //  buffer_manager logic relies on iterator_to working as expected:
     BOOST_TEST(set.begin() == set.iterator_to(pg));
 
-    buffer_manager::buffer_list_type list;
+    buffer_manager::buffer_cache_type list;
 
     list.push_back(pg);
     BOOST_TEST(&*list.begin() == &pg);
@@ -154,7 +155,7 @@ namespace
 
     BOOST_TEST(f.buffer_count() == 0);
     BOOST_TEST(f.data_size() == 0);
-    BOOST_TEST(f.max_cache_buffers() == 0);
+    BOOST_TEST(f.max_cache_size() == 0);
     BOOST_TEST(!f.is_open());
 
     // case: file does not exist 
@@ -192,12 +193,23 @@ namespace
 
     // create the test file
     f.open(test_path, oflag::out);
+    BOOST_TEST(f.is_open());
+    buffer_ptr pp;
+    pp = f.new_buffer();
+    pp = f.new_buffer();
+    pp = f.new_buffer();
+    BOOST_TEST(f.buffer_count() == 3);
+    BOOST_TEST(pp->buffer_id() == 2);
+    BOOST_TEST(pp->use_count() == 1);
+    BOOST_TEST(pp->manager() == &f);
+    BOOST_TEST(pp->needs_write());
+
     f.close();
     BOOST_TEST(!f.is_open());
     BOOST_TEST(fs::exists(test_path));
-    BOOST_TEST(fs::file_size(test_path) == 0);
+    BOOST_TEST(fs::file_size(test_path) != 0);
 
-    // open the existing test file 
+    // reopen the existing test file 
     bool existing_file = f.open(test_path, oflag::out);
     BOOST_TEST(existing_file);
     BOOST_TEST(f.is_open());
@@ -225,14 +237,14 @@ namespace
     BOOST_TEST(f.buffer_count() == 1);
     BOOST_TEST(pp->buffer_id() == 0);
     BOOST_TEST(pp->use_count() == 1);
-    BOOST_TEST(&pp->manager() == &f);
+    BOOST_TEST(pp->manager() == &f);
     BOOST_TEST(pp->needs_write());
 
     pp = f.new_buffer();
     BOOST_TEST(f.buffer_count() == 2);
     BOOST_TEST(pp->buffer_id() == 1);
     BOOST_TEST(pp->use_count() == 1);
-    BOOST_TEST(&pp->manager() == &f);
+    BOOST_TEST(pp->manager() == &f);
     BOOST_TEST(pp->needs_write());
   }
 
@@ -249,7 +261,7 @@ namespace
     f.open(test_path, oflag::out, 3, 256);  // create the test file
     BOOST_TEST(f.is_open());
     BOOST_TEST(f.buffer_count() == 0);
-    BOOST_TEST_EQ(f.max_cache_buffers(), 3U);
+    BOOST_TEST_EQ(f.max_cache_size(), 3U);
     BOOST_TEST_EQ(f.data_size(), 256U);
 
     //  create three buffers to test with
@@ -315,7 +327,7 @@ int cpp_main(int argc, char * argv[])
 {
   iterator_to_test();
   buffer_test();
-  buffer_ptr_test();
+//  buffer_ptr_test();
   open_new_file_test();
   open_existing_file_test();
   new_buffer_test();
