@@ -26,6 +26,7 @@
 #include <boost/btree/detail/config.hpp>
 #include <boost/filesystem/v3/path.hpp>
 #include <boost/detail/bitmask.hpp>
+#include <boost/assert.hpp>
 #include <ios>
 #include <cstddef>  // for size_t
 
@@ -139,68 +140,83 @@ namespace boost
       // unspecified value if error
 
       std::size_t raw_read(void* target, std::size_t sz);
+      // Requires: is_open()
       // Effects: As if calls POSIX read().
       // Returns: Count of bytes actually read, except 0 if end-of-file.
       // Throws: On error
 
       template<typename T>
       bool read(T& target, std::size_t sz, system::error_code& ec)
+      // Requires: is_open()
       // Effects: As if calls POSIX read(), except will finish partial
       // reads. ec.clear() if no error, otherwise set ec to the system error code.
       // Returns: true, except false if end-of-file or error.
       {
+        BOOST_ASSERT(is_open());
         return m_read(&target, sz, ec);
       }
 
       template<typename T>
       bool read(T& target, std::size_t sz = sizeof(T))
+      // Requires: is_open()
       // Effects: As if POSIX read(), except will finish partial reads.
       // Throws: On error.
       // Returns: true, except false if end-of-file.
       {
+        BOOST_ASSERT(is_open());
         return m_read(&target, sz);
       }
 
       std::size_t raw_write(const void* source, std::size_t sz,
         system::error_code& ec);
+      // Requires: is_open()
       // Effects: As if, calls POSIX write(). Sets ec to 0 if no error,
       // otherwise to the system error code.
       // Returns: Count of bytes actually written if no error, 0 if error.
 
       std::size_t raw_write(const void* source, std::size_t sz);
+      // Requires: is_open()
       // Effects: As if, calls POSIX write().
       // Returns: Count of bytes actually written.
       // Throws: On error
 
       template<typename T>
       void write(const T& source, std::size_t sz, system::error_code& ec)
+      // Requires: is_open()
       // Effects: As if, calls POSIX write(), except will finish partial
       // writes. Sets ec to 0 if no error, otherwise to the system error code.
       {
+        BOOST_ASSERT(is_open());
         m_write(&source, sz, ec);
       }
 
       //template<typename T>
       //void write(const T& source, std::size_t sz = sizeof(T))
+      //// Requires: is_open()
       //// Effects: As if, POSIX write(), except will finish partial write.
       //// Length of write is n* sizeof(boost::remove_extent<T>::type).
       //// Throws: On error.
       //{
+      //  BOOST_ASSERT(is_open());
       //  m_write(&source, sz);
       //}
 
       void write(const void* source, std::size_t sz)
+      // Requires: is_open()
       // Effects: As if, POSIX write(), except will finish partial write.
       // Length of write is n* sizeof(boost::remove_extent<T>::type).
       // Throws: On error.
       {
+        BOOST_ASSERT(is_open());
         m_write(source, sz);
       }
       void write(const char* source, std::size_t sz)
+      // Requires: is_open()
       // Effects: As if, POSIX write(), except will finish partial write.
       // Length of write is n* sizeof(boost::remove_extent<T>::type).
       // Throws: On error.
       {
+        BOOST_ASSERT(is_open());
         m_write(source, sz);
       }
 
