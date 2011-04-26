@@ -18,46 +18,49 @@ namespace boost
 {
 namespace btree
 {
- 
+//------------------------------------ close() -----------------------------------------//
+
+void buffer_manager::close()
+{
+  BOOST_ASSERT(is_open());
+
+  buffer_cache.clear();
+
+  // clear buffers, deleting those with use_count() == 0
+  for (buffers_type::iterator itr = buffers.begin(); itr != buffers.end();)
+  {
+    if (itr->needs_write())
+    {
+      write(*itr);
+      itr->needs_write(false);
+    }
+    buffers_type::iterator cur = itr++;
+    buffer* buf = &*cur;
+    buffers.erase(cur);
+    if (buf->use_count() == 0)
+    {
+      //std::cout << "   deleting buffer " << buf->buffer_id() << " at " << buf << std::endl;
+      delete buf;
+    }
+    else
+      cur->manager(0);  // mark buffer as orphaned; it has outlived its manager
+  }
+  BOOST_ASSERT(buffers.empty());
+  BOOST_ASSERT(buffer_cache.empty());
+  //std::cout << " all buffers deleted" << std::endl;
+  binary_file::close();
+  m_buffer_count = 0;
+  m_data_size = 0;
+}
+
 //-------------------------------- ~buffer_manager() -----------------------------------//
 
 buffer_manager::~buffer_manager()
 {
   if (is_open())
   {
-    flush();
     close();
-    m_buffer_count = 0;
-    m_data_size = 0;
   }
-
-  //// deletion of a buffer with a non-zero parent can cause !buffer_available_list.empty()
-  //// after it has supposedly been cleared; a fix is to do a pre-delete pass just
-  //// to do a parent().reset().
-  //// TODO: does this in fact signifiy a logic error? Shouldn't all parents already
-  //// have been reset()? Yet BOOST_ASSERT(buffer_available_list.empty()) below fires
-  //// without this pre-delete pass.
-  //for (buffer_set_type::iterator itr = buffer_set.begin(); itr != buffer_set.end(); ++itr)
-  //{
-  //  itr->parent().reset();
-  //}
-
-  // must clear buffer_available_list before deleting buffers
-  //std::cout << " clearing buffer_available_list with " << buffer_available_list.size() << " buffers" << std::endl;
-  buffer_available_list.clear();
-
-  // delete all buffers in buffer_set
-  //std::cout << " deleting " << buffer_set.size() << " buffers" << std::endl;
-  for (buffer_set_type::iterator itr = buffer_set.begin(); itr != buffer_set.end();)
-  {
-    buffer_set_type::iterator cur = itr++;
-    buffer* pg = &*cur;
-    buffer_set.erase(cur);  // remove from buffer_set before deleting memory
-    //std::cout << "   deleting buffer " << pg->buffer_id() << " at " << pg << std::endl;
-    delete pg;
-    BOOST_ASSERT(buffer_available_list.empty()); // fires if buffer had non-zero parent() 
-  }
-  //std::cout << " all buffers deleted" << std::endl;
 }
  
 //------------------------------------- open() -----------------------------------------//
@@ -71,9 +74,12 @@ bool buffer_manager::open(const boost::filesystem::path& p, oflag::bitmask flags
 {
   BOOST_ASSERT(!is_open());
   BOOST_ASSERT(data_sz);
+  BOOST_ASSERT(buffers.empty());
+  BOOST_ASSERT(buffer_cache.empty());
+
   m_buffer_count = 0;
   m_data_size = data_sz;
-  m_max_cache_buffers = max_cache_pgs;
+  m_max_cache_size = max_cache_pgs;
 
   m_active_buffers_read = m_cached_buffers_read = m_file_buffers_read
     = m_file_buffers_written = m_new_buffer_requests = m_buffer_allocs = 0;
@@ -111,8 +117,8 @@ buffer* buffer_manager::m_prepare_buffer(buffer_id_type pg_id)
 {
   buffer* pg;
 
-  if (buffer_available_list.empty()
-    || buffer_available_list.size() < max_cache_buffers())
+  if (buffer_cache.empty()
+    || buffer_cache.size() < max_cache_size())
   {
     // allocate a new buffer
     pg = m_alloc(pg_id, *this);
@@ -124,10 +130,10 @@ buffer* buffer_manager::m_prepare_buffer(buffer_id_type pg_id)
   else
   {
     // reuse an existing buffer
-    BOOST_ASSERT(!buffer_available_list.empty());
-    pg = &*buffer_available_list.begin();
-    buffer_available_list.pop_front();
-    buffer_set.erase(buffer_set.iterator_to(*pg));
+    BOOST_ASSERT(!buffer_cache.empty());
+    pg = &*buffer_cache.begin();
+    buffer_cache.pop_front();
+    buffers.erase(buffers.iterator_to(*pg));
     if (pg->needs_write())
     {
       write(*pg);
@@ -135,7 +141,7 @@ buffer* buffer_manager::m_prepare_buffer(buffer_id_type pg_id)
     }
     pg->reuse(pg_id);
   }
-  buffer_set.insert(*pg);
+  buffers.insert(*pg);
   return pg;
 }
  
@@ -161,9 +167,9 @@ buffer_ptr buffer_manager::read(buffer_id_type pg_id)
 
   buffer key(pg_id);   // TODO: move the key buffer to buffer_manager to avoid construction
 
-  buffer_set_type::iterator found = buffer_set.find(key);
+  buffers_type::iterator found = buffers.find(key);
 
-  if (found == buffer_set.end()) // the buffer is not in memory
+  if (found == buffers.end()) // the buffer is not in memory
   {
     ++m_file_buffers_read;
     buffer* pg = m_prepare_buffer(pg_id);
@@ -173,11 +179,11 @@ buffer_ptr buffer_manager::read(buffer_id_type pg_id)
   }
   else // the buffer is in memory
   {
-    if (found->use_count() == 0)  // buffer not in use, but is in buffer_available_list
+    if (found->use_count() == 0)  // buffer not in use, but is in buffer_cache
     { 
       ++m_cached_buffers_read;
-      // remove from buffer_available_list
-      buffer_available_list.erase(buffer_available_list.iterator_to(*found));  
+      // remove from buffer_cache
+      buffer_cache.erase(buffer_cache.iterator_to(*found));  
     }
     else
       ++m_active_buffers_read;
@@ -201,13 +207,15 @@ void buffer_manager::write(buffer& pg)
 bool buffer_manager::flush()
 {
   bool buffer_written = false;
-  for (buffer_set_type::iterator itr = buffer_set.begin();
-    itr != buffer_set.end();
+  for (buffers_type::iterator itr = buffers.begin();
+    itr != buffers.end();
     ++itr)
   {
+    const buffer* b = &*itr;
     if (itr->needs_write())
     {
       write(*itr);
+      itr->needs_write(false);
       buffer_written = true;
     }
   }

@@ -13,11 +13,13 @@ using std::cout;
 //set_type s;
 
 #include <boost/btree/set.hpp>
-typedef boost::btree::btree_set<int> set_type;
-set_type s("set.btr", boost::btree::flags::truncate);
+
 
 int main()
 {
+  typedef boost::btree::btree_set<int> set_type;
+  set_type s("set.btr", boost::btree::flags::truncate);
+
   s.insert(5); s.insert(3); s.insert(1);
 
   for (set_type::iterator it = s.begin(); it != s.end(); ++it)

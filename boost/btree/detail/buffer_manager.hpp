@@ -120,7 +120,6 @@ namespace boost
     public:
       typedef boost::uint32_t    buffer_id_type;
       typedef boost::uint32_t    use_count_type;
-      typedef buffer_manager*    buffer_manager_pointer;
 
       buffer()
         : m_buffer_id(-1), m_use_count(0), m_manager(0),
@@ -136,11 +135,11 @@ namespace boost
 
       buffer_id_type   buffer_id() const       { return m_buffer_id; }
       use_count_type   use_count() const       { return m_use_count; }
-      buffer_manager&  manager() const         { return *m_manager; }
+      buffer_manager*  manager() const         { return m_manager; }  // may be 0; see below
       bool             needs_write() const     { return m_needs_write; }
       bool operator<(const buffer& rhs) const  { return buffer_id() < rhs.buffer_id(); }
 
-      void             manager(buffer_manager_pointer pm) { m_manager = pm; }
+      void             manager(buffer_manager* pm) { m_manager = pm; }
 
       void inc_use_count()                     { ++m_use_count; }
       void dec_use_count();
@@ -162,8 +161,9 @@ namespace boost
 
       buffer_id_type              m_buffer_id;
       use_count_type              m_use_count;
-      buffer_manager_pointer      m_manager;
-      boost::scoped_array<char>   m_data;  // file buffer
+      buffer_manager*             m_manager;       // 0 if orphaned; this happens when
+                                                   // manager closed but use_count > 0
+      boost::scoped_array<char>   m_data;          // file buffer
       bool                        m_needs_write;
     };
 
@@ -176,7 +176,7 @@ namespace boost
 //  seeks via a buffer cache. The need for speed must be great enough that simply       //
 //  relying on operating system disk caching is not sufficient.                         //
 //                                                                                      //
-//  The associated buffer objects are owned by the buffer_manager.                      //
+//  The associated buffer objects are owned by buffer_ptr smart pointers.               //
 //  Buffer objects are cached; the buffer_manager keeps a map of the buffers, keyed on  //
 //  buffer_id, so that requests for a buffer are always satisfied with a buffer_ptr to  //
 //  the same buffer object if it is in memory. To prevent memory allocation churn, a    //
@@ -202,7 +202,7 @@ namespace boost
       explicit buffer_manager(buffer_alloc alloc = default_buffer_alloc)
         //  alloc function pointer allows management of classes derived from buffer
         //  yet still permits separate compilation
-        : m_buffer_count(0), m_data_size(0), m_max_cache_buffers(0), m_alloc(alloc) {}
+        : m_buffer_count(0), m_data_size(0), m_max_cache_size(0), m_alloc(alloc) {}
 
       ~buffer_manager();
 
@@ -234,12 +234,14 @@ namespace boost
       bool flush();
       //  Returns: true iff any buffers written to disk;
 
+      void close();
+
       // modifiers
-      void             max_cache_buffers(std::size_t m) {m_max_cache_buffers = m;}
+      void             max_cache_size(std::size_t m) {m_max_cache_size = m;}
 
       // observers
+      std::size_t      max_cache_size() const       {return m_max_cache_size;}
       buffer_count_type  buffer_count() const       {return m_buffer_count;}
-      std::size_t      max_cache_buffers() const    {return m_max_cache_buffers;}
       data_size_type   data_size() const            {return m_data_size;}  // on disk
 
       void*            owner() const                {return m_owner;}
@@ -251,28 +253,32 @@ namespace boost
       boost::uint32_t  file_buffers_written() const {return m_file_buffers_written;}
       boost::uint32_t  new_buffer_requests() const  {return m_new_buffer_requests;}
       boost::uint32_t  buffer_allocs() const        {return m_buffer_allocs;}
-      boost::uint32_t  buffers_in_memory() const    {return buffer_set.size();}
-      boost::uint32_t  buffers_available() const    {return buffer_available_list.size();}
+      boost::uint32_t  buffers_in_memory() const    {return buffers.size();}
+      boost::uint32_t  buffers_available() const    {return buffer_cache.size();}
 
-//    private:
+#ifndef BOOST_BUFFER_MANAGER_TEST
+    private:
+#endif
 
       friend class buffer;
 
-      typedef boost::intrusive::set<buffer>  buffer_set_type;
-      typedef boost::intrusive::list<buffer> buffer_list_type;
+      typedef boost::intrusive::set<buffer>   buffers_type;
+      typedef boost::intrusive::list<buffer>  buffer_cache_type;
 
-      buffer_set_type   buffer_set;           // all buffers in memory that have been
-                                              // allocated by this buffer manager
+      buffers_type   buffers;           // all buffers in memory that are being
+                                        // managed by this buffer manager, including
+                                        // buffers in use (use_count() > 0) and
+                                        // buffers in the buffer_cache (use_count() == 0)
 
-      buffer_list_type  buffer_available_list;// buffers in memory with use_count() == 0;
-                                              // in effect this is a LRU list with
-                                              // begin() being the least recently used buffer
+      buffer_cache_type  buffer_cache;  // buffers in memory with use_count() == 0;
+                                        // least recently used (LRU) order, begin()
+                                        // being the least recently used buffer
 
     private:
 
       buffer_count_type   m_buffer_count;     // number of buffers in the file
       data_size_type      m_data_size;        // number of bytes per disk buffer
-      std::size_t         m_max_cache_buffers;// maximum number of buffers to cache; may be 0
+      std::size_t         m_max_cache_size;   // maximum # buffers to cache; may be 0
       void*               m_owner;            // not used by buffer_manager itself
       buffer_alloc        m_alloc;            // memory allocation function pointer
 
@@ -328,9 +334,32 @@ namespace boost
     {
       BOOST_ASSERT(use_count() != 0);
       if ( --m_use_count == 0
-        && buffer_id() != static_cast<buffer_id_type>(-1)  // dummy buffers have id -1
-        && m_manager)  // TODO: should m_manager be removed after initial testing? 
-        manager().buffer_available_list.push_back(*this);
+           && buffer_id() != static_cast<buffer_id_type>(-1)  // dummy buffers have id -1
+         )
+      {
+        if (!manager())  // buffer is orphaned; it has outlived its manager
+        {
+          BOOST_ASSERT(!needs_write());
+          delete this;
+        }
+        else
+        {
+          if (manager()->buffer_cache.size()
+            && manager()->buffer_cache.size() >= manager()->max_cache_size())
+          {
+            // release a buffer
+            buffer* lru = &*manager()->buffer_cache.begin();
+            manager()->buffer_cache.pop_front();
+            manager()->buffers.erase(manager()->buffers.iterator_to(*lru));
+            if (lru->needs_write())
+            {
+              manager()->write(*lru);
+            }
+            delete lru;
+          }
+          manager()->buffer_cache.push_back(*this);
+        }
+      }
     }
 
 
