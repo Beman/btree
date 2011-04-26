@@ -75,6 +75,10 @@
   * Header should contain uuid for value_type; used to check existing file is being
     opened with the right template parameters.
 
+  * The commented out logging in binary_file.cpp was very useful. (1) move it to header
+    and (2) apply only when BOOST_BINARY_FILE_LOG is defined. This implies adding m_ to
+    the actual binary_file.cpp implementation names.
+
 */
 
 namespace boost
@@ -480,7 +484,9 @@ public:
 
   //  file operations:
 
-  void flush()                              { if (m_mgr.flush())
+  void flush()                              {
+                                              BOOST_ASSERT(is_open());
+                                              if (m_mgr.flush())
                                                 m_write_header();
                                             }
   void close();
@@ -1107,8 +1113,7 @@ btree_base<Key,Base,Traits,Comp>::m_open(const boost::filesystem::path& p,
     m_hdr.mapped_size(Base::mapped_size());
     m_hdr.increment_page_count();  // i.e. the header itself
     m_mgr.new_buffer();  // force a buffer write, thus zeroing the header for its full size
-    flush();
-    m_write_header();  // not totally necessary
+    flush();  // writes buffer and header
 
     // set up an empty leaf as the initial root
     m_root = m_mgr.new_buffer();
@@ -1461,6 +1466,7 @@ typename btree_base<Key,Base,Traits,Comp>::const_iterator
 btree_base<Key,Base,Traits,Comp>::erase(const_iterator pos)
 {
   BOOST_ASSERT_MSG(is_open(), "erase() on unopen btree");
+  BOOST_ASSERT_MSG(!read_only(), "erase() on read only btree");
   BOOST_ASSERT_MSG(pos != end(), "erase() on end iterator");
   BOOST_ASSERT(pos.m_page);
   BOOST_ASSERT(pos.m_page->is_leaf());
@@ -1582,6 +1588,7 @@ typename btree_base<Key,Base,Traits,Comp>::size_type
 btree_base<Key,Base,Traits,Comp>::erase(const key_type& k)
 {
   BOOST_ASSERT_MSG(is_open(), "erase() on unopen btree");
+  BOOST_ASSERT_MSG(!read_only(), "erase() on read only btree");
   size_type count = 0;
   const_iterator it = lower_bound(k);
     
@@ -1598,6 +1605,7 @@ typename btree_base<Key,Base,Traits,Comp>::const_iterator
 btree_base<Key,Base,Traits,Comp>::erase(const_iterator first, const_iterator last)
 {
   BOOST_ASSERT_MSG(is_open(), "erase() on unopen btree");
+  BOOST_ASSERT_MSG(!read_only(), "erase() on read only btree");
   // caution: last must be revalidated when on the same page as first
   while (first != last)
   {

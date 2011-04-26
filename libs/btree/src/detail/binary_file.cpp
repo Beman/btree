@@ -90,6 +90,7 @@ namespace boost
       // Returns: true if successful.
     {
       BOOST_ASSERT(!is_open());
+//std::cout << "*** open " << p.string() << std::endl;
       m_path = p;
 
       if ((flags & oflag::preload) && !(flags & oflag::truncate))
@@ -194,6 +195,7 @@ namespace boost
 #   ifdef BOOST_WINDOWS_API
       if (m_handle == INVALID_HANDLE_VALUE)
         return false;
+//std::cout << "*** close " << m_path.string() << std::endl;
       bool ok (::CloseHandle(m_handle) != 0);
       m_handle = INVALID_HANDLE_VALUE;
       if (ok)
@@ -240,6 +242,8 @@ namespace boost
     binary_file::raw_read(void* target, std::size_t sz, system::error_code& ec)
     {
       BOOST_ASSERT(is_open());
+//std::cout << "*** raw_read " << m_path.string()
+//  << " into " << target << " size " << sz << std::endl;
 #   ifdef BOOST_WINDOWS_API
       DWORD sz_read;
       if (!::ReadFile(handle(), target, DWORD(sz), &sz_read, 0))
@@ -277,6 +281,8 @@ namespace boost
     binary_file::m_read(void* target, std::size_t sz, system::error_code& ec)
     {
       BOOST_ASSERT(is_open());
+//std::cout << "*** read " << m_path.string()
+//  << " into " << target << " size " << sz << std::endl;
 #   ifdef BOOST_WINDOWS_API
       DWORD sz_read = raw_read(target, sz, ec);
       // It isn't clear to me from the Platform SDK docs if a partial read
@@ -337,6 +343,8 @@ namespace boost
     binary_file::raw_write(const void* source, std::size_t sz, system::error_code& ec)
     {
       BOOST_ASSERT(is_open());
+//std::cout << "*** raw_write " << m_path.string()
+//  << " from " << source << " size " << sz << std::endl;
 #   ifdef BOOST_WINDOWS_API
       DWORD sz_written;
       if (!::WriteFile(handle(), source, DWORD(sz), &sz_written, 0))
@@ -371,6 +379,8 @@ namespace boost
     void binary_file::m_write(const void* source, std::size_t sz, system::error_code& ec)
     {
       BOOST_ASSERT(is_open());
+//std::cout << "*** write " << m_path.string()
+//  << " from " << source << " size " << sz << std::endl;
 #   ifdef BOOST_WINDOWS_API
       DWORD sz_written;
       if (!::WriteFile(handle(), source, DWORD(sz), &sz_written, 0))
@@ -417,6 +427,8 @@ namespace boost
     binary_file::seek(offset_type offset, seekdir::pos from, system::error_code& ec)
     {
       BOOST_ASSERT(is_open());
+//std::cout << "*** seek " << m_path.string() << " offset " << offset << std::endl;
+
 #   ifdef BOOST_WINDOWS_API
       DWORD mv_method;
       if (from == seekdir::end)
