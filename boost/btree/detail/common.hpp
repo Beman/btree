@@ -1,4 +1,4 @@
-//  boost/detail/common_base.hpp  ------------------------------------------------------//
+//  boost/btree/detail/common.hpp  -----------------------------------------------------//
 
 //  Copyright Beman Dawes 2000, 2006, 2010
 
@@ -17,8 +17,7 @@
 #include <boost/static_assert.hpp>
 #include <boost/type_traits/is_const.hpp>
 #include <boost/type_traits/remove_const.hpp>
-#include <boost/type_traits/integral_constant.hpp>
-#include <boost/mpl/if.hpp>
+#include <boost/mpl/or.hpp>
 #include <boost/mpl/if.hpp>
 #include <cstddef>     // for size_t
 #include <cstring>
@@ -88,18 +87,6 @@ namespace btree
 //                                                                                      //
 //--------------------------------------------------------------------------------------//
 
-//--------------------------------- dynamic_size ---------------------------------------//
-
-//  Must be overloaded for any type T whose dynamic size differs from sizeof(T)
-//  See http://www.gotw.ca/publications/mill17.htm,
-//  Why Not Specialize: The Dimov/Abrahams Example
-
-template <class T>
-inline std::size_t dynamic_size(const T&) { return sizeof(T); }
-
-template <class T>
-struct has_dynamic_size : public false_type{};
-
 //--------------------------------- map_value ------------------------------------------//
 
 // TODO: either add code to align mapped() or add a requirement that T2 does not
@@ -117,7 +104,7 @@ public:
   }
   std::size_t dynamic_size() const
   { 
-    return btree::dynamic_size(key()) + btree::dynamic_size(mapped_value());
+    return  btree::dynamic_size(key()) +  btree::dynamic_size(mapped_value());
   }
 };
 
@@ -322,8 +309,9 @@ namespace detail
 
     void increment()
     {
+      std::cout << "***inc dynamic_size " << dynamic_size(*m_ptr) << std::endl;
       m_ptr = reinterpret_cast<T*>(reinterpret_cast<char*>(m_ptr)
-        + btree::dynamic_size(*m_ptr));
+        + dynamic_size(*m_ptr));
     }
 
     void decrement()
@@ -395,7 +383,7 @@ namespace detail
 
     void increment()
     {
-      //std::cout << "\ninc  " <<  btree::dynamic_size(*m_ptr) << '\n';
+      //std::cout << "***inc  " <<  btree::dynamic_size(*m_ptr) << '\n';
       m_ptr = reinterpret_cast<T*>(reinterpret_cast<char*>(m_ptr)
         + btree::dynamic_size(*m_ptr));
     }
@@ -1263,7 +1251,8 @@ btree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter,
   std::size_t          mapped_size = (header().flags() & btree::flags::key_only)
     ? 0
     : dynamic_size(mapped_value_);
-  std::size_t          value_size = key_size + mapped_size;;
+  std::size_t          value_size = key_size + mapped_size;
+  //std::cout << "***insert key_size " << key_size << " value_size " << value_size << std::endl;
   btree_page_ptr       pg = insert_iter.m_page;
   leaf_iterator        insert_begin = insert_iter.m_element;
   btree_page_ptr       pg2;
@@ -1330,12 +1319,19 @@ btree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter,
   }
 
   //  insert value into pg at insert_begin
+//std::cout << "pg size " << pg->size()
+//          << " insert_begin " << &*insert_begin
+//          << " begin() " << &*pg->leaf().begin()
+//          << " end() " << &*pg->leaf().end()
+//          << " char_distance " << char_distance(&*insert_begin, &*pg->leaf().end())
+//          << std::endl;
   BOOST_ASSERT(&*insert_begin >= &*pg->leaf().begin());
   BOOST_ASSERT(&*insert_begin <= &*pg->leaf().end());
   std::memmove(char_ptr(&*insert_begin) + value_size,
     &*insert_begin, char_distance(&*insert_begin, &*pg->leaf().end()));  // make room
   m_memcpy_value(&*insert_begin, &key_, key_size, &mapped_value_, mapped_size);  // insert value
   pg->size(pg->size() + value_size);
+//std::cout << "pg size " << pg->size() << std::endl;
 
   // if there is a new page, its initial key and page_id are inserted into parent
   if (pg2)
@@ -1347,6 +1343,7 @@ btree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter,
       key(*pg2->leaf().begin()), pg2->page_id());
   }
 
+//std::cout << "***insert done" << std::endl;
   return const_iterator(pg, insert_begin);
 }
 
@@ -1880,7 +1877,7 @@ void btree_base<Key,Base,Traits,Comp>::dump_dot(std::ostream& os) const
         os << *it;
       }
       os << "\"];\n";
-    }
+   }
     else if (pg->is_branch())
     {
       os << "page" << p << "[label = \"";

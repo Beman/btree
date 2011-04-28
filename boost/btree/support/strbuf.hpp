@@ -5,9 +5,10 @@
 //  Distributed under the Boost Software License, Version 1.0.
 //  http://www.boost.org/LICENSE_1_0.txt
 
+#include <boost/btree/dynamic_size.hpp>
 #include <string>
 #include <cstring>
-#include <boost/type_traits/integral_constant.hpp>
+#include <boost/cstdint.hpp>
 #include <boost/assert.hpp>
 
 #ifndef BOOST_BTREE_STRBUF_HPP

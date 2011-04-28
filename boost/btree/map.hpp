@@ -14,6 +14,7 @@
 
 #include <boost/config.hpp>
 #include <boost/cstdint.hpp>
+#include <boost/btree/dynamic_size.hpp>
 #include <boost/btree/header.hpp>
 #include <boost/filesystem/path.hpp>
 #include <boost/btree/detail/common.hpp>  // common to all 4 btree_* containers
