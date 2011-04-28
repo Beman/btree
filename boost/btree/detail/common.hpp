@@ -62,10 +62,6 @@
 
   * Pack optimization should apply to branches too.
 
-  //* m_set_max_cache_pages() needs to be reviewed. Is it needed at all? The comment is
-  //  totally outdated. Won't everything just work? Make sure there is a test to verify
-  //  that exceeding max_cache_pages is harmless.
-
   * Either add code to align mapped() or add a requirement that PID, K does not
     require alignment.
 
@@ -163,7 +159,7 @@ void append(const Btree& from, const Btree& to)
 {
   BOOST_ASSERT_MSG(from.is_open(), "append() requires 'from' btree be open");
   BOOST_ASSERT_MSG(to.is_open(), "append() requires 'to' btree be open");
-  for (Btree::iterator it = from.begin(); it != from.end(); ++it)
+  for (typename Btree::iterator it = from.begin(); it != from.end(); ++it)
     to.insert(*it);
 }
 
@@ -237,6 +233,36 @@ protected:
 
 namespace detail
 {
+  //--------------------------------- branch_value -------------------------------------//
+
+  template <class PID, class K>
+  class branch_value
+  {
+  public:
+    PID&  page_id() {return *reinterpret_cast<PID*>(this); }
+    K&  key()
+    {
+      return *reinterpret_cast<K*>(reinterpret_cast<char*>(this)
+               + sizeof(PID));
+    }
+    const K&  key() const
+    {
+      return *reinterpret_cast<const K*>(reinterpret_cast<const char*>(this)
+               + sizeof(PID));
+    }
+    std::size_t dynamic_size() const
+    { 
+      return sizeof(PID) + btree::dynamic_size(key());
+    }
+  };
+}  // namespace detail
+
+template <class PID, class K>
+std::size_t dynamic_size(const detail::branch_value<PID, K>& v) {return v.dynamic_size();}
+
+namespace detail
+{
+
   //-------------------------------- dynamic_iterator ----------------------------------//
   //
   //  Raw pointers to elements on a page won't work as iterators if the elements are
@@ -247,10 +273,21 @@ namespace detail
     : public boost::iterator_facade<dynamic_iterator<T>, T, bidirectional_traversal_tag>
   {
   public:
-    dynamic_iterator() : m_ptr(0), m_begin(0) {} 
-    explicit dynamic_iterator(T* ptr) : m_ptr(ptr) {m_begin = ptr;}
+    dynamic_iterator() : m_ptr(0), m_begin(0)
+    {
+      //std::cout << "dynamic_iterator ctor 1\n";
+    } 
+    explicit dynamic_iterator(T* ptr) : m_ptr(ptr)
+    {
+      //std::cout << "dynamic_iterator ctor 2\n";
+      m_begin = ptr;
+    }
     dynamic_iterator(T* ptr, std::size_t sz)
-      : m_ptr(reinterpret_cast<T*>(reinterpret_cast<char*>(ptr) + sz)) {m_begin = ptr;}
+      : m_ptr(reinterpret_cast<T*>(reinterpret_cast<char*>(ptr) + sz))
+    {
+      //std::cout << "dynamic_iterator ctor 3\n";
+      m_begin = ptr;
+    }
 
     bool operator<(const dynamic_iterator& rhs) const
     {
@@ -324,7 +361,8 @@ namespace detail
   //-------------------------------- pointer_iterator ----------------------------------//
   //
   //  Raw pointer wrapper providing the same interface as dynamic_pointer, but as
-  //  a random access rather than bidirctional iterator.
+  //  a random access rather than bidirctional iterator. It is used when T is not a
+  //  dynamic-size type.
 
   template <class T>
   class pointer_iterator
@@ -357,6 +395,7 @@ namespace detail
 
     void increment()
     {
+      //std::cout << "\ninc  " <<  btree::dynamic_size(*m_ptr) << '\n';
       m_ptr = reinterpret_cast<T*>(reinterpret_cast<char*>(m_ptr)
         + btree::dynamic_size(*m_ptr));
     }
@@ -380,33 +419,7 @@ namespace detail
 
   };
 
-  //--------------------------------- branch_value -------------------------------------//
-
-  template <class PID, class K>
-  class branch_value
-  {
-  public:
-    PID&  page_id() {return *reinterpret_cast<PID*>(this); }
-    K&  key()
-    {
-      return *reinterpret_cast<K*>(reinterpret_cast<char*>(this)
-               + sizeof(PID));
-    }
-    const K&  key() const
-    {
-      return *reinterpret_cast<const K*>(reinterpret_cast<const char*>(this)
-               + sizeof(PID));
-    }
-    std::size_t dynamic_size() const
-    { 
-      return sizeof(PID) + btree::dynamic_size(key());
-    }
-  };
-
 }  // namespace detail
-
-template <class PID, class K>
-std::size_t dynamic_size(const detail::branch_value<PID, K>& v) {return v.dynamic_size();}
 
 //--------------------------------------------------------------------------------------//
 //                                                                                      //
@@ -529,12 +542,8 @@ public:
   size_type     size() const                { return m_hdr.element_count(); }
   //size_type     max_size() const            { return ; }
   std::size_t   page_size() const           { return m_mgr.data_size(); }
-  std::size_t   max_cache_pages() const     { return m_mgr.max_cache_buffers(); }
-  void          max_cache_pages(std::size_t m)
-                                            {
-                                              m_mgr.max_cache_size(m);
-                                              //m_set_max_cache_pages();
-                                            }
+  std::size_t   max_cache_size() const      { return m_mgr.max_cache_size(); }
+  void          max_cache_size(std::size_t m){m_mgr.max_cache_size(m);}
 
   //  The following element access functions are not provided. Returning references is
   //  far too dangerous, since the memory pointed to would be in a page buffer that can
@@ -715,7 +724,7 @@ private:
     page_id_type       page_id() const                 {return page_id_type(buffer_id());}
 
     btree_page*        parent()                          {return m_parent.get();}
-    void               parent(btree_page_ptr& p)         {m_parent = p;}
+    void               parent(btree_page_ptr p)          {m_parent = p;}
     branch_iterator    parent_element()                  {return m_parent_element;}
     void               parent_element(branch_iterator p) {m_parent_element = p;}
 #   ifndef NDEBUG
@@ -930,7 +939,6 @@ private:
   void  m_branch_insert(btree_page* pg, branch_iterator element,
     const key_type& k, page_id_type id);
 
-  struct branch_value_type;
   void  m_erase_branch_value(btree_page* pg, branch_iterator value, page_id_type erasee);
   void  m_free_page(btree_page* pg)
   {
@@ -1136,13 +1144,8 @@ void
 btree_base<Key,Base,Traits,Comp>::clear()
 {
   BOOST_ASSERT_MSG(is_open(), "can't clear() unopen btree");
-  for (buffer_manager::buffer_set_type::iterator itr = m_mgr.buffer_set.begin();
-    itr != m_mgr.buffer_set.end();
-    ++itr)
-  {
-    itr->needs_write(false);
-  }
 
+  manager().clear_write_needed();
   m_hdr.element_count(0);
   m_hdr.root_page_id(1);
   m_hdr.first_page_id(1);
@@ -1239,8 +1242,6 @@ btree_base<Key,Base,Traits,Comp>::m_new_root()
   m_hdr.root_page_id(m_root->page_id());
   m_root->branch().begin()->page_id() = old_root_id;
   m_root->size(0);  // the end pseudo-element doesn't count as an element
-  // TODO: why maintain the child->parent list? By the time m_new_root() is called,
-  // hasn't the need passed?
   m_root->parent(btree_page_ptr());  
   m_root->parent_element(branch_iterator());
   old_root->parent(m_root);
@@ -1363,6 +1364,8 @@ void
 btree_base<Key,Base,Traits,Comp>::m_branch_insert(
   btree_page* pg1, branch_iterator element, const key_type& k, page_id_type id) 
 {
+  //std::cout << "branch insert key " << k << ", id " << id << std::endl;
+
   std::size_t       k_size = dynamic_size(k);
   std::size_t       insert_size = k_size + sizeof(page_id_type);
   btree_page*       pg = pg1;
@@ -1377,7 +1380,7 @@ btree_base<Key,Base,Traits,Comp>::m_branch_insert(
   if (pg->size() + insert_size > m_max_branch_size)  // no room on page?
   {
     //  no room on page, so page must be split
-//std::cout << "Splitting branch\n";
+    //std::cout << "Splitting branch\n";
 
     if (pg->level() == m_hdr.root_level()) // splitting the root?
       m_new_root();  // create a new root
@@ -1436,6 +1439,14 @@ btree_base<Key,Base,Traits,Comp>::m_branch_insert(
   }
 
   //  insert k, id, into pg at insert_begin
+
+//std::cout << "page size " << pg->size()
+//          << " insert size " << insert_size
+//          << " k_size " << k_size
+//          << " insert_begin " << insert_begin
+//          << " begin() " << &*pg->branch().begin()
+//          << " char_distance " << char_distance(insert_begin, &pg->branch().end()->key())
+//          << std::endl;
   BOOST_ASSERT(insert_begin >= &pg->branch().begin()->key());
   BOOST_ASSERT(insert_begin <= &pg->branch().end()->key());
   std::memmove(char_ptr(insert_begin) + insert_size,
@@ -1447,12 +1458,21 @@ btree_base<Key,Base,Traits,Comp>::m_branch_insert(
 #ifndef NDEBUG
   if (m_hdr.flags() & btree::flags::unique)
   {
+//std::cout << "branch sequence check" << std::endl;
     branch_iterator cur = pg->branch().begin();
+//std::cout << " begin " << &*pg->branch().begin()
+//          << " end " << &*pg->branch().end() << std::endl;
     key_type prev_key = cur->key();
     ++cur;
+//std::cout << " cur " << &*cur << std::endl;
     for(; cur != pg->branch().end(); ++cur)
     {
-      BOOST_ASSERT(key_comp()(prev_key, cur->key()));
+//std::cout << prev_key << " " << cur->key() << std::endl;
+//std::cout << "size is " << size()
+//          << " root is page " << header().root_page_id() << '\n'; 
+//dump_dot(std::cout);
+//      BOOST_ASSERT(key_comp()(prev_key, cur->key()));
+//abort();
       prev_key = cur->key();
     }
   }
@@ -1564,7 +1584,7 @@ void btree_base<Key,Base,Traits,Comp>::m_erase_branch_value(
       char_ptr(erase_point)+erase_sz, &pg->branch().end()->key());
     std::memmove(erase_point, char_ptr(erase_point) + erase_sz, move_sz);
     pg->size(pg->size() - erase_sz);
-    std::memset(char_ptr(&pg->branch().end()) + sizeof(page_id_type), 0, erase_sz);
+    std::memset(char_ptr(&*pg->branch().end()) + sizeof(page_id_type), 0, erase_sz);
     pg->needs_write(true);
 
     while (pg->level()   // not the leaf (which can happen if iteration reaches leaf)
@@ -1627,6 +1647,9 @@ btree_base<Key,Base,Traits,Comp>::m_insert_unique(const key_type& k,
   const mapped_type& mv)
 {
   BOOST_ASSERT_MSG(is_open(), "insert() on unopen btree");
+  BOOST_ASSERT_MSG(!read_only(), "insert() on read only btree");
+  //BOOST_ASSERT_MSG(dynamic_size(k) + (&k != &mv ? dynamic_size(mv) : 0)
+  //  < page_size()/3, "insert() value size too large for page size");
   iterator insert_point = m_special_lower_bound(k);
 
   bool is_unique = insert_point.m_element == insert_point.m_page->leaf().end()
@@ -1644,12 +1667,15 @@ btree_base<Key,Base,Traits,Comp>::m_insert_unique(const key_type& k,
 
 template <class Key, class Base, class Traits, class Comp>   
 inline typename btree_base<Key,Base,Traits,Comp>::const_iterator
-btree_base<Key,Base,Traits,Comp>::m_insert_non_unique(const key_type& key,
-  const mapped_type& mapped_value)
+btree_base<Key,Base,Traits,Comp>::m_insert_non_unique(const key_type& k,
+  const mapped_type& mv)
 {
   BOOST_ASSERT_MSG(is_open(), "insert() on unopen btree");
-  iterator insert_point = m_special_upper_bound(key);
-  return m_leaf_insert(insert_point, key, mapped_value);
+  BOOST_ASSERT_MSG(!read_only(), "insert() on read only btree");
+  //BOOST_ASSERT_MSG(dynamic_size(k) + (&k != &mv ? dynamic_size(mv) : 0)
+  //  < page_size()/3, "insert() value size too large for page size");
+  iterator insert_point = m_special_upper_bound(k);
+  return m_leaf_insert(insert_point, k, mv);
 }
 
 //----------------------------------- m_update() ---------------------------------------//
@@ -1659,8 +1685,10 @@ typename btree_base<Key,Base,Traits,Comp>::iterator
 btree_base<Key,Base,Traits,Comp>::m_update(iterator itr,
   const mapped_type& new_mapped_value)
 {
+  BOOST_ASSERT_MSG(is_open(), "update() on unopen btree");
+  BOOST_ASSERT_MSG(!read_only(), "update() on read only btree");
   BOOST_ASSERT_MSG(dynamic_size(new_mapped_value) == dynamic_size(itr->mapped_value()),
-    "dynamic_size of the new mapped value must be equal dynamic_size of the old value");
+    "update() size of the new mapped value not equal size of the old mapped value");
   itr.m_page->needs_write(true);
   std::memcpy(const_cast<mapped_type*>(&itr->mapped_value()),
     &new_mapped_value, dynamic_size(new_mapped_value));

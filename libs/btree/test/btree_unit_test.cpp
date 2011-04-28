@@ -196,7 +196,7 @@ void construct_new_test(BT& bt, const fs::path& p)
 
   BOOST_TEST(bt.begin() == bt.end());
 
-  BT::key_type k;
+  typename BT::key_type k;
   BOOST_TEST(bt.lower_bound(k) == bt.end());
   BOOST_TEST(bt.upper_bound(k) == bt.end());
   BOOST_TEST(bt.find(k) == bt.end());
@@ -235,7 +235,7 @@ void  single_insert()
       = x.insert(123, 456);
     x.dump_dot(std::cout);
 
-    BOOST_TEST_EQ(x.size(), 1);
+    BOOST_TEST_EQ(x.size(), 1U);
     BOOST_TEST(result.second);
     BOOST_TEST_EQ(result.first->key(), 123);
     BOOST_TEST_EQ(result.first->mapped_value(), 456);
@@ -627,7 +627,7 @@ void insert_tests(BTree& bt)
   BOOST_TEST(cur == bt.end());
   BOOST_TEST_EQ(bt.size(), 2U);
   BOOST_TEST_EQ(bt.header().root_page_id(), 2U);
-  BOOST_TEST_EQ(bt.header().root_level(), 1);
+  BOOST_TEST_EQ(bt.header().root_level(), 1U);
 
   cur = bt.find(0x0A);
   BOOST_TEST(cur != bt.end());
@@ -690,8 +690,9 @@ void insert_tests(BTree& bt)
   for (int i = 1; i <= 31; ++i )  // many of these won't exist
   {
     //cout << "\n  erase " << i << endl;
-    typename BTree::size_type ct
-      = bt.erase(i);
+    typename BTree::size_type count_result = bt.count(i);
+    typename BTree::size_type erase_result = bt.erase(i);
+    BOOST_TEST_EQ(count_result, erase_result);
     //cout << "     erase count " << ct << ", size() " << bt.size() << endl;
     //cout << "root is page " << bt.header().root_page_id() << '\n'; 
     //bt.dump_dot(std::cout);
@@ -714,7 +715,7 @@ void insert()
   {
     fs::path map_path("btree_map.btree");
     btree::btree_map<fat, int> map(map_path, btree::flags::truncate, 128);
-    map.max_cache_pages(0);  // maximum stress
+    map.max_cache_size(0);  // maximum stress
     insert_tests(map);
   }
 
@@ -834,7 +835,7 @@ void find_and_bounds()
     fb_set_type set("find_and_bounds_set.btr", btree::flags::truncate, 128);
     BOOST_TEST(set.header().flags() & btree::flags::unique);
     BOOST_TEST(set.header().flags() & btree::flags::key_only);
-    set.max_cache_pages(0);  // maximum stress
+    set.max_cache_size(0);  // maximum stress
     find_and_bounds_tests(set);
   }
 
@@ -843,7 +844,7 @@ void find_and_bounds()
       btree::flags::truncate, 128);
     BOOST_TEST(!(multiset.header().flags() & btree::flags::unique));
     BOOST_TEST(multiset.header().flags() & btree::flags::key_only);
-    multiset.max_cache_pages(0);  // maximum stress
+    multiset.max_cache_size(0);  // maximum stress
     find_and_bounds_tests(multiset);
   }
 
@@ -855,7 +856,7 @@ void find_and_bounds()
       btree::flags::truncate, 128);
     BOOST_TEST(map.header().flags() & btree::flags::unique);
     BOOST_TEST(!(map.header().flags() & btree::flags::key_only));
-    map.max_cache_pages(0);  // maximum stress
+    map.max_cache_size(0);  // maximum stress
     find_and_bounds_tests(map);
   }
 
@@ -864,7 +865,7 @@ void find_and_bounds()
       btree::flags::truncate, 128);
     BOOST_TEST(!(multimap.header().flags() & btree::flags::unique));
     BOOST_TEST(!(multimap.header().flags() & btree::flags::key_only));
-    multimap.max_cache_pages(0);  // maximum stress
+    multimap.max_cache_size(0);  // maximum stress
     find_and_bounds_tests(multimap);
   }
 
@@ -921,7 +922,7 @@ void insert_non_unique()
     fs::path map_path("non_unique.btr");
     btree::btree_multimap<fat, int> multimap(map_path,
       btree::flags::truncate, 128);
-    multimap.max_cache_pages(0);  // maximum stress
+    multimap.max_cache_size(0);  // maximum stress
     insert_non_unique_tests(multimap);
   }
 

@@ -76,7 +76,7 @@ namespace
       t.stop();
       t.report();
 
-      bt.max_cache_pages(cache_sz);
+      bt.max_cache_size(cache_sz);
 
       if (do_insert)
       {

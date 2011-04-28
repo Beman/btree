@@ -183,8 +183,8 @@ namespace boost
       page_id_type     last_page_id() const          { return m_last_page_id; }
       page_id_type     page_count() const            { return m_page_count; }
       page_id_type     free_page_list_head_id() const{ return m_free_page_list_head_id; }
-      int              root_level() const            { return m_root_level; }
-      int              levels() const                { return m_root_level+1; }
+      unsigned         root_level() const            { return m_root_level; }
+      unsigned         levels() const                { return m_root_level+1; }
 
       //  user supplied-data members
       const char*      user_c_str() const            { return m_user_c_str; }

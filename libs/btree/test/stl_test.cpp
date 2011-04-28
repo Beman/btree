@@ -672,7 +672,7 @@ namespace
     bt.open(path_str,
       restart ? boost::btree::flags::read_write : boost::btree::flags::truncate,
       page_sz);
-    bt.max_cache_pages(cache_sz);
+    bt.max_cache_size(cache_sz);
 
     if (restart)
       verify_restart();

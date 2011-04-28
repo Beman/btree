@@ -205,6 +205,18 @@ void buffer_manager::write(buffer& pg)
   ++m_file_buffers_written;
 }
   
+//-------------------------------- clear_write_needed() --------------------------------//
+
+void buffer_manager::clear_write_needed()
+{
+  for (buffer_manager::buffers_type::iterator itr = buffers.begin();
+    itr != buffers.end();
+    ++itr)
+  {
+    itr->needs_write(false);
+  }
+}
+
 //-------------------------------------- flush() ---------------------------------------//
 
 bool buffer_manager::flush()
