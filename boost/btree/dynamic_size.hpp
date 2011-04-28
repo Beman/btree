@@ -29,4 +29,4 @@ namespace boost
   }
 }
 
-#endif BOOST_BTREE_DYNAMIC_SIZE_HPP
+#endif  // BOOST_BTREE_DYNAMIC_SIZE_HPP

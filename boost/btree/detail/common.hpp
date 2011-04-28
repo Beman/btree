@@ -100,11 +100,13 @@ public:
   const T2& mapped_value() const
   {
     return *reinterpret_cast<const T2*>(reinterpret_cast<const char*>(this)
-             + btree::dynamic_size(key()));
+             + dynamic_size(key()));
   }
-  std::size_t dynamic_size() const
-  { 
-    return  btree::dynamic_size(key()) +  btree::dynamic_size(mapped_value());
+  std::size_t size() const
+  {
+    //std::cout << " dynamic_size key " << dynamic_size(key())
+    //  << ", mapped_value " << dynamic_size(mapped_value()) << std::endl;
+    return dynamic_size(key()) + dynamic_size(mapped_value());
   }
 };
 
@@ -116,7 +118,7 @@ std::ostream& operator<<(std::ostream& os, const map_value<T1, T2>& x)
 }
 
 template <class T1, class T2>
-inline std::size_t dynamic_size(const map_value<T1, T2>& x) {return x.dynamic_size();}
+inline std::size_t dynamic_size(const map_value<T1, T2>& x) {return x.size();}
 
 //--------------------------------------------------------------------------------------//
 //                             general support functions                                //
@@ -237,15 +239,15 @@ namespace detail
       return *reinterpret_cast<const K*>(reinterpret_cast<const char*>(this)
                + sizeof(PID));
     }
-    std::size_t dynamic_size() const
+    std::size_t size() const
     { 
-      return sizeof(PID) + btree::dynamic_size(key());
+      return sizeof(PID) + dynamic_size(key());
     }
   };
 }  // namespace detail
 
 template <class PID, class K>
-std::size_t dynamic_size(const detail::branch_value<PID, K>& v) {return v.dynamic_size();}
+std::size_t dynamic_size(const detail::branch_value<PID, K>& v) {return v.size();}
 
 namespace detail
 {
@@ -309,7 +311,7 @@ namespace detail
 
     void increment()
     {
-      std::cout << "***inc dynamic_size " << dynamic_size(*m_ptr) << std::endl;
+      //std::cout << "***inc dynamic_size " << dynamic_size(*m_ptr) << std::endl;
       m_ptr = reinterpret_cast<T*>(reinterpret_cast<char*>(m_ptr)
         + dynamic_size(*m_ptr));
     }
