@@ -16,8 +16,6 @@ using std::cout;
 using std::string;
 using boost::btree::strbuf;
 
-
-
 int main()
 {
   typedef std::map<string, string> std_map_type;
@@ -27,9 +25,9 @@ int main()
   std_map.insert(std::make_pair<string, string>("drink", "beber"));
   std_map.insert(std::make_pair<string, string>("be merry", "ser feliz"));
 
-  cout << "\nstd_map:\n";
+  cout << "std_map:\n";
   for (std_map_type::iterator it = std_map.begin(); it != std_map.end(); ++it)
-    cout << it->first << " --> " << it->second << '\n';
+    cout << "  " << it->first << " --> " << it->second << '\n';
 
   typedef boost::btree::btree_map<strbuf, strbuf> btree_map_type;
   btree_map_type bt_map("bt_map.btr", boost::btree::flags::truncate, 128);
@@ -40,9 +38,9 @@ int main()
   bt_map.insert(strbuf("drink"), strbuf("beber"));
   bt_map.insert(strbuf("be merry"), strbuf("ser feliz"));
 
-  cout << "\nbt_map:\n";
+  cout << "bt_map:\n";
   for (btree_map_type::iterator it = bt_map.begin(); it != bt_map.end(); ++it)
-    cout << it->key() << " --> " << it->mapped_value() << '\n';
+    cout << "  " << it->key() << " --> " << it->mapped_value() << '\n';
 
   return 0;
 }
