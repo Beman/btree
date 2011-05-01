@@ -6,6 +6,8 @@
 <meta name="ProgId" content="FrontPage.Editor.Document">
 <meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
 <title>Boost System Timers</title>
+  <link rel="stylesheet" type="text/css" href=
+  "../../../doc/src/minimal.css">
 </head>
 
 <body>
@@ -42,8 +44,8 @@ int main()
 {
   boost::system::run_timer t;
 
-  for ( long i = 0; i &lt; 10000000; ++i )
-    std::sqrt( 123.456L ); // burn some time
+  for (long i = 0; i &lt; 10000000; ++i)
+    std::sqrt(123.456L); // burn some time
 
   return 0;
 }</pre>
@@ -66,15 +68,15 @@ from the command line:</p>
   <pre>#include &lt;boost/system/timer.hpp&gt;
 #include &lt;cmath&gt;
 
-int main( int argc, char * argv[] )
+int main(int argc, char * argv[])
 {
-  const char * format = argc &gt; 1 ? argv[1] : &quot;%t cpu seconds\n&quot;;
-  int          places = argc &gt; 2 ? std::atoi( argv[2] ) : 2;
+  const char* format = argc &gt; 1 ? argv[1] : &quot;%t cpu seconds\n&quot;;
+  int places = argc &gt; 2 ? std::atoi( argv[2] ) : 2;
 
-  boost::system::run_timer t( format, places );
+  boost::system::run_timer t(format, places);
 
-  for ( long i = 0; i &lt; 10000000; ++i )
-    std::sqrt( 123.456L ); // burn some time
+  for (long i = 0; i &lt; 10000000; ++i)
+    std::sqrt(123.456L); // burn some time
 
   return 0;
 }</pre>
@@ -116,8 +118,8 @@ synopsis</font></h2>
 
     // low-level functions --------------------------------------------//
 
-    void times( times_t &amp; result );
-    error_code &amp; times( times_t &amp; result, error_code &amp; ec );
+    void times(times_t &amp; result);
+    error_code &amp; times(times_t &amp; result, error_code &amp; ec);
 
     // class timer ----------------------------------------------------//
 
@@ -126,13 +128,13 @@ synopsis</font></h2>
     public:
 
       timer();
-      timer( const std::nothrow_t &amp; );
+      timer(const std::nothrow_t&amp;);
      ~timer();
 
       void             start();
       const times_t &amp;  stop();
       bool             stopped() const;
-      void             elapsed( times_t &amp; result );
+      void             elapsed(times_t &amp; result);
 
     private:
       times_t m_times;  // <i><b>exposition only</b></i>
@@ -143,16 +145,16 @@ synopsis</font></h2>
     class run_timer : public timer
     {
     public:
-      explicit run_timer( int places = 2 );
-      run_timer( int places, std::ostream &amp; os );
+      explicit run_timer(int places = 2);
+      run_timer(int places, std::ostream&amp; os);
 
-      explicit run_timer( const std::string &amp; format, int places = 2 );
-      run_timer( const std::string &amp; format, int places, std::ostream &amp; os );
+      explicit run_timer(const std::string&amp; format, int places = 2);
+      run_timer(const std::string&amp; format, int places, std::ostream &amp; os);
 
      ~run_timer();
 
       void        report();
-      error_code  report( error_code &amp; ec ); // never throws
+      error_code  report(error_code&amp; ec); // never throws
 
     private:
       int             m_places;  // <i><b>exposition only</b></i>
@@ -197,7 +199,7 @@ second, the actual resolution of common operating system timers is often only
 process timing function, such as POSIX <code>times()</code> or <code>Windows 
 GetProcessTimes()</code>.</p>
 
-<p><code>void times( times_t &amp; result );</code></p>
+<p><code>void times(times_t&amp; result);</code></p>
 
 <blockquote>
 
@@ -209,7 +211,7 @@ operating system API call reports an error.</p>
 
 </blockquote>
 
-<p><code>error_code &amp; times( times_t &amp; result, error_code &amp; ec );</code></p>
+<p><code>error_code&amp; times(times_t&amp; result, error_code&amp; ec);</code></p>
 
 <blockquote>
 
@@ -241,7 +243,7 @@ reported by setting time values to -1.</p>
 
 </blockquote>
 
-<p><code>timer( const std::nothrow_t &amp; );</code></p>
+<p><code>timer(const std::nothrow_t&amp;);</code></p>
 
 <blockquote>
 <p><i>Effects:</i> <code>start()</code>.</p>
@@ -275,7 +277,7 @@ wall-clock, user process, and system process elapsed time.</p>
 <p><i>Postconditions:</i> <code>stopped() == false</code>.</p>
 
 </blockquote>
-<p><code>const times_t &amp; stop();</code></p>
+<p><code>const times_t&amp; stop();</code></p>
 
 <blockquote>
 <p><i>Effects:</i> If <code>!stopped()</code>, stops measuring wall-clock, user 
@@ -298,7 +300,7 @@ preceding invocation of <code>start()</code>. Otherwise, has no effect.</p>
 
 </blockquote>
 
-<p><code>void elapsed( times_t &amp; result );</code></p>
+<p><code>void elapsed(times_t&amp; result);</code></p>
 
 <blockquote>
 
@@ -320,7 +322,7 @@ timer</a></code>. For the description of inherited functions, see
 
 <h3>Class run_timer members</h3>
 
-<pre>explicit run_timer( int places = 2 );</pre>
+<pre>explicit run_timer(int places = 2);</pre>
 <blockquote>
   <p><i>Effects:</i> Constructs an object of type <code>run_timer</code>.</p>
   <p><i>Postconditions:<br>
@@ -328,7 +330,7 @@ timer</a></code>. For the description of inherited functions, see
 &nbsp; m_os == std::cout,<br>
 &nbsp; m_format == &quot; %ws wall, %us user + %ss system = %ts cpu (%p%)\n&quot;</code></p>
 </blockquote>
-<pre>run_timer( int places, std::ostream &amp; os );</pre>
+<pre>run_timer(int places, std::ostream&amp; os);</pre>
 <blockquote>
   <p><i>Effects:</i> Constructs an object of type <code>run_timer</code>.</p>
   <p><i>Postconditions:<br>
@@ -336,7 +338,7 @@ timer</a></code>. For the description of inherited functions, see
 &nbsp; m_os == os,<br>
 &nbsp; m_format == &quot; %ws wall, %us user + %ss system = %ts cpu (%p%)\n&quot;</code></p>
 </blockquote>
-<pre>explicit run_timer( const std::string &amp; format, int places = 2 );</pre>
+<pre>explicit run_timer(const std::string&amp; format, int places = 2);</pre>
 <blockquote>
   <p><i>Effects:</i> Constructs an object of type <code>run_timer</code>.</p>
   <p><i>Postconditions:<br>
@@ -344,7 +346,7 @@ timer</a></code>. For the description of inherited functions, see
 &nbsp; m_places == places,<br>
 &nbsp; m_os == std::cout&nbsp; </code></p>
 </blockquote>
-<pre>run_timer( const std::string &amp; format, int places, std::ostream &amp; os );</pre>
+<pre>run_timer(const std::string&amp; format, int places, std::ostream &amp; os);</pre>
 <blockquote>
   <p><i>Effects:</i> Constructs an object of type <code>run_timer</code>.</p>
   <p><i>Postconditions:<br>
@@ -356,16 +358,16 @@ timer</a></code>. For the description of inherited functions, see
 <blockquote>
   <p><i>Effects:</i> <br>
   <code>&nbsp; error_code ed;<br>
-&nbsp; if ( !stopped() ) report( ec );</code></p>
+&nbsp; if (!stopped()) report(ec);</code></p>
 <p><i>Throws:</i> Never.</p>
 
 </blockquote>
 <pre>void report();</pre>
 <blockquote>
-  <p><i>Effects:</i> Same as <code>report( error_code &amp; ec )</code>. See below.</p>
+  <p><i>Effects:</i> Same as <code>report(error_code &amp; ec)</code>. See below.</p>
   <p><i>Note: </i>Does throw on errors.</p>
 </blockquote>
-<pre>error_code report( error_code &amp; ec );</pre>
+<pre>error_code report(error_code &amp; ec);</pre>
 <blockquote>
 
 <p><i>Effects: </i>Displays times on <code>m_os</code>:</p>
@@ -374,8 +376,8 @@ timer</a></code>. For the description of inherited functions, see
     <li><code>stop()</code>.</li>
     <li>Saves <code>m_os</code> <code>ios</code> flags and precision.</li>
     <li>Sets <code>m_os</code>&nbsp; <code>ios</code> flags and precision as if by:<ul>
-      <li><code>m_os.setf( std::ios_base::fixed, std::ios_base::floatfield )</code></li>
-      <li><code>m_os.precision( m_places )</code></li>
+      <li><code>m_os.setf(std::ios_base::fixed, std::ios_base::floatfield)</code></li>
+      <li><code>m_os.precision(m_places)</code></li>
     </ul>
     </li>
     <li>Outputs <code>m_format</code> to <code>m_os</code>, replacing the character 
@@ -418,7 +420,7 @@ timer</a></code>. For the description of inherited functions, see
 
 <hr>
 <p>Last revised:
-<!--webbot bot="Timestamp" s-type="EDITED" s-format="%d %B, %Y" startspan -->17 September, 2010<!--webbot bot="Timestamp" endspan i-checksum="39341" --></p>
+<!--webbot bot="Timestamp" s-type="EDITED" s-format="%d %B, %Y" startspan -->01 May, 2011<!--webbot bot="Timestamp" endspan i-checksum="13960" --></p>
 <p>© Copyright Beman Dawes, 2006</p>
 <p>Distributed under the Boost Software License, Version 1.0. (See accompanying 
 file <a href="../../../../LICENSE_1_0.txt">LICENSE_1_0.txt</a> or copy at

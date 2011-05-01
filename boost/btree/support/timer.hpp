@@ -39,10 +39,10 @@ namespace boost
     //  low-level functions  -------------------------------------------------//
 
     BOOST_BTREE_DECL
-    void         times( times_t & result ); // throws on error
+    void  times(times_t& result); // throws on error
 
     BOOST_BTREE_DECL
-    system::error_code & times( times_t & result, system::error_code & ec ); // never throws
+    system::error_code& times(times_t& result, system::error_code& ec); // never throws
 
     //  timer  ---------------------------------------------------------------//
 
@@ -53,14 +53,14 @@ namespace boost
     public:
 
       timer()                         : m_flags(m_stopped) { start(); }
-      timer( const std::nothrow_t & ) : m_flags(static_cast<m_flags_t>(m_stopped
+      timer(const std::nothrow_t&) : m_flags(static_cast<m_flags_t>(m_stopped
                                                   | m_nothrow)) { start(); }
      ~timer()                         {}  // never throws
 
       void            start();
-      const times_t & stop();
-      bool            stopped() const { return m_flags & m_stopped; }
-      void            elapsed( times_t & result ); // does not stop()
+      const times_t& stop();
+      bool            stopped() const { return m_flags& m_stopped; }
+      void            elapsed(times_t& result); // does not stop()
 
     private:
       times_t    m_times;
@@ -80,32 +80,32 @@ namespace boost
       // std::cout, which in turn would require including <iostream> with its
       // high associated cost even when the standard streams are not used.
 
-      explicit run_timer( int places = 2 );
+      explicit run_timer(int places = 2);
 
-      run_timer( int places, std::ostream & os )
+      run_timer(int places, std::ostream& os)
         : m_places(places), m_os(os), m_format(0) {}
 
-      explicit run_timer( const std::string & format, int places = 2 );
+      explicit run_timer(const std::string& format, int places = 2);
 
-      run_timer( const std::string & format, int places, std::ostream & os )
+      run_timer(const std::string& format, int places, std::ostream& os)
          : m_places(places), m_os(os), m_format(new char[format.size()+1])
            { std::strcpy(m_format, format.c_str()); }
 
      ~run_timer()  // never throws
       { 
         system::error_code ec;
-        if ( !stopped() )
-          report( ec );
+        if(!stopped())
+          report(ec);
         delete [] m_format;
       }
 
       void        report();
       system::error_code
-                  report( system::error_code & ec ); // never throws
+                  report(system::error_code& ec); // never throws
 
     private:
       int             m_places;
-      std::ostream &  m_os;
+      std::ostream&   m_os;
       char*           m_format;  // doesn't use std::string as VC++ too painful
                                  // across DLL boundaries due to warning C4251
     };

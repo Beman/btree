@@ -27,10 +27,10 @@ namespace boost
 {
   namespace btree
   {
-    run_timer::run_timer( int places )
+    run_timer::run_timer(int places)
       : m_places(places), m_os(std::cout), m_format(0) {}
 
-    run_timer::run_timer( const std::string & format, int places )
+    run_timer::run_timer(const std::string& format, int places)
       : m_places(places), m_os(std::cout), m_format(new char[format.size()+1])
         { std::strcpy(m_format, format.c_str()); }
 

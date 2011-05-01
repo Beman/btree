@@ -38,31 +38,31 @@ namespace
   const char * default_format =
     " %ws wall, %us user + %ss system = %ts cpu (%p%)\n";
 
-void show_time( const char * format, int places, std::ostream & os,
-    const times_t & times )
+void show_time(const char * format, int places, std::ostream& os,
+    const times_t& times)
   //  NOTE WELL: Will truncate least-significant digits to LDBL_DIG, which may
   //  be as low as 10, although will be 15 for many common platforms.
   {
-    if ( times.wall < microsecond_t(0) ) return;
-    if ( places > 6 ) places = 6;
-    else if ( places < 0 ) places = 0;
+    if (times.wall < microsecond_t(0)) return;
+    if (places > 6) places = 6;
+    else if (places < 0) places = 0;
 
-    boost::io::ios_flags_saver ifs( os );
-    boost::io::ios_precision_saver ips( os );
-    os.setf( std::ios_base::fixed, std::ios_base::floatfield );
-    os.precision( places );
+    boost::io::ios_flags_saver ifs(os);
+    boost::io::ios_precision_saver ips(os);
+    os.setf(std::ios_base::fixed, std::ios_base::floatfield);
+    os.precision(places);
 
     const long double sec = 1000000.0L;
     microsecond_t total = times.system + times.user;
 
-    for ( ; *format; ++format )
+    for (; *format; ++format)
     {
-      if ( *format != '%' || !*(format+1) || !std::strchr("wustp", *(format+1)) )
+      if (*format != '%' || !*(format+1) || !std::strchr("wustp", *(format+1)))
         os << *format;
       else
       {
         ++format;
-        switch ( *format )
+        switch (*format)
         {
         case 'w':
           os << times.wall / sec;
@@ -77,12 +77,12 @@ void show_time( const char * format, int places, std::ostream & os,
           os << total / sec;
           break;
         case 'p':
-          os.precision( 1 );
-           if ( times.wall && total )
+          os.precision(1);
+           if (times.wall && total)
              os << static_cast<long double>(total) /times. wall * 100.0;
            else
              os << 0.0;
-          os.precision( places );
+          os.precision(places);
           break;
         default:
           assert(0);
@@ -101,13 +101,13 @@ namespace boost
 
     void run_timer::report()
     {
-      show_time( !m_format 
+      show_time(!m_format 
           ? default_format
           : m_format,
-        m_places, m_os, this->stop() );
+        m_places, m_os, this->stop());
     }
 
-    error_code run_timer::report( error_code & ec )
+    error_code run_timer::report(error_code& ec)
     {
       try
       {
@@ -117,7 +117,7 @@ namespace boost
 
       catch (...) // eat any exceptions
       {
-        ec = error_code( EIO, system::generic_category() );
+        ec = error_code(EIO, system::generic_category());
       } 
       
       return ec;

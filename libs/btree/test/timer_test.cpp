@@ -17,10 +17,10 @@ using boost::system::times_t;
 using boost::system::timer;
 using boost::system::run_timer;
 
-int main( int argc, char * argv[] )
+int main(int argc, char * argv[])
 {
-  std::locale loc( "" );
-  std::cout.imbue( loc );
+  std::locale loc("");
+  std::cout.imbue(loc);
   
   run_timer timer(6);
   run_timer timer2("\nwall %w s, utilization %p%\n");
@@ -32,14 +32,14 @@ int main( int argc, char * argv[] )
   microsecond_t timeout
     = microsecond_t(500000); // default .5 seconds
 
-  if ( argc > 1 ) timeout = microsecond_t(std::atol( argv[1] ));
+  if (argc > 1) timeout = microsecond_t(std::atol(argv[1]));
 
-  while ( times.wall < timeout )
+  while (times.wall < timeout)
   {
     //  The point of this code is to burn both kernal and user cpu time,
     //  with the total less than wall clock time.
     ++count;
-    timer.elapsed( times );
+    timer.elapsed(times);
     //    sleep(1);
     //std::cout << "iteration " << count << ", "
     //  << times.wall << " wall, "
