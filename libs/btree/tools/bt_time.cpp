@@ -87,7 +87,7 @@ namespace
         {
           if (lg && i % lg == 0)
             std::cout << i << std::endl; 
-          bt.insert(key(), i);
+          bt.emplace(key(), i);
         }
         insert_tm = t.stop();
         t.report();
@@ -104,7 +104,7 @@ namespace
         BT bt_new(path, btree::flags::truncate, page_sz);
         for (BT::iterator it = bt_old.begin(); it != bt_old.end(); ++it)
         {
-          bt_new.insert(it->key(), it->mapped_value());
+          bt_new.emplace(it->key(), it->mapped_value());
         }
         cout << "  bt_old.size() " << bt_old.size() << std::endl;
         cout << "  bt_new.size() " << bt_new.size() << std::endl;

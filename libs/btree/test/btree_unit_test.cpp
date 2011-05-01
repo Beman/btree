@@ -83,10 +83,10 @@ void instantiate()
     btree::btree_map<fat, int> x;
     instantiate_test(x);
   }
-  {
-    btree::btree_multimap<fat, int> x;
-    instantiate_test(x);
-  }
+  //{
+  //  btree::btree_multimap<fat, int> x;
+  //  instantiate_test(x);
+  //}
   {
     btree::btree_set<int> x;
     instantiate_test(x);
@@ -232,7 +232,7 @@ void  single_insert()
     btree_type x(p, btree::flags::read_write, 128);
 
     std::pair<btree_type::const_iterator, bool> result
-      = x.insert(123, 456);
+      = x.emplace(123, 456);
     x.dump_dot(std::cout);
 
     BOOST_TEST_EQ(x.size(), 1U);
@@ -257,13 +257,13 @@ void open_existing()
 
     int key = 5;
     int mapped = 0x55;
-    bt.insert(key, mapped);
+    bt.emplace(key, mapped);
     bt.dump_dot(std::cout);
     key = 4; mapped = 0x44;
-    bt.insert(key, mapped);
+    bt.emplace(key, mapped);
     bt.dump_dot(std::cout);
     key = 6; mapped = 0x66;
-    bt.insert(key, mapped);
+    bt.emplace(key, mapped);
     bt.dump_dot(std::cout);
   }
 
@@ -306,7 +306,7 @@ void small_variable_set()
   bt.insert(stuff);
   //bt.dump_dot(std::cout);
   stuff = "the";
-  bt.insert(stuff);
+  bt.emplace(stuff);  // try the emplace() overload
   stuff = "time";
   bt.insert(stuff);
   stuff = "when";
@@ -345,28 +345,28 @@ void small_variable_map()
 
   key = "now";
   value = "won";
-  bt.insert(key, value);
+  bt.emplace(key, value);
   key = "is";
   value = "si";
-  bt.insert(key, value);
+  bt.emplace(key, value);
   key = "the";
   value = "eht";
-  bt.insert(key, value);
+  bt.emplace(key, value);
   key = "time";
   value = "emit";
-  bt.insert(key, value);
+  bt.emplace(key, value);
   key = "when";
   value = "nehw";
-  bt.insert(key, value);
+  bt.emplace(key, value);
   key = "all";
   value = "lla";
-  bt.insert(key, value);
+  bt.emplace(key, value);
   key = "good";
   value = "doog";
-  bt.insert(key, value);
+  bt.emplace(key, value);
   key = "...";
   value = "...";
-  bt.insert(key, value);
+  bt.emplace(key, value);
 
   BOOST_TEST(bt.is_open());
   BOOST_TEST(!bt.empty());
@@ -508,7 +508,7 @@ void insert_tests(BTree& bt)
 
   std::pair<typename BTree::const_iterator, bool> result;
 
-  result = bt.insert(key, mapped_value);
+  result = bt.emplace(key, mapped_value);
   BOOST_TEST(result.second);
   BOOST_TEST(result.first->key() == key);
   BOOST_TEST_EQ(result.first->mapped_value(), mapped_value);
@@ -524,7 +524,7 @@ void insert_tests(BTree& bt)
 
   key = 0x0A;
   mapped_value = 0xAAAAAAAA;
-  result = bt.insert(key, mapped_value);
+  result = bt.emplace(key, mapped_value);
   BOOST_TEST(result.second);
   BOOST_TEST_EQ(result.first->key().x, key.x);
   BOOST_TEST_EQ(result.first->mapped_value(), mapped_value);
@@ -533,7 +533,7 @@ void insert_tests(BTree& bt)
 
   key = 0x0E;
   mapped_value = 0xEEEEEEEE;
-  result = bt.insert(key, mapped_value);
+  result = bt.emplace(key, mapped_value);
   BOOST_TEST(result.second);
   BOOST_TEST_EQ(result.first->key().x, key.x);
   BOOST_TEST_EQ(result.first->mapped_value(), mapped_value);
@@ -543,7 +543,7 @@ void insert_tests(BTree& bt)
 
   key = 0x0B;
   mapped_value = 0xBBBBBBBB;
-  result = bt.insert(key, mapped_value);
+  result = bt.emplace(key, mapped_value);
   BOOST_TEST(result.second);
   BOOST_TEST_EQ(result.first->key().x, key.x);
   BOOST_TEST_EQ(result.first->mapped_value(), mapped_value);
@@ -554,7 +554,7 @@ void insert_tests(BTree& bt)
 
   key = 0x0D;
   mapped_value = 0xDDDDDDDD;
-  result = bt.insert(key, mapped_value);
+  result = bt.emplace(key, mapped_value);
   BOOST_TEST(result.second);
   BOOST_TEST_EQ(result.first->key().x, key.x);
   BOOST_TEST_EQ(result.first->mapped_value(), mapped_value);
@@ -674,7 +674,7 @@ void insert_tests(BTree& bt)
 // std::cout << "\n inserting " << i << std::endl;
     key = i;
     mapped_value = i * 100;
-    bt.insert(key, mapped_value);
+    bt.emplace(key, mapped_value);
 //std::cout << "root is page " << bt.header().root_page_id() << '\n'; 
   //bt.dump_dot(std::cout);
   }
@@ -748,12 +748,12 @@ void do_fb_insert(fb_multiset_type& bt, int i)
 void do_fb_insert(fb_map_type& bt, int i)
 {
   fat k(i);
-  bt.insert(k, i*100);
+  bt.emplace(k, i*100);
 }
 void do_fb_insert(fb_multimap_type& bt, int i)
 {
   fat k(i);
-  bt.insert(k, i*100);
+  bt.emplace(k, i*100);
 }
 
 template <class BTree>
@@ -896,7 +896,7 @@ void insert_non_unique_tests(BTree& bt)
 
   for (int i = 1; i <= n; ++i)
   {
-    result = bt.insert(k = 3, i);
+    result = bt.emplace(k = 3, i);
     BOOST_TEST_EQ(bt.size(), static_cast<unsigned>(i));
     BOOST_TEST_EQ(result->key().x, 3);
     BOOST_TEST_EQ(result->mapped_value(), i);
@@ -953,7 +953,7 @@ void update_test()
 
   for (int n = 1; n < 1000; ++n)
   {
-    bt.insert(fat(random_value()), n);
+    bt.emplace(fat(random_value()), n);
   }
 
   for (bt_type::iterator itr = bt.begin(); itr != bt.end(); ++itr)
@@ -1028,14 +1028,14 @@ void pack_optimization()
 
   btree::btree_map<int, int> np("not_packed.btr", btree::flags::truncate, page_sz);
   for (int i=n; i > 0; --i)
-    np.insert(i, 0xffffff00+i);
+    np.emplace(i, 0xffffff00+i);
 
   cout << "\nroot is page " << np.header().root_page_id() << '\n'; 
   np.dump_dot(std::cout);
   
   btree::btree_map<int, int> p("packed.btr", btree::flags::truncate, page_sz);
   for (int i=1; i <= n; ++i)
-    p.insert(i, 0xffffff00+i);
+    p.emplace(i, 0xffffff00+i);
 
   cout << "\nroot is page " << p.header().root_page_id() << '\n'; 
   p.dump_dot(std::cout);
@@ -1095,7 +1095,7 @@ void  reopen_btree_object_test()
 
   for (long i = 1; i <= n; ++i)
   {
-    bt.insert(key(), i);
+    bt.emplace(key(), i);
   }
 
   cout << "    copying " << bt.size() << " elements..." << endl;
@@ -1106,7 +1106,7 @@ void  reopen_btree_object_test()
   map_type bt2(path2);
   bt.open(path, btree::flags::truncate, 128);
   for (map_type::iterator it = bt2.begin(); it != bt2.end(); ++it)
-    bt.insert(it->key(), it->mapped_value());
+    bt.emplace(it->key(), it->mapped_value());
   BOOST_TEST_EQ(bt.size(), bt2.size());
   bt2.close();
   bt.close();

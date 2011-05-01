@@ -77,7 +77,14 @@ namespace boost
           flags::user(flgs) | flags::key_only | flags::unique, pg_sz);
       }
 
-      // typename btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>:: is required by GCC but not VC++
+      //  emplace(const Key&) special case not requiring c++0x support
+      std::pair<typename btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::const_iterator, bool>
+      emplace(const typename btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::value_type& value)
+      {
+        return btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::m_insert_unique(
+          value, value);
+      }
+
       std::pair<typename btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::const_iterator, bool>
       insert(const typename btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::value_type& value)
       {
@@ -144,7 +151,14 @@ namespace boost
           flags::user(flgs) | flags::key_only, pg_sz);
       }
 
-      // typename btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>:: is required by GCC but not VC++
+      //  emplace(const Key&) special case not requiring c++0x support
+      std::pair<typename btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::const_iterator, bool>
+      emplace(const typename btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::value_type& value)
+      {
+        return btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::m_insert_non_unique(
+          value, value);
+      }
+
       typename btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::const_iterator
       insert(const typename btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::value_type& value)
       {

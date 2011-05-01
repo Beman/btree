@@ -78,12 +78,19 @@ namespace boost
           flags::user(flgs) | flags::unique, pg_sz);
       }
 
-      // typename btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>:: is required by GCC but not VC++
+      //  emplace(const Key&, const T&) special case not requiring c++0x support
       std::pair<typename btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>::const_iterator, bool>
-      insert(const Key& key, const T& mapped_value)
+      emplace(const Key& key, const T& mapped_value)
       {
         return btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>::m_insert_unique(
           key, mapped_value);
+      }
+
+      std::pair<typename btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>::const_iterator, bool>
+      insert(const map_value<Key, T>& value)
+      {
+        return btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>::m_insert_unique(
+          value->key(), value->mapped_value());
       }
 
       template <class InputIterator>
@@ -96,7 +103,6 @@ namespace boost
         }
       }
 
-       // typename btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>:: is required by GCC but not VC++
       typename btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>::iterator
       update(typename btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>::iterator itr,
         const T& mapped_value)
@@ -143,8 +149,6 @@ namespace boost
       {
         for (; begin != end; ++begin)
         {
-          //BOOST_ASSERT_MSG(dynamic_size(begin->key())+dynamic_size(begin->mapped_value())
-          //  < page_size()/3, "value size too large for page size");
           btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>::m_insert_non_unique(
             begin->key(), begin->mapped_value());
         }
@@ -158,38 +162,35 @@ namespace boost
           flags::user(flgs), pg_sz);
       }
 
-      // typename btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>:: is required by GCC but not VC++
+      //  emplace(const Key&, const T&) special case not requiring c++0x support
       typename btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>::const_iterator
-      insert(const Key& key, const T& mapped_value)
+      emplace(const Key& key, const T& mapped_value)
       {
-        //BOOST_ASSERT_MSG(!read_only(), "insert() on read only btree");
-        //BOOST_ASSERT_MSG(dynamic_size(key)+dynamic_size(mapped_value)
-        //  < page_size()/3, "value size too large for page size");
         return btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>::m_insert_non_unique(
           key, mapped_value);
+      }
+
+      typename btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>::const_iterator
+      insert(const map_value<Key, T>& value)
+      {
+        return btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>::m_insert_non_unique(
+          value->key(), value->mapped_value());
       }
 
       template <class InputIterator>
       void insert(InputIterator begin, InputIterator end)
       {
-        //BOOST_ASSERT_MSG(!read_only(), "insert() on read only btree");
         for (; begin != end; ++begin)
         {
-          //BOOST_ASSERT_MSG(dynamic_size(begin->key())+dynamic_size(begin->mapped_value())
-          //  < page_size()/3, "value size too large for page size");
           btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>::m_insert_non_unique(
             begin->key(), begin->mapped_value());
         }
       }
 
-       // typename btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>:: is required by GCC but not VC++
       typename btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>::iterator
       update(typename btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>::iterator itr,
         const T& mapped_value)
       {
-        //BOOST_ASSERT_MSG(!read_only(), "update() on read only btree");
-        //BOOST_ASSERT_MSG(dynamic_size(itr->key())+dynamic_size(mapped_value)
-        //  < page_size()/3, "value size too large for page size");
         return btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>::m_update(
           itr, mapped_value);
       }

@@ -257,7 +257,8 @@ namespace
         cout << element.first << ',';
 
       pair<stl_type::iterator, bool> stl_result = stl.insert(element);
-      pair<bt_type::const_iterator, bool> bt_result = bt.insert(element.first, element.second);
+      pair<bt_type::const_iterator, bool> bt_result
+        = bt.emplace(element.first, element.second);
 
       if (stl_result.second != bt_result.second)
       {

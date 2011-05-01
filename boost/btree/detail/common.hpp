@@ -33,10 +33,6 @@
 
   TODO:
 
-  * replace insert(key, mapped_value) with insert_emplace?
-
-  * implement emplace(). Howard speculates emplace() makes the map/multimap insert()
-    key, mapped_value overload unnecessary. 
 
   * erase() return is correct for unique containers, but not for non-unique containers. Decide
     what to do about non-unique containers. Might have to first count the offset from
@@ -48,9 +44,6 @@
   * Upgrade m_update() to allow new dynamic size different from old dynamic size
 
   * Add static_assert Key, T are is_trivially_copyable
-
-  * map, multi_map, insert(key, mapped_value) can be confused with template insert?
-    Use enable_if?
 
   * header() shouldn't be part of the public interface.
       - Add individual get, and where appropriate, set, functions.
