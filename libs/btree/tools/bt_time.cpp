@@ -102,7 +102,7 @@ namespace
         t.start();
         BT bt_old(path_org);
         BT bt_new(path, btree::flags::truncate, page_sz);
-        for (BT::iterator it = bt_old.begin(); it != bt_old.end(); ++it)
+        for (typename BT::iterator it = bt_old.begin(); it != bt_old.end(); ++it)
         {
           bt_new.emplace(it->key(), it->mapped_value());
         }

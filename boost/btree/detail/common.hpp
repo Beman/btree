@@ -1450,21 +1450,12 @@ btree_base<Key,Base,Traits,Comp>::m_branch_insert(
 #ifndef NDEBUG
   if (m_hdr.flags() & btree::flags::unique)
   {
-//std::cout << "branch sequence check" << std::endl;
     branch_iterator cur = pg->branch().begin();
-//std::cout << " begin " << &*pg->branch().begin()
-//          << " end " << &*pg->branch().end() << std::endl;
     key_type prev_key = cur->key();
     ++cur;
-//std::cout << " cur " << &*cur << std::endl;
     for(; cur != pg->branch().end(); ++cur)
     {
-//std::cout << prev_key << " " << cur->key() << std::endl;
-//std::cout << "size is " << size()
-//          << " root is page " << header().root_page_id() << '\n'; 
-//dump_dot(std::cout);
-//      BOOST_ASSERT(key_comp()(prev_key, cur->key()));
-//abort();
+      BOOST_ASSERT(key_comp()(prev_key, cur->key()));
       prev_key = cur->key();
     }
   }
