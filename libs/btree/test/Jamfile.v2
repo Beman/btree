@@ -14,10 +14,8 @@ project
     
    test-suite "btree" :
        [ run binary_file_test.cpp :  :  :  : ]                  
-       [ run buffer_manager_test.cpp :  :  :  : ]                  
+       [ run ../tools/bt_time.cpp : 100 -stl -k :  :  : ]                  
        [ run btree_unit_test.cpp :  :  :  : ]                  
+       [ run buffer_manager_test.cpp :  :  :  : ]                  
        [ run stl_test.cpp :  :  :  : ]                  
        ;
-
-
-
