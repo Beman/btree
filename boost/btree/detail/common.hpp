@@ -1846,8 +1846,8 @@ template <class Key, class Base, class Traits, class Comp>
 void btree_base<Key,Base,Traits,Comp>::dump_dot(std::ostream& os) const
 {
   BOOST_ASSERT_MSG(is_open(), "dump_dot() on unopen btree");
-  os << "digraph btree {\n"
-    "node [shape = record,height=.1];\n";
+  os << "digraph btree {\nrankdir=LR;\nfontname=Courier;\n"
+    "node [shape = record,margin=.1,width=.1,height=.1,fontname=Courier,style=\"filled\"];\n";
 
   for (unsigned int p = 1; p < header().page_count(); ++p)
   {
@@ -1862,7 +1862,7 @@ void btree_base<Key,Base,Traits,Comp>::dump_dot(std::ostream& os) const
           os << '|';
         os << *it;
       }
-      os << "\"];\n";
+      os << "\",fillcolor=\"palegreen\"];\n";
    }
     else if (pg->is_branch())
     {
@@ -1871,11 +1871,10 @@ void btree_base<Key,Base,Traits,Comp>::dump_dot(std::ostream& os) const
       branch_iterator it;
       for (it = pg->branch().begin(); it != pg->branch().end(); ++it)
       {
-        os << "<f" << f << "> " << it->page_id() << "," << it->key() << "|";
+        os << "<f" << f << ">|" /*<< it->page_id() << ","*/ << it->key() << "|";
         ++f;
       }
-      os << "<f" << f << "> " << it->page_id();
-      os << "\"];\n";
+      os << "<f" << f << ">\",fillcolor=\"lightblue\"];\n";
       f = 0;
       for (it = pg->branch().begin(); it != pg->branch().end(); ++it)
       {

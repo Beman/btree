@@ -761,7 +761,7 @@ void find_and_bounds_tests(BTree& bt)
 {
   cout << "    testing \"" << bt.file_path().string() << "\" ..." << endl;
 
-  for (int i = 1; i < 18; i += 2)
+  for (int i = 17; i > 0; i -= 2)
   {
     do_fb_insert(bt, i);
     //std::cout << "   size is " << bt.size() << std::endl;
@@ -800,7 +800,7 @@ void find_and_bounds_tests(BTree& bt)
   }
 
   //cout << "root is page " << bt.header().root_page_id() << '\n'; 
-  //bt.dump_dot(std::cout);
+  bt.dump_dot(std::cout);
 
   //             i =   0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18
   const int  lwr[] = { 1, 1, 3, 3, 5, 5, 7, 7, 9, 9, 11, 11, 13, 13, 15, 15, 17, 17, -1};
