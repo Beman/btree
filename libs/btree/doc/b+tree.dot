@@ -1,0 +1,18 @@
+digraph g {
+aspect = 3.0;
+node [shape = record,height=.1,style="filled",fontname=Arial,fontsize=20];
+node0[label = "<f0> | LHR |<f1>|empty| |empty|",fillcolor="lightblue"];
+node1[label = "<f0>| DFW |<f1> |HND|<f2>| empty|",fillcolor="lightblue"];
+node2[label = "<f0> ATL,1|CDG,2|DEN,10",fillcolor="palegreen"];
+node3[label = "<f0> DFW,7|FRA,9|empty",fillcolor="palegreen"];
+node4[label = "<f0> |empty | |empty| |empty|",fillcolor="lightblue"];
+node5[label = "<f0> HND,4|LAX,5|empty",fillcolor="palegreen"];
+node6[label = "<f0> LHR,3|ORD,2|PEK,8",fillcolor="palegreen"];
+ "node0":f0 -> "node1":f0;
+ "node0":f1 -> "node4":f0;
+ "node1":f0 -> "node2":f0;
+ "node1":f1 -> "node3":f0;
+ "node1":f2 -> "node5":f0;
+ "node4":f0 -> "node6":f0;
+ }
+ 
