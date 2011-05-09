@@ -1,11 +1,11 @@
 digraph btree {
 fontname=Courier;
 node [shape = record,margin=.1,width=.1,height=.5,fontname=Courier,style="filled"];
-page1[label = "<f0> 1,100|3,300|5,500",fillcolor="palegreen"];
+page1[label = "<f0> 1,100|3,300|empty",fillcolor="palegreen"];
 page2[label = "<f0>|7|<f1>|13|<f2>",fillcolor="lightblue"];
 "page2":f0 -> "page1":f0;
 "page2":f1 -> "page3":f0;
 "page2":f2 -> "page4":f0;
 page3[label = "<f0> 7,700|9,900|11,1100",fillcolor="palegreen"];
-page4[label = "<f0> 13,1300|15,1500|17,1700",fillcolor="palegreen"];
+page4[label = "<f0> 13,1300|empty|empty",fillcolor="palegreen"];
 }
