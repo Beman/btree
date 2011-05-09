@@ -72,7 +72,7 @@ namespace btree
 
   private:
     boost::uint8_t  m_size;  // std::strlen(m_buf); for speed, particularly on large strings 
-    char            m_buf[max_size+1];
+    char            m_buf[max_size+1];  // '\0' terminated
   };
 
 

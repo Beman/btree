@@ -27,20 +27,18 @@ int main()
 
   cout << "std_map:\n";
   for (std_map_type::iterator it = std_map.begin(); it != std_map.end(); ++it)
-    cout << "  " << it->first << " --> " << it->second << '\n';
+    cout << "  \"" << it->first << "\" --> \"" << it->second << "\"\n";
 
   typedef boost::btree::btree_map<strbuf, strbuf> btree_map_type;
   btree_map_type bt_map("bt_map.btr", boost::btree::flags::truncate, 128);
 
-  strbuf key, mapped_value;
-
-  bt_map.insert(strbuf("eat"), strbuf("comer"));
-  bt_map.insert(strbuf("drink"), strbuf("beber"));
-  bt_map.insert(strbuf("be merry"), strbuf("ser feliz"));
+  bt_map.emplace("eat","comer");
+  bt_map.emplace("drink", "beber");
+  bt_map.emplace("be merry", "ser feliz");
 
   cout << "bt_map:\n";
   for (btree_map_type::iterator it = bt_map.begin(); it != bt_map.end(); ++it)
-    cout << "  " << it->key() << " --> " << it->mapped_value() << '\n';
+    cout << "  \"" << it->key() << "\" --> \"" << it->mapped_value() << "\"\n";
 
   return 0;
 }
