@@ -67,6 +67,10 @@
     and (2) apply only when BOOST_BINARY_FILE_LOG is defined. This implies adding m_ to
     the actual binary_file.cpp implementation names.
 
+  * Preload option currently is just passed on to binary_file, which reads the entire file.
+    That preloads the O/S cache, but does nothing for the btree cache. Should also iterate
+    over the btree to preload the btree cache.
+
 */
 
 namespace boost
@@ -526,7 +530,7 @@ public:
   //size_type     max_size() const            { return ; }
   std::size_t   page_size() const           { return m_mgr.data_size(); }
   std::size_t   max_cache_size() const      { return m_mgr.max_cache_size(); }
-  void          max_cache_size(std::size_t m){m_mgr.max_cache_size(m);}
+  void          max_cache_size(std::size_t m) {m_mgr.max_cache_size(m);}
 
   //  The following element access functions are not provided. Returning references is
   //  far too dangerous, since the memory pointed to would be in a page buffer that can
