@@ -1,0 +1,57 @@
+<html>
+
+<head>
+<meta name="GENERATOR" content="Microsoft FrontPage 5.0">
+<meta name="ProgId" content="FrontPage.Editor.Document">
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+  <title>B-Tree Reference</title>
+  <link rel="stylesheet" type="text/css" href=
+  "../../../doc/src/minimal.css">
+</head>
+
+<body>
+  <table border="0" cellpadding="5" cellspacing="0" style=
+  "border-collapse: collapse" bordercolor="#111111">
+    <tr>
+      <td width="277"><a href="../../../../index.htm"><img src=
+      "../../../boost.png" alt="boost.png (6897 bytes)" align=
+      "middle" width="300" height="86" border="0"></a></td>
+
+      <td align="middle"><font size="7">B-Tree Library Reference</font></td>
+    </tr>
+  </table>
+
+  <table border="0" cellpadding="5" cellspacing="0" style=
+  "border-collapse: collapse" bordercolor="#111111" bgcolor=
+  "#D7EEFF" width="100%">
+    <tr>
+      <td><a href="../../../index.htm">Boost Home</a>
+      &nbsp;&nbsp; <a href="index.html">Library Home</a>
+      &nbsp;&nbsp; <a href="reference.html">Reference</a>
+      &nbsp;&nbsp; <a href="tutorial.html">Tutorial</a>
+      &nbsp;&nbsp; <a href="faq.html">FAQ</a> &nbsp;&nbsp; <a href=
+      "portability_guide.htm">Portability</a></td>
+    </tr>
+  </table>
+
+  <h2>Class btree_value</h2>
+  <p>...</p>
+  <pre>template &lt;class T1, class T2&gt;
+class btree_value
+{
+public:
+  const T1&amp; key() const;
+  const T2&amp; mapped_value() const;
+  std::size_t size() const;
+};
+
+template &lt;class T1, class T2&gt;
+std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const btree_value&lt;T1, T2&gt;&amp; x);
+
+template &lt;class T1, class T2&gt;
+std::size_t dynamic_size(const btree_value&lt;T1, T2&gt;&amp; x);
+</pre>
+
+</body>
+
+</html>
