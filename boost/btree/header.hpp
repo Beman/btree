@@ -33,7 +33,7 @@ namespace boost
 //                                                                                      //
 //  The traits provide the types for management objects on btree disk nodes. Nodes are  //
 //  typically 4096 bytes in length, and every byte wasted in overhead causes a          //
-//  measurable reduction in speed. Page formats were designed to avoid alignment        //
+//  measurable reduction in speed. Node formats were designed to avoid alignment        //
 //  bytes, given the defaults.                                                          //
 //                                                                                      //
 //--------------------------------------------------------------------------------------//
@@ -108,7 +108,7 @@ namespace boost
     static const boost::uint8_t minor_version = 1;
 
     static const std::size_t default_node_size = 4096;
-    static const std::size_t default_max_cache_nodes = 128;
+    static const std::size_t default_max_cache_nodes = 32;
 
     namespace flags
     {
