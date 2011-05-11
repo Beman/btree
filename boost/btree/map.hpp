@@ -27,7 +27,7 @@ namespace boost
   namespace btree
   {
 
-    //  endian traits are the default since they don't require page_id_type alignment
+    //  endian traits are the default since they don't require node_id_type alignment
 
 //--------------------------------------------------------------------------------------//
 //                                 class btree_map                                      //
@@ -49,19 +49,19 @@ namespace boost
 
       explicit btree_map(const boost::filesystem::path& p,
           flags::bitmask flgs = flags::read_only,
-          std::size_t pg_sz = default_page_size,  // ignored if existing file
+          std::size_t node_sz = default_node_size,  // ignored if existing file
           const Comp& comp = Comp())
         : btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>(p,
-            flags::user(flgs) | flags::unique, pg_sz, comp) {}
+            flags::user(flgs) | flags::unique, node_sz, comp) {}
 
       template <class InputIterator>
       btree_map(InputIterator begin, InputIterator end,
         const boost::filesystem::path& p,
         flags::bitmask flgs = flags::read_only,
-        std::size_t pg_sz = default_page_size,  // ignored if existing file
+        std::size_t node_sz = default_node_size,  // ignored if existing file
         const Comp& comp = Comp())
       : btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>(p,
-          flags::user(flgs) | flags::unique, pg_sz, comp)
+          flags::user(flgs) | flags::unique, node_sz, comp)
       {
         for (; begin != end; ++begin)
         {
@@ -72,10 +72,10 @@ namespace boost
  
       void open(const boost::filesystem::path& p,
         flags::bitmask flgs = flags::read_only,
-        std::size_t pg_sz = default_page_size) // pg_sz ignored if existing file
+        std::size_t node_sz = default_node_size) // node_sz ignored if existing file
       {
         btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>::m_open(p,
-          flags::user(flgs) | flags::unique, pg_sz);
+          flags::user(flgs) | flags::unique, node_sz);
       }
 
       //  emplace(const Key&, const T&) special case not requiring c++0x support
@@ -133,19 +133,19 @@ namespace boost
 
       explicit btree_multimap(const boost::filesystem::path& p,
           flags::bitmask flgs = flags::read_only,
-          std::size_t pg_sz = default_page_size,  // ignored if existing file
+          std::size_t node_sz = default_node_size,  // ignored if existing file
           const Comp& comp = Comp())
         : btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>(p,
-            flags::user(flgs), pg_sz, comp) {}
+            flags::user(flgs), node_sz, comp) {}
 
       template <class InputIterator>
       btree_multimap(InputIterator begin, InputIterator end,
           const boost::filesystem::path& p,
           flags::bitmask flgs = flags::read_only,
-          std::size_t pg_sz = default_page_size,  // ignored if existing file
+          std::size_t node_sz = default_node_size,  // ignored if existing file
           const Comp& comp = Comp())
         : btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>(p,
-            flags::user(flgs), pg_sz, comp)
+            flags::user(flgs), node_sz, comp)
       {
         for (; begin != end; ++begin)
         {
@@ -156,10 +156,10 @@ namespace boost
 
       void open(const boost::filesystem::path& p,
       flags::bitmask flgs = flags::read_only,
-      std::size_t pg_sz = default_page_size) // pg_sz ignored if existing file
+      std::size_t node_sz = default_node_size) // node_sz ignored if existing file
       {
         btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>::m_open(p,
-          flags::user(flgs), pg_sz);
+          flags::user(flgs), node_sz);
       }
 
       //  emplace(const Key&, const T&) special case not requiring c++0x support

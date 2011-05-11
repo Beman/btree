@@ -32,8 +32,8 @@ namespace
   long initial_n;
   long seed = 1;
   long lg = 0;
-  int cache_sz = btree::default_max_cache_pages;
-  int page_sz = btree::default_page_size;
+  int cache_sz = btree::default_max_cache_nodes;
+  int node_sz = btree::default_node_size;
   bool do_create (true);
   bool do_preload (false);
   bool do_insert (true);
@@ -72,7 +72,7 @@ namespace
 
       cout << "\nopening " << path << endl;
       t.start();
-      BT bt(path, flgs, page_sz);
+      BT bt(path, flgs, node_sz);
       t.stop();
       t.report();
 
@@ -101,7 +101,7 @@ namespace
         fs::rename(path, path_org);
         t.start();
         BT bt_old(path_org);
-        BT bt_new(path, btree::flags::truncate, page_sz);
+        BT bt_new(path, btree::flags::truncate, node_sz);
         for (typename BT::iterator it = bt_old.begin(); it != bt_old.end(); ++it)
         {
           bt_new.emplace(it->key(), it->mapped_value());
@@ -432,8 +432,8 @@ int cpp_main(int argc, char * argv[])
         whichaway = integer::endianness::native;
       else if ( *(argv[2]+1) == 's' )
         seed = atol( argv[2]+2 );
-      else if ( *(argv[2]+1) == 'p' )
-        page_sz = atoi( argv[2]+2 );
+      else if ( *(argv[2]+1) == 'n' )
+        node_sz = atoi( argv[2]+2 );
       else if ( *(argv[2]+1) == 'c' )
         cache_sz = atoi( argv[2]+2 );
       else if ( *(argv[2]+1) == 'i' )
@@ -462,9 +462,9 @@ int cpp_main(int argc, char * argv[])
       " Options:\n"
       "   path     Specifies the test file path; default test.btree\n"
       "   -s#      Seed for random number generator; default 1\n"
-      "   -p#      Page size (>=128); default " << btree::default_page_size << "\n"
-      "              Small page sizes are useful for stress testing\n"
-      "   -c#      Cache size; default " << btree::default_max_cache_pages << " pages\n"
+      "   -n#      Node size (>=128); default " << btree::default_node_size << "\n"
+      "              Small node sizes are useful for stress testing\n"
+      "   -c#      Cache size; default " << btree::default_max_cache_nodes << " nodes\n"
       "   -l#      log progress every # actions; default is to not log\n"
       "   -xc      No create; use file from prior -xe run\n"
       "   -xi      No insert test; forces -xc and doesn't do inserts\n"
@@ -484,8 +484,8 @@ int cpp_main(int argc, char * argv[])
     return 1;
   }
 
-  cout << "starting tests with page size " << page_sz
-       << ", maximum cache pages " << cache_sz << ",\n";
+  cout << "starting tests with node size " << node_sz
+       << ", maximum cache nodes " << cache_sz << ",\n";
 
   switch (whichaway)
   {

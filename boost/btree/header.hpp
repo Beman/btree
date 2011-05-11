@@ -31,7 +31,7 @@ namespace boost
 //                                                                                      //
 //                                   Default Traits                                     //
 //                                                                                      //
-//  The traits provide the types for management objects on btree disk pages. Pages are  //
+//  The traits provide the types for management objects on btree disk nodes. Nodes are  //
 //  typically 4096 bytes in length, and every byte wasted in overhead causes a          //
 //  measurable reduction in speed. Page formats were designed to avoid alignment        //
 //  bytes, given the defaults.                                                          //
@@ -40,9 +40,9 @@ namespace boost
 
     struct default_native_traits
     {
-      typedef boost::uint32_t  page_id_type;     // page ids
-      typedef boost::uint16_t  page_size_type;   // sizes
-      typedef boost::uint16_t  page_level_type;  // level of page; 0 for leaf page.
+      typedef boost::uint32_t  node_id_type;     // node ids
+      typedef boost::uint16_t  node_size_type;   // sizes
+      typedef boost::uint16_t  node_level_type;  // level of node; 0 for leaf node.
                                                  // Could be smaller, but that would
                                                  // require alignment byte so why bother
       static const BOOST_SCOPED_ENUM(integer::endianness) header_endianness
@@ -55,27 +55,27 @@ namespace boost
 
     struct default_big_endian_traits
     {
-      typedef integer::ubig32_t  page_id_type;
-      typedef integer::ubig16_t  page_size_type;
-      typedef integer::ubig16_t  page_level_type;
+      typedef integer::ubig32_t  node_id_type;
+      typedef integer::ubig16_t  node_size_type;
+      typedef integer::ubig16_t  node_level_type;
       static const BOOST_SCOPED_ENUM(integer::endianness) header_endianness
         = integer::endianness::big;
     };
 
     struct default_little_endian_traits
     {
-      typedef integer::ulittle32_t  page_id_type;
-      typedef integer::ulittle16_t  page_size_type;
-      typedef integer::ulittle16_t  page_level_type;
+      typedef integer::ulittle32_t  node_id_type;
+      typedef integer::ulittle16_t  node_size_type;
+      typedef integer::ulittle16_t  node_level_type;
       static const BOOST_SCOPED_ENUM(integer::endianness) header_endianness
         = integer::endianness::little;
     };
 
     struct default_endian_traits
     {
-      typedef integer::ubig32_t  page_id_type;
-      typedef integer::ubig16_t  page_size_type;
-      typedef integer::ubig16_t  page_level_type;
+      typedef integer::ubig32_t  node_id_type;
+      typedef integer::ubig16_t  node_size_type;
+      typedef integer::ubig16_t  node_level_type;
       static const BOOST_SCOPED_ENUM(integer::endianness) header_endianness
         = integer::endianness::big;
     };
@@ -107,8 +107,8 @@ namespace boost
     static const boost::uint8_t major_version = 0;  // version identification
     static const boost::uint8_t minor_version = 1;
 
-    static const std::size_t default_page_size = 4096;
-    static const std::size_t default_max_cache_pages = 128;
+    static const std::size_t default_node_size = 4096;
+    static const std::size_t default_max_cache_nodes = 128;
 
     namespace flags
     {
@@ -122,7 +122,7 @@ namespace boost
     class header_page
     {
     public:
-      typedef boost::uint32_t page_id_type;
+      typedef boost::uint32_t node_id_type;
     private:
       // stuff often looked at in dumps comes first, subject to alignment requirements
 
@@ -134,13 +134,13 @@ namespace boost
 
       boost::uint64_t     m_element_count;
 
-      boost::uint32_t     m_page_size;           // disk page size in bytes
+      boost::uint32_t     m_node_size;           // disk node size in bytes
       boost::uint32_t     m_flags;
-      page_id_type        m_root_page_id;
-      page_id_type        m_first_page_id;
-      page_id_type        m_last_page_id;
-      page_id_type        m_page_count;
-      page_id_type        m_free_page_list_head_id;  // list of recycleable pages
+      node_id_type        m_root_node_id;
+      node_id_type        m_first_node_id;
+      node_id_type        m_last_node_id;
+      node_id_type        m_node_count;
+      node_id_type        m_free_node_list_head_id;  // list of recycleable nodes
 
       boost::uint16_t     m_root_level;
       boost::uint16_t     m_key_size;            // sizeof(key_type); -1 imples indirect
@@ -171,18 +171,18 @@ namespace boost
       const char*      splash_c_str() const          { return m_splash_c_str; }
       boost::uint8_t   major_version() const         { return m_major_version; }  
       boost::uint8_t   minor_version() const         { return m_minor_version; }  
-      boost::uint32_t  page_size() const             { return m_page_size; }
+      boost::uint32_t  node_size() const             { return m_node_size; }
       boost::uint16_t  key_size() const              { return m_key_size; }
       boost::uint16_t  mapped_size() const           { return m_mapped_size; }
       flags::bitmask   flags() const { return static_cast<flags::bitmask>(m_flags); }
 
       //  "updated" members that change as the file changes
       boost::uint64_t  element_count() const         { return m_element_count; }
-      page_id_type     root_page_id() const          { return m_root_page_id; }
-      page_id_type     first_page_id() const         { return m_first_page_id; }
-      page_id_type     last_page_id() const          { return m_last_page_id; }
-      page_id_type     page_count() const            { return m_page_count; }
-      page_id_type     free_page_list_head_id() const{ return m_free_page_list_head_id; }
+      node_id_type     root_node_id() const          { return m_root_node_id; }
+      node_id_type     first_node_id() const         { return m_first_node_id; }
+      node_id_type     last_node_id() const          { return m_last_node_id; }
+      node_id_type     node_count() const            { return m_node_count; }
+      node_id_type     free_node_list_head_id() const{ return m_free_node_list_head_id; }
       unsigned         root_level() const            { return m_root_level; }
       unsigned         levels() const                { return m_root_level+1; }
 
@@ -202,19 +202,19 @@ namespace boost
       }
       void  major_version(boost::uint8_t value)      { m_major_version = value; } 
       void  minor_version(boost::uint8_t value)      { m_minor_version = value; }  
-      void  page_size(std::size_t sz)                { m_page_size = sz; }
+      void  node_size(std::size_t sz)                { m_node_size = sz; }
       void  key_size(std::size_t sz)                 { m_key_size = sz; }
       void  mapped_size(std::size_t sz)              { m_mapped_size = sz; }
       void  flags(flags::bitmask flgs)               { m_flags = flgs; }
       void  element_count(boost::uint64_t value)     { m_element_count = value; }
       void  increment_element_count()                { ++m_element_count; }
       void  decrement_element_count()                { --m_element_count; }
-      void  root_page_id(page_id_type id)            { m_root_page_id = id; }
-      void  first_page_id(page_id_type id)           { m_first_page_id = id; }
-      void  last_page_id(page_id_type id)            { m_last_page_id = id; }
-      void  page_count(page_id_type value)           { m_page_count = value; }
-      void  increment_page_count()                   { ++m_page_count; }
-      void  free_page_list_head_id(page_id_type id)  { m_free_page_list_head_id = id; }
+      void  root_node_id(node_id_type id)            { m_root_node_id = id; }
+      void  first_node_id(node_id_type id)           { m_first_node_id = id; }
+      void  last_node_id(node_id_type id)            { m_last_node_id = id; }
+      void  node_count(node_id_type value)           { m_node_count = value; }
+      void  increment_node_count()                   { ++m_node_count; }
+      void  free_node_list_head_id(node_id_type id)  { m_free_node_list_head_id = id; }
       void  root_level(uint16_t value)               { m_root_level = value; }
       boost::uint16_t  increment_root_level()        { return ++m_root_level; }
       void  decrement_root_level()                   { --m_root_level; }
@@ -230,17 +230,17 @@ namespace boost
 #         endif
           )
         {
-          integer::endian_flip(m_page_size);
+          integer::endian_flip(m_node_size);
           integer::endian_flip(m_key_size);
           integer::endian_flip(m_mapped_size);
           integer::endian_flip(m_element_count);
           integer::endian_flip(m_flags);
           integer::endian_flip(m_root_level);
-          integer::endian_flip(m_root_page_id);
-          integer::endian_flip(m_first_page_id);
-          integer::endian_flip(m_last_page_id);
-          integer::endian_flip(m_page_count);
-          integer::endian_flip(m_free_page_list_head_id);
+          integer::endian_flip(m_root_node_id);
+          integer::endian_flip(m_first_node_id);
+          integer::endian_flip(m_last_node_id);
+          integer::endian_flip(m_node_count);
+          integer::endian_flip(m_free_node_list_head_id);
         }
       }
     };

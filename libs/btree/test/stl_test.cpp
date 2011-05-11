@@ -48,7 +48,7 @@ namespace
   boost::int32_t high = 0;
   boost::int32_t cycles = 1;
   boost::int32_t seed = 1;
-  boost::int32_t page_sz = 128; // smaller than usual default to increase stress
+  boost::int32_t node_sz = 128; // smaller than usual default to increase stress
   boost::int32_t cache_sz = 2;  // ditto
   boost::int32_t dump = 0;
   bool restart = false;
@@ -672,7 +672,7 @@ namespace
 
     bt.open(path_str,
       restart ? boost::btree::flags::read_write : boost::btree::flags::truncate,
-      page_sz);
+      node_sz);
     bt.max_cache_size(cache_sz);
 
     if (restart)
@@ -687,8 +687,8 @@ namespace
          << "  cycles = " << cycles << '\n'
          << "  seed = " << seed << '\n'
          << "  dump = " << dump << '\n'
-         << "  page size = " << page_sz << '\n'
-         << "  max cache pages = " << cache_sz << "\n";
+         << "  node size = " << node_sz << '\n'
+         << "  max cache nodes = " << cache_sz << "\n";
 
     boost::btree::run_timer total_times(3);
     boost::btree::run_timer cycle_times(3);
@@ -757,8 +757,8 @@ int cpp_main(int argc, char *argv[])
         cycles = atol(argv[1]+8);
       else if (strncmp(argv[1]+1, "seed=", 5) == 0)
         seed = atol(argv[1]+6);
-      else if (strncmp(argv[1]+1, "page=", 5) == 0)
-        page_sz = atol(argv[1]+6);
+      else if (strncmp(argv[1]+1, "node=", 5) == 0)
+        node_sz = atol(argv[1]+6);
       else if (strncmp(argv[1]+1, "cache=", 6) == 0)
         cache_sz = atol(argv[1]+7);
       else if (strncmp(argv[1]+1, "dump=", 5) == 0)
@@ -791,9 +791,9 @@ int cpp_main(int argc, char *argv[])
       "   -cycles=#    Cycle tests specified number of times; default " << cycles << "\n"
       "                -cycles=0 causes tests to cycle forever\n"
       "   -seed=#      Seed for random number generator; default "  << seed << "\n"
-      "   -page=#      Page size (>=128); default " << page_sz << "\n"
-      "                Small page sizes increase stress\n"
-      "   -cache=#     Cache size; default " << cache_sz << " pages\n"
+      "   -node=#      Node size (>=128); default " << node_sz << "\n"
+      "                Small node sizes increase stress\n"
+      "   -cache=#     Cache size; default " << cache_sz << " nodes\n"
       "   -dump=#      Dump restart files when cycles run mod dump # == 0, except \n"
       "                dump # -1 means dump at end only, 0 means never dump;\n"
       "                default " << dump << "\n"

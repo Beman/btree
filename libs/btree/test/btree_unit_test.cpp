@@ -191,7 +191,7 @@ void construct_new_test(BT& bt, const fs::path& p)
   BOOST_TEST_EQ(bt.size(), 0U);
   BOOST_TEST(bt.empty());
   BOOST_TEST(!bt.read_only());
-  BOOST_TEST(bt.page_size() == btree::default_page_size);  // the default
+  BOOST_TEST(bt.node_size() == btree::default_node_size);  // the default
   BOOST_TEST(bt.file_path() == p);
 
   BOOST_TEST(bt.begin() == bt.end());
@@ -271,9 +271,9 @@ void open_existing()
   BOOST_TEST(bt2.is_open());
   BOOST_TEST(!bt2.empty());
   BOOST_TEST_EQ(bt2.size(), 3U);
-  BOOST_TEST_EQ(bt2.page_size(), 128U);
+  BOOST_TEST_EQ(bt2.node_size(), 128U);
   BOOST_TEST_EQ(bt2.header().element_count(), 3U);
-  BOOST_TEST_EQ(bt2.header().page_size(), 128U);
+  BOOST_TEST_EQ(bt2.header().node_size(), 128U);
   bt2.dump_dot(std::cout);
 
   // TODO: test each header value
@@ -321,9 +321,9 @@ void small_variable_set()
   BOOST_TEST(bt.is_open());
   BOOST_TEST(!bt.empty());
   BOOST_TEST_EQ(bt.size(), 8U);
-  BOOST_TEST_EQ(bt.page_size(), 128U);
+  BOOST_TEST_EQ(bt.node_size(), 128U);
   BOOST_TEST_EQ(bt.header().element_count(), 8U);
-  BOOST_TEST_EQ(bt.header().page_size(), 128U);
+  BOOST_TEST_EQ(bt.header().node_size(), 128U);
 
   bt.dump_dot(std::cout);
 
@@ -371,9 +371,9 @@ void small_variable_map()
   BOOST_TEST(bt.is_open());
   BOOST_TEST(!bt.empty());
   BOOST_TEST_EQ(bt.size(), 8U);
-  BOOST_TEST_EQ(bt.page_size(), 128U);
+  BOOST_TEST_EQ(bt.node_size(), 128U);
   BOOST_TEST_EQ(bt.header().element_count(), 8U);
-  BOOST_TEST_EQ(bt.header().page_size(), 128U);
+  BOOST_TEST_EQ(bt.header().node_size(), 128U);
 
   bt.dump_dot(std::cout);
 
@@ -494,7 +494,7 @@ void insert_tests(BTree& bt)
   BOOST_TEST(bt.size() == 0U);
   BOOST_TEST(bt.empty());
   BOOST_TEST(!bt.read_only());
-  BOOST_TEST(bt.page_size() == 128);
+  BOOST_TEST(bt.node_size() == 128);
   BOOST_TEST(bt.begin() == bt.end());
 
   typename BTree::const_iterator empty_iterator, begin, end, cur;
@@ -575,7 +575,7 @@ void insert_tests(BTree& bt)
 
   cur = begin = end = empty_iterator;
   //cout << '\n' << bt.manager() << '\n';
-  //cout << "\nroot is page " << bt.header().root_page_id() << ", size() " << bt.size() << '\n'; 
+  //cout << "\nroot is node " << bt.header().root_node_id() << ", size() " << bt.size() << '\n'; 
   //bt.dump_dot(std::cout);
 
   cur = bt.begin();
@@ -626,7 +626,7 @@ void insert_tests(BTree& bt)
   cur = bt.find(0x0E);
   BOOST_TEST(cur != bt.end());
 
-  //cout << "root is page " << bt.header().root_page_id() << '\n'; 
+  //cout << "root is node " << bt.header().root_node_id() << '\n'; 
   //bt.dump_dot(std::cout);
 
   cout << "    erase " << cur->key() << endl;
@@ -634,7 +634,7 @@ void insert_tests(BTree& bt)
 
   BOOST_TEST(cur == bt.end());
   BOOST_TEST_EQ(bt.size(), 2U);
-  BOOST_TEST_EQ(bt.header().root_page_id(), 2U);
+  BOOST_TEST_EQ(bt.header().root_node_id(), 2U);
   BOOST_TEST_EQ(bt.header().root_level(), 1U);
 
   cur = bt.find(0x0A);
@@ -646,12 +646,12 @@ void insert_tests(BTree& bt)
   BOOST_TEST_EQ(cur->key().x, 0x0D);
   BOOST_TEST(bt.begin() == cur);
   BOOST_TEST_EQ(bt.size(), 1U);
-  BOOST_TEST_EQ(bt.header().root_page_id(), 4U);
+  BOOST_TEST_EQ(bt.header().root_node_id(), 4U);
   BOOST_TEST_EQ(bt.header().root_level(), 0);
 
   cur = bt.find(0x0D);
 
-  //cout << "root is page " << bt.header().root_page_id() << '\n'; 
+  //cout << "root is node " << bt.header().root_node_id() << '\n'; 
   //bt.dump_dot(std::cout);
 
   BOOST_TEST(cur != bt.end());
@@ -662,25 +662,25 @@ void insert_tests(BTree& bt)
   BOOST_TEST(cur == bt.end());
   BOOST_TEST(bt.begin() == bt.end());
   BOOST_TEST_EQ(bt.size(), 0U);
-  BOOST_TEST_EQ(bt.header().root_page_id(), 4U);
+  BOOST_TEST_EQ(bt.header().root_node_id(), 4U);
   BOOST_TEST_EQ(bt.header().root_level(), 0);
   
-  //cout << "root is page " << bt.header().root_page_id() << '\n'; 
+  //cout << "root is node " << bt.header().root_node_id() << '\n'; 
   //bt.dump_dot(std::cout);
 
-  cout << "\n  add enough elements to force branch page splits" << endl;
+  cout << "\n  add enough elements to force branch node splits" << endl;
   for (int i = 1; i <= 21; ++i )
   {
 // std::cout << "\n inserting " << i << std::endl;
     key = i;
     mapped_value = i * 100;
     bt.emplace(key, mapped_value);
-//std::cout << "root is page " << bt.header().root_page_id() << '\n'; 
+//std::cout << "root is node " << bt.header().root_node_id() << '\n'; 
   //bt.dump_dot(std::cout);
   }
   BOOST_TEST_EQ(bt.size(), 21U);
   
-  //cout << "root is page " << bt.header().root_page_id() << '\n'; 
+  //cout << "root is node " << bt.header().root_node_id() << '\n'; 
   //bt.dump_dot(std::cout);
 
   cout << "\n  erase every other element" << endl;
@@ -691,7 +691,7 @@ void insert_tests(BTree& bt)
   }
   BOOST_TEST_EQ(bt.size(), 10U);
 
-  //cout << "root is page " << bt.header().root_page_id() << '\n'; 
+  //cout << "root is node " << bt.header().root_node_id() << '\n'; 
   //bt.dump_dot(std::cout);
 
   cout << "\n  erase remaining elements and attempt to erase nonexistant elements" << endl;
@@ -702,7 +702,7 @@ void insert_tests(BTree& bt)
     typename BTree::size_type erase_result = bt.erase(i);
     BOOST_TEST_EQ(count_result, erase_result);
     //cout << "     erase count " << ct << ", size() " << bt.size() << endl;
-    //cout << "root is page " << bt.header().root_page_id() << '\n'; 
+    //cout << "root is node " << bt.header().root_node_id() << '\n'; 
     //bt.dump_dot(std::cout);
   }
   BOOST_TEST_EQ(bt.size(), 0U);
@@ -717,8 +717,8 @@ void insert()
 {
   cout << "  insert..." << endl;
 
-  //  these tests use a value type that is large relative to the page size, thus stressing
-  //  the code by causing a lot of page splits 
+  //  these tests use a value type that is large relative to the node size, thus stressing
+  //  the code by causing a lot of node splits 
 
   {
     fs::path map_path("btree_map.btree");
@@ -772,34 +772,34 @@ void find_and_bounds_tests(BTree& bt)
 
   if (!(bt.header().flags() & btree::flags::unique))
   {
-    //cout << "root is page " << bt.header().root_page_id() << '\n'; 
+    //cout << "root is node " << bt.header().root_node_id() << '\n'; 
     //bt.dump_dot(std::cout);
     //cout << "insert 3" << endl;
     do_fb_insert(bt, 3);
-    //cout << "root is page " << bt.header().root_page_id() << '\n'; 
+    //cout << "root is node " << bt.header().root_node_id() << '\n'; 
     //bt.dump_dot(std::cout);
     //cout << "insert 7" << endl;
     do_fb_insert(bt, 7);
-    //cout << "root is page " << bt.header().root_page_id() << '\n'; 
+    //cout << "root is node " << bt.header().root_node_id() << '\n'; 
     //bt.dump_dot(std::cout);
     //cout << "insert 7" << endl;
     do_fb_insert(bt, 7);
     for (int i = 0; i < 10; ++i)
     {
-      //cout << "root is page " << bt.header().root_page_id() << '\n'; 
+      //cout << "root is node " << bt.header().root_node_id() << '\n'; 
       //bt.dump_dot(std::cout);
 
       //cout << "insert 15" << endl;
       do_fb_insert(bt, 15);
     }
-    //cout << "root is page " << bt.header().root_page_id() << '\n'; 
+    //cout << "root is node " << bt.header().root_node_id() << '\n'; 
     //bt.dump_dot(std::cout);
 
 
     BOOST_TEST_EQ(bt.size(), 22U);
   }
 
-  //cout << "root is page " << bt.header().root_page_id() << '\n'; 
+  //cout << "root is node " << bt.header().root_node_id() << '\n'; 
   bt.dump_dot(std::cout);
 
   //             i =   0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18
@@ -856,8 +856,8 @@ void find_and_bounds()
     find_and_bounds_tests(multiset);
   }
 
-  //  these tests use a value type that is large relative to the page size, thus stressing
-  //  the code by causing a lot of page splits 
+  //  these tests use a value type that is large relative to the node size, thus stressing
+  //  the code by causing a lot of node splits 
 
   {
     fb_map_type map("find_and_bounds_map.btr",
@@ -901,7 +901,7 @@ void insert_non_unique_tests(BTree& bt)
     BOOST_TEST_EQ(result->key().x, 3);
     BOOST_TEST_EQ(result->mapped_value(), i);
 
-    //cout << "root is page " << bt.header().root_page_id() << '\n'; 
+    //cout << "root is node " << bt.header().root_node_id() << '\n'; 
     //bt.dump_dot(std::cout);
    
     int j = 0;
@@ -923,8 +923,8 @@ void insert_non_unique()
 {
   cout << "  insert_non_unique..." << endl;
 
-  //  these tests use a value type that is large relative to the page size, thus stressing
-  //  the code by causing a lot of page splits 
+  //  these tests use a value type that is large relative to the node size, thus stressing
+  //  the code by causing a lot of node splits 
 
   {
     fs::path map_path("non_unique.btr");
@@ -998,12 +998,12 @@ void update_test()
 //  cout << "     multi complete" << endl;
 //}
 //
-////--------------------------- parent_pointer_to_split_page -----------------------------//
+////--------------------------- parent_pointer_to_split_node -----------------------------//
 //
-//void parent_pointer_to_split_page()
+//void parent_pointer_to_split_node()
 //{
-//  cout << "  parent_pointer_to_split_page..." << endl;
-//  cout << "    parent_pointer_to_split_page complete" << endl;
+//  cout << "  parent_pointer_to_split_node..." << endl;
+//  cout << "    parent_pointer_to_split_node complete" << endl;
 //}
 //
 ////----------------------------- parent_pointer_lifetime --------------------------------//
@@ -1021,27 +1021,27 @@ void pack_optimization()
   cout << "  pack_optimization..." << endl;
 
   typedef std::pair<int, int> value_type;
-  const int page_sz = 128;
+  const int node_sz = 128;
   const int overhead = 12;
-  const int per_page = (page_sz - overhead) / sizeof(value_type);
-  const int n = per_page * 2;  // sufficient to distinguish if pack optimization works
+  const int per_node = (node_sz - overhead) / sizeof(value_type);
+  const int n = per_node * 2;  // sufficient to distinguish if pack optimization works
 
-  btree::btree_map<int, int> np("not_packed.btr", btree::flags::truncate, page_sz);
+  btree::btree_map<int, int> np("not_packed.btr", btree::flags::truncate, node_sz);
   for (int i=n; i > 0; --i)
     np.emplace(i, 0xffffff00+i);
 
-  cout << "\nroot is page " << np.header().root_page_id() << '\n'; 
+  cout << "\nroot is node " << np.header().root_node_id() << '\n'; 
   np.dump_dot(std::cout);
   
-  btree::btree_map<int, int> p("packed.btr", btree::flags::truncate, page_sz);
+  btree::btree_map<int, int> p("packed.btr", btree::flags::truncate, node_sz);
   for (int i=1; i <= n; ++i)
     p.emplace(i, 0xffffff00+i);
 
-  cout << "\nroot is page " << p.header().root_page_id() << '\n'; 
+  cout << "\nroot is node " << p.header().root_node_id() << '\n'; 
   p.dump_dot(std::cout);
 
   BOOST_TEST_EQ(np.size(), p.size());
-  BOOST_TEST(p.header().page_count() < np.header().page_count());
+  BOOST_TEST(p.header().node_count() < np.header().node_count());
 
   cout << "    pack_optimization complete" << endl;
 }
@@ -1150,7 +1150,7 @@ int cpp_main(int, char*[])
   update_test();
   //iteration();
   //multi();
-  //parent_pointer_to_split_page();
+  //parent_pointer_to_split_node();
   //parent_pointer_lifetime();
   pack_optimization();
   reopen_btree_object_test();
