@@ -750,13 +750,13 @@ private:
         par_element = par->branch().begin();
       }
 
-      btree_node_ptr pg(manager()->read(par_element->node_id()));
-      pg->parent(par);
-      pg->parent_element(par_element);
+      btree_node_ptr np(manager()->read(par_element->node_id()));
+      np->parent(par);
+      np->parent_element(par_element);
 #     ifndef NDEBUG
-      pg->parent_node_id(par->node_id());
+      np->parent_node_id(par->node_id());
 #     endif
-      return pg;
+      return np;
     }
 
     btree_node_ptr     prior_node()  // return next node at current level
@@ -779,13 +779,13 @@ private:
         par_element = par->branch().end();
       }
 
-      btree_node_ptr pg(manager()->read(par_element->node_id()));
-      pg->parent(par);
-      pg->parent_element(par_element);
+      btree_node_ptr np(manager()->read(par_element->node_id()));
+      np->parent(par);
+      np->parent_element(par_element);
 #     ifndef NDEBUG
-      pg->parent_node_id(par->node_id());
+      np->parent_node_id(par->node_id());
 #     endif
-      return pg;
+      return np;
     }
 
   private:
@@ -891,8 +891,8 @@ protected:
 //--------------------------------------------------------------------------------------//
 private:
 
-  static buffer* m_node_alloc(buffer::buffer_id_type pg_id, buffer_manager& mgr)
-  { return new btree_node(pg_id, mgr); }
+  static buffer* m_node_alloc(buffer::buffer_id_type np_id, buffer_manager& mgr)
+  { return new btree_node(np_id, mgr); }
 
   void m_read_header()
   {
@@ -923,17 +923,17 @@ private:
   void  m_new_root();
   const_iterator m_leaf_insert(iterator insert_iter, const key_type& key,
     const mapped_type& mapped_value);
-  void  m_branch_insert(btree_node* pg, branch_iterator element,
+  void  m_branch_insert(btree_node* np, branch_iterator element,
     const key_type& k, node_id_type id);
 
-  void  m_erase_branch_value(btree_node* pg, branch_iterator value, node_id_type erasee);
-  void  m_free_node(btree_node* pg)
+  void  m_erase_branch_value(btree_node* np, branch_iterator value, node_id_type erasee);
+  void  m_free_node(btree_node* np)
   {
-    pg->needs_write(true);
-    pg->level(0xFFFE);
-    pg->size(0);
-    pg->branch().begin()->node_id() = node_id_type(m_hdr.free_node_list_head_id());
-    m_hdr.free_node_list_head_id(pg->node_id());
+    np->needs_write(true);
+    np->level(0xFFFE);
+    np->size(0);
+    np->branch().begin()->node_id() = node_id_type(m_hdr.free_node_list_head_id());
+    m_hdr.free_node_list_head_id(np->node_id());
   }
 
   //-------------------------------- branch_compare ------------------------------------//
@@ -1136,23 +1136,23 @@ btree_base<Key,Base,Traits,Comp>::begin() const
   BOOST_ASSERT_MSG(is_open(), "begin() on unopen btree");
   if (empty())
     return end();
-  btree_node_ptr pg = m_root;
+  btree_node_ptr np = m_root;
 
   // work down the tree until a leaf is reached
-  while (pg->is_branch())
+  while (np->is_branch())
   {
     // create the child->parent list
-    btree_node_ptr child_pg = m_mgr.read(pg->branch().begin()->node_id());
-    child_pg->parent(pg);
-    child_pg->parent_element(pg->branch().begin());
+    btree_node_ptr child_np = m_mgr.read(np->branch().begin()->node_id());
+    child_np->parent(np);
+    child_np->parent_element(np->branch().begin());
 #   ifndef NDEBUG
-    child_pg->parent_node_id(pg->node_id());
+    child_np->parent_node_id(np->node_id());
 #   endif
 
-    pg = child_pg;
+    np = child_np;
   }
 
-  return const_iterator(pg, pg->leaf().begin());
+  return const_iterator(np, np->leaf().begin());
 }
 
 //-------------------------------------- last() ---------------------------------------//
@@ -1165,9 +1165,9 @@ btree_base<Key,Base,Traits,Comp>::last() const
   if (empty())
     return end();
   BOOST_ASSERT(header().last_node_id());
-  btree_node_ptr pg(m_mgr.read(header().last_node_id()));
-  BOOST_ASSERT(pg->is_leaf());
-  return const_iterator(pg, pg->leaf().end()-1);
+  btree_node_ptr np(m_mgr.read(header().last_node_id()));
+  BOOST_ASSERT(np->is_leaf());
+  return const_iterator(np, np->leaf().end()-1);
 }
 
 //---------------------------------- m_new_node() --------------------------------------//
@@ -1176,24 +1176,24 @@ template <class Key, class Base, class Traits, class Comp>
 typename btree_base<Key,Base,Traits,Comp>::btree_node_ptr 
 btree_base<Key,Base,Traits,Comp>::m_new_node(boost::uint16_t lv)
 {
-  btree_node_ptr pg;
+  btree_node_ptr np;
   if (m_hdr.free_node_list_head_id())
   {
-    pg = m_mgr.read(m_hdr.free_node_list_head_id());
-    BOOST_ASSERT(pg->level() == 0xFFFE);  // free node list entry
-    m_hdr.free_node_list_head_id(pg->branch().begin()->node_id());
+    np = m_mgr.read(m_hdr.free_node_list_head_id());
+    BOOST_ASSERT(np->level() == 0xFFFE);  // free node list entry
+    m_hdr.free_node_list_head_id(np->branch().begin()->node_id());
   }
   else
   {
-    pg = m_mgr.new_buffer();
+    np = m_mgr.new_buffer();
     m_hdr.increment_node_count();
     BOOST_ASSERT(m_hdr.node_count() == m_mgr.buffer_count());
   }
 
-  pg->needs_write(true);
-  pg->level(lv);
-  pg->size(0);
-  return pg;
+  np->needs_write(true);
+  np->level(lv);
+  np->size(0);
+  return np;
 }
 
 //----------------------------------- m_new_root() -------------------------------------//
@@ -1234,98 +1234,98 @@ btree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter,
     : dynamic_size(mapped_value_);
   std::size_t          value_size = key_size + mapped_size;
   //std::cout << "***insert key_size " << key_size << " value_size " << value_size << std::endl;
-  btree_node_ptr       pg = insert_iter.m_node;
+  btree_node_ptr       np = insert_iter.m_node;
   leaf_iterator        insert_begin = insert_iter.m_element;
-  btree_node_ptr       pg2;
+  btree_node_ptr       np2;
   
-  BOOST_ASSERT_MSG(pg->is_leaf(), "internal error");
-  BOOST_ASSERT_MSG(pg->size() <= m_max_leaf_size, "internal error");
+  BOOST_ASSERT_MSG(np->is_leaf(), "internal error");
+  BOOST_ASSERT_MSG(np->size() <= m_max_leaf_size, "internal error");
 
   m_hdr.increment_element_count();
-  pg->needs_write(true);
+  np->needs_write(true);
 
-  if (pg->size() + value_size > m_max_leaf_size)  // no room on node?
+  if (np->size() + value_size > m_max_leaf_size)  // no room on node?
   {
     //  no room on node, so node must be split
 
-    if (pg->level() == m_hdr.root_level()) // splitting the root?
+    if (np->level() == m_hdr.root_level()) // splitting the root?
       m_new_root();  // create a new root
     
-    pg2 = m_new_node(pg->level());  // create the new node 
+    np2 = m_new_node(np->level());  // create the new node 
 
     // ck pack conditions now, since leaf seq list update may chg header().last_node_id()
     if (m_ok_to_pack
-        && (insert_begin != pg->leaf().end() || pg->node_id() != header().last_node_id()))
+        && (insert_begin != np->leaf().end() || np->node_id() != header().last_node_id()))
       m_ok_to_pack = false;  // conditions for pack optimization not met
 
-    if (pg->node_id() == header().last_node_id())
-      m_hdr.last_node_id(pg2->node_id());
+    if (np->node_id() == header().last_node_id())
+      m_hdr.last_node_id(np2->node_id());
 
     // apply pack optimization if applicable
     if (m_ok_to_pack)  // have all inserts been ordered and no erases occurred?
     {
-      // pack optimization: instead of splitting pg, just put value alone on pg2
-      m_memcpy_value(&*pg2->leaf().begin(), &key_, key_size, &mapped_value_, mapped_size);  // insert value
-      pg2->size(value_size);
-      BOOST_ASSERT(pg->parent()->node_id() == pg->parent_node_id()); // max_cache_size logic OK?
-      m_branch_insert(pg->parent(), pg->parent_element(),
-        key(*pg2->leaf().begin()), pg2->node_id());
-      return const_iterator(pg2, pg2->leaf().begin());
+      // pack optimization: instead of splitting np, just put value alone on np2
+      m_memcpy_value(&*np2->leaf().begin(), &key_, key_size, &mapped_value_, mapped_size);  // insert value
+      np2->size(value_size);
+      BOOST_ASSERT(np->parent()->node_id() == np->parent_node_id()); // max_cache_size logic OK?
+      m_branch_insert(np->parent(), np->parent_element(),
+        key(*np2->leaf().begin()), np2->node_id());
+      return const_iterator(np2, np2->leaf().begin());
     }
 
-    // split node pg by moving half the elements, by size, to node p2
-    leaf_iterator split_begin(pg->leaf().begin());
-    split_begin.advance_by_size(pg->leaf().size() / 2);
+    // split node np by moving half the elements, by size, to node p2
+    leaf_iterator split_begin(np->leaf().begin());
+    split_begin.advance_by_size(np->leaf().size() / 2);
     ++split_begin; // for leaves, prefer more aggressive split begin
-    std::size_t split_sz = char_distance(&*split_begin, &*pg->leaf().end());
+    std::size_t split_sz = char_distance(&*split_begin, &*np->leaf().end());
 
     // TODO: if the insert point will fall on the new node, it would be faster to
     // copy the portion before the insert point, copy the value being inserted, and
     // finally copy the portion after the insert point. However, that's a fair amount of
     // additional code for something that only happens on half of all leaf splits on average.
 
-    std::memcpy(&*pg2->leaf().begin(), &*split_begin, split_sz);
-    pg2->size(split_sz);
+    std::memcpy(&*np2->leaf().begin(), &*split_begin, split_sz);
+    np2->size(split_sz);
     std::memset(&*split_begin, 0,                         // zero unused space to make
-      char_distance(&*split_begin, &*pg->leaf().end()));  //  file dumps easier to read
-    pg->size(pg->size() - split_sz);
+      char_distance(&*split_begin, &*np->leaf().end()));  //  file dumps easier to read
+    np->size(np->size() - split_sz);
 
-    // adjust pg and insert_begin if they now fall on the new node due to the split
+    // adjust np and insert_begin if they now fall on the new node due to the split
     if (&*split_begin < &*insert_begin)
     {
-      pg = pg2;
-      insert_begin = leaf_iterator(&*pg->leaf().begin(),
+      np = np2;
+      insert_begin = leaf_iterator(&*np->leaf().begin(),
         char_distance(&*split_begin, &*insert_begin));  
     }
   }
 
-  //  insert value into pg at insert_begin
-//std::cout << "pg size " << pg->size()
+  //  insert value into np at insert_begin
+//std::cout << "np size " << np->size()
 //          << " insert_begin " << &*insert_begin
-//          << " begin() " << &*pg->leaf().begin()
-//          << " end() " << &*pg->leaf().end()
-//          << " char_distance " << char_distance(&*insert_begin, &*pg->leaf().end())
+//          << " begin() " << &*np->leaf().begin()
+//          << " end() " << &*np->leaf().end()
+//          << " char_distance " << char_distance(&*insert_begin, &*np->leaf().end())
 //          << std::endl;
-  BOOST_ASSERT(&*insert_begin >= &*pg->leaf().begin());
-  BOOST_ASSERT(&*insert_begin <= &*pg->leaf().end());
+  BOOST_ASSERT(&*insert_begin >= &*np->leaf().begin());
+  BOOST_ASSERT(&*insert_begin <= &*np->leaf().end());
   std::memmove(char_ptr(&*insert_begin) + value_size,
-    &*insert_begin, char_distance(&*insert_begin, &*pg->leaf().end()));  // make room
+    &*insert_begin, char_distance(&*insert_begin, &*np->leaf().end()));  // make room
   m_memcpy_value(&*insert_begin, &key_, key_size, &mapped_value_, mapped_size);  // insert value
-  pg->size(pg->size() + value_size);
-//std::cout << "pg size " << pg->size() << std::endl;
+  np->size(np->size() + value_size);
+//std::cout << "np size " << np->size() << std::endl;
 
   // if there is a new node, its initial key and node_id are inserted into parent
-  if (pg2)
+  if (np2)
   {
     BOOST_ASSERT(insert_iter.m_node->parent()->node_id() \
       == insert_iter.m_node->parent_node_id()); // max_cache_size logic OK?
     m_branch_insert(insert_iter.m_node->parent(),
       insert_iter.m_node->parent_element(),
-      key(*pg2->leaf().begin()), pg2->node_id());
+      key(*np2->leaf().begin()), np2->node_id());
   }
 
 //std::cout << "***insert done" << std::endl;
-  return const_iterator(pg, insert_begin);
+  return const_iterator(np, insert_begin);
 }
 
 //---------------------------------- m_branch_insert() ---------------------------------//
@@ -1340,37 +1340,37 @@ btree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter,
 template <class Key, class Base, class Traits, class Comp>   
 void
 btree_base<Key,Base,Traits,Comp>::m_branch_insert(
-  btree_node* pg1, branch_iterator element, const key_type& k, node_id_type id) 
+  btree_node* np1, branch_iterator element, const key_type& k, node_id_type id) 
 {
   //std::cout << "branch insert key " << k << ", id " << id << std::endl;
 
   std::size_t       k_size = dynamic_size(k);
   std::size_t       insert_size = k_size + sizeof(node_id_type);
-  btree_node*       pg = pg1;
+  btree_node*       np = np1;
   key_type*         insert_begin = &element->key();
-  btree_node_ptr    pg2;
+  btree_node_ptr    np2;
 
-  BOOST_ASSERT(pg->is_branch());
-  BOOST_ASSERT(pg->size() <= m_max_branch_size);
+  BOOST_ASSERT(np->is_branch());
+  BOOST_ASSERT(np->size() <= m_max_branch_size);
 
-  pg->needs_write(true);
+  np->needs_write(true);
 
-  if (pg->size() + insert_size > m_max_branch_size)  // no room on node?
+  if (np->size() + insert_size > m_max_branch_size)  // no room on node?
   {
     //  no room on node, so node must be split
     //std::cout << "Splitting branch\n";
 
-    if (pg->level() == m_hdr.root_level()) // splitting the root?
+    if (np->level() == m_hdr.root_level()) // splitting the root?
       m_new_root();  // create a new root
     
-    pg2 = m_new_node(pg->level());  // create the new node
+    np2 = m_new_node(np->level());  // create the new node
 
-    // split node pg by moving half the elements, by size, to node p2
+    // split node np by moving half the elements, by size, to node p2
 
-   branch_iterator unsplit_end(pg->branch().begin());
-    unsplit_end.advance_by_size(pg->branch().size() / 2);
+   branch_iterator unsplit_end(np->branch().begin());
+    unsplit_end.advance_by_size(np->branch().size() / 2);
     branch_iterator split_begin(unsplit_end+1);
-    std::size_t split_sz = char_distance(&*split_begin, char_ptr(&*pg->branch().end()) 
+    std::size_t split_sz = char_distance(&*split_begin, char_ptr(&*np->branch().end()) 
       + sizeof(node_id_type));  // include the end pseudo-element node_id
     BOOST_ASSERT(split_sz > sizeof(node_id_type));
 
@@ -1382,64 +1382,64 @@ btree_base<Key,Base,Traits,Comp>::m_branch_insert(
     //// if the insert will be at the start just copy everything to the proper location
     //if (split_begin == insert_begin)
     //{
-    //  pg2->branch().P0 = id;
-    //  std::memcpy(&*pg2->branch().begin(), &*split_begin, split_sz); // move split values to new node
-    //  pg2->size(split_sz);
+    //  np2->branch().P0 = id;
+    //  std::memcpy(&*np2->branch().begin(), &*split_begin, split_sz); // move split values to new node
+    //  np2->size(split_sz);
     //  std::memset(&*split_begin, 0,  // zero unused space to make file dumps easier to read
-    //    (pg->branch().end() - split_begin) * sizeof(branch_value_type)); 
-    //  pg->size(pg->size() - split_sz);
-    //  BOOST_ASSERT(pg->parent()->node_id() == pg->parent_node_id()); // max_cache_size logic OK?
-    //  m_branch_insert(pg->parent(), pg->parent_element()+1, k, pg2->node_id());
+    //    (np->branch().end() - split_begin) * sizeof(branch_value_type)); 
+    //  np->size(np->size() - split_sz);
+    //  BOOST_ASSERT(np->parent()->node_id() == np->parent_node_id()); // max_cache_size logic OK?
+    //  m_branch_insert(np->parent(), np->parent_element()+1, k, np2->node_id());
     //  return;
     //}
 
     // copy the split elements, including the pseudo-end element, to p2
-    std::memcpy(&*pg2->branch().begin(), &*split_begin, split_sz);  // include end pseudo element
-    pg2->size(split_sz - sizeof(node_id_type));  // exclude end pseudo element from size
+    std::memcpy(&*np2->branch().begin(), &*split_begin, split_sz);  // include end pseudo element
+    np2->size(split_sz - sizeof(node_id_type));  // exclude end pseudo element from size
 
-    BOOST_ASSERT(pg->parent()->node_id() == pg->parent_node_id()); // max_cache_size logic OK?
+    BOOST_ASSERT(np->parent()->node_id() == np->parent_node_id()); // max_cache_size logic OK?
 
     // promote the key from the original node's new end pseudo element to the parent branch node
-    m_branch_insert(pg->parent(), pg->parent_element(), unsplit_end->key(), pg2->node_id());
+    m_branch_insert(np->parent(), np->parent_element(), unsplit_end->key(), np2->node_id());
 
     // finalize work on the original node
     std::memset(&unsplit_end->key(), 0,  // zero unused space to make file dumps easier to read
-      char_distance(&unsplit_end->key(), &pg->branch().end()->key())); 
-    pg->size(char_distance(&*pg->branch().begin(), &*unsplit_end));
+      char_distance(&unsplit_end->key(), &np->branch().end()->key())); 
+    np->size(char_distance(&*np->branch().begin(), &*unsplit_end));
 
-    // adjust pg and insert_begin if they now fall on the new node due to the split
+    // adjust np and insert_begin if they now fall on the new node due to the split
     if (&*split_begin <= &*element)
     {
-      pg = pg2.get();
-      insert_begin = reinterpret_cast<key_type*>(char_ptr(&pg2->branch().begin()->key())
+      np = np2.get();
+      insert_begin = reinterpret_cast<key_type*>(char_ptr(&np2->branch().begin()->key())
         + char_distance(&split_begin->key(), insert_begin));
     }
   }
 
-  //  insert k, id, into pg at insert_begin
+  //  insert k, id, into np at insert_begin
 
-//std::cout << "node size " << pg->size()
+//std::cout << "node size " << np->size()
 //          << " insert size " << insert_size
 //          << " k_size " << k_size
 //          << " insert_begin " << insert_begin
-//          << " begin() " << &*pg->branch().begin()
-//          << " char_distance " << char_distance(insert_begin, &pg->branch().end()->key())
+//          << " begin() " << &*np->branch().begin()
+//          << " char_distance " << char_distance(insert_begin, &np->branch().end()->key())
 //          << std::endl;
-  BOOST_ASSERT(insert_begin >= &pg->branch().begin()->key());
-  BOOST_ASSERT(insert_begin <= &pg->branch().end()->key());
+  BOOST_ASSERT(insert_begin >= &np->branch().begin()->key());
+  BOOST_ASSERT(insert_begin <= &np->branch().end()->key());
   std::memmove(char_ptr(insert_begin) + insert_size,
-    insert_begin, char_distance(insert_begin, &pg->branch().end()->key()));  // make room
+    insert_begin, char_distance(insert_begin, &np->branch().end()->key()));  // make room
   std::memcpy(insert_begin, &k, k_size);  // insert k
   std::memcpy(char_ptr(insert_begin) + k_size, &id, sizeof(node_id_type));
-  pg->size(pg->size() + insert_size);
+  np->size(np->size() + insert_size);
 
 #ifndef NDEBUG
   if (m_hdr.flags() & btree::flags::unique)
   {
-    branch_iterator cur = pg->branch().begin();
+    branch_iterator cur = np->branch().begin();
     const key_type* prev_key = &cur->key();
     ++cur;
-    for(; cur != pg->branch().end(); ++cur)
+    for(; cur != np->branch().end(); ++cur)
     {
       BOOST_ASSERT(key_comp()(*prev_key, cur->key()));
       prev_key = &cur->key();
@@ -1519,27 +1519,27 @@ btree_base<Key,Base,Traits,Comp>::erase(const_iterator pos)
 
 template <class Key, class Base, class Traits, class Comp>   
 void btree_base<Key,Base,Traits,Comp>::m_erase_branch_value(
-  btree_node* pg, branch_iterator element, node_id_type erasee)
+  btree_node* np, branch_iterator element, node_id_type erasee)
 {
-  BOOST_ASSERT(pg->is_branch());
-  BOOST_ASSERT(&*element >= &*pg->branch().begin());
-  BOOST_ASSERT(&*element <= &*pg->branch().end());  // equal to end if pseudo-element only
+  BOOST_ASSERT(np->is_branch());
+  BOOST_ASSERT(&*element >= &*np->branch().begin());
+  BOOST_ASSERT(&*element <= &*np->branch().end());  // equal to end if pseudo-element only
   BOOST_ASSERT(erasee == element->node_id());
 
-  if (pg->empty()) // end pseudo-element only element on node?
+  if (np->empty()) // end pseudo-element only element on node?
                    // i.e. after the erase, the entire sub-tree will be empty
   {
-    BOOST_ASSERT(pg->level() != header().root_level());
-    BOOST_ASSERT(pg->parent()->node_id() == pg->parent_node_id()); // max_cache_size logic OK?
-    m_erase_branch_value(pg->parent(),
-      pg->parent_element(), pg->node_id()); // erase parent value pointing to pg
-    m_free_node(pg); // move node to free node list
+    BOOST_ASSERT(np->level() != header().root_level());
+    BOOST_ASSERT(np->parent()->node_id() == np->parent_node_id()); // max_cache_size logic OK?
+    m_erase_branch_value(np->parent(),
+      np->parent_element(), np->node_id()); // erase parent value pointing to np
+    m_free_node(np); // move node to free node list
   }
   else
   {
     void* erase_point;
   
-    if (element != pg->branch().begin())
+    if (element != np->branch().begin())
     {
       --element;
       erase_point = &element->key();
@@ -1550,26 +1550,26 @@ void btree_base<Key,Base,Traits,Comp>::m_erase_branch_value(
     }
     std::size_t erase_sz = dynamic_size(element->key()) + sizeof(node_id_type); 
     std::size_t move_sz = char_distance(
-      char_ptr(erase_point)+erase_sz, &pg->branch().end()->key());
+      char_ptr(erase_point)+erase_sz, &np->branch().end()->key());
     std::memmove(erase_point, char_ptr(erase_point) + erase_sz, move_sz);
-    pg->size(pg->size() - erase_sz);
-    std::memset(char_ptr(&*pg->branch().end()) + sizeof(node_id_type), 0, erase_sz);
-    pg->needs_write(true);
+    np->size(np->size() - erase_sz);
+    std::memset(char_ptr(&*np->branch().end()) + sizeof(node_id_type), 0, erase_sz);
+    np->needs_write(true);
 
     //  recursively free the root node if it is now empty, promoting the end
     //  pseudo element to be the new root
-    while (pg->level()   // not the leaf (which can happen if iteration reaches leaf)
-      && pg->branch().begin() == pg->branch().end()  // node empty except for P0
-      && pg->level() == header().root_level())   // node is the root
+    while (np->level()   // not the leaf (which can happen if iteration reaches leaf)
+      && np->branch().begin() == np->branch().end()  // node empty except for P0
+      && np->level() == header().root_level())   // node is the root
     {
       // make the end pseudo-element the new root and then free this node
-      m_hdr.root_node_id(pg->branch().end()->node_id());
+      m_hdr.root_node_id(np->branch().end()->node_id());
       m_hdr.decrement_root_level();
       m_root = m_mgr.read(header().root_node_id());
       m_root->parent(btree_node_ptr());
       m_root->parent_element(branch_iterator());
-      m_free_node(pg); // move node to free node list
-      pg = m_root.get();
+      m_free_node(np); // move node to free node list
+      np = m_root.get();
     }
   }
 }
@@ -1689,40 +1689,40 @@ btree_base<Key,Base,Traits,Comp>::m_special_lower_bound(const key_type& k) const
 //  Search key:  A  B  C  D  E  F  G
 //  std::lower_bound  
 //   element     0  0  1  1  2  2  end pseudo-element
-//  child_pg->   0  0  1  1  2  2  end pseudo-element
+//  child_np->   0  0  1  1  2  2  end pseudo-element
 //   parent_element
 //  Child node:  P0 P1 P1 P2 P2 P3 P3
 {
-  btree_node_ptr pg = m_root;
+  btree_node_ptr np = m_root;
 
   // search branches down the tree until a leaf is reached
-  while (pg->is_branch())
+  while (np->is_branch())
   {
     branch_iterator low
-      = std::lower_bound(pg->branch().begin(), pg->branch().end(), k, branch_comp());
+      = std::lower_bound(np->branch().begin(), np->branch().end(), k, branch_comp());
 
     if ((header().flags() & btree::flags::unique)
-      && low != pg->branch().end()
+      && low != np->branch().end()
       && !key_comp()(k, low->key())) // if k isn't less that low->key(), it is equal
       ++low;                         // and so must be incremented; this follows from
                                      // the branch node invariant for unique containers
 
     // create the child->parent list
-    btree_node_ptr child_pg = m_mgr.read(low->node_id());
-    child_pg->parent(pg);
-    child_pg->parent_element(low);
+    btree_node_ptr child_np = m_mgr.read(low->node_id());
+    child_np->parent(np);
+    child_np->parent_element(low);
 #   ifndef NDEBUG
-    child_pg->parent_node_id(pg->node_id());
+    child_np->parent_node_id(np->node_id());
 #   endif
 
-    pg = child_pg;
+    np = child_np;
   }
 
   //  search leaf
   leaf_iterator low
-    = std::lower_bound(pg->leaf().begin(), pg->leaf().end(), k, value_comp());
+    = std::lower_bound(np->leaf().begin(), np->leaf().end(), k, value_comp());
 
-  return iterator(pg, low);
+  return iterator(np, low);
 }
 
 //---------------------------------- lower_bound() -------------------------------------//
@@ -1745,8 +1745,8 @@ btree_base<Key,Base,Traits,Comp>::lower_bound(const key_type& k) const
   }
 
   // lower bound is first element on next node
-  btree_node_ptr pg = low.m_node->next_node();
-  return pg ? const_iterator(pg, pg->leaf().begin()) : end();
+  btree_node_ptr np = low.m_node->next_node();
+  return np ? const_iterator(np, np->leaf().begin()) : end();
 }
 
 //------------------------------ m_special_upper_bound() -------------------------------//
@@ -1755,30 +1755,30 @@ template <class Key, class Base, class Traits, class Comp>
 typename btree_base<Key,Base,Traits,Comp>::iterator
 btree_base<Key,Base,Traits,Comp>::m_special_upper_bound(const key_type& k) const
 {
-  btree_node_ptr pg = m_root;
+  btree_node_ptr np = m_root;
 
   // search branches down the tree until a leaf is reached
-  while (pg->is_branch())
+  while (np->is_branch())
   {
     branch_iterator up
-      = std::upper_bound(pg->branch().begin(), pg->branch().end(), k, branch_comp());
+      = std::upper_bound(np->branch().begin(), np->branch().end(), k, branch_comp());
 
     // create the child->parent list
-    btree_node_ptr child_pg = m_mgr.read(up->node_id());
-    child_pg->parent(pg);
-    child_pg->parent_element(up);
+    btree_node_ptr child_np = m_mgr.read(up->node_id());
+    child_np->parent(np);
+    child_np->parent_element(up);
 #   ifndef NDEBUG
-    child_pg->parent_node_id(pg->node_id());
+    child_np->parent_node_id(np->node_id());
 #   endif
 
-    pg = child_pg;
+    np = child_np;
   }
 
   //  search leaf
   leaf_iterator up
-    = std::upper_bound(pg->leaf().begin(), pg->leaf().end(), k, value_comp());
+    = std::upper_bound(np->leaf().begin(), np->leaf().end(), k, value_comp());
 
-  return iterator(pg, up);
+  return iterator(np, up);
 }
 
 //---------------------------------- upper_bound() -------------------------------------//
@@ -1795,8 +1795,8 @@ btree_base<Key,Base,Traits,Comp>::upper_bound(const key_type& k) const
     return up;
 
   // upper bound is first element on next node
-  btree_node_ptr pg = up.m_node->next_node();
-  return pg ? const_iterator(pg, pg->leaf().begin()) : end();
+  btree_node_ptr np = up.m_node->next_node();
+  return np ? const_iterator(np, np->leaf().begin()) : end();
 }
 
 //------------------------------------- find() -----------------------------------------//
@@ -1839,32 +1839,32 @@ void btree_base<Key,Base,Traits,Comp>::dump_dot(std::ostream& os) const
 
   for (unsigned int p = 1; p < header().node_count(); ++p)
   {
-    btree_node_ptr pg = m_mgr.read(p);
+    btree_node_ptr np = m_mgr.read(p);
 
-    if (pg->is_leaf())
+    if (np->is_leaf())
     {
       os << "node" << p << "[label = \"<f0> ";
-      for (leaf_iterator it = pg->leaf().begin(); it != pg->leaf().end(); ++it)
+      for (leaf_iterator it = np->leaf().begin(); it != np->leaf().end(); ++it)
       {
-        if (it != pg->leaf().begin())
+        if (it != np->leaf().begin())
           os << '|';
         os << *it;
       }
       os << "\",fillcolor=\"palegreen\"];\n";
    }
-    else if (pg->is_branch())
+    else if (np->is_branch())
     {
       os << "node" << p << "[label = \"";
       int f = 0;
       branch_iterator it;
-      for (it = pg->branch().begin(); it != pg->branch().end(); ++it)
+      for (it = np->branch().begin(); it != np->branch().end(); ++it)
       {
         os << "<f" << f << ">|" /*<< it->node_id() << ","*/ << it->key() << "|";
         ++f;
       }
       os << "<f" << f << ">\",fillcolor=\"lightblue\"];\n";
       f = 0;
-      for (it = pg->branch().begin(); it != pg->branch().end(); ++it)
+      for (it = np->branch().begin(); it != np->branch().end(); ++it)
       {
         os << "\"node" << p << "\":f" << f << " -> \"node" << it->node_id() << "\":f0;\n";
         ++f;
@@ -1924,7 +1924,7 @@ btree_base<Key,Base,Traits,Comp>::iterator_type<T>::increment()
   if (++m_element != m_node->leaf().end())
     return;
 
-  btree_node_ptr pg(m_node);
+  btree_node_ptr np(m_node);
   m_node = m_node->next_node();
 
   if (m_node)
@@ -1935,7 +1935,7 @@ btree_base<Key,Base,Traits,Comp>::iterator_type<T>::increment()
   else // end() reached
   {
     *this = reinterpret_cast<const btree_base<Key,Base,Traits,Comp>*>
-        (pg->manager()->owner())->m_end_iterator;
+        (np->manager()->owner())->m_end_iterator;
   }
 }
 
@@ -1952,7 +1952,7 @@ btree_base<Key,Base,Traits,Comp>::iterator_type<T>::decrement()
     --m_element;
   else
   {
-    btree_node_ptr pg(m_node);
+    btree_node_ptr np(m_node);
     m_node = m_node->prior_node();
 
     if (m_node)
@@ -1964,7 +1964,7 @@ btree_base<Key,Base,Traits,Comp>::iterator_type<T>::decrement()
     else // end() reached
     {
       *this = reinterpret_cast<const btree_base<Key,Base,Traits,Comp>*>
-          (pg->manager()->owner())->m_end_iterator;
+          (np->manager()->owner())->m_end_iterator;
     }
   }
 }
