@@ -31,7 +31,11 @@ namespace boost
     }
     std::string operator()();
 
-    void seed(int x) {m_char_rng.seed(x);}
+    void seed(int x)
+    {
+      m_len_rng.seed(x);
+      m_char_rng.seed(x);
+    }
 
   private:
 
@@ -49,6 +53,7 @@ namespace boost
     std::string s;
     for (int len = m_len->operator()(); len > 0; --len)
       s += m_char->operator()();
+    //std::cout << s << '\n';
     return s;
   }
 

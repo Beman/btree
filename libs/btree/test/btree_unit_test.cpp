@@ -574,6 +574,7 @@ void insert_tests(BTree& bt)
   BOOST_TEST_EQ(bt.find(0x0E)->key().x, 0x0E);
 
   cur = begin = end = empty_iterator;
+
   //cout << '\n' << bt.manager() << '\n';
   //cout << "\nroot is node " << bt.header().root_node_id() << ", size() " << bt.size() << '\n'; 
   //bt.dump_dot(std::cout);

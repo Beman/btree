@@ -926,7 +926,8 @@ private:
   void  m_branch_insert(btree_node* np, branch_iterator element,
     const key_type& k, node_id_type id);
 
-  void  m_erase_branch_value(btree_node* np, branch_iterator value, node_id_type erasee);
+iterator m_sub_tree_begin(node_id_type id);
+iterator m_erase_branch_value(btree_node* np, branch_iterator value, node_id_type erasee);
   void  m_free_node(btree_node* np)
   {
     np->needs_write(true);
@@ -1466,11 +1467,11 @@ btree_base<Key,Base,Traits,Comp>::erase(const_iterator pos)
   pos.m_node->needs_write(true);
   m_hdr.decrement_element_count();
 
-  key_type nxt_key;  // save next key to be able to find() iterator to be returned
-  const_iterator nxt(pos);
-  ++nxt;
-  if (nxt != end())
-    nxt_key = key(*nxt);
+  //key_type nxt_key;  // save next key to be able to find() iterator to be returned
+  //const_iterator nxt(pos);
+  //++nxt;
+  //if (nxt != end())
+  //  nxt_key = key(*nxt);
 
   if (pos.m_node->node_id() != m_root->node_id()  // not root?
     && (pos.m_node->size() == dynamic_size(*pos.m_node->leaf().begin())))  // only 1 element on node?
@@ -1493,10 +1494,11 @@ btree_base<Key,Base,Traits,Comp>::erase(const_iterator pos)
       m_hdr.last_node_id(prr_node->node_id());
     }
 
-    m_erase_branch_value(pos.m_node->parent(), pos.m_node->parent_element(),
-      pos.m_node->node_id());
+    const_iterator nxt = m_erase_branch_value(pos.m_node->parent(),
+      pos.m_node->parent_element(), pos.m_node->node_id());
 
     m_free_node(pos.m_node.get());  // add node to free node list
+    return nxt;
   }
   else
   {
@@ -1511,14 +1513,46 @@ btree_base<Key,Base,Traits,Comp>::erase(const_iterator pos)
     std::memmove(erase_point, char_ptr(erase_point) + erase_sz, move_sz);
     pos.m_node->size(pos.m_node->size() - erase_sz);
     std::memset(&*pos.m_node->leaf().end(), 0, erase_sz);
+
+    if (pos.m_element != pos.m_node->leaf().end())
+      return pos;
+    btree_node_ptr next_node(pos.m_node->next_node());
+    return !next_node ? end() : iterator(next_node, next_node->leaf().begin());
   }
-  return nxt == end() ? nxt : find(nxt_key);
+}
+
+//----------------------------------- m_sub_tree_begin() -------------------------------//
+
+template <class Key, class Base, class Traits, class Comp>
+typename btree_base<Key,Base,Traits,Comp>::iterator
+btree_base<Key,Base,Traits,Comp>::m_sub_tree_begin(node_id_type id)
+{
+  if (empty())
+    return end();
+  btree_node_ptr np =  m_mgr.read(id);
+
+  // work down the tree until a leaf is reached
+  while (np->is_branch())
+  {
+    // create the child->parent list
+    btree_node_ptr child_np = m_mgr.read(np->branch().begin()->node_id());
+    child_np->parent(np);
+    child_np->parent_element(np->branch().begin());
+#   ifndef NDEBUG
+    child_np->parent_node_id(np->node_id());
+#   endif
+
+    np = child_np;
+  }
+
+  return iterator(np, np->leaf().begin());
 }
 
 //------------------------------ m_erase_branch_value() --------------------------------//
 
-template <class Key, class Base, class Traits, class Comp>   
-void btree_base<Key,Base,Traits,Comp>::m_erase_branch_value(
+template <class Key, class Base, class Traits, class Comp>
+typename btree_base<Key,Base,Traits,Comp>::iterator
+btree_base<Key,Base,Traits,Comp>::m_erase_branch_value(
   btree_node* np, branch_iterator element, node_id_type erasee)
 {
   BOOST_ASSERT(np->is_branch());
@@ -1531,13 +1565,16 @@ void btree_base<Key,Base,Traits,Comp>::m_erase_branch_value(
   {
     BOOST_ASSERT(np->level() != header().root_level());
     BOOST_ASSERT(np->parent()->node_id() == np->parent_node_id()); // max_cache_size logic OK?
-    m_erase_branch_value(np->parent(),
+    iterator nxt = m_erase_branch_value(np->parent(),
       np->parent_element(), np->node_id()); // erase parent value pointing to np
     m_free_node(np); // move node to free node list
+    return nxt;
   }
   else
   {
     void* erase_point;
+
+    node_id_type next_id (element == np->branch().end() ? 0 : (element+1)->node_id());
   
     if (element != np->branch().begin())
     {
@@ -1556,6 +1593,15 @@ void btree_base<Key,Base,Traits,Comp>::m_erase_branch_value(
     std::memset(char_ptr(&*np->branch().end()) + sizeof(node_id_type), 0, erase_sz);
     np->needs_write(true);
 
+    //  set up the return iterator
+    if (!next_id)
+    {
+      btree_node_ptr next_np(np->next_node());
+      if (!!next_np)
+        next_id = next_np->branch().begin()->node_id();
+    }
+    iterator next_itr (next_id ? m_sub_tree_begin(next_id) : end());
+
     //  recursively free the root node if it is now empty, promoting the end
     //  pseudo element to be the new root
     while (np->level()   // not the leaf (which can happen if iteration reaches leaf)
@@ -1571,6 +1617,7 @@ void btree_base<Key,Base,Traits,Comp>::m_erase_branch_value(
       m_free_node(np); // move node to free node list
       np = m_root.get();
     }
+    return next_itr;
   }
 }
 
