@@ -1437,12 +1437,12 @@ btree_base<Key,Base,Traits,Comp>::m_branch_insert(
   if (m_hdr.flags() & btree::flags::unique)
   {
     branch_iterator cur = pg->branch().begin();
-    key_type prev_key = cur->key();
+    const key_type* prev_key = &cur->key();
     ++cur;
     for(; cur != pg->branch().end(); ++cur)
     {
-      BOOST_ASSERT(key_comp()(prev_key, cur->key()));
-      prev_key = cur->key();
+      BOOST_ASSERT(key_comp()(*prev_key, cur->key()));
+      prev_key = &cur->key();
     }
   }
 #endif
@@ -1556,6 +1556,8 @@ void btree_base<Key,Base,Traits,Comp>::m_erase_branch_value(
     std::memset(char_ptr(&*pg->branch().end()) + sizeof(node_id_type), 0, erase_sz);
     pg->needs_write(true);
 
+    //  recursively free the root node if it is now empty, promoting the end
+    //  pseudo element to be the new root
     while (pg->level()   // not the leaf (which can happen if iteration reaches leaf)
       && pg->branch().begin() == pg->branch().end()  // node empty except for P0
       && pg->level() == header().root_level())   // node is the root
