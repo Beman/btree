@@ -10,7 +10,8 @@
 #include <boost/btree/map.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/cstdint.hpp>
-#include <boost/btree/support/cstr.hpp>
+#include <boost/btree/support/c_str_proxy.hpp>
+#include <boost/btree/support/strbuf.hpp>
 #include <boost/btree/support/random_string.hpp>
 #include <boost/btree/support/timer.hpp>
 #include <boost/detail/lightweight_main.hpp>
@@ -57,12 +58,21 @@ namespace
   btree::times_t erase_tm;
   const long double sec = 1000000.0L;
 
-  template <class BT>
+  struct c_str_proxy_tag{};
+
+  const btree::c_str_proxy& make_key(const char* s, c_str_proxy_tag)
+    {return btree::make_c_str(s); }
+
+  struct strbuf_tag{};
+
+  const btree::strbuf& make_key(const btree::strbuf& s, strbuf_tag)
+    {return s;}
+
+  template <class BT, class Tag>
   void test()
   {
     btree::run_timer t(3);
-    //boost::random_string key(4, 30, 'a', 'z');
-    boost::random_string key(1, 10, 'a', 'z');
+    boost::random_string key(5, 30, 'a', 'z');
 
     {
       btree::flags::bitmask flgs =
@@ -88,7 +98,7 @@ namespace
         {
           if (lg && i % lg == 0)
             std::cout << i << std::endl; 
-          bt.emplace(btree::make_cstr(key().c_str()), i);
+          bt.emplace(make_key(key().c_str(), Tag()), i);
         }
         insert_tm = t.stop();
         t.report();
@@ -133,7 +143,7 @@ namespace
           if (lg && i % lg == 0)
             std::cout << i << std::endl;
           k = key();
-          itr = bt.find(btree::make_cstr(k.c_str()));
+          itr = bt.find(make_key(k.c_str(), Tag()));
 #       if !defined(NDEBUG)
           if (itr == bt.end())
             throw std::runtime_error("btree find() returned end()");
@@ -191,7 +201,7 @@ namespace
           //}
           //else
           //  bt.erase(k);
-          bt.erase(btree::make_cstr(key().c_str()));
+          bt.erase(make_key(key().c_str(), Tag()));
         }
         erase_tm = t.stop();
         t.report();
@@ -491,21 +501,29 @@ int cpp_main(int argc, char * argv[])
   cout << "starting tests with node size " << node_sz
        << ", maximum cache nodes " << cache_sz << ",\n";
 
-  switch (whichaway)
-  {
-  case integer::endianness::big:
-    cout << "and big endianness\n";
-    test< btree::btree_map<btree::cstr, int32_t, btree::default_big_endian_traits> >();
-    break;
-  case integer::endianness::little:
-    cout << "and little endianness\n";
-    test< btree::btree_map<btree::cstr, int32_t, btree::default_little_endian_traits> >();
-    break;
-  case integer::endianness::native:
-    cout << "and native endianness\n";
-    test< btree::btree_map<btree::cstr, int32_t, btree::default_native_traits> >();
-    break;
-  }
+  //switch (whichaway)
+  //{
+  //case integer::endianness::big:
+  //  cout << "and big endianness\n";
+  //  test< btree::btree_map<btree::c_str_proxy, int32_t, btree::default_big_endian_traits> >();
+  //  break;
+  //case integer::endianness::little:
+  //  cout << "and little endianness\n";
+  //  test< btree::btree_map<btree::c_str_proxy, int32_t, btree::default_little_endian_traits> >();
+  //  break;
+  //case integer::endianness::native:
+  //  cout << "and native endianness\n";
+  //  test< btree::btree_map<btree::c_str_proxy, int32_t, btree::default_native_traits> >();
+  //  break;
+  //}
+
+  cout << "and native endianness\n";
+  cout << "\n***** with strbuf *****\n";
+  test< btree::btree_map<btree::strbuf, int32_t, btree::default_native_traits>,
+    strbuf_tag>();  
+  cout << "\n***** with c_str_proxy *****\n";
+  test< btree::btree_map<btree::c_str_proxy, int32_t, btree::default_native_traits>,
+    c_str_proxy_tag>();
 
   return 0;
 }
