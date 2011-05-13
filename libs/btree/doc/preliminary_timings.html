@@ -12,7 +12,7 @@
 
 <h1><span style="font-weight: 400">Boost [Proposed] B-Tree Library</span></h1>
 <p>Revised:
-<!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->07 May 2011<!--webbot bot="Timestamp" endspan i-checksum="15116" --></p>
+<!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->13 May 2011<!--webbot bot="Timestamp" endspan i-checksum="15109" --></p>
 <h2>Some preliminary timings</h2>
 <p>Timings were done with <code>bt_time.cpp</code>; see <code>libs/btree/tools</code>. 
 The system was an Intel Core i7 CPU at 2.80 GHz with 8 gigabytes of main memory, 
@@ -33,112 +33,141 @@ random numbers. Thus when the ratio is less that 1.00, the B-tree implementation
 is actually faster than the <code>std::map</code> implementation.</p>
 <p>The high-lighted tests are cases where the B-tree was faster than <code>
 std::map</code>.</p>
+
 <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111">
   <tr>
-    <td colspan="9">
+    <td colspan="5">
     <p align="center"><b>Ubuntu Linux / GCC 4.4</b></td>
   </tr>
 <tr>
     <td><b><code>bt_time</code> command line</b></td>
-    <td colspan="2" align="center"><b>Insert</b></td>
-    <td colspan="2" align="center"><b>Find</b></td>
-    <td colspan="2" align="center"><b>Iterate</b></td>
-    <td colspan="2" align="center"><b>Erase</b></td>
+    <td align="center"><b>Insert</b></td>
+    <td align="center"><b>Find</b></td>
+    <td align="center"><b>Iterate</b></td>
+    <td align="center"><b>Erase</b></td>
 </tr>
 <tr>
-  <td><code>./bt_time 5000000 -stl -p4096 -c32 -native -html</code></td>
-  <td align="right">17.61s</td>  <td align="right">4.20</td>
-  <td align="right">10.17s</td>  <td align="right">2.61</td>
-  <td align="right" bgcolor="#99FF66">0.05s</td>  <td align="right" bgcolor="#99FF66">0.14</td>
-  <td align="right">21.01s</td>  <td align="right">5.16</td>
-</tr>
-<tr>
-  <td><code>./bt_time 5000000 -stl -p4096 -c2100 -native -html</code></td>
-  <td align="right">20.41s</td>  <td align="right">3.99</td>
-  <td align="right">17.35s</td>  <td align="right">3.72</td>
-  <td align="right" bgcolor="#99FF66">0.09s</td>  <td align="right" bgcolor="#99FF66">0.23</td>
-  <td align="right">31.16s</td>  <td align="right">6.24</td>
-</tr>
-<tr>
-  <td><code>./bt_time 5000000 -stl -p4096 -c4200 -native -html</code></td>
-  <td align="right">10.50s</td>  <td align="right">2.59</td>
-  <td align="right">10.91s</td>  <td align="right">2.77</td>
-  <td align="right" bgcolor="#99FF66">0.06s</td>  <td align="right" bgcolor="#99FF66">0.18</td>
-  <td align="right">19.50s</td>  <td align="right">4.92</td>
-</tr>
-<tr>
-  <td><code>./bt_time 5000000 -stl -p4096 -c8400 -native -html</code></td>
-  <td align="right">6.32s</td>  <td align="right">1.57</td>
-  <td align="right">5.95s</td>  <td align="right">1.52</td>
-  <td align="right" bgcolor="#99FF66">0.07s</td>  <td align="right" bgcolor="#99FF66">0.22</td>
-  <td align="right">8.54s</td>  <td align="right">2.16</td>
-</tr>
-<tr>
-  <td><code>./bt_time 5000000 -stl -p4096 -c8400 -little -html</code></td>
-  <td align="right">4.78s</td>  <td align="right">1.19</td>
-  <td align="right">4.25s</td>  <td align="right">1.09</td>
-  <td align="right" bgcolor="#99FF66">0.05s</td>  <td align="right" bgcolor="#99FF66">0.15</td>
-  <td align="right">6.11s</td>  <td align="right">1.57</td>
-</tr>
-<tr>
-  <td><code>./bt_time 5000000 -stl -p4096 -c8400 -big -html</code></td>
-  <td align="right">4.74s</td>  <td align="right">1.19</td>
-  <td align="right">4.30s</td>  <td align="right">1.10</td>
-  <td align="right" bgcolor="#99FF66">0.04s</td>  <td align="right" bgcolor="#99FF66">0.12</td>
-  <td align="right">6.34s</td>  <td align="right">1.61</td>
-</tr>
-<tr>
-    <td colspan="9">
+    <td colspan="5">
     <p align="center"><b>Windows / VC++ 10.0 Express</b></td>
 </tr>
 <tr>
     <td><b><code>bt_time</code> command line</b></td>
-    <td colspan="2" align="center"><b>Insert</b></td>
-    <td colspan="2" align="center"><b>Find</b></td>
-    <td colspan="2" align="center"><b>Iterate</b></td>
-    <td colspan="2" align="center"><b>Erase</b></td>
+    <td align="center"><b>Insert</b></td>
+    <td align="center"><b>Find</b></td>
+    <td align="center"><b>Iterate</b></td>
+    <td align="center"><b>Erase</b></td>
 </tr>
 <tr>
-  <td><code>bt_time 5000000 -stl -p4096 -c32 -native -html</code></td>
-  <td align="right">35.61s</td>  <td align="right">9.59</td>
-  <td align="right">23.62s</td>  <td align="right">6.82</td>
-  <td align="right" bgcolor="#99FF66">0.08s</td>  <td align="right" bgcolor="#99FF66">0.42</td>
-  <td align="right">39.81s</td>  <td align="right">9.49</td>
+  <td><code>bt_time 5000000 -stl -n4096 -c32 -native -html</code></td>
+  <td align="right">33.55 sec<br>8.66 ratio</td>
+  <td align="right">23.18 sec<br>6.50 ratio</td>
+  <td align="right" bgcolor="#99FF66">0.07 sec<br>0.37 ratio</td>
+  <td align="right">37.49 sec<br>8.48 ratio</td>
 </tr>
 <tr>
-  <td><code>bt_time 5000000 -stl -p4096 -c2100 -native -html</code></td>
-  <td align="right">23.35s</td>  <td align="right">6.24</td>
-  <td align="right">21.78s</td>  <td align="right">6.26</td>
-  <td align="right" bgcolor="#99FF66">0.08s</td>  <td align="right" bgcolor="#99FF66">0.38</td>
-  <td align="right">39.39s</td>  <td align="right">9.39</td>
+  <td><code>bt_time 5000000 -stl -n4096 -c2100 -native -html</code></td>
+  <td align="right">23.55 sec<br>6.10 ratio</td>
+  <td align="right">21.74 sec<br>6.02 ratio</td>
+  <td align="right" bgcolor="#99FF66">0.08 sec<br>0.41 ratio</td>
+  <td align="right">34.44 sec<br>7.97 ratio</td>
 </tr>
 <tr>
-  <td><code>bt_time 5000000 -stl -p4096 -c4200 -native -html</code></td>
-  <td align="right">14.60s</td>  <td align="right">3.88</td>
-  <td align="right">17.10s</td>  <td align="right">4.91</td>
-  <td align="right" bgcolor="#99FF66">0.08s</td>  <td align="right" bgcolor="#99FF66">0.42</td>
-  <td align="right">29.20s</td>  <td align="right">6.96</td>
+  <td><code>bt_time 5000000 -stl -n4096 -c4200 -native -html</code></td>
+  <td align="right">13.79 sec<br>3.53 ratio</td>
+  <td align="right">16.34 sec<br>4.56 ratio</td>
+  <td align="right" bgcolor="#99FF66">0.08 sec<br>0.40 ratio</td>
+  <td align="right">25.90 sec<br>5.81 ratio</td>
 </tr>
 <tr>
-  <td><code>bt_time 5000000 -stl -p4096 -c8400 -native -html</code></td>
-  <td align="right">4.20s</td>  <td align="right">1.13</td>
-  <td align="right">3.51s</td>  <td align="right">1.01</td>
-  <td align="right" bgcolor="#99FF66">0.05s</td>  <td align="right" bgcolor="#99FF66">0.25</td>
-  <td align="right">5.13s</td>  <td align="right">1.22</td>
+  <td><code>bt_time 5000000 -stl -n4096 -c8400 -native -html</code></td>
+  <td align="right">4.35 sec<br>1.12 ratio</td>
+  <td align="right" bgcolor="#99FF66">3.62 sec<br>1.00 ratio</td>
+  <td align="right" bgcolor="#99FF66">0.04 sec<br>0.23 ratio</td>
+  <td align="right" bgcolor="#99FF66">4.13 sec<br>0.93 ratio</td>
 </tr>
 <tr>
-  <td><code>bt_time 5000000 -stl -p4096 -c8400 -little -html</code></td>
-  <td align="right">4.26s</td>  <td align="right">1.14</td>
-  <td align="right">3.53s</td>  <td align="right">1.01</td>
-  <td align="right" bgcolor="#99FF66">0.03s</td>  <td align="right" bgcolor="#99FF66">0.17</td>
-  <td align="right">5.18s</td>  <td align="right">1.23</td>
+  <td><code>bt_time 5000000 -stl -n4096 -c8400 -little -html</code></td>
+  <td align="right">4.39 sec<br>1.13 ratio</td>
+  <td align="right">3.73 sec<br>1.04 ratio</td>
+  <td align="right" bgcolor="#99FF66">0.04 sec<br>0.22 ratio</td>
+  <td align="right" bgcolor="#99FF66">4.14 sec<br>0.95 ratio</td>
 </tr>
 <tr>
-  <td><code>bt_time 5000000 -stl -p4096 -c8400 -big -html</code></td>
-  <td align="right">4.23s</td>  <td align="right">1.13</td>
-  <td align="right">3.53s</td>  <td align="right">1.01</td>
-  <td align="right" bgcolor="#99FF66">0.05s</td>  <td align="right" bgcolor="#99FF66">0.25</td>
-  <td align="right">5.18s</td>  <td align="right">1.23</td>
+  <td><code>bt_time 5000000 -stl -n4096 -c8400 -big -html</code></td>
+  <td align="right">4.43 sec<br>1.15 ratio</td>
+  <td align="right">3.72 sec<br>1.04 ratio</td>
+  <td align="right" bgcolor="#99FF66">0.04 sec<br>0.23 ratio</td>
+  <td align="right" bgcolor="#99FF66">4.18 sec<br>0.94 ratio</td>
+</tr>
+</table>
+
+<p>
+</p>
+
+<table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111">
+  <tr>
+    <td colspan="5">
+    <p align="center"><b>Ubuntu Linux / GCC 4.4</b></td>
+  </tr>
+<tr>
+    <td><b><code>bt_time</code> command line</b></td>
+    <td align="center"><b>Insert</b></td>
+    <td align="center"><b>Find</b></td>
+    <td align="center"><b>Iterate</b></td>
+    <td align="center"><b>Erase</b></td>
+</tr>
+<tr>
+    <td colspan="5">
+    <p align="center"><b>Windows / VC++ 10.0 Express</b></td>
+</tr>
+<tr>
+    <td><b><code>bt_time</code> command line</b></td>
+    <td align="center"><b>Insert</b></td>
+    <td align="center"><b>Find</b></td>
+    <td align="center"><b>Iterate</b></td>
+    <td align="center"><b>Erase</b></td>
+</tr>
+<tr>
+  <td><code>bt_time 5000000 -stl -n512 -c100000 -native -html</code></td>
+  <td align="right">5.54 sec<br>1.39 ratio</td>
+  <td align="right">6.08 sec<br>1.65 ratio</td>
+  <td align="right" bgcolor="#99FF66">0.07 sec<br>0.38 ratio</td>
+  <td align="right">6.25 sec<br>1.41 ratio</td>
+</tr>
+<tr>
+  <td><code>bt_time 5000000 -stl -n1024 -c100000 -native -html</code></td>
+  <td align="right">4.83 sec<br>1.20 ratio</td>
+  <td align="right">5.25 sec<br>1.43 ratio</td>
+  <td align="right" bgcolor="#99FF66">0.06 sec<br>0.29 ratio</td>
+  <td align="right">5.33 sec<br>1.23 ratio</td>
+</tr>
+<tr>
+  <td><code>bt_time 5000000 -stl -n2048 -c100000 -native -html</code></td>
+  <td align="right">4.30 sec<br>1.08 ratio</td>
+  <td align="right">4.03 sec<br>1.12 ratio</td>
+  <td align="right" bgcolor="#99FF66">0.05 sec<br>0.26 ratio</td>
+  <td align="right" bgcolor="#99FF66">4.29 sec<br>0.97 ratio</td>
+</tr>
+<tr>
+  <td><code>bt_time 5000000 -stl -n4096 -c8400 -native -html</code></td>
+  <td align="right">4.45 sec<br>1.13 ratio</td>
+  <td align="right">3.67 sec<br>1.03 ratio</td>
+  <td align="right" bgcolor="#99FF66">0.04 sec<br>0.22 ratio</td>
+  <td align="right" bgcolor="#99FF66">4.16 sec<br>0.92 ratio</td>
+</tr>
+<tr>
+  <td><code>bt_time 5000000 -stl -n8192 -c8400 -native -html</code></td>
+  <td align="right">5.20 sec<br>1.34 ratio</td>
+  <td align="right" bgcolor="#99FF66">3.42 sec<br>0.93 ratio</td>
+  <td align="right" bgcolor="#99FF66">0.04 sec<br>0.22 ratio</td>
+  <td align="right">4.45 sec<br>1.01 ratio</td>
+</tr>
+<tr>
+  <td><code>bt_time 5000000 -stl -n16380 -c8400 -native -html</code></td>
+  <td align="right">5.84 sec<br>1.50 ratio</td>
+  <td align="right" bgcolor="#99FF66">2.70 sec<br>0.75 ratio</td>
+  <td align="right" bgcolor="#99FF66">0.04 sec<br>0.22 ratio</td>
+  <td align="right">4.59 sec<br>1.06 ratio</td>
 </tr>
 </table>
 </pre><h2>Conclusions</h2><h3>Program cache matters a lot</h3><p>The only difference between tests 1, 2, and 3 is that 1 caches a maximum of 32 pages,  2 caches 1000 pages (about 1/8 of the total file), while test 3 uses a cache large 
@@ -149,27 +178,29 @@ data type while 4 and 5 used big and little endian integers, respectively. The h
 <h2>bt_test command line arguments</h2><p>Here is the explanation of the command line arguments:</p>
 <blockquote>
   <pre>Usage: bt_time n [Options]
-  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;The argument n specifies the number of test cases to run
-  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;Options:
-  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; path&nbsp;&nbsp;&nbsp;&nbsp; Specifies the test file path; default test.btree
-  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -s#&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Seed for random number generator; default 1
-  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -p#&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Page size (>=128); default 512
-  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Small page sizes are useful for stress testing
-  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -c#&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Cache size; default 16 pages
-  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -l#&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; log progress every # actions; default is to not log
-  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -xc&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; No create; use file from prior -xe run
-  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -xi&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; No insert test; forces -xc and doesn't do inserts
-  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -xf&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; No find test
-  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -xi&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; No iterate test
-  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -xe&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; No erase test; use to save file intact
-  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -v&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Verbose output statistics
-  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -stl&nbsp;&nbsp;&nbsp;&nbsp; Also run the tests against std::map
-  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -r&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Read entire file to preload operating system disk cache;
-  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; only applicable if -xc option is active
-  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -big&nbsp;&nbsp;&nbsp;&nbsp; Use btree::default_big_endian_traits
-  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -little&nbsp; Use btree::default_little_endian_traits
-  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -native&nbsp; Use btree::default_native_traits; this is the default
-  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -html&nbsp;&nbsp;&nbsp; Output html table of results to cerr</blockquote>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;The argument n specifies the number of test cases to run
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;Options:
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; path&nbsp;&nbsp;&nbsp;&nbsp; Specifies the test file path; default test.btree
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -s#&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Seed for random number generator; default 1
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -n#&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp; Node size (>=128); default 512
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Small
+&nbsp; node sizes are useful for stress testing
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -c#&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Cache size; default 16 pages
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -l#&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; log progress every # actions; default is to not log
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -xc&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; No create; use file from prior -xe run
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -xi&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; No insert test; forces -xc and doesn't do inserts
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -xf&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; No find test
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -xi&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; No iterate test
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -xe&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; No erase test; use to save file intact
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -v&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Verbose output statistics
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -stl&nbsp;&nbsp;&nbsp;&nbsp; Also run the tests against std::map
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -r&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Read entire file to preload operating system disk cache;
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; only applicable if -xc option is active
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -big&nbsp;&nbsp;&nbsp;&nbsp; Use btree::default_big_endian_traits
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -little&nbsp; Use btree::default_little_endian_traits
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -native&nbsp; Use btree::default_native_traits; this is the default
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; -html&nbsp;&nbsp;&nbsp; Output html table of results to cerr</blockquote>
 </body>
 
 </html>
