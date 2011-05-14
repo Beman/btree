@@ -101,7 +101,9 @@ namespace
         fs::rename(path, path_org);
         t.start();
         BT bt_old(path_org);
+        bt_old.max_cache_size(cache_sz);
         BT bt_new(path, btree::flags::truncate, node_sz);
+        bt_new.max_cache_size(cache_sz);
         for (typename BT::iterator it = bt_old.begin(); it != bt_old.end(); ++it)
         {
           bt_new.emplace(it->key(), it->mapped_value());
@@ -115,6 +117,7 @@ namespace
         cout << "  " << path_org << " file size: " << fs::file_size(path_org) << '\n';
         cout << "  " << path << "     file size: " << fs::file_size(path) << '\n';
         bt.open(path, btree::flags::read_write);
+        bt.max_cache_size(cache_sz);
       }
 
       if (do_find)

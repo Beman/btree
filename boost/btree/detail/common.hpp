@@ -34,18 +34,13 @@
   TODO:
 
 
-  * erase() return is correct for unique containers, but not for non-unique containers. Decide
-    what to do about non-unique containers. Might have to first count the offset from
-    first of the key, then for return find and increment to the new offset. Potentially
-    O(2*offset) complexity.
-  
   * btree_unit_test.cpp: move erase tests out of insert test.
 
   * Upgrade m_update() to allow new dynamic size different from old dynamic size
 
   * Add static_assert Key, T are is_trivially_copyable
 
-  * header() shouldn't be part of the public interface.
+  * Should header() be part of the public interface?
       - Add individual get, and where appropriate, set, functions.
       - Move header file to detail.
 
@@ -70,6 +65,10 @@
   * Preload option currently is just passed on to binary_file, which reads the entire file.
     That preloads the O/S cache, but does nothing for the btree cache. Should also iterate
     over the btree to preload the btree cache.
+
+  * Should (some) constructors, open, have max_cache_size argument?
+
+  * Verify, document, that a max_cache_size(-1) is "all".
 
 */
 

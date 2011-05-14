@@ -648,7 +648,7 @@ void insert_tests(BTree& bt)
   BOOST_TEST(bt.begin() == cur);
   BOOST_TEST_EQ(bt.size(), 1U);
   BOOST_TEST_EQ(bt.header().root_node_id(), 4U);
-  BOOST_TEST_EQ(bt.header().root_level(), 0);
+  BOOST_TEST_EQ(bt.header().root_level(), 0U);
 
   cur = bt.find(0x0D);
 
