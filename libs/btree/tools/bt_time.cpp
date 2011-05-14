@@ -233,17 +233,15 @@ namespace
           double ratio = (insert_tm.wall * 1.0) / this_tm.wall;
           if (ratio < 1.0)
             cerr << "  <td align=\"right\" bgcolor=\"#99FF66\">" 
-                 << insert_tm.wall / sec << "s</td>"
-                 << "  <td align=\"right\" bgcolor=\"#99FF66\">" 
-                 << ratio << "</td>\n";
+                 << insert_tm.wall / sec << " sec<br>"
+                 << ratio << " ratio</td>\n";
           else
             cerr << "  <td align=\"right\">" 
-                 << insert_tm.wall / sec << "s</td>"
-                 << "  <td align=\"right\">" 
-                 << ratio << "</td>\n";
+                 << insert_tm.wall / sec << " sec<br>"
+                 << ratio << " ratio</td>\n";
         }
         else
-          cerr << "  <td align=\"right\">N/A</td>  <td align=\"right\">N/A</td>\n";
+          cerr << "  <td align=\"right\">N/A</td>\n";
       }
       if (this_tm.wall)
         cout << "  ratio of btree to stl wall clock time: "
@@ -280,17 +278,15 @@ namespace
           double ratio = (find_tm.wall * 1.0) / this_tm.wall;
           if (ratio < 1.0)
             cerr << "  <td align=\"right\" bgcolor=\"#99FF66\">" 
-                 << find_tm.wall / sec << "s</td>"
-                 << "  <td align=\"right\" bgcolor=\"#99FF66\">" 
-                 << ratio << "</td>\n";
+                 << find_tm.wall / sec << " sec<br>"
+                 << ratio << " ratio</td>\n";
           else
             cerr << "  <td align=\"right\">" 
-                 << find_tm.wall / sec << "s</td>"
-                 << "  <td align=\"right\">" 
-                 << ratio << "</td>\n";
+                 << find_tm.wall / sec << " sec<br>"
+                 << ratio << " ratio</td>\n";
         }
         else
-          cerr << "  <td align=\"right\">N/A</td>  <td align=\"right\">N/A</td>\n";
+          cerr << "  <td align=\"right\">N/A</td>\n";
       }
       if (this_tm.wall)
         cout << "  ratio of btree to stl wall clock time: "
@@ -322,17 +318,15 @@ namespace
           double ratio = (iterate_tm.wall * 1.0) / this_tm.wall;
           if (ratio < 1.0)
             cerr << "  <td align=\"right\" bgcolor=\"#99FF66\">" 
-                 << iterate_tm.wall / sec << "s</td>"
-                 << "  <td align=\"right\" bgcolor=\"#99FF66\">" 
-                 << ratio << "</td>\n";
+                 << iterate_tm.wall / sec << " sec<br>"
+                 << ratio << " ratio</td>\n";
           else
             cerr << "  <td align=\"right\">" 
-                 << iterate_tm.wall / sec << "s</td>"
-                 << "  <td align=\"right\">" 
-                 << ratio << "</td>\n";
+                 << iterate_tm.wall / sec << " sec<br>"
+                 << ratio << " ratio</td>\n";
         }
         else
-          cerr << "  <td align=\"right\">N/A</td>  <td align=\"right\">N/A</td>\n";
+          cerr << "  <td align=\"right\">N/A</td>\n";
       }
       if (this_tm.wall)
         cout << "  ratio of btree to stl wall clock time: "
@@ -362,14 +356,12 @@ namespace
           double ratio = (erase_tm.wall * 1.0) / this_tm.wall;
           if (ratio < 1.0)
             cerr << "  <td align=\"right\" bgcolor=\"#99FF66\">" 
-                 << erase_tm.wall / sec << "s</td>"
-                 << "  <td align=\"right\" bgcolor=\"#99FF66\">" 
-                 << ratio << "</td>\n</tr>\n";
+                 << erase_tm.wall / sec << " sec<br>"
+                 << ratio << " ratio</td>\n</tr>\n";
           else
             cerr << "  <td align=\"right\">" 
-                 << erase_tm.wall / sec << "s</td>"
-                 << "  <td align=\"right\">" 
-                 << ratio << "</td>\n</tr>\n";
+                 << erase_tm.wall / sec << " sec<br>"
+                 << ratio << " ratio</td>\n</tr>\n";
         }
         else
           cerr << "  <td align=\"right\">N/A</td>\n</tr>  <td align=\"right\">N/A</td>\n</tr>\n";
