@@ -1,3 +1,23 @@
 Proposed B-tree library for Boost
 
-See libs/btree/tools/install.bat for an installation script
+To experiment with the library, various other boost libraries must be
+available. Here is one way to create such a setup:
+
+  git clone git://github.com/Beman/Boost-Btree.git xbtree
+  svn export --force http://svn.boost.org/svn/boost/trunk xbtree
+  
+As a confidence test, the following should build bjam, build various
+libraries and then run the Boost.btree regression tests on Windows:
+
+  cd xbtree
+  bootstrap
+  cd libs\btree\test
+  ..\..\..\bjam
+
+Or on POSIX-like systems:
+
+  cd xbtree
+  ./bootstrap.sh
+  cd libs/btree/test
+  ../../../bjam
+  
