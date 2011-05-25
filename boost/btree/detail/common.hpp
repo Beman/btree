@@ -1355,7 +1355,10 @@ btree_base<Key,Base,Traits,Comp>::m_branch_insert(
 
   np->needs_write(true);
 
-  if (np->size() + insert_size > m_max_branch_size)  // no room on node?
+  if (np->size() + insert_size
+                 + sizeof(node_id_type)  // NOTE WELL: size() doesn't include
+                                         // size of the end pseudo-element node_id
+    > m_max_branch_size)  // no room on node?
   {
     //  no room on node, so node must be split
     //std::cout << "Splitting branch\n";
@@ -1367,7 +1370,7 @@ btree_base<Key,Base,Traits,Comp>::m_branch_insert(
 
     // split node np by moving half the elements, by size, to node p2
 
-   branch_iterator unsplit_end(np->branch().begin());
+    branch_iterator unsplit_end(np->branch().begin());
     unsplit_end.advance_by_size(np->branch().size() / 2);
     branch_iterator split_begin(unsplit_end+1);
     std::size_t split_sz = char_distance(&*split_begin, char_ptr(&*np->branch().end()) 
@@ -1394,6 +1397,8 @@ btree_base<Key,Base,Traits,Comp>::m_branch_insert(
     //}
 
     // copy the split elements, including the pseudo-end element, to p2
+    BOOST_ASSERT(char_ptr(&*np2->branch().begin())+split_sz
+      <= char_ptr(&*np2->branch().begin())+m_max_branch_size);
     std::memcpy(&*np2->branch().begin(), &*split_begin, split_sz);  // include end pseudo element
     np2->size(split_sz - sizeof(node_id_type));  // exclude end pseudo element from size
 
@@ -1427,8 +1432,13 @@ btree_base<Key,Base,Traits,Comp>::m_branch_insert(
 //          << std::endl;
   BOOST_ASSERT(insert_begin >= &np->branch().begin()->key());
   BOOST_ASSERT(insert_begin <= &np->branch().end()->key());
+  BOOST_ASSERT(char_ptr(insert_begin) + insert_size            // start of memmove
+    + char_distance(insert_begin, &np->branch().end()->key())  // + size of memmove
+    <= char_ptr(&*np->branch().begin()) + m_max_branch_size);
   std::memmove(char_ptr(insert_begin) + insert_size,
     insert_begin, char_distance(insert_begin, &np->branch().end()->key()));  // make room
+  BOOST_ASSERT(char_ptr(insert_begin) + k_size + sizeof(node_id_type)
+    <= char_ptr(&*np->branch().begin())+m_max_branch_size);
   std::memcpy(insert_begin, &k, k_size);  // insert k
   std::memcpy(char_ptr(insert_begin) + k_size, &id, sizeof(node_id_type));
   np->size(np->size() + insert_size);

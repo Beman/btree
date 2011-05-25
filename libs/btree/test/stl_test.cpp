@@ -16,10 +16,10 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/detail/lightweight_main.hpp>
+#include <boost/detail/lightweight_test.hpp>
 
 #include <string>
 #include <iostream>
-#include <boost/detail/lightweight_test.hpp>
 #include <fstream>
 #include <cstdlib>  // for atol()
 #include <cstring>  // for strcmp(), strncmp()
@@ -828,5 +828,6 @@ int cpp_main(int argc, char *argv[])
   tests();
 
   cout << "all test cycles complete" << endl;
-  return 0;
+
+  return boost::report_errors();
 }

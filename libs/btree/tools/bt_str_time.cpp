@@ -35,8 +35,11 @@ namespace
   long initial_n;
   long seed = 1;
   long lg = 0;
+  long trace = 0;
+  long trace_count;
   int cache_sz = btree::default_max_cache_nodes;
   int node_sz = btree::default_node_size;
+  bool do_c_str_proxy (false);
   bool do_create (true);
   bool do_preload (false);
   bool do_insert (true);
@@ -60,13 +63,17 @@ namespace
 
   struct c_str_proxy_tag{};
 
-  const btree::c_str_proxy& make_key(const char* s, c_str_proxy_tag)
+  inline const btree::c_str_proxy& make_key(const char* s, c_str_proxy_tag)
     {return btree::make_c_str(s); }
 
   struct strbuf_tag{};
 
-  const btree::strbuf& make_key(const btree::strbuf& s, strbuf_tag)
-    {return s;}
+  inline const btree::strbuf& make_key(const btree::strbuf& s, strbuf_tag)
+  {
+    if (trace && ++trace_count > trace)
+      cout << s.c_str() << endl;
+    return s;
+  }
 
   template <class BT, class Tag>
   void test()
@@ -267,133 +274,146 @@ namespace
              << ((insert_tm.system + insert_tm.user) * 1.0)
                 / (this_tm.system + this_tm.user) << '\n';
 
-      cout << "\nfinding " << n << " std::map elements..." << endl;
-      stl_type::const_iterator itr;
-      std::string k;
-      key.seed(seed);
-      t.start();
-      for (long i = 1; i <= n; ++i)
+      if (do_find)
       {
-        if (lg && i % lg == 0)
-          std::cout << i << std::endl; 
-          k = key();
-          itr = stl.find(k);
-#       if !defined(NDEBUG)
-          if (itr == stl.end())
-            throw std::runtime_error("stl find() returned end()");
-          if (itr->first != k)
-            throw std::runtime_error("stl find() returned wrong iterator");
-#       endif
-      }
-      this_tm = t.stop();
-      t.report();
-      if (html)
-      {
-        if (this_tm.wall)
+        cout << "\nfinding " << n << " std::map elements..." << endl;
+        stl_type::const_iterator itr;
+        std::string k;
+        key.seed(seed);
+        t.start();
+        for (long i = 1; i <= n; ++i)
         {
-          double ratio = (find_tm.wall * 1.0) / this_tm.wall;
-          if (ratio < 1.0)
-            cerr << "  <td align=\"right\" bgcolor=\"#99FF66\">" 
-                 << find_tm.wall / sec << "s</td>"
-                 << "  <td align=\"right\" bgcolor=\"#99FF66\">" 
-                 << ratio << "</td>\n";
-          else
-            cerr << "  <td align=\"right\">" 
-                 << find_tm.wall / sec << "s</td>"
-                 << "  <td align=\"right\">" 
-                 << ratio << "</td>\n";
+          if (lg && i % lg == 0)
+            std::cout << i << std::endl; 
+            k = key();
+            itr = stl.find(k);
+  #       if !defined(NDEBUG)
+            if (itr == stl.end())
+              throw std::runtime_error("stl find() returned end()");
+            if (itr->first != k)
+              throw std::runtime_error("stl find() returned wrong iterator");
+  #       endif
         }
-        else
-          cerr << "  <td align=\"right\">N/A</td>  <td align=\"right\">N/A</td>\n";
+        this_tm = t.stop();
+        t.report();
+        if (html)
+        {
+          if (this_tm.wall)
+          {
+            double ratio = (find_tm.wall * 1.0) / this_tm.wall;
+            if (ratio < 1.0)
+              cerr << "  <td align=\"right\" bgcolor=\"#99FF66\">" 
+                   << find_tm.wall / sec << "s</td>"
+                   << "  <td align=\"right\" bgcolor=\"#99FF66\">" 
+                   << ratio << "</td>\n";
+            else
+              cerr << "  <td align=\"right\">" 
+                   << find_tm.wall / sec << "s</td>"
+                   << "  <td align=\"right\">" 
+                   << ratio << "</td>\n";
+          }
+          else
+            cerr << "  <td align=\"right\">N/A</td>  <td align=\"right\">N/A</td>\n";
+        }
+        if (this_tm.wall)
+          cout << "  ratio of btree to stl wall clock time: "
+               << (find_tm.wall * 1.0) / this_tm.wall << '\n';
+        if (verbose && this_tm.system + this_tm.user)
+          cout << "  ratio of btree to stl cpu time: "
+               << ((find_tm.system + find_tm.user) * 1.0)
+                  / (this_tm.system + this_tm.user) << '\n';
       }
-      if (this_tm.wall)
-        cout << "  ratio of btree to stl wall clock time: "
-             << (find_tm.wall * 1.0) / this_tm.wall << '\n';
-      if (verbose && this_tm.system + this_tm.user)
-        cout << "  ratio of btree to stl cpu time: "
-             << ((find_tm.system + find_tm.user) * 1.0)
-                / (this_tm.system + this_tm.user) << '\n';
+      if (do_iterate)
+      {
+        cout << "\niterating over " << stl.size() << " stl elements..." << endl;
+        unsigned long count = 0;
+        std::string prior_key;
+        t.start();
+        for (stl_type::const_iterator itr = stl.begin();
+          itr != stl.end();
+          ++itr)
+        {
+          ++count;
+          if (itr->first <= prior_key)
+            throw std::runtime_error("stl iteration sequence error");
+          prior_key = itr->first;
+        }
+        this_tm = t.stop();
+        t.report();
+        if (html)
+        {
+          if (this_tm.wall)
+          {
+            double ratio = (iterate_tm.wall * 1.0) / this_tm.wall;
+            if (ratio < 1.0)
+              cerr << "  <td align=\"right\" bgcolor=\"#99FF66\">" 
+                   << iterate_tm.wall / sec << "s</td>"
+                   << "  <td align=\"right\" bgcolor=\"#99FF66\">" 
+                   << ratio << "</td>\n";
+            else
+              cerr << "  <td align=\"right\">" 
+                   << iterate_tm.wall / sec << "s</td>"
+                   << "  <td align=\"right\">" 
+                   << ratio << "</td>\n";
+          }
+          else
+            cerr << "  <td align=\"right\">N/A</td>  <td align=\"right\">N/A</td>\n";
+        }
+        if (this_tm.wall)
+          cout << "  ratio of btree to stl wall clock time: "
+               << (iterate_tm.wall * 1.0) / this_tm.wall << '\n';
+        if (verbose && this_tm.system + this_tm.user)
+          cout << "  ratio of btree to stl cpu time: "
+               << ((iterate_tm.system + iterate_tm.user) * 1.0)
+                  / (this_tm.system + this_tm.user) << '\n';
+        if (count != stl.size())
+          throw std::runtime_error("stl iteration count error");
+      }
 
-      cout << "\niterating over " << stl.size() << " stl elements..." << endl;
-      unsigned long count = 0;
-      std::string prior_key;
-      t.start();
-      for (stl_type::const_iterator itr = stl.begin();
-        itr != stl.end();
-        ++itr)
+      if (do_erase)
       {
-        ++count;
-        if (itr->first <= prior_key)
-          throw std::runtime_error("stl iteration sequence error");
-        prior_key = itr->first;
-      }
-      this_tm = t.stop();
-      t.report();
-      if (html)
-      {
-        if (this_tm.wall)
+        cout << "\nerasing " << n << " std::map elements..." << endl;
+        key.seed(seed);
+        t.start();
+        for (long i = 1; i <= n; ++i)
         {
-          double ratio = (iterate_tm.wall * 1.0) / this_tm.wall;
-          if (ratio < 1.0)
-            cerr << "  <td align=\"right\" bgcolor=\"#99FF66\">" 
-                 << iterate_tm.wall / sec << "s</td>"
-                 << "  <td align=\"right\" bgcolor=\"#99FF66\">" 
-                 << ratio << "</td>\n";
-          else
-            cerr << "  <td align=\"right\">" 
-                 << iterate_tm.wall / sec << "s</td>"
-                 << "  <td align=\"right\">" 
-                 << ratio << "</td>\n";
+          if (lg && i % lg == 0)
+            std::cout << i << std::endl; 
+          stl.erase(key());
         }
-        else
-          cerr << "  <td align=\"right\">N/A</td>  <td align=\"right\">N/A</td>\n";
+        this_tm = t.stop();
+        t.report();
+        if (html)
+        {
+          if (this_tm.wall)
+          {
+            double ratio = (erase_tm.wall * 1.0) / this_tm.wall;
+            if (ratio < 1.0)
+              cerr << "  <td align=\"right\" bgcolor=\"#99FF66\">" 
+                   << erase_tm.wall / sec << "s</td>"
+                   << "  <td align=\"right\" bgcolor=\"#99FF66\">" 
+                   << ratio << "</td>\n</tr>\n";
+            else
+              cerr << "  <td align=\"right\">" 
+                   << erase_tm.wall / sec << "s</td>"
+                   << "  <td align=\"right\">" 
+                   << ratio << "</td>\n</tr>\n";
+          }
+          else
+            cerr << "  <td align=\"right\">N/A</td>\n</tr>  <td align=\"right\">N/A</td>\n</tr>\n";
+        }
+        if (this_tm.wall)
+          cout << "  ratio of btree to stl wall clock time: "
+               << (erase_tm.wall * 1.0) / this_tm.wall << '\n';
+        if (verbose && this_tm.system + this_tm.user)
+          cout << "  ratio of btree to stl cpu time: "
+               << ((erase_tm.system + erase_tm.user) * 1.0)
+                  / (this_tm.system + this_tm.user) << '\n';
+        cout << "STL timing complete" << endl;
       }
-      if (this_tm.wall)
-        cout << "  ratio of btree to stl wall clock time: "
-             << (iterate_tm.wall * 1.0) / this_tm.wall << '\n';
       if (verbose && this_tm.system + this_tm.user)
         cout << "  ratio of btree to stl cpu time: "
-             << ((iterate_tm.system + iterate_tm.user) * 1.0)
-                / (this_tm.system + this_tm.user) << '\n';
-      if (count != stl.size())
-        throw std::runtime_error("stl iteration count error");
-
-      cout << "\nerasing " << n << " std::map elements..." << endl;
-      key.seed(seed);
-      t.start();
-      for (long i = 1; i <= n; ++i)
-      {
-        if (lg && i % lg == 0)
-          std::cout << i << std::endl; 
-        stl.erase(key());
-      }
-      this_tm = t.stop();
-      t.report();
-      if (html)
-      {
-        if (this_tm.wall)
-        {
-          double ratio = (erase_tm.wall * 1.0) / this_tm.wall;
-          if (ratio < 1.0)
-            cerr << "  <td align=\"right\" bgcolor=\"#99FF66\">" 
-                 << erase_tm.wall / sec << "s</td>"
-                 << "  <td align=\"right\" bgcolor=\"#99FF66\">" 
-                 << ratio << "</td>\n</tr>\n";
-          else
-            cerr << "  <td align=\"right\">" 
-                 << erase_tm.wall / sec << "s</td>"
-                 << "  <td align=\"right\">" 
-                 << ratio << "</td>\n</tr>\n";
-        }
-        else
-          cerr << "  <td align=\"right\">N/A</td>\n</tr>  <td align=\"right\">N/A</td>\n</tr>\n";
-      }
-      if (this_tm.wall)
-        cout << "  ratio of btree to stl wall clock time: "
-             << (erase_tm.wall * 1.0) / this_tm.wall << '\n';
-      if (verbose && this_tm.system + this_tm.user)
-        cout << "  ratio of btree to stl cpu time: "
-             << ((erase_tm.system + erase_tm.user) * 1.0)
+              << ((erase_tm.system + erase_tm.user) * 1.0)
                 / (this_tm.system + this_tm.user) << '\n';
       cout << "STL timing complete" << endl;
     }
@@ -436,6 +456,8 @@ int cpp_main(int argc, char * argv[])
       }
       else if ( std::strncmp( argv[2]+1, "stl", 3 )==0 )
         stl_tests = true;
+      else if ( std::strncmp( argv[2]+1, "c_str_proxy", 11 )==0 )
+        do_c_str_proxy = true;
       else if ( std::strncmp( argv[2]+1, "html", 4 )==0 )
         html = true;
       else if ( std::strncmp( argv[2]+1, "big", 3 )==0 )
@@ -448,6 +470,8 @@ int cpp_main(int argc, char * argv[])
         seed = atol( argv[2]+2 );
       else if ( *(argv[2]+1) == 'n' )
         node_sz = atoi( argv[2]+2 );
+      else if ( *(argv[2]+1) == 't' )
+        trace = atoi( argv[2]+2 );
       else if ( *(argv[2]+1) == 'c' )
         cache_sz = atoi( argv[2]+2 );
       else if ( *(argv[2]+1) == 'i' )
@@ -480,6 +504,7 @@ int cpp_main(int argc, char * argv[])
       "              Small node sizes are useful for stress testing\n"
       "   -c#      Cache size; default " << btree::default_max_cache_nodes << " nodes\n"
       "   -l#      log progress every # actions; default is to not log\n"
+      "   -t#      start trace at # insertions; default 0 implies no trace\n"
       "   -xc      No create; use file from prior -xe run\n"
       "   -xi      No insert test; forces -xc and doesn't do inserts\n"
       "   -xf      No find test\n"
@@ -488,6 +513,7 @@ int cpp_main(int argc, char * argv[])
       "   -k       Pack tree after insert test\n"
       "   -v       Verbose output statistics\n"
       "   -stl     Also run the tests against std::map\n"
+      "   -c_str_proxy   Also run the tests with class c_str_proxy\n"
       "   -r       Read entire file to preload operating system disk cache;\n"
       "            only applicable if -xc option is active\n"
       "   -big     Use btree::default_big_endian_traits\n"
@@ -518,12 +544,17 @@ int cpp_main(int argc, char * argv[])
   //}
 
   cout << "and native endianness\n";
+
   cout << "\n***** with strbuf *****\n";
   test< btree::btree_map<btree::strbuf, int32_t, btree::default_native_traits>,
-    strbuf_tag>();  
-  cout << "\n***** with c_str_proxy *****\n";
-  test< btree::btree_map<btree::c_str_proxy, int32_t, btree::default_native_traits>,
-    c_str_proxy_tag>();
+    strbuf_tag>();
+
+  if (do_c_str_proxy)
+  {
+    cout << "\n***** with c_str_proxy *****\n";
+    test< btree::btree_map<btree::c_str_proxy, int32_t, btree::default_native_traits>,
+      c_str_proxy_tag>();
+  }
 
   return 0;
 }
