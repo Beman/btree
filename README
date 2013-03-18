@@ -1,23 +1,25 @@
-Proposed B-tree library for Boost
+B-tree library for eventual proposal to Boost
+
+THIS IS AN EXPERIMENTAL LIBRARY STILL UNDER DEVELOPMENT.
+IT IS NOT SUITABLE FOR PRODUCTION WORK.
 
 To experiment with the library, various other boost libraries must be
 available. Here is one way to create such a setup:
 
-  git clone git://github.com/Beman/Boost-Btree.git xbtree
-  svn export --force http://svn.boost.org/svn/boost/trunk xbtree
+  cd boost-root/libs
+  git clone git@github.com:Beman/Boost-Btree.git btree
+  cd ../boost
+  mklink /d btree ..\libs\btree\include\boost\btree
   
 As a confidence test, the following should build bjam, build various
-libraries and then run the Boost.btree regression tests on Windows:
+libraries and then run the regression tests.
 
-  cd xbtree
-  bootstrap
-  cd libs\btree\test
+Windows (assumes bootstrap has been run):
+
+  cd boost-root/libs/btree/test
   ..\..\..\bjam
 
-Or on POSIX-like systems:
+POSIX-like systems (assumes bootstrap has been run):
 
-  cd xbtree
-  ./bootstrap.sh
-  cd libs/btree/test
+  cd boost-root/libs/btree/test
   ../../../bjam
-  
