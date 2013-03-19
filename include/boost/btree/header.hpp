@@ -14,8 +14,8 @@
 
 #include <boost/cstdint.hpp>
 #include <boost/detail/bitmask.hpp>
-#include <boost/integer/endian.hpp>
-#include <boost/integer/endian_flip.hpp>
+#include <boost/endian/integers.hpp>
+#include <boost/endian/converters.hpp>
 #include <boost/detail/scoped_enum_emulation.hpp>
 #include <boost/assert.hpp>
 #include <cstring>

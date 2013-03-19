@@ -24,7 +24,7 @@
 #define BOOST_BINARY_FILE_HPP
 
 #include <boost/btree/detail/config.hpp>
-#include <boost/filesystem/v3/path.hpp>
+#include <boost/filesystem/path.hpp>
 #include <boost/detail/bitmask.hpp>
 #include <boost/assert.hpp>
 #include <ios>

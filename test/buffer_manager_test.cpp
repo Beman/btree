@@ -15,7 +15,7 @@
 #define BOOST_BUFFER_MANAGER_TEST
 
 #include <boost/btree/detail/buffer_manager.hpp>
-#include <boost/filesystem/v3/operations.hpp>
+#include <boost/filesystem/operations.hpp>
 #include <boost/detail/lightweight_main.hpp>
 #include <boost/detail/lightweight_test.hpp> 
 

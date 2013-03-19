@@ -82,9 +82,6 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\src\detail\binary_file.cpp" />
     <ClCompile Include="..\..\..\src\detail\buffer_manager.cpp" />
-    <ClCompile Include="..\..\..\src\detail\run_timer.cpp" />
-    <ClCompile Include="..\..\..\src\detail\run_timer_ctors.cpp" />
-    <ClCompile Include="..\..\..\src\detail\timer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\filesystem_dll\filesystem_dll.vcxproj">
@@ -103,7 +100,6 @@
     <ClInclude Include="..\..\..\..\..\boost\btree\detail\config.hpp" />
     <ClInclude Include="..\..\..\..\..\boost\btree\detail\fixstr.hpp" />
     <ClInclude Include="..\..\..\..\..\boost\btree\detail\indirect_common.hpp" />
-    <ClInclude Include="..\..\..\..\..\boost\btree\detail\timer.hpp" />
     <ClInclude Include="..\..\..\..\..\boost\btree\header.hpp" />
     <ClInclude Include="..\..\..\..\..\boost\btree\indirect_map.hpp" />
     <ClInclude Include="..\..\..\..\..\boost\btree\indirect_set.hpp" />
