@@ -47,7 +47,7 @@ namespace
   const int places = 2;
   std::string path("bt_time.btree");
   std::string path_org("bt_time.btree.org");
-  BOOST_SCOPED_ENUM(integer::endianness) whichaway = integer::endianness::native;
+  BOOST_SCOPED_ENUM(endian::order) whichaway = endian::order::native;
 
   btree::times_t insert_tm;
   btree::times_t find_tm;
@@ -420,11 +420,11 @@ int cpp_main(int argc, char * argv[])
       else if ( std::strncmp( argv[2]+1, "html", 4 )==0 )
         html = true;
       else if ( std::strncmp( argv[2]+1, "big", 3 )==0 )
-        whichaway = integer::endianness::big;
+        whichaway = endian::order::big;
       else if ( std::strncmp( argv[2]+1, "little", 6 )==0 )
-        whichaway = integer::endianness::little;
+        whichaway = endian::order::little;
       else if ( std::strncmp( argv[2]+1, "native", 6 )==0 )
-        whichaway = integer::endianness::native;
+        whichaway = endian::order::native;
       else if ( *(argv[2]+1) == 's' )
         seed = atol( argv[2]+2 );
       else if ( *(argv[2]+1) == 'n' )
@@ -484,15 +484,15 @@ int cpp_main(int argc, char * argv[])
 
   switch (whichaway)
   {
-  case integer::endianness::big:
+  case endian::order::big:
     cout << "and big endianness\n";
     test< btree::btree_map<long, long, btree::default_big_endian_traits> >();
     break;
-  case integer::endianness::little:
+  case endian::order::little:
     cout << "and little endianness\n";
     test< btree::btree_map<long, long, btree::default_little_endian_traits> >();
     break;
-  case integer::endianness::native:
+  case endian::order::native:
     cout << "and native endianness\n";
     test< btree::btree_map<long, long, btree::default_native_traits> >();
     break;

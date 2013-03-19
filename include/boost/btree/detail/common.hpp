@@ -1073,7 +1073,7 @@ btree_base<Key,Base,Traits,Comp>::m_open(const boost::filesystem::path& p,
     m_read_header();
     if (!m_hdr.marker_ok())
       BOOST_BTREE_THROW(std::runtime_error(file_path().string()+" isn't a btree"));
-    if (m_hdr.big_endian() != (Traits::header_endianness == integer::endianness::big))
+    if (m_hdr.big_endian() != (Traits::header_endianness == endian::order::big))
       BOOST_BTREE_THROW(std::runtime_error(file_path().string()+" has wrong endianness"));
     m_mgr.data_size(m_hdr.node_size());
     m_root = m_mgr.read(m_hdr.root_node_id());
@@ -1081,7 +1081,7 @@ btree_base<Key,Base,Traits,Comp>::m_open(const boost::filesystem::path& p,
   else
   { // new or truncated file
     m_hdr.clear();
-    m_hdr.big_endian(Traits::header_endianness == integer::endianness::big);
+    m_hdr.big_endian(Traits::header_endianness == endian::order::big);
     m_hdr.flags(flgs & ~(btree::flags::read_write | btree::flags::truncate));
     m_hdr.splash_c_str("boost.org btree");
     m_hdr.user_c_str("");

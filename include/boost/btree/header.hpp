@@ -45,39 +45,39 @@ namespace boost
       typedef boost::uint16_t  node_level_type;  // level of node; 0 for leaf node.
                                                  // Could be smaller, but that would
                                                  // require alignment byte so why bother
-      static const BOOST_SCOPED_ENUM(integer::endianness) header_endianness
+      static const BOOST_SCOPED_ENUM(endian::order) header_endianness
 #   ifdef BOOST_BIG_ENDIAN
-        = integer::endianness::big;
+        = endian::order::big;
 #   else
-        = integer::endianness::little;
+        = endian::order::little;
 #   endif
     };
 
     struct default_big_endian_traits
     {
-      typedef integer::ubig32_t  node_id_type;
-      typedef integer::ubig16_t  node_size_type;
-      typedef integer::ubig16_t  node_level_type;
-      static const BOOST_SCOPED_ENUM(integer::endianness) header_endianness
-        = integer::endianness::big;
+      typedef endian::ubig32_t  node_id_type;
+      typedef endian::ubig16_t  node_size_type;
+      typedef endian::ubig16_t  node_level_type;
+      static const BOOST_SCOPED_ENUM(endian::order) header_endianness
+        = endian::order::big;
     };
 
     struct default_little_endian_traits
     {
-      typedef integer::ulittle32_t  node_id_type;
-      typedef integer::ulittle16_t  node_size_type;
-      typedef integer::ulittle16_t  node_level_type;
-      static const BOOST_SCOPED_ENUM(integer::endianness) header_endianness
-        = integer::endianness::little;
+      typedef endian::ulittle32_t  node_id_type;
+      typedef endian::ulittle16_t  node_size_type;
+      typedef endian::ulittle16_t  node_level_type;
+      static const BOOST_SCOPED_ENUM(endian::order) header_endianness
+        = endian::order::little;
     };
 
     struct default_endian_traits
     {
-      typedef integer::ubig32_t  node_id_type;
-      typedef integer::ubig16_t  node_size_type;
-      typedef integer::ubig16_t  node_level_type;
-      static const BOOST_SCOPED_ENUM(integer::endianness) header_endianness
-        = integer::endianness::big;
+      typedef endian::ubig32_t  node_id_type;
+      typedef endian::ubig16_t  node_size_type;
+      typedef endian::ubig16_t  node_level_type;
+      static const BOOST_SCOPED_ENUM(endian::order) header_endianness
+        = endian::order::big;
     };
 
 
@@ -230,17 +230,17 @@ namespace boost
 #         endif
           )
         {
-          integer::endian_flip(m_node_size);
-          integer::endian_flip(m_key_size);
-          integer::endian_flip(m_mapped_size);
-          integer::endian_flip(m_element_count);
-          integer::endian_flip(m_flags);
-          integer::endian_flip(m_root_level);
-          integer::endian_flip(m_root_node_id);
-          integer::endian_flip(m_first_node_id);
-          integer::endian_flip(m_last_node_id);
-          integer::endian_flip(m_node_count);
-          integer::endian_flip(m_free_node_list_head_id);
+          m_node_size = endian::reorder(m_node_size);
+          m_key_size = endian::reorder(m_key_size);
+          m_mapped_size = endian::reorder(m_mapped_size);
+          m_element_count = endian::reorder(m_element_count);
+          m_flags = endian::reorder(m_flags);
+          m_root_level = endian::reorder(m_root_level);
+          m_root_node_id = endian::reorder(m_root_node_id);
+          m_first_node_id = endian::reorder(m_first_node_id);
+          m_last_node_id = endian::reorder(m_last_node_id);
+          m_node_count = endian::reorder(m_node_count);
+          m_free_node_list_head_id = endian::reorder(m_free_node_list_head_id);
         }
       }
     };
