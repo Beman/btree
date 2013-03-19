@@ -92,14 +92,6 @@
       <Project>{61954631-3857-4C20-9E7C-1DA7BAAFF426}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
-    <ProjectReference Include="..\filesystem_dll\filesystem_dll.vcxproj">
-      <Project>{2aad90ac-4fd3-422f-9e99-1cea3ef092ed}</Project>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
-    <ProjectReference Include="..\system_dll\system_dll.vcxproj">
-      <Project>{2558c6e2-046f-441d-9515-0fab44f5a22e}</Project>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\stl_test.cpp" />

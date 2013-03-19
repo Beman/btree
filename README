@@ -25,11 +25,13 @@ POSIX-like systems (assumes bootstrap has been run):
   ../../../bjam
 
 A Visual Studio solution is included at boost-root\libs\btree\test\msvc10.
-First run:
+Setup:
    
   cd boost-root
   .\bootstrap
-  .\b2 --with-system --with-chrono --with-timer --with-filesystem link=shared stage
+  .\b2 --with-system --with-chrono --with-timer --with-filesystem link=static stage
+
+Static linking eases VC++ debugging since these library's dll's don't have to be found.
 
 To find out more about builds:
 

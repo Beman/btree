@@ -8,8 +8,13 @@
   <ItemDefinitionGroup>
     <ClCompile>
       <AdditionalIncludeDirectories>../../../../endian;../../../../..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>BOOST_SYSTEM_NO_DEPRECATED;BOOST_ALL_NO_LIB;BOOST_ALL_DYN_LINK;BOOST_LIGHTWEIGHT_TEST_OSTREAM=std::cout;BOOST_ASSERT_MSG_OSTREAM=std::cout;BOOST_FILESYSTEM_USE_TIME_T;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>BOOST_SYSTEM_NO_DEPRECATED;BOOST_BTREE_NO_LIB;BOOST_BTREE_DYN_LINK;BOOST_SYSTEM_STATIC_LINK;BOOST_FILESYSTEM_STATIC_LINK;BOOST_TIMER_STATIC_LINK;BOOST_CHRONO_STATIC_LINK;BOOST_LIGHTWEIGHT_TEST_OSTREAM=std::cout;BOOST_ASSERT_MSG_OSTREAM=std::cout;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <WarningLevel>Level4</WarningLevel>
+      <MultiProcessorCompilation>
+      </MultiProcessorCompilation>
     </ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories>..\..\..\..\..\stage\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
   </ItemDefinitionGroup>
 </Project>

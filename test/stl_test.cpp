@@ -11,7 +11,7 @@
 #include <map>
 #include <boost/random.hpp>
 #include <boost/cstdint.hpp>
-#include <boost/btree/support/timer.hpp>
+#include <boost/timer/timer.hpp>
 #include <boost/btree/support/fixstr.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/filesystem.hpp>
@@ -690,8 +690,8 @@ namespace
          << "  node size = " << node_sz << '\n'
          << "  max cache nodes = " << cache_sz << "\n";
 
-    boost::btree::run_timer total_times(3);
-    boost::btree::run_timer cycle_times(3);
+    boost::timer::auto_cpu_timer total_times(3);
+    boost::timer::auto_cpu_timer cycle_times(3);
 
     for (; cycle <= cycles; ++cycle)
     {

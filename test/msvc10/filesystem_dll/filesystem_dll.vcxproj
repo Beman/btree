@@ -94,12 +94,6 @@
     <ClCompile Include="..\..\..\..\filesystem\src\utf8_codecvt_facet.cpp" />
     <ClCompile Include="..\..\..\..\filesystem\src\windows_file_codecvt.cpp" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\system_dll\system_dll.vcxproj">
-      <Project>{2558c6e2-046f-441d-9515-0fab44f5a22e}</Project>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

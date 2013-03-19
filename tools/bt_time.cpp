@@ -10,7 +10,7 @@
 #include <boost/btree/map.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/random.hpp>
-#include <boost/btree/support/timer.hpp>
+#include <boost/timer/timer.hpp>
 #include <boost/detail/lightweight_main.hpp>
 
 #include <iostream>
@@ -49,16 +49,16 @@ namespace
   std::string path_org("bt_time.btree.org");
   BOOST_SCOPED_ENUM(endian::order) whichaway = endian::order::native;
 
-  btree::times_t insert_tm;
-  btree::times_t find_tm;
-  btree::times_t iterate_tm;
-  btree::times_t erase_tm;
-  const long double sec = 1000000.0L;
+  timer::cpu_times insert_tm;
+  timer::cpu_times find_tm;
+  timer::cpu_times iterate_tm;
+  timer::cpu_times erase_tm;
+  const long double sec = 1000000000.0L;
 
   template <class BT>
   void test()
   {
-    btree::run_timer t(3);
+    timer::auto_cpu_timer t(3);
     rand48  rng;
     uniform_int<long> n_dist(0, n-1);
     variate_generator<rand48&, uniform_int<long> > key(rng, n_dist);
@@ -89,7 +89,8 @@ namespace
             std::cout << i << std::endl; 
           bt.emplace(key(), i);
         }
-        insert_tm = t.stop();
+        t.stop();
+        insert_tm = t.elapsed();
         t.report();
       }
 
@@ -140,7 +141,8 @@ namespace
             throw std::runtime_error("btree find() returned wrong iterator");
 #       endif 
         }
-        find_tm = t.stop();
+        t.stop();
+        find_tm = t.elapsed(); 
         t.report();
       }
 
@@ -159,7 +161,8 @@ namespace
             throw std::runtime_error("btree iteration sequence error");
           prior_key = itr->key();
         }
-        iterate_tm = t.stop();
+        t.stop();
+        iterate_tm = t.elapsed();
         t.report();
         if (count != bt.size())
           throw std::runtime_error("btree iteration count error");
@@ -192,7 +195,8 @@ namespace
           //  bt.erase(k);
           bt.erase(key());
         }
-        erase_tm = t.stop();
+        t.stop();
+        erase_tm = t.elapsed();
         t.report();
       }
 
@@ -215,7 +219,7 @@ namespace
     {
       cout << "\ninserting " << n << " std::map elements..." << endl;
       rng.seed(seed);
-      btree::times_t this_tm;
+      timer::cpu_times this_tm;
       t.start();
       for (long i = 1; i <= n; ++i)
       {
@@ -224,7 +228,8 @@ namespace
         stl_type::value_type element(key(), i);
         stl.insert(element);
       }
-      this_tm = t.stop();
+      t.stop();
+      this_tm = t.elapsed();
       t.report();
       if (html)
       {
@@ -272,7 +277,8 @@ namespace
             throw std::runtime_error("stl find() returned wrong iterator");
 #       endif
       }
-      this_tm = t.stop();
+      t.stop();
+      this_tm = t.elapsed();
       t.report();
       if (html)
       {
@@ -312,7 +318,8 @@ namespace
           throw std::runtime_error("stl iteration sequence error");
         prior_key = itr->first;
       }
-      this_tm = t.stop();
+      t.stop();
+      this_tm = t.elapsed();
       t.report();
       if (html)
       {
@@ -350,7 +357,8 @@ namespace
           std::cout << i << std::endl; 
         stl.erase(key());
       }
-      this_tm = t.stop();
+      t.stop();
+      this_tm = t.elapsed();
       t.report();
       if (html)
       {

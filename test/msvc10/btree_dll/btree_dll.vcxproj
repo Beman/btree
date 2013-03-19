@@ -84,16 +84,6 @@
     <ClCompile Include="..\..\..\src\detail\buffer_manager.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\filesystem_dll\filesystem_dll.vcxproj">
-      <Project>{2aad90ac-4fd3-422f-9e99-1cea3ef092ed}</Project>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
-    <ProjectReference Include="..\system_dll\system_dll.vcxproj">
-      <Project>{2558c6e2-046f-441d-9515-0fab44f5a22e}</Project>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="..\..\..\..\..\boost\btree\detail\binary_file.hpp" />
     <ClInclude Include="..\..\..\..\..\boost\btree\detail\buffer_manager.hpp" />
     <ClInclude Include="..\..\..\..\..\boost\btree\detail\common.hpp" />
