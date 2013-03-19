@@ -23,3 +23,15 @@ POSIX-like systems (assumes bootstrap has been run):
 
   cd boost-root/libs/btree/test
   ../../../bjam
+
+A Visual Studio solution is included at boost-root\libs\btree\test\msvc10.
+First run:
+   
+  cd boost-root
+  .\bootstrap
+  .\b2 --with-system --with-chrono --with-timer --with-filesystem link=shared stage
+
+To find out more about builds:
+
+  cd boost-root
+  .\b2 --help
