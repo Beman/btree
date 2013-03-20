@@ -32,6 +32,8 @@ Setup:
   .\b2 --with-system --with-chrono --with-timer --with-filesystem link=static stage
 
 Static linking eases VC++ debugging since these library's dll's don't have to be found.
+If changed to dynamic linking, remember to set Common Properties | VC++ Directories | Executable Directories
+to include ..\..\..\..\..\stage\lib so dll's can be found by debugger.
 
 To find out more about builds:
 
