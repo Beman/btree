@@ -26,6 +26,9 @@ POSIX-like systems (assumes bootstrap has been run):
 A Windows Visual Studio solution is included:  btree\test\msvc2012\btree.sln
 Be sure to do the following setup before starting Visual Studio.
 
+IMPORTANT: If Preprocessor macros are supplied via a common property page,
+<inherit from parent or project defaults> must be set for each project!
+
 Setup Windows to use the solution:
   
   set BOOST_TRUNK=boost-root-path
