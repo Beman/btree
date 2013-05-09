@@ -6,37 +6,40 @@ IT IS NOT SUITABLE FOR PRODUCTION WORK.
 To experiment with the library, various other boost libraries must be
 available. Here is one way to create such a setup:
 
-  cd boost-root/libs
   git clone git@github.com:Beman/Boost-Btree.git btree
   cd ../boost
   mklink /d btree ..\libs\btree\include\boost\btree
   
-As a confidence test, the following should build bjam, build various
+As a confidence test, the following should build b2, build various
 libraries and then run the regression tests.
 
 Windows (assumes bootstrap has been run):
 
   cd boost-root/libs/btree/test
-  ..\..\..\bjam
+  ..\..\..\b2
 
 POSIX-like systems (assumes bootstrap has been run):
 
   cd boost-root/libs/btree/test
-  ../../../bjam
+  ../../../b2
 
-A Visual Studio solution is included at boost-root\libs\btree\test\msvc2012.
-Setup:
-   
-  cd boost-root
+A Windows Visual Studio solution is included:  btree\test\msvc2012\btree.sln
+Be sure to do the following setup before starting Visual Studio.
+
+Setup Windows to use the solution:
+  
+  set BOOST_TRUNK=boost-root-path
+  path %path%;%BOOST_TRUNK%\stage\lib  
+  cd %BOOST_TRUNK%
   .\bootstrap
   .\b2 --with-system --with-chrono --with-timer --with-filesystem link=shared stage
-
-So that Boost library dll's are found, add boost-root\stage\lib to the system path.
-Note: This ensures the debugger can find filesystem, system, timer, and other Boost dll's.
-Simply adding ..\..\..\..\..\stage\lib to Common Properties | VC++ Directories | Executable Directories
-does not work reliably for the debugger.
 
 To find out more about builds:
 
   cd boost-root
   .\b2 --help
+  
+------------------------------------------------------------------------------------------
+Copyright Beman Dawes, 2013
+Distributed under the Boost Software License, Version 1.0.
+See http://www.boost.org/LICENSE_1_0.txt
