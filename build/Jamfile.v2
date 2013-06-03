@@ -4,8 +4,6 @@
 # Distributed under the Boost Software License, Version 1.0.
 # See www.boost.org/LICENSE_1_0.txt
 
-# Library home page //www.boost.org/libs/btree
-
 project boost/btree
     : source-location ../src/detail
     : usage-requirements # pass these requirement to dependents (i.e. users)
@@ -14,13 +12,15 @@ project boost/btree
     ;
 
 SOURCES =
-    binary_file buffer_manager timer run_timer run_timer_ctors ;
+    binary_file buffer_manager ;
 
 lib boost_btree
     :
     $(SOURCES).cpp
     ../../system/build//boost_system
     ../../filesystem/build//boost_filesystem
+    ../../timer/build//boost_timer
+    ../../chrono/build//boost_chrono
     :
     <link>shared:<define>BOOST_ALL_DYN_LINK=1 # tell source we're building dll's
     <link>static:<define>BOOST_All_STATIC_LINK=1 # tell source we're building static lib's

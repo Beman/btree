@@ -9,6 +9,8 @@ project
       <library>/boost/btree//boost_btree
       <library>/boost/filesystem//boost_filesystem
       <library>/boost/system//boost_system
+      <library>/boost/timer//boost_timer
+      <library>/boost/chrono//boost_chrono
       <toolset>msvc:<asynch-exceptions>on
     ;
     
