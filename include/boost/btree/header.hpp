@@ -14,8 +14,8 @@
 
 #include <boost/cstdint.hpp>
 #include <boost/detail/bitmask.hpp>
-#include <boost/endian/integers.hpp>
-#include <boost/endian/converters.hpp>
+#include <boost/endian/types.hpp>
+#include <boost/endian/conversion.hpp>
 #include <boost/detail/scoped_enum_emulation.hpp>
 #include <boost/assert.hpp>
 #include <cstring>
@@ -55,27 +55,27 @@ namespace boost
 
     struct default_big_endian_traits
     {
-      typedef endian::ubig32_t  node_id_type;
-      typedef endian::ubig16_t  node_size_type;
-      typedef endian::ubig16_t  node_level_type;
+      typedef endian::big_uint32_t  node_id_type;
+      typedef endian::big_uint16_t  node_size_type;
+      typedef endian::big_uint16_t  node_level_type;
       static const BOOST_SCOPED_ENUM(endian::order) header_endianness
         = endian::order::big;
     };
 
     struct default_little_endian_traits
     {
-      typedef endian::ulittle32_t  node_id_type;
-      typedef endian::ulittle16_t  node_size_type;
-      typedef endian::ulittle16_t  node_level_type;
+      typedef endian::little_uint32_t  node_id_type;
+      typedef endian::little_uint16_t  node_size_type;
+      typedef endian::little_uint16_t  node_level_type;
       static const BOOST_SCOPED_ENUM(endian::order) header_endianness
         = endian::order::little;
     };
 
     struct default_endian_traits
     {
-      typedef endian::ubig32_t  node_id_type;
-      typedef endian::ubig16_t  node_size_type;
-      typedef endian::ubig16_t  node_level_type;
+      typedef endian::big_uint32_t  node_id_type;
+      typedef endian::big_uint16_t  node_size_type;
+      typedef endian::big_uint16_t  node_level_type;
       static const BOOST_SCOPED_ENUM(endian::order) header_endianness
         = endian::order::big;
     };
@@ -230,17 +230,17 @@ namespace boost
 #         endif
           )
         {
-          m_node_size = endian::reorder(m_node_size);
-          m_key_size = endian::reorder(m_key_size);
-          m_mapped_size = endian::reorder(m_mapped_size);
-          m_element_count = endian::reorder(m_element_count);
-          m_flags = endian::reorder(m_flags);
-          m_root_level = endian::reorder(m_root_level);
-          m_root_node_id = endian::reorder(m_root_node_id);
-          m_first_node_id = endian::reorder(m_first_node_id);
-          m_last_node_id = endian::reorder(m_last_node_id);
-          m_node_count = endian::reorder(m_node_count);
-          m_free_node_list_head_id = endian::reorder(m_free_node_list_head_id);
+          endian::reverse(m_node_size);
+          endian::reverse(m_key_size);
+          endian::reverse(m_mapped_size);
+          endian::reverse(m_element_count);
+          endian::reverse(m_flags);
+          endian::reverse(m_root_level);
+          endian::reverse(m_root_node_id);
+          endian::reverse(m_first_node_id);
+          endian::reverse(m_last_node_id);
+          endian::reverse(m_node_count);
+          endian::reverse(m_free_node_list_head_id);
         }
       }
     };
