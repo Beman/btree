@@ -70,6 +70,11 @@
 
   * Verify, document, that a max_cache_size(-1) is "all".
 
+  * Problem: if key_type or mapped type require 64-bit alignment on some machines, but
+    not on others (for example, 32-bit gcc builds), would need to artificially force
+    64-bit alignment to ensure data portability with endian traits. Is an alignment trait
+    needed?
+
 */
 
 namespace boost
@@ -463,6 +468,7 @@ public:
   typedef typename Traits::node_level_type      node_level_type;
 
   // TODO: why are these being exposed:
+
   typedef value_type                            leaf_value_type;
   typedef typename boost::mpl::or_<
     typename boost::btree::has_dynamic_size<key_type>::type,
@@ -594,7 +600,7 @@ private:
                                   // access to "this" via buffer::manager() 
   const_iterator     m_end_iterator;
 
-  btree::header_page m_hdr;
+  header_page        m_hdr;
 
   std::size_t        m_max_leaf_size;
   std::size_t        m_max_branch_size;
@@ -623,7 +629,7 @@ private:
 
 //  private:
     node_level_type  m_level;        // leaf: 0, branches: distance from leaf,
-                                     // header: 0xFFFF, free node list entry: 0xFFFE
+                                     // header: 0xBBBB, free node list entry: 0xFFFE
     node_size_type   m_size;         // size in bytes of elements on node
   };
   
@@ -896,7 +902,7 @@ private:
   void m_read_header()
   {
     m_mgr.seek(0);
-    m_mgr.binary_file::read(m_hdr, sizeof(btree::header_page));
+    m_mgr.binary_file::read(m_hdr, sizeof(header_page));
     m_hdr.endian_flip_if_needed();
   }
 
@@ -904,7 +910,7 @@ private:
   {
     m_mgr.seek(0);
     m_hdr.endian_flip_if_needed();
-    m_mgr.binary_file::write(&m_hdr, sizeof(btree::header_page));
+    m_mgr.binary_file::write(&m_hdr, sizeof(header_page));
     m_hdr.endian_flip_if_needed();
   }
 
@@ -1082,7 +1088,7 @@ btree_base<Key,Base,Traits,Comp>::m_open(const boost::filesystem::path& p,
   { // new or truncated file
     m_hdr.clear();
     m_hdr.big_endian(Traits::header_endianness == endian::order::big);
-    m_hdr.flags(flgs & ~(btree::flags::read_write | btree::flags::truncate));
+    m_hdr.flags(flags::permanent_flags(flgs));
     m_hdr.splash_c_str("boost.org btree");
     m_hdr.user_c_str("");
     m_hdr.node_size(node_sz);
@@ -1112,7 +1118,7 @@ template <class Key, class Base, class Traits, class Comp>
 void
 btree_base<Key,Base,Traits,Comp>::clear()
 {
-  BOOST_ASSERT_MSG(is_open(), "can't clear() unopen btree");
+  BOOST_ASSERT_MSG(is_open(), "attempt to clear() unopen btree");
 
   manager().clear_write_needed();
   m_hdr.element_count(0);

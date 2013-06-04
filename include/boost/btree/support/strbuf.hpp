@@ -21,6 +21,7 @@ namespace btree
 
   class strbuf
   {
+    typedef boost::uint8_t m_size_type;
   public:
     static const std::size_t max_size = 255;
 
@@ -33,7 +34,7 @@ namespace btree
         sz = max_size;
       std::memcpy(m_buf, s, sz);
       m_buf[sz] = '\0';
-      m_size = sz;
+      m_size = static_cast<m_size_type>(sz);
     }
 
     strbuf(const strbuf& s)
@@ -49,7 +50,7 @@ namespace btree
         sz = max_size;
       std::memcpy(m_buf, s, sz);
       m_buf[sz] = '\0';
-      m_size = sz;
+      m_size = static_cast<m_size_type>(sz);
       return *this;
     }
 
@@ -71,7 +72,7 @@ namespace btree
     bool operator>=(const strbuf& rhs) const {return std::strcmp(m_buf, rhs.m_buf) >= 0;}
 
   private:
-    boost::uint8_t  m_size;  // std::strlen(m_buf); for speed, particularly on large strings 
+    m_size_type    m_size;  // std::strlen(m_buf); for speed, particularly on large strings 
     char            m_buf[max_size+1];  // '\0' terminated
   };
 

@@ -253,8 +253,8 @@ namespace boost
       boost::uint32_t  file_buffers_written() const {return m_file_buffers_written;}
       boost::uint32_t  new_buffer_requests() const  {return m_new_buffer_requests;}
       boost::uint32_t  buffer_allocs() const        {return m_buffer_allocs;}
-      boost::uint32_t  buffers_in_memory() const    {return buffers.size();}
-      boost::uint32_t  buffers_available() const    {return buffer_cache.size();}
+      std::size_t      buffers_in_memory() const    {return buffers.size();}
+      std::size_t      buffers_available() const    {return buffer_cache.size();}
 
 #ifndef BOOST_BUFFER_MANAGER_TEST
     private:

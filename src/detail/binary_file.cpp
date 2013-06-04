@@ -284,7 +284,7 @@ namespace boost
 //std::cout << "*** read " << m_path.string()
 //  << " into " << target << " size " << sz << std::endl;
 #   ifdef BOOST_WINDOWS_API
-      DWORD sz_read = raw_read(target, sz, ec);
+      std::size_t sz_read = raw_read(target, sz, ec);
       // It isn't clear to me from the Platform SDK docs if a partial read
       // in the POSIX sense can occur. For now, consider a partial read an
       // error.
