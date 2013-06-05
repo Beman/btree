@@ -80,7 +80,11 @@ void instantiate()
 {
   cout << "  instantiate..." << endl;
   {
-    btree::btree_map<fat, int> x;
+    btree::btree_map<fat, int, btree::aligned_native_traits> x;
+    instantiate_test(x);
+  }
+  {
+    btree::btree_map<fat, int, btree::unaligned_native_traits> x;
     instantiate_test(x);
   }
   //{
@@ -88,27 +92,51 @@ void instantiate()
   //  instantiate_test(x);
   //}
   {
-    btree::btree_set<int> x;
+    btree::btree_set<int, btree::aligned_native_traits> x;
     instantiate_test(x);
   }
   {
-    btree::btree_multiset<int> x;
+    btree::btree_set<int, btree::unaligned_native_traits> x;
     instantiate_test(x);
   }
   {
-    btree::btree_map<fat, int, btree::default_big_endian_traits> x;
+    btree::btree_multiset<int, btree::aligned_native_traits> x;
     instantiate_test(x);
   }
   {
-    btree::btree_multimap<fat, int, btree::default_little_endian_traits> x;
+    btree::btree_multiset<int, btree::unaligned_native_traits> x;
     instantiate_test(x);
   }
   {
-    btree::btree_set<int, btree::default_little_endian_traits> x;
+    btree::btree_map<fat, int, btree::aligned_big_endian_traits> x;
     instantiate_test(x);
   }
   {
-    btree::btree_multiset<int, btree::default_big_endian_traits> x;
+    btree::btree_map<fat, int, btree::unaligned_big_endian_traits> x;
+    instantiate_test(x);
+  }
+  {
+    btree::btree_multimap<fat, int, btree::aligned_little_endian_traits> x;
+    instantiate_test(x);
+  }
+  {
+    btree::btree_multimap<fat, int, btree::unaligned_little_endian_traits> x;
+    instantiate_test(x);
+  }
+  {
+    btree::btree_set<int, btree::aligned_little_endian_traits> x;
+    instantiate_test(x);
+  }
+  {
+    btree::btree_set<int, btree::unaligned_little_endian_traits> x;
+    instantiate_test(x);
+  }
+  {
+    btree::btree_multiset<int, btree::aligned_big_endian_traits> x;
+    instantiate_test(x);
+  }
+  {
+    btree::btree_multiset<int, btree::unaligned_big_endian_traits> x;
     instantiate_test(x);
   }
   cout << "    instantiate complete" << endl;

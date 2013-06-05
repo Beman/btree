@@ -33,15 +33,18 @@ namespace boost
 //                                                                                      //
 //  The traits provide the types for management objects on btree disk nodes. Nodes are  //
 //  typically 4096 bytes in length, and every byte wasted in overhead causes a          //
-//  measurable reduction in speed.                                                      //
+//  measurable reduction in speed if the tree adds levels. That may favor unaligned     //
+//  traits, particularly if the user's key and mapped types are also unaligned.         //
+//                                                                                      //
+//  On the other hand, aligned types are much more efficient and generate less code.    //
+//                                                                                      //
+//  We don't yet have enough timing data to know if and when an aligned approach or an  //
+//  unaligned approach is most appropriate.                                             // 
 //                                                                                      //
 //--------------------------------------------------------------------------------------//
 
-    //  The default_native_traits generate the least code, but are not portable to systems
-    //  with different endianness. They may also require padding bytes on node pages to
-    //  maintain alignment, and that may reduce space and speed efficiency.
-    
-    struct default_native_traits
+  
+    struct aligned_native_traits
     {
       typedef boost::uint32_t  node_id_type;     // node ids
       typedef boost::uint16_t  node_size_type;   // sizes
@@ -56,11 +59,24 @@ namespace boost
         = endian::order::little;
 #   endif
     };
+  
+    struct unaligned_native_traits
+    {
+      typedef endian::native_uint32un_t  node_id_type;     // node ids
+      typedef boost::uint16_t  node_size_type;   // sizes
+      typedef boost::uint16_t  node_level_type;  // level of node; 0 for leaf node.
+                                                 // Could be smaller, but given the node
+                                                 // layout that would require a padding
+                                                 // byte so why bother?
+      static const BOOST_SCOPED_ENUM(endian::order) header_endianness
+#   ifdef BOOST_BIG_ENDIAN
+        = endian::order::big;
+#   else
+        = endian::order::little;
+#   endif
+    };
 
-    //  The default endian traits result in reasonably portable files using aligned types.
-    //  Unaligned endian types are supported in user supplied traits
-
-    struct default_big_endian_traits
+    struct aligned_big_endian_traits
     {
       typedef endian::big_uint32_t  node_id_type;
       typedef endian::big_uint16_t  node_size_type;
@@ -69,11 +85,29 @@ namespace boost
         = endian::order::big;
     };
 
-    struct default_little_endian_traits
+    struct aligned_little_endian_traits
     {
       typedef endian::little_uint32_t  node_id_type;
       typedef endian::little_uint16_t  node_size_type;
       typedef endian::little_uint16_t  node_level_type;
+      static const BOOST_SCOPED_ENUM(endian::order) header_endianness
+        = endian::order::little;
+    };
+
+    struct unaligned_big_endian_traits
+    {
+      typedef endian::big_uint32un_t  node_id_type;
+      typedef endian::big_uint16un_t  node_size_type;
+      typedef endian::big_uint16un_t  node_level_type;
+      static const BOOST_SCOPED_ENUM(endian::order) header_endianness
+        = endian::order::big;
+    };
+
+    struct unaligned_little_endian_traits
+    {
+      typedef endian::little_uint32un_t  node_id_type;
+      typedef endian::little_uint16un_t  node_size_type;
+      typedef endian::little_uint16un_t  node_level_type;
       static const BOOST_SCOPED_ENUM(endian::order) header_endianness
         = endian::order::little;
     };

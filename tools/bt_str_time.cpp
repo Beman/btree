@@ -524,9 +524,9 @@ int cpp_main(int argc, char * argv[])
       "   -c_str_proxy   Also run the tests with class c_str_proxy\n"
       "   -r       Read entire file to preload operating system disk cache;\n"
       "            only applicable if -xc option is active\n"
-      "   -big     Use btree::default_big_endian_traits\n"
-      "   -little  Use btree::default_little_endian_traits\n"
-      "   -native  Use btree::default_native_traits; this is the default\n"
+      "   -big     Use btree::aligned_big_endian_traits\n"
+      "   -little  Use btree::aligned_little_endian_traits\n"
+      "   -native  Use btree::aligned_native_traits; this is the default\n"
       "   -html    Output html table of results to cerr\n"
       ;
     return 1;
@@ -539,28 +539,28 @@ int cpp_main(int argc, char * argv[])
   //{
   //case endian::order::big:
   //  cout << "and big endianness\n";
-  //  test< btree::btree_map<btree::c_str_proxy, int32_t, btree::default_big_endian_traits> >();
+  //  test< btree::btree_map<btree::c_str_proxy, int32_t, btree::aligned_big_endian_traits> >();
   //  break;
   //case endian::order::little:
   //  cout << "and little endianness\n";
-  //  test< btree::btree_map<btree::c_str_proxy, int32_t, btree::default_little_endian_traits> >();
+  //  test< btree::btree_map<btree::c_str_proxy, int32_t, btree::aligned_little_endian_traits> >();
   //  break;
   //case endian::order::native:
   //  cout << "and native endianness\n";
-  //  test< btree::btree_map<btree::c_str_proxy, int32_t, btree::default_native_traits> >();
+  //  test< btree::btree_map<btree::c_str_proxy, int32_t, btree::aligned_native_traits> >();
   //  break;
   //}
 
   cout << "and native endianness\n";
 
   cout << "\n***** with strbuf *****\n";
-  test< btree::btree_map<btree::strbuf, int32_t, btree::default_native_traits>,
+  test< btree::btree_map<btree::strbuf, int32_t, btree::aligned_native_traits>,
     strbuf_tag>();
 
   if (do_c_str_proxy)
   {
     cout << "\n***** with c_str_proxy *****\n";
-    test< btree::btree_map<btree::c_str_proxy, int32_t, btree::default_native_traits>,
+    test< btree::btree_map<btree::c_str_proxy, int32_t, btree::aligned_native_traits>,
       c_str_proxy_tag>();
   }
 

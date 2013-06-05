@@ -31,7 +31,7 @@ namespace boost
 //                                class btree_set                                       //
 //--------------------------------------------------------------------------------------//
 
-    template <class Key, class Traits = default_native_traits,
+    template <class Key, class Traits = aligned_native_traits,
               class Comp = btree::less<Key> >
     class btree_set
       : public btree_base<Key, btree_set_base<Key,Comp>, Traits, Comp>
@@ -105,7 +105,7 @@ namespace boost
 //                              class btree_multiset                                    //
 //--------------------------------------------------------------------------------------//
 
-    template <class Key, class Traits = default_native_traits,
+    template <class Key, class Traits = aligned_native_traits,
               class Comp = btree::less<Key> >              
     class btree_multiset
       : public btree_base<Key, btree_set_base<Key,Comp>, Traits, Comp>

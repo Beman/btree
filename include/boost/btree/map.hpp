@@ -31,7 +31,7 @@ namespace boost
 //                                 class btree_map                                      //
 //--------------------------------------------------------------------------------------//
 
-    template <class Key, class T, class Traits = default_native_traits,
+    template <class Key, class T, class Traits = aligned_native_traits,
               class Comp = btree::less<Key> >
     class btree_map
       : public btree_base<Key, btree_map_base<Key,T,Comp>, Traits, Comp>
@@ -115,7 +115,7 @@ namespace boost
 //                               class btree_multimap                                   //
 //--------------------------------------------------------------------------------------//
 
-    template <class Key, class T, class Traits = default_native_traits,
+    template <class Key, class T, class Traits = aligned_native_traits,
               class Comp = btree::less<Key> >
     class btree_multimap
       : public btree_base<Key, btree_map_base<Key,T,Comp>, Traits, Comp>
