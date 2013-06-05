@@ -165,13 +165,13 @@ namespace boost
     class header_page
     {
     public:
-      typedef uint32_t  hdr_node_id_type;
-      typedef uint32_t  node_size_type;
-      typedef uint8_t   node_level_type;  // even fanout 2 allows 2 to 256th pow elements
-      typedef uint32_t  flags_type;
-      typedef uint16_t  version_type;
-      typedef uint32_t  key_size_type;
-      typedef uint32_t  mapped_size_type;
+      typedef uint32_t    node_id_type;
+      typedef uint32_t    node_size_type;
+      typedef uint8_t     node_level_type;  // even fanout 2 allows 2 to 256th pow elements
+      typedef uint32_t    flags_type;
+      typedef uint16_t    version_type;
+      typedef uint32_t    key_size_type;
+      typedef uint32_t    mapped_size_type;
 
     private:
       // stuff often looked at in dumps comes first, subject to alignment requirements
@@ -186,11 +186,11 @@ namespace boost
       mapped_size_type    m_mapped_size;         // sizeof(mapped_type); -1 implies indirect
       node_size_type      m_node_size;           // disk node size in bytes
 
-      hdr_node_id_type    m_root_node_id;
-      hdr_node_id_type    m_first_node_id;
-      hdr_node_id_type    m_last_node_id;
-      hdr_node_id_type    m_node_count;
-      hdr_node_id_type    m_free_node_list_head_id;  // list of recycleable nodes
+      node_id_type        m_root_node_id;
+      node_id_type        m_first_node_id;
+      node_id_type        m_last_node_id;
+      node_id_type        m_node_count;
+      node_id_type        m_free_node_list_head_id;  // list of recycleable nodes
 
       version_type        m_major_version;   
       version_type        m_minor_version; 
@@ -229,11 +229,11 @@ namespace boost
 
       //  "updated" members that change as the file changes
       uint64_t         element_count() const         { return m_element_count; }
-      hdr_node_id_type root_node_id() const          { return m_root_node_id; }
-      hdr_node_id_type first_node_id() const         { return m_first_node_id; }
-      hdr_node_id_type last_node_id() const          { return m_last_node_id; }
-      hdr_node_id_type node_count() const            { return m_node_count; }
-      hdr_node_id_type free_node_list_head_id() const{ return m_free_node_list_head_id; }
+      node_id_type root_node_id() const          { return m_root_node_id; }
+      node_id_type first_node_id() const         { return m_first_node_id; }
+      node_id_type last_node_id() const          { return m_last_node_id; }
+      node_id_type node_count() const            { return m_node_count; }
+      node_id_type free_node_list_head_id() const{ return m_free_node_list_head_id; }
       node_level_type  root_level() const            { return m_root_level; }
       node_level_type  levels() const                { return m_root_level+1; }
 
@@ -260,12 +260,12 @@ namespace boost
       void  element_count(boost::uint64_t value)     { m_element_count = value; }
       void  increment_element_count()                { ++m_element_count; }
       void  decrement_element_count()                { --m_element_count; }
-      void  root_node_id(hdr_node_id_type id)        { m_root_node_id = id; }
-      void  first_node_id(hdr_node_id_type id)       { m_first_node_id = id; }
-      void  last_node_id(hdr_node_id_type id)        { m_last_node_id = id; }
-      void  node_count(hdr_node_id_type value)       { m_node_count = value; }
+      void  root_node_id(node_id_type id)            { m_root_node_id = id; }
+      void  first_node_id(node_id_type id)           { m_first_node_id = id; }
+      void  last_node_id(node_id_type id)            { m_last_node_id = id; }
+      void  node_count(node_id_type value)           { m_node_count = value; }
       void  increment_node_count()                   { ++m_node_count; }
-      void  free_node_list_head_id(hdr_node_id_type id)  { m_free_node_list_head_id = id; }
+      void  free_node_list_head_id(node_id_type id)  { m_free_node_list_head_id = id; }
       void  root_level(node_level_type value)        { m_root_level = value; }
       node_level_type  increment_root_level()        { return ++m_root_level; }
       void  decrement_root_level()                   { --m_root_level; }
