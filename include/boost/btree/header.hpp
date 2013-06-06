@@ -229,11 +229,11 @@ namespace boost
 
       //  "updated" members that change as the file changes
       uint64_t         element_count() const         { return m_element_count; }
-      node_id_type root_node_id() const          { return m_root_node_id; }
-      node_id_type first_node_id() const         { return m_first_node_id; }
-      node_id_type last_node_id() const          { return m_last_node_id; }
-      node_id_type node_count() const            { return m_node_count; }
-      node_id_type free_node_list_head_id() const{ return m_free_node_list_head_id; }
+      node_id_type     root_node_id() const          { return m_root_node_id; }
+      node_id_type     first_node_id() const         { return m_first_node_id; }
+      node_id_type     last_node_id() const          { return m_last_node_id; }
+      node_id_type     node_count() const            { return m_node_count; }
+      node_id_type     free_node_list_head_id() const{ return m_free_node_list_head_id; }
       node_level_type  root_level() const            { return m_root_level; }
       node_level_type  levels() const                { return m_root_level+1; }
 
@@ -253,9 +253,9 @@ namespace boost
       }
       void  major_version(version_type value)        { m_major_version = value; } 
       void  minor_version(version_type value)        { m_minor_version = value; }  
-      void  node_size(std::size_t sz)                { m_node_size = sz; }
-      void  key_size(std::size_t sz)                 { m_key_size = sz; }
-      void  mapped_size(std::size_t sz)              { m_mapped_size = sz; }
+      void  node_size(std::size_t sz)                { m_node_size = static_cast<node_size_type>(sz); }
+      void  key_size(std::size_t sz)                 { m_key_size = static_cast<key_size_type>(sz); }
+      void  mapped_size(std::size_t sz)              { m_mapped_size = static_cast<mapped_size_type>(sz); }
       void  flags(flags::bitmask flgs)               { m_flags = flgs; }
       void  element_count(boost::uint64_t value)     { m_element_count = value; }
       void  increment_element_count()                { ++m_element_count; }
