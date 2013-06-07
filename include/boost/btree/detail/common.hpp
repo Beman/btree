@@ -623,13 +623,14 @@ private:
     unsigned         level() const         {return m_level;}
     void             level(unsigned lv)    {m_level = lv;}
     bool             is_leaf() const       {return m_level == 0;}
-    bool             is_branch() const     {return m_level > 0 && m_level < 0xFFFEU;}
+    bool             is_branch() const     {return m_level > 0 && m_level != 0xFF;}
     std::size_t      size() const          {return m_size;}  // std::size_t is correct!
-    void             size(std::size_t sz)  {m_size = sz;}    // ditto
+    void             size(std::size_t sz)  {m_size
+                                             = static_cast<uint_least32_t>(sz);}  // ditto
 
 //  private:
     node_level_type  m_level;        // leaf: 0, branches: distance from leaf,
-                                     // header: 0xBBBB, free node list entry: 0xFFFE
+                                     // free node list entry: 0xFF
     node_size_type   m_size;         // size in bytes of elements on node
   };
   
@@ -732,7 +733,8 @@ private:
     bool               is_leaf() const       {return leaf().is_leaf();}
     bool               is_branch() const     {return leaf().is_branch();}
     std::size_t        size() const          {return leaf().m_size;}  // std::size_t is correct!
-    void               size(std::size_t sz)  {leaf().m_size = sz;}    // ditto
+    void               size(std::size_t sz)  {leaf().m_size           // ditto
+                                               = static_cast<uint_least32_t>(sz);}    
     bool               empty() const         {return leaf().m_size == 0;}
 
     btree_node_ptr     next_node()  // return next node at current level
@@ -936,7 +938,7 @@ iterator m_erase_branch_value(btree_node* np, branch_iterator value, node_id_typ
   void  m_free_node(btree_node* np)
   {
     np->needs_write(true);
-    np->level(0xFFFE);
+    np->level(0xFF);
     np->size(0);
     np->branch().begin()->node_id() = node_id_type(m_hdr.free_node_list_head_id());
     m_hdr.free_node_list_head_id(np->node_id());
@@ -1186,7 +1188,7 @@ btree_base<Key,Base,Traits,Comp>::m_new_node(boost::uint16_t lv)
   if (m_hdr.free_node_list_head_id())
   {
     np = m_mgr.read(m_hdr.free_node_list_head_id());
-    BOOST_ASSERT(np->level() == 0xFFFE);  // free node list entry
+    BOOST_ASSERT(np->level() == 0xFF);  // free node list entry
     m_hdr.free_node_list_head_id(np->branch().begin()->node_id());
   }
   else

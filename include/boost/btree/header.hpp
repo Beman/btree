@@ -29,29 +29,49 @@ namespace boost
 
 //--------------------------------------------------------------------------------------//
 //                                                                                      //
-//                                   Default Traits                                     //
+//                                     Traits                                           //
 //                                                                                      //
-//  The traits provide the types for management objects on btree disk nodes. Nodes are  //
+//  Traits provide the types for management objects on btree disk nodes. Nodes are      //
 //  typically 4096 bytes in length, and every byte wasted in overhead causes a          //
 //  measurable reduction in speed if the tree adds levels. That may favor unaligned     //
 //  traits, particularly if the user's key and mapped types are also unaligned.         //
 //                                                                                      //
-//  On the other hand, aligned types are much more efficient and generate less code.    //
+//  On the other hand, aligned types are more efficient and generate less code.         //
 //                                                                                      //
-//  We don't yet have enough timing data to know if and when an aligned approach or an  //
-//  unaligned approach is most appropriate.                                             // 
+//  Actual timing tests, however, show virtually no real-world speed differences        //
+//  between aligned and unaligned traits, or native and non-native endian traits.       //
+//  Other factors, such as maximum cache size, size of mapped data, portability, and    //
+//  so on, determine btree performance.                                                 //
+//                                                                                      //
+//  The big_endian_traits are choosen as the default because file dumps are easier to   //
+//  read, files are portable, and no other factors have any measurable effect on        //
+//  performance.                                                                        //
 //                                                                                      //
 //--------------------------------------------------------------------------------------//
 
-  
-    struct aligned_native_traits
+    struct big_endian_traits
     {
-      typedef boost::uint32_t  node_id_type;     // node ids
-      typedef boost::uint16_t  node_size_type;   // sizes
-      typedef boost::uint16_t  node_level_type;  // level of node; 0 for leaf node.
-                                                 // Could be smaller, but given the node
-                                                 // layout that would require a padding
-                                                 // byte so why bother?
+      typedef endian::big_uint32un_t  node_id_type;     // node ids are page numbers
+      typedef uint8_t                 node_level_type;  // level of node; 0 for leaf node.
+      typedef endian::big_uint24un_t  node_size_type;   // permits large node sizes
+      static const BOOST_SCOPED_ENUM(endian::order) header_endianness
+        = endian::order::big;
+    };
+
+    struct little_endian_traits
+    {
+      typedef endian::little_uint32un_t  node_id_type;     // node ids are page numbers
+      typedef uint8_t                    node_level_type;  // level of node; 0 for leaf node.
+      typedef endian::little_uint24un_t  node_size_type;   // permits large node sizes
+      static const BOOST_SCOPED_ENUM(endian::order) header_endianness
+        = endian::order::little;
+    };
+  
+    struct native_endian_traits
+    {
+      typedef endian::native_uint32un_t  node_id_type;     // node ids are page numbers
+      typedef uint8_t                    node_level_type;  // level of node; 0 for leaf node.
+      typedef endian::native_uint24un_t  node_size_type;   // permits large node sizes
       static const BOOST_SCOPED_ENUM(endian::order) header_endianness
 #   ifdef BOOST_BIG_ENDIAN
         = endian::order::big;
@@ -59,60 +79,10 @@ namespace boost
         = endian::order::little;
 #   endif
     };
-  
-    struct unaligned_native_traits
-    {
-      typedef endian::native_uint32un_t  node_id_type;     // node ids
-      typedef boost::uint16_t  node_size_type;   // sizes
-      typedef boost::uint16_t  node_level_type;  // level of node; 0 for leaf node.
-                                                 // Could be smaller, but given the node
-                                                 // layout that would require a padding
-                                                 // byte so why bother?
-      static const BOOST_SCOPED_ENUM(endian::order) header_endianness
-#   ifdef BOOST_BIG_ENDIAN
-        = endian::order::big;
-#   else
-        = endian::order::little;
-#   endif
-    };
 
-    struct aligned_big_endian_traits
-    {
-      typedef endian::big_uint32_t  node_id_type;
-      typedef endian::big_uint16_t  node_size_type;
-      typedef endian::big_uint16_t  node_level_type;
-      static const BOOST_SCOPED_ENUM(endian::order) header_endianness
-        = endian::order::big;
-    };
+    typedef big_endian_traits  default_traits;  // see rationale above
 
-    struct aligned_little_endian_traits
-    {
-      typedef endian::little_uint32_t  node_id_type;
-      typedef endian::little_uint16_t  node_size_type;
-      typedef endian::little_uint16_t  node_level_type;
-      static const BOOST_SCOPED_ENUM(endian::order) header_endianness
-        = endian::order::little;
-    };
-
-    struct unaligned_big_endian_traits
-    {
-      typedef endian::big_uint32un_t  node_id_type;
-      typedef endian::big_uint16un_t  node_size_type;
-      typedef endian::big_uint16un_t  node_level_type;
-      static const BOOST_SCOPED_ENUM(endian::order) header_endianness
-        = endian::order::big;
-    };
-
-    struct unaligned_little_endian_traits
-    {
-      typedef endian::little_uint32un_t  node_id_type;
-      typedef endian::little_uint16un_t  node_size_type;
-      typedef endian::little_uint16un_t  node_level_type;
-      static const BOOST_SCOPED_ENUM(endian::order) header_endianness
-        = endian::order::little;
-    };
-
-
+//--------------------------------------------------------------------------------------//
 
     namespace flags
     {

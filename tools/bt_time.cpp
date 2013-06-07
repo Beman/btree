@@ -47,7 +47,7 @@ namespace
   const int places = 2;
   std::string path("bt_time.btree");
   std::string path_org("bt_time.btree.org");
-  BOOST_SCOPED_ENUM(endian::order) whichaway = endian::order::native;
+  BOOST_SCOPED_ENUM(endian::order) whichaway = endian::order::big;
 
   timer::cpu_times insert_tm;
   timer::cpu_times find_tm;
@@ -479,9 +479,9 @@ int cpp_main(int argc, char * argv[])
       "   -stl     Also run the tests against std::map\n"
       "   -r       Read entire file to preload operating system disk cache;\n"
       "            only applicable if -xc option is active\n"
-      "   -big     Use btree::aligned_big_endian_traits\n"
-      "   -little  Use btree::aligned_little_endian_traits\n"
-      "   -native  Use btree::aligned_native_traits; this is the default\n"
+      "   -big     Use btree::big_endian_traits; this is the default\n"
+      "   -little  Use btree::little_endian_traits\n"
+      "   -native  Use btree::native_traits\n"
       "   -html    Output html table of results to cerr\n"
       ;
     return 1;
@@ -493,16 +493,16 @@ int cpp_main(int argc, char * argv[])
   switch (whichaway)
   {
   case endian::order::big:
-    cout << "and big endianness\n";
-    test< btree::btree_map<long, long, btree::aligned_big_endian_traits> >();
+    cout << "and big endian traits\n";
+    test< btree::btree_map<long, long, btree::big_endian_traits> >();
     break;
   case endian::order::little:
-    cout << "and little endianness\n";
-    test< btree::btree_map<long, long, btree::aligned_little_endian_traits> >();
+    cout << "and little endian traits\n";
+    test< btree::btree_map<long, long, btree::little_endian_traits> >();
     break;
   case endian::order::native:
-    cout << "and native endianness\n";
-    test< btree::btree_map<long, long, btree::aligned_native_traits> >();
+    cout << "and native endian traits\n";
+    test< btree::btree_map<long, long, btree::native_endian_traits> >();
     break;
   }
 

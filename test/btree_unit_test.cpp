@@ -79,66 +79,79 @@ void instantiate_test(BT& bt)
 void instantiate()
 {
   cout << "  instantiate..." << endl;
+
+  // map
   {
-    btree::btree_map<fat, int, btree::aligned_native_traits> x;
+    btree::btree_map<fat, int> x;
     instantiate_test(x);
   }
   {
-    btree::btree_map<fat, int, btree::unaligned_native_traits> x;
-    instantiate_test(x);
-  }
-  //{
-  //  btree::btree_multimap<fat, int> x;
-  //  instantiate_test(x);
-  //}
-  {
-    btree::btree_set<int, btree::aligned_native_traits> x;
+    btree::btree_map<fat, int, btree::big_endian_traits> x;
     instantiate_test(x);
   }
   {
-    btree::btree_set<int, btree::unaligned_native_traits> x;
+    btree::btree_map<fat, int, btree::little_endian_traits> x;
     instantiate_test(x);
   }
   {
-    btree::btree_multiset<int, btree::aligned_native_traits> x;
+    btree::btree_map<fat, int, btree::native_endian_traits> x;
+    instantiate_test(x);
+  }
+
+  // multimap
+  {
+    btree::btree_multimap<fat, int> x;
     instantiate_test(x);
   }
   {
-    btree::btree_multiset<int, btree::unaligned_native_traits> x;
+    btree::btree_multimap<fat, int, btree::big_endian_traits> x;
     instantiate_test(x);
   }
   {
-    btree::btree_map<fat, int, btree::aligned_big_endian_traits> x;
+    btree::btree_multimap<fat, int, btree::little_endian_traits> x;
     instantiate_test(x);
   }
   {
-    btree::btree_map<fat, int, btree::unaligned_big_endian_traits> x;
+    btree::btree_multimap<fat, int, btree::native_endian_traits> x;
+    instantiate_test(x);
+  }
+
+  // set
+  {
+    btree::btree_set<int> x;
     instantiate_test(x);
   }
   {
-    btree::btree_multimap<fat, int, btree::aligned_little_endian_traits> x;
+    btree::btree_set<int, btree::big_endian_traits> x;
     instantiate_test(x);
   }
   {
-    btree::btree_multimap<fat, int, btree::unaligned_little_endian_traits> x;
+    btree::btree_set<int, btree::little_endian_traits> x;
     instantiate_test(x);
   }
   {
-    btree::btree_set<int, btree::aligned_little_endian_traits> x;
+    btree::btree_set<int, btree::native_endian_traits> x;
+    instantiate_test(x);
+  }
+
+  // multiset
+  {
+    btree::btree_multiset<int> x;
     instantiate_test(x);
   }
   {
-    btree::btree_set<int, btree::unaligned_little_endian_traits> x;
+    btree::btree_multiset<int, btree::big_endian_traits> x;
     instantiate_test(x);
   }
   {
-    btree::btree_multiset<int, btree::aligned_big_endian_traits> x;
+    btree::btree_multiset<int, btree::little_endian_traits> x;
     instantiate_test(x);
   }
   {
-    btree::btree_multiset<int, btree::unaligned_big_endian_traits> x;
+    btree::btree_multiset<int, btree::native_endian_traits> x;
     instantiate_test(x);
   }
+
   cout << "    instantiate complete" << endl;
 }
 

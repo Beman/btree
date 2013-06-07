@@ -551,16 +551,16 @@ int cpp_main(int argc, char * argv[])
   //  break;
   //}
 
-  cout << "and native endianness\n";
+  cout << "and default_traits\n";
 
   cout << "\n***** with strbuf *****\n";
-  test< btree::btree_map<btree::strbuf, int32_t, btree::aligned_native_traits>,
+  test< btree::btree_map<btree::strbuf, int32_t>,
     strbuf_tag>();
 
   if (do_c_str_proxy)
   {
     cout << "\n***** with c_str_proxy *****\n";
-    test< btree::btree_map<btree::c_str_proxy, int32_t, btree::aligned_native_traits>,
+    test< btree::btree_map<btree::c_str_proxy, int32_t>,
       c_str_proxy_tag>();
   }
 
