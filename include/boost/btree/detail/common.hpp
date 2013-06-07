@@ -75,6 +75,8 @@
     64-bit alignment to ensure data portability with endian traits. Is an alignment trait
     needed?
 
+  * Search all files for TODO, clear problems if possible, otherwise add to this list.
+
 */
 
 namespace boost
@@ -483,8 +485,8 @@ public:
 
   // TODO: why are these being exposed:
   btree_base(const Comp& comp);
-  btree_base(const boost::filesystem::path& p, flags::bitmask flgs, std::size_t node_sz,
-             const Comp& comp);
+  btree_base(const boost::filesystem::path& p, flags::bitmask flgs, uint64_t signature,
+   std::size_t node_sz, const Comp& comp);
   ~btree_base();
 
   //  file operations:
@@ -891,7 +893,8 @@ protected:
 
   iterator m_update(iterator itr, const mapped_type& mv);
 
-  void m_open(const boost::filesystem::path& p, flags::bitmask flgs, std::size_t node_sz);
+  void m_open(const boost::filesystem::path& p, flags::bitmask flgs, uint64_t signature,
+              std::size_t node_sz);
 
 //--------------------------------------------------------------------------------------//
 //                              private member functions                                //
@@ -1019,7 +1022,7 @@ btree_base<Key,Base,Traits,Comp>::btree_base(const Comp& comp)
 
 template <class Key, class Base, class Traits, class Comp>
 btree_base<Key,Base,Traits,Comp>::btree_base(const boost::filesystem::path& p,
-  flags::bitmask flgs, std::size_t node_sz, const Comp& comp)
+  flags::bitmask flgs, uint64_t signature, std::size_t node_sz, const Comp& comp)
   : m_mgr(m_node_alloc), m_comp(comp), m_value_comp(comp), m_branch_comp(comp)
 { 
   m_mgr.owner(this);
@@ -1029,7 +1032,7 @@ btree_base<Key,Base,Traits,Comp>::btree_base(const boost::filesystem::path& p,
   m_end_iterator = const_iterator(buffer_ptr(m_end_node));
 
   // open the file and set up data members
-  m_open(p, flgs, node_sz);
+  m_open(p, flgs, signature, node_sz);
 }
 
 //----------------------------------- destructor ---------------------------------------//
@@ -1058,7 +1061,7 @@ void btree_base<Key,Base,Traits,Comp>::close()
 template <class Key, class Base, class Traits, class Comp>
 void
 btree_base<Key,Base,Traits,Comp>::m_open(const boost::filesystem::path& p,
-  flags::bitmask flgs, std::size_t node_sz) 
+  flags::bitmask flgs, uint64_t signature, std::size_t node_sz) 
 {
   BOOST_ASSERT(!is_open());
   BOOST_ASSERT(node_sz >= sizeof(btree::header_page));
@@ -1081,8 +1084,13 @@ btree_base<Key,Base,Traits,Comp>::m_open(const boost::filesystem::path& p,
     m_read_header();
     if (!m_hdr.marker_ok())
       BOOST_BTREE_THROW(std::runtime_error(file_path().string()+" isn't a btree"));
+    if (m_hdr.signature() != signature)
+      BOOST_BTREE_THROW(std::runtime_error(file_path().string()+" has wrong signature"));
     if (m_hdr.big_endian() != (Traits::header_endianness == endian::order::big))
       BOOST_BTREE_THROW(std::runtime_error(file_path().string()+" has wrong endianness"));
+    if ((m_hdr.flags() & flags::unique) != (flgs & flags::unique))
+      BOOST_BTREE_THROW(std::runtime_error(file_path().string()+" has wrong uniqueness"));
+
     m_mgr.data_size(m_hdr.node_size());
     m_root = m_mgr.read(m_hdr.root_node_id());
   }
@@ -1090,6 +1098,7 @@ btree_base<Key,Base,Traits,Comp>::m_open(const boost::filesystem::path& p,
   { // new or truncated file
     m_hdr.clear();
     m_hdr.big_endian(Traits::header_endianness == endian::order::big);
+    m_hdr.signature(signature);
     m_hdr.flags(flags::permanent_flags(flgs));
     m_hdr.splash_c_str("boost.org btree");
     m_hdr.user_c_str("");

@@ -270,7 +270,7 @@ void  single_insert()
 
     typedef btree::btree_map<int, int> btree_type;
 
-    btree_type x(p, btree::flags::read_write, 128);
+    btree_type x(p, btree::flags::read_write, -1, 128);
 
     std::pair<btree_type::const_iterator, bool> result
       = x.emplace(123, 456);
@@ -294,7 +294,7 @@ void open_existing()
 
   {
     fs::remove(p);
-    btree::btree_map<int, int> bt(p, btree::flags::truncate, 128);
+    btree::btree_map<int, int> bt(p, btree::flags::truncate, -1, 128);
 
     int key = 5;
     int mapped = 0x55;
@@ -306,6 +306,28 @@ void open_existing()
     key = 6; mapped = 0x66;
     bt.emplace(key, mapped);
     bt.dump_dot(std::cout);
+  }
+
+  {
+    cout << "  try to open with wrong signature" << endl;
+    bool signature_ok = false;
+    try {btree::btree_map<int, int> bt2(p,btree::flags::read_only,0);}
+    catch (...) { signature_ok = true; }
+    BOOST_TEST(signature_ok);
+  }
+  {
+    cout << "  try to open with wrong uniquenesss" << endl;
+    bool uniqueness_ok = false;
+    try {btree::btree_multimap<int, int> bt2(p);}
+    catch (...) { uniqueness_ok = true; }
+    BOOST_TEST(uniqueness_ok);
+  }
+  {
+    cout << "  try to open with set/map conflict" << endl;
+    bool set_map_conflict = false;
+    try {btree::btree_set<int> bt2(p);}
+    catch (...) { set_map_conflict = true; }
+    BOOST_TEST(!set_map_conflict);
   }
 
   btree::btree_map<int, int> bt2(p);
@@ -331,7 +353,7 @@ void small_variable_set()
   fs::path p("btree_set.btree");
   fs::remove(p);
   typedef btree::btree_set<btree::strbuf> btree_type;
-  btree_type bt(p, btree::flags::truncate, 128);
+  btree_type bt(p, btree::flags::truncate, -1, 128);
   std::pair<btree_type::iterator, bool> result;
 
   btree::strbuf stuff;
@@ -379,7 +401,7 @@ void small_variable_map()
 
   fs::path p("btree_map.btree");
   fs::remove(p);
-  btree::btree_map<btree::strbuf, btree::strbuf> bt(p, btree::flags::truncate, 128);
+  btree::btree_map<btree::strbuf, btree::strbuf> bt(p, btree::flags::truncate, -1, 128);
 
   btree::strbuf key;
   btree::strbuf value;
@@ -764,7 +786,7 @@ void insert()
 
   {
     fs::path map_path("btree_map.btree");
-    btree::btree_map<fat, int> map(map_path, btree::flags::truncate, 128);
+    btree::btree_map<fat, int> map(map_path, btree::flags::truncate, -1, 128);
     map.max_cache_size(0);  // maximum stress
     insert_tests(map);
   }
@@ -882,7 +904,7 @@ void find_and_bounds()
   cout << "  find_and_bounds..." << endl;
 
   {
-    fb_set_type set("find_and_bounds_set.btr", btree::flags::truncate, 128);
+    fb_set_type set("find_and_bounds_set.btr", btree::flags::truncate, -1, 128);
     BOOST_TEST(set.header().flags() & btree::flags::unique);
     BOOST_TEST(set.header().flags() & btree::flags::key_only);
     set.max_cache_size(0);  // maximum stress
@@ -891,7 +913,7 @@ void find_and_bounds()
 
   {
     fb_multiset_type multiset("find_and_bounds_multiset.btr",
-      btree::flags::truncate, 128);
+      btree::flags::truncate, -1, 128);
     BOOST_TEST(!(multiset.header().flags() & btree::flags::unique));
     BOOST_TEST(multiset.header().flags() & btree::flags::key_only);
     multiset.max_cache_size(0);  // maximum stress
@@ -903,7 +925,7 @@ void find_and_bounds()
 
   {
     fb_map_type map("find_and_bounds_map.btr",
-      btree::flags::truncate, 128);
+      btree::flags::truncate, -1, 128);
     BOOST_TEST(map.header().flags() & btree::flags::unique);
     BOOST_TEST(!(map.header().flags() & btree::flags::key_only));
     map.max_cache_size(0);  // maximum stress
@@ -912,7 +934,7 @@ void find_and_bounds()
 
   {
     fb_multimap_type multimap("find_and_bounds_multimap.btr",
-      btree::flags::truncate, 128);
+      btree::flags::truncate, -1, 128);
     BOOST_TEST(!(multimap.header().flags() & btree::flags::unique));
     BOOST_TEST(!(multimap.header().flags() & btree::flags::key_only));
     multimap.max_cache_size(0);  // maximum stress
@@ -971,7 +993,7 @@ void insert_non_unique()
   {
     fs::path map_path("non_unique.btr");
     btree::btree_multimap<fat, int> multimap(map_path,
-      btree::flags::truncate, 128);
+      btree::flags::truncate, -1, 128);
     multimap.max_cache_size(0);  // maximum stress
     insert_non_unique_tests(multimap);
   }
@@ -986,7 +1008,7 @@ void update_test()
   cout << "  update_test..." << endl;
 
   typedef btree::btree_map<fat, int> bt_type;
-  bt_type bt("update.btr", btree::flags::truncate, 128);
+  bt_type bt("update.btr", btree::flags::truncate, -1, 128);
 
   boost::mt19937 rng;
   boost::uniform_int<> million(1,1000000);
@@ -1068,14 +1090,14 @@ void pack_optimization()
   const int per_node = (node_sz - overhead) / sizeof(value_type);
   const int n = per_node * 2;  // sufficient to distinguish if pack optimization works
 
-  btree::btree_map<int, int> np("not_packed.btr", btree::flags::truncate, node_sz);
+  btree::btree_map<int, int> np("not_packed.btr", btree::flags::truncate, -1, node_sz);
   for (int i=n; i > 0; --i)
     np.emplace(i, 0xffffff00+i);
 
   cout << "\nroot is node " << np.header().root_node_id() << '\n'; 
   np.dump_dot(std::cout);
   
-  btree::btree_map<int, int> p("packed.btr", btree::flags::truncate, node_sz);
+  btree::btree_map<int, int> p("packed.btr", btree::flags::truncate, -1, node_sz);
   for (int i=1; i <= n; ++i)
     p.emplace(i, 0xffffff00+i);
 
@@ -1128,7 +1150,7 @@ void  reopen_btree_object_test()
   std::string path("reopen.btree");
   std::string path2("reopen.btree.2");
   typedef btree::btree_map<long, long> map_type;
-  map_type bt(path, btree::flags::truncate, 128);
+  map_type bt(path, btree::flags::truncate, -1, 128);
   rand48  rng;
   uniform_int<long> n_dist(0, n);
   variate_generator<rand48&, uniform_int<long> > key(rng, n_dist);
@@ -1146,7 +1168,7 @@ void  reopen_btree_object_test()
   fs::remove(path2);
   fs::rename(path, path2);
   map_type bt2(path2);
-  bt.open(path, btree::flags::truncate, 128);
+  bt.open(path, btree::flags::truncate, -1, 128);
   for (map_type::iterator it = bt2.begin(); it != bt2.end(); ++it)
     bt.emplace(it->key(), it->mapped_value());
   BOOST_TEST_EQ(bt.size(), bt2.size());

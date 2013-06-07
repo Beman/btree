@@ -90,7 +90,7 @@ namespace
 
       cout << "\nopening " << path << endl;
       t.start();
-      BT bt(path, flgs, node_sz);
+      BT bt(path, flgs, -1, node_sz);
       t.stop();
       t.report();
 
@@ -123,7 +123,7 @@ namespace
         fs::rename(path, path_org);
         t.start();
         BT bt_old(path_org);
-        BT bt_new(path, btree::flags::truncate, node_sz);
+        BT bt_new(path, btree::flags::truncate, -1, node_sz);
         for (typename BT::iterator it = bt_old.begin(); it != bt_old.end(); ++it)
         {
           bt_new.emplace(it->key(), it->mapped_value());

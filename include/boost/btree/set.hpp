@@ -45,20 +45,24 @@ namespace boost
         : btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>(comp) {}
 
       explicit btree_set(const boost::filesystem::path& p,
-          flags::bitmask flgs = flags::read_only,
-          std::size_t node_sz = default_node_size,  // ignored if existing file
-          const Comp& comp = Comp())
+        flags::bitmask flgs = flags::read_only,
+        uint64_t signature = -1,  // for existing files, must match signature from creation
+        std::size_t node_sz = default_node_size,  // ignored if existing file
+        const Comp& comp = Comp())
         : btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>(p,
-            flags::open_flags(flgs) | flags::key_only | flags::unique, node_sz, comp) {}
+            flags::open_flags(flgs) | flags::key_only | flags::unique,
+            signature, node_sz, comp) {}
 
       template <class InputIterator>
       btree_set(InputIterator begin, InputIterator end,
         const boost::filesystem::path& p,
         flags::bitmask flgs = flags::read_only,
+        uint64_t signature = -1,  // for existing files, must match signature from creation
         std::size_t node_sz = default_node_size,  // ignored if existing file
         const Comp& comp = Comp())
       : btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>(p,
-          flags::open_flags(flgs) | flags::key_only | flags::unique, node_sz, comp)
+          flags::open_flags(flgs) | flags::key_only | flags::unique,
+          signature, node_sz, comp)
       {
         for (; begin != end; ++begin)
         {
@@ -69,10 +73,11 @@ namespace boost
  
       void open(const boost::filesystem::path& p,
         flags::bitmask flgs = flags::read_only,
+        uint64_t signature = -1,  // for existing files, must match signature from creation
         std::size_t node_sz = default_node_size) // node_sz ignored if existing file
       {
         btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::m_open(p,
-          flags::open_flags(flgs) | flags::key_only | flags::unique, node_sz);
+          flags::open_flags(flgs) | flags::key_only | flags::unique, signature, node_sz);
       }
 
       //  emplace(const Key&) special case not requiring c++0x support
@@ -119,20 +124,22 @@ namespace boost
         : btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>(comp) {}
 
       explicit btree_multiset(const boost::filesystem::path& p,
-          flags::bitmask flgs = flags::read_only,
-          std::size_t node_sz = default_node_size,  // ignored if existing file
-          const Comp& comp = Comp())
+        flags::bitmask flgs = flags::read_only,
+        uint64_t signature = -1,  // for existing files, must match signature from creation
+        std::size_t node_sz = default_node_size,  // ignored if existing file
+        const Comp& comp = Comp())
         : btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>(p,
-            flags::open_flags(flgs) | flags::key_only, node_sz, comp) {}
+            flags::open_flags(flgs) | flags::key_only, signature, node_sz, comp) {}
 
       template <class InputIterator>
       btree_multiset(InputIterator begin, InputIterator end,
         const boost::filesystem::path& p,
         flags::bitmask flgs = flags::read_only,
+        uint64_t signature = -1,  // for existing files, must match signature from creation
         std::size_t node_sz = default_node_size,  // ignored if existing file
         const Comp& comp = Comp())
       : btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>(p,
-          flags::open_flags(flgs) | flags::key_only, node_sz, comp)
+          flags::open_flags(flgs) | flags::key_only, signature, node_sz, comp)
       {
         for (; begin != end; ++begin)
         {
@@ -143,10 +150,11 @@ namespace boost
 
       void open(const boost::filesystem::path& p,
         flags::bitmask flgs = flags::read_only,
+        uint64_t signature = -1,  // for existing files, must match signature from creation
         std::size_t node_sz = default_node_size) // node_sz ignored if existing file
       {
          btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::m_open(p,
-          flags::open_flags(flgs) | flags::key_only, node_sz);
+          flags::open_flags(flgs) | flags::key_only, signature, node_sz);
       }
 
       //  emplace(const Key&) special case not requiring c++0x support

@@ -189,6 +189,7 @@ namespace boost
         return std::memcmp(m_marker, mark, sizeof(m_marker)) == 0;
       }
       bool             big_endian() const            { return m_endianness == 1; }
+      uint64_t         signature() const             { return m_signature; }
       const char*      splash_c_str() const          { return m_splash_c_str; }
       version_type     major_version() const         { return m_major_version; }  
       version_type     minor_version() const         { return m_minor_version; }  
@@ -216,6 +217,7 @@ namespace boost
       }
 
       void  big_endian(bool x)                       { m_endianness = x ? 0x01 : 0x02; }
+      void  signature(uint64_t x)                    { m_signature = x; }
       void  splash_c_str(const char* str)
       {
         std::strncpy(m_splash_c_str, str, sizeof(m_splash_c_str)-1);
@@ -255,6 +257,7 @@ namespace boost
           endian::reverse(m_key_size);
           endian::reverse(m_mapped_size);
           endian::reverse(m_element_count);
+          endian::reverse(m_signature);
           endian::reverse(m_flags);
           endian::reverse(m_root_node_id);
           endian::reverse(m_first_node_id);

@@ -671,7 +671,7 @@ namespace
     keygen_t erase_keygen(erase_rng, n_dist);
 
     bt.open(path_str,
-      restart ? boost::btree::flags::read_write : boost::btree::flags::truncate,
+      restart ? boost::btree::flags::read_write : boost::btree::flags::truncate, -1,
       node_sz);
     bt.max_cache_size(cache_sz);
 

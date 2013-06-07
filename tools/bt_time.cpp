@@ -72,7 +72,7 @@ namespace
 
       cout << "\nopening " << path << endl;
       t.start();
-      BT bt(path, flgs, node_sz);
+      BT bt(path, flgs, -1, node_sz);
       t.stop();
       t.report();
 
@@ -103,7 +103,7 @@ namespace
         t.start();
         BT bt_old(path_org);
         bt_old.max_cache_size(cache_sz);
-        BT bt_new(path, btree::flags::truncate, node_sz);
+        BT bt_new(path, btree::flags::truncate, -1, node_sz);
         bt_new.max_cache_size(cache_sz);
         for (typename BT::iterator it = bt_old.begin(); it != bt_old.end(); ++it)
         {
