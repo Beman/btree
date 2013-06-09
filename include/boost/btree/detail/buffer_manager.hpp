@@ -247,12 +247,12 @@ namespace boost
       void*            owner() const                {return m_owner;}
       void             owner(void* p)               {m_owner = p;}
 
-      boost::uint32_t  active_buffers_read() const  {return m_active_buffers_read;}
-      boost::uint32_t  cached_buffers_read() const  {return m_cached_buffers_read;}
-      boost::uint32_t  file_buffers_read() const    {return m_file_buffers_read;}
-      boost::uint32_t  file_buffers_written() const {return m_file_buffers_written;}
-      boost::uint32_t  new_buffer_requests() const  {return m_new_buffer_requests;}
-      boost::uint32_t  buffer_allocs() const        {return m_buffer_allocs;}
+      boost::uint64_t  active_buffers_read() const  {return m_active_buffers_read;}
+      boost::uint64_t  cached_buffers_read() const  {return m_cached_buffers_read;}
+      boost::uint64_t  file_buffers_read() const    {return m_file_buffers_read;}
+      boost::uint64_t  file_buffers_written() const {return m_file_buffers_written;}
+      boost::uint64_t  new_buffer_requests() const  {return m_new_buffer_requests;}
+      boost::uint64_t  buffer_allocs() const        {return m_buffer_allocs;}
       std::size_t      buffers_in_memory() const    {return buffers.size();}
       std::size_t      buffers_available() const    {return buffer_cache.size();}
 
@@ -283,12 +283,12 @@ namespace boost
       buffer_alloc        m_alloc;            // memory allocation function pointer
 
       //  activity counts
-      boost::uint32_t   m_active_buffers_read;
-      boost::uint32_t   m_cached_buffers_read;
-      boost::uint32_t   m_file_buffers_read;
-      boost::uint32_t   m_file_buffers_written;
-      boost::uint32_t   m_new_buffer_requests;
-      boost::uint32_t   m_buffer_allocs;
+      boost::uint64_t   m_active_buffers_read;
+      boost::uint64_t   m_cached_buffers_read;
+      boost::uint64_t   m_file_buffers_read;
+      boost::uint64_t   m_file_buffers_written;
+      boost::uint64_t   m_new_buffer_requests;
+      boost::uint64_t   m_buffer_allocs;
 
       buffer* m_prepare_buffer(buffer_id_type pg_id);
     };
