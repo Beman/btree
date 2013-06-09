@@ -900,6 +900,13 @@ protected:
 //                              private member functions                                //
 //--------------------------------------------------------------------------------------//
 private:
+  
+  void m_close_and_throw(const std::string& msg)
+  {
+    if (is_open())
+      close();
+    BOOST_BTREE_THROW(std::runtime_error(file_path().string()+" "+msg));
+  }
 
   static buffer* m_node_alloc(buffer::buffer_id_type np_id, buffer_manager& mgr)
   { return new btree_node(np_id, mgr); }
@@ -936,8 +943,8 @@ private:
   void  m_branch_insert(btree_node* np, branch_iterator element,
     const key_type& k, node_id_type id);
 
-iterator m_sub_tree_begin(node_id_type id);
-iterator m_erase_branch_value(btree_node* np, branch_iterator value, node_id_type erasee);
+  iterator m_sub_tree_begin(node_id_type id);
+  iterator m_erase_branch_value(btree_node* np, branch_iterator value, node_id_type erasee);
   void  m_free_node(btree_node* np)
   {
     np->needs_write(true);
@@ -1083,19 +1090,19 @@ btree_base<Key,Base,Traits,Comp>::m_open(const boost::filesystem::path& p,
   { // existing non-truncated file
     m_read_header();
     if (!m_hdr.marker_ok())
-      BOOST_BTREE_THROW(std::runtime_error(file_path().string()+" isn't a btree"));
+      m_close_and_throw("isn't a btree");
     if (m_hdr.signature() != signature)
-      BOOST_BTREE_THROW(std::runtime_error(file_path().string()+" signature differs"));
+      m_close_and_throw("signature differs");
     if (m_hdr.big_endian() != (Traits::header_endianness == endian::order::big))
-      BOOST_BTREE_THROW(std::runtime_error(file_path().string()+" endianness differs"));
+      m_close_and_throw("endianness differs");
     if ((m_hdr.flags() & flags::key_only) != (flgs & flags::key_only))
-      BOOST_BTREE_THROW(std::runtime_error(file_path().string()+" map/set differs"));
+      m_close_and_throw("map/set differs");
     if ((m_hdr.flags() & flags::unique) != (flgs & flags::unique))
-      BOOST_BTREE_THROW(std::runtime_error(file_path().string()+" multi/non-multi differs"));
+      m_close_and_throw("multi/non-multi differs");
     if (m_hdr.key_size() != Base::key_size())
-      BOOST_BTREE_THROW(std::runtime_error(file_path().string()+" key size differs"));
+      m_close_and_throw("key size differs");
     if (m_hdr.key_size() != Base::mapped_size())
-      BOOST_BTREE_THROW(std::runtime_error(file_path().string()+" mapped size differs"));
+      m_close_and_throw("mapped size differs");
 
     m_mgr.data_size(m_hdr.node_size());
     m_root = m_mgr.read(m_hdr.root_node_id());
