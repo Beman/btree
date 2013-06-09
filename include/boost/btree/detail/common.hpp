@@ -34,6 +34,9 @@
   TODO:
 
 
+  * flags for key_varies and mapped_varies added, but not being set or used yet.
+    key and mapped size no longer set to -1 to indicate variable length. 
+  
   * btree_unit_test.cpp: move erase tests out of insert test.
 
   * Upgrade m_update() to allow new dynamic size different from old dynamic size
@@ -54,9 +57,6 @@
 
   * Add a function (apply(key, mapped_value)?) that inserts if key not present,
     updates if present.
-
-  * Header should contain uuid for value_type; used to check existing file is being
-    opened with the right template parameters.
 
   * The commented out logging in binary_file.cpp was very useful. (1) move it to header
     and (2) apply only when BOOST_BINARY_FILE_LOG is defined. This implies adding m_ to
@@ -170,8 +170,8 @@ public:
 
   const Key& key(const value_type& v) const {return v;}  // really handy, so expose
 
-  static std::size_t key_size() { return -1; }
-  static std::size_t mapped_size() { return -1; }
+  static std::size_t key_size()    { return sizeof(Key); }
+  static std::size_t mapped_size() { return sizeof(Key); }
 
 protected:
   void m_memcpy_value(value_type* dest, const Key* k, std::size_t key_sz,
@@ -190,13 +190,13 @@ class btree_map_base
 {
 public:
   typedef map_value<Key, T>  value_type;
-  typedef T                              mapped_type;
+  typedef T                  mapped_type;
 
   const Key& key(const value_type& v) const  // really handy, so expose
     {return v.key();}
 
-  static std::size_t key_size() { return -1; }
-  static std::size_t mapped_size() { return -1; }
+  static std::size_t key_size()    { return sizeof(Key); }
+  static std::size_t mapped_size() { return sizeof(T); }
 
   class value_compare
   {
@@ -1085,11 +1085,17 @@ btree_base<Key,Base,Traits,Comp>::m_open(const boost::filesystem::path& p,
     if (!m_hdr.marker_ok())
       BOOST_BTREE_THROW(std::runtime_error(file_path().string()+" isn't a btree"));
     if (m_hdr.signature() != signature)
-      BOOST_BTREE_THROW(std::runtime_error(file_path().string()+" has wrong signature"));
+      BOOST_BTREE_THROW(std::runtime_error(file_path().string()+" signature differs"));
     if (m_hdr.big_endian() != (Traits::header_endianness == endian::order::big))
-      BOOST_BTREE_THROW(std::runtime_error(file_path().string()+" has wrong endianness"));
+      BOOST_BTREE_THROW(std::runtime_error(file_path().string()+" endianness differs"));
+    if ((m_hdr.flags() & flags::key_only) != (flgs & flags::key_only))
+      BOOST_BTREE_THROW(std::runtime_error(file_path().string()+" map/set differs"));
     if ((m_hdr.flags() & flags::unique) != (flgs & flags::unique))
-      BOOST_BTREE_THROW(std::runtime_error(file_path().string()+" has wrong uniqueness"));
+      BOOST_BTREE_THROW(std::runtime_error(file_path().string()+" multi/non-multi differs"));
+    if (m_hdr.key_size() != Base::key_size())
+      BOOST_BTREE_THROW(std::runtime_error(file_path().string()+" key size differs"));
+    if (m_hdr.key_size() != Base::mapped_size())
+      BOOST_BTREE_THROW(std::runtime_error(file_path().string()+" mapped size differs"));
 
     m_mgr.data_size(m_hdr.node_size());
     m_root = m_mgr.read(m_hdr.root_node_id());

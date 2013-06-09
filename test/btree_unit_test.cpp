@@ -324,12 +324,27 @@ void open_existing()
   }
   {
     cout << "  try to open with set/map conflict" << endl;
-    bool set_map_conflict = false;
+    bool set_vs_map_ok = false;
     try {btree::btree_set<int> bt2(p);}
-    catch (...) { set_map_conflict = true; }
-    BOOST_TEST(!set_map_conflict);
+    catch (...) { set_vs_map_ok = true; }
+    BOOST_TEST(set_vs_map_ok);
+  }
+  {
+    cout << "  try to open with key size conflict" << endl;
+    bool key_size_ok = false;
+    try {btree::btree_map<char, int> bt2(p);}
+    catch (...) { key_size_ok = true; }
+    BOOST_TEST(key_size_ok);
+  }
+  {
+    cout << "  try to open with mapped_size conflict" << endl;
+    bool mapped_size_ok = false;
+    try {btree::btree_map<int, char> bt2(p);}
+    catch (...) { mapped_size_ok = true; }
+    BOOST_TEST(mapped_size_ok);
   }
 
+  cout << "  verify header contents" << endl;
   btree::btree_map<int, int> bt2(p);
   BOOST_TEST(bt2.is_open());
   BOOST_TEST(!bt2.empty());

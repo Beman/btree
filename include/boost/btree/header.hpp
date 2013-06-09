@@ -89,16 +89,18 @@ namespace boost
       enum bitmask
       {
         // bitmasks set by implemenation, ignored if passed in by user:
-        unique      = 1,      // map or set; uniqueness required
-        key_only    = 2,      // set or multiset
+        unique        = 1,    // not multi; uniqueness required
+        key_only      = 2,    // set or multiset
+        key_varies    = 4,    // key is variable length
+        mapped_varies = 8,    // mapped is variable length
  
         // open values (choose one):
-        read_only   = 0x10,   // file must exist
-        read_write  = 0x20,   // open existing file, otherwise create new file
-        truncate    = 0x40,   // same as read_write except existing file truncated
+        read_only   = 0x100,   // file must exist
+        read_write  = 0x200,   // open existing file, otherwise create new file
+        truncate    = 0x400,   // same as read_write except existing file truncated
 
         // bitmask options set by user; not present in header:
-        preload     = 0x100, // existing file read to preload O/S file cache
+        preload     = 0x1000, // existing file read to preload O/S file cache
       };
 
       BOOST_BITMASK(bitmask);
