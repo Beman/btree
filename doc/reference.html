@@ -34,18 +34,65 @@
     </tr>
   </table>
 
+  <h2>Header &lt;boost/btree/map.hpp&gt; synopsis</h2>
+    <pre>namespace boost { namespace btree {
+
+template &lt;class Key, class T, class Traits = default_traits,
+          class Comp = btree::less&lt;Key&gt; &gt;
+  class btree_map;
+
+template &lt;class Key, class T, class Traits = default_traits,
+          class Comp = btree::less&lt;Key&gt; &gt;
+  class btree_multimap;
+
+struct big_endian_traits
+{
+  typedef endian::big_uint32un_t  node_id_type;     // node ids are page numbers
+  typedef uint8_t                 node_level_type;  // level of node; 0 for leaf node.
+  typedef endian::big_uint24un_t  node_size_type;   // permits large node sizes
+  static const BOOST_SCOPED_ENUM(endian::order) header_endianness
+    = endian::order::big;
+};
+
+struct little_endian_traits
+{
+  typedef endian::little_uint32un_t  node_id_type;     // node ids are page numbers
+  typedef uint8_t                    node_level_type;  // level of node; 0 for leaf node.
+  typedef endian::little_uint24un_t  node_size_type;   // permits large node sizes
+  static const BOOST_SCOPED_ENUM(endian::order) header_endianness
+    = endian::order::little;
+};
+
+struct native_endian_traits
+{
+  typedef endian::native_uint32un_t  node_id_type;     // node ids are page numbers
+  typedef uint8_t                    node_level_type;  // level of node; 0 for leaf node.
+  typedef endian::native_uint24un_t  node_size_type;   // permits large node sizes
+  static const BOOST_SCOPED_ENUM(endian::order) header_endianness
+#   ifdef BOOST_BIG_ENDIAN
+        = endian::order::big;
+#   else
+        = endian::order::little;
+#   endif
+};
+
+typedef big_endian_traits  default_traits;
+
+} // namespace btree
+} // namespace boost</pre>
+
   <h2>Class btree_map</h2>
     <pre>namespace boost { namespace btree {
 
-template &lt;class Key, class T, class Traits = default_endian_traits,
+template &lt;class Key, class T, class Traits = default_traits,
           class Comp = btree::less&lt;Key&gt; &gt;
 class btree_map
 {
 public:
   // types:
   typedef Key                                   key_type;
+  typedef T                                     mapped_type;
   typedef typename Base::value_type             value_type;
-  typedef typename Base::mapped_type            mapped_type;
   typedef Comp                                  key_compare;
   typedef typename Base::value_compare          value_compare; 
   typedef value_type&amp;                           reference;
@@ -71,22 +118,25 @@ public:
   explicit btree_map(const Comp&amp; comp = Comp());
 
   explicit btree_map(const boost::filesystem::path&amp; p,
-      flags::bitmask flgs = flags::read_only,
-      std::size_t pg_sz = default_page_size,  // ignored if existing file
-      const Comp&amp; comp = Comp());
+    flags::bitmask flgs = flags::read_only,
+    uint64_t signature = -1, 
+    std::size_t pg_sz = default_page_size,  // ignored if existing file
+    const Comp&amp; comp = Comp());
 
   template &lt;class InputIterator&gt;
   btree_map(InputIterator begin, InputIterator end,
     const boost::filesystem::path&amp; p,
     flags::bitmask flgs = flags::read_only,
+    uint64_t signature = -1, 
     std::size_t pg_sz = default_page_size,  // ignored if existing file
     const Comp&amp; comp = Comp());
 
   ~btree_base();
 
   //  file operations:
-
-  void open(const boost::filesystem::path&amp; p, flags::bitmask flgs = flags::read_only,
+  void open(const boost::filesystem::path&amp; p,
+    flags::bitmask flgs = flags::read_only,
+    uint64_t signature = -1, 
     std::size_t pg_sz = default_page_size);
   void flush();
   void close();
@@ -95,74 +145,104 @@ public:
   
   // iterators:
 
-  const_iterator     begin() const;
-  const_iterator     end() const;
-  const_iterator     last() const;
-  const_reverse_iterator
-                     rbegin() const;     
-  const_reverse_iterator
-                     rend() const;
+  const_iterator          begin() const;
+  const_iterator          end() const;
+  const_iterator          last() const;
+  const_reverse_iterator  rbegin() const;     
+  const_reverse_iterator  rend() const;
 
-  const_iterator     cbegin() const;
-  const_iterator     cend() const;
-  const_reverse_iterator
-                     crbegin() const;    
-  const_reverse_iterator                    
-                     crend() const;
+  const_iterator          cbegin() const;
+  const_iterator          cend() const;
+  const_reverse_iterator  crbegin() const;    
+  const_reverse_iterator  crend() const;
 
   // observers:
-
-  const buffer_manager&amp;
-                     manager() const;
-  bool               is_open() const;
-  const filesystem::path&amp;
-                     file_path() const;
-  bool               read_only() const;
-  const header_page&amp; header() const;
-  void               dump_dot(std::ostream&amp; os) const; // dump Graphviz dot format
+  key_compare             key_comp() const;
+  value_compare           value_comp() const;
+  const buffer_manager&amp;   manager() const;
+  bool                    is_open() const;
+  const filesystem::path&amp; file_path() const;
+  bool                    read_only() const;
+  const header_page&amp;      header() const;
+  void                    dump_dot(std::ostream&amp; os) const; // Graphviz dot format
 
   // capacity:
-
-  bool               empty() const;
-  size_type          size() const;
-  std::size_t        page_size() const;
-  std::size_t        max_cache_size() const;
-  void               max_cache_size(std::size_t m);
+  bool                    empty() const;
+  size_type               size() const;
+  std::size_t             page_size() const;
+  std::size_t             max_cache_size() const;
+  void                    max_cache_size(std::size_t m);
 
   // modifiers:
-
   std::pair&lt;const_iterator, bool&gt;
-                     emplace(const Key&amp; key, const T&amp; mapped_value);
+                          emplace(const Key&amp; key, const T&amp; mapped_value);
   std::pair&lt;const_iterator, bool&gt;
-                     insert(const map_value&lt;Key, T&gt;&amp; value);
+                          insert(const map_value&lt;Key, T&gt;&amp; value);
 
   template &lt;class InputIterator&gt;
-  void               insert(InputIterator begin, InputIterator end);
+  void                    insert(InputIterator begin, InputIterator end);
 
-  iterator           update(iterator itr, const T&amp; mapped_value);
-  const_iterator     erase(const_iterator position);
-  size_type          erase(const key_type&amp; k);
-  const_iterator     erase(const_iterator first, const_iterator last);
-  void               clear();
-
-  // observers:
-
-  key_compare        key_comp() const;
-  value_compare      value_comp() const;
+  iterator                update(iterator itr, const T&amp; mapped_value);
+  const_iterator          erase(const_iterator position);
+  size_type               erase(const key_type&amp; k);
+  const_iterator          erase(const_iterator first, const_iterator last);
+  void                    clear();
 
   // operations:
+  const_iterator          find(const key_type&amp; k) const;
+  size_type               count(const key_type&amp; k) const;
 
-  const_iterator     find(const key_type&amp; k) const;
-  size_type          count(const key_type&amp; k) const;
+  const_iterator          lower_bound(const key_type&amp; k) const;
+  const_iterator          upper_bound(const key_type&amp; k) const;
 
-  const_iterator     lower_bound(const key_type&amp; k) const;
-  const_iterator     upper_bound(const key_type&amp; k) const;
-
-  const_iterator_range  equal_range(const key_type&amp; k) const;
+  const_iterator_range    equal_range(const key_type&amp; k) const;
 };
 } // namespace btree
 } // namespace boost</pre>
 
+  <h3>btree_map constructors and open</h3>
+  <pre>explicit btree_map(const boost::filesystem::path&amp; p,
+  flags::bitmask flgs = flags::read_only,
+  uint64_t signature = -1, 
+  std::size_t pg_sz = default_page_size,  // ignored if existing file
+  const Comp&amp; comp = Comp());
+
+template &lt;class InputIterator&gt;
+btree_map(InputIterator begin, InputIterator end,
+  const boost::filesystem::path&amp; p,
+  flags::bitmask flgs = flags::read_only,
+  uint64_t signature = -1, 
+  std::size_t pg_sz = default_page_size,  // ignored if existing file
+  const Comp&amp; comp = Comp());</pre>
+  <blockquote>
+    <p><i>Effects:</i> <code>open(p, flgs, signature, pg_sz, comp)</code>.</p>
+    <p><i>Throws:</i> See <a href="#open">open</a>.</p>
+  </blockquote>
+  <pre>void <a name="open">open</a>(const boost::filesystem::path&amp; p,
+  flags::bitmask flgs = flags::read_only,
+  uint64_t signature = -1, 
+  std::size_t pg_sz = default_page_size);</pre>
+  <blockquote>
+    <p><i>Throws:</i> <code>std::runtime_error</code> if the file exists and
+    <code>flgs flags::truncate</code> is not set and:</p>
+    <blockquote>
+      <ul>
+        <li>The file does not begin with a btree header, or</li>
+        <li>Any of these attributes of the btree being opened are not equal to 
+        the same attribute at time of file creation:<ul>
+          <li><code>signature</code>,</li>
+          <li>endianness,</li>
+          <li>association arity [<i>Note:</i> sets are arity 1, maps are arity 2&nbsp;
+          <i>-- end note</i>],</li>
+          <li>association uniqueness [<i>Note:</i> sets and maps are unique, 
+          multisets and multimaps are not unique&nbsp; <i>-- end note</i>],</li>
+          <li><code>sizeof(key_type)</code>,</li>
+          <li><code>sizeof(mapped_type)</code>.</li>
+        </ul>
+        </li>
+      </ul>
+    </blockquote>
+  </blockquote>
   <h2>Class btree_value</h2>
   <p>...</p>
   <pre>template &lt;class T1, class T2&gt;
