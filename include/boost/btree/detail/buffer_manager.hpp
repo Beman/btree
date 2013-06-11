@@ -36,6 +36,29 @@
 #  pragma warning(disable: 4251) 
 #endif
 
+//--------------------------------------------------------------------------------------//
+//                                                                                      //
+//  buffer_manager - manages a binary disk file and its associated page buffer objects  //
+//                                                                                      //
+//  Use cases involve fixed length buffers, random access, and a need to minimize       //
+//  seeks via a buffer cache. The need for speed must be great enough that simply       //
+//  relying on operating system disk caching is not sufficient.                         //
+//                                                                                      //
+//  The associated page buffer objects are owned by buffer_ptr smart pointers.          //
+//  Buffer objects are cached; the buffer_manager keeps all buffers in an intrusive     //
+//  set, buffer_manager::buffers, keyed on buffer_id, so that requests for a page_id    //
+//  are always satisfied with a buffer_ptr to the same buffer if the page is in memory. //
+//                                                                                      //
+//  Pages are always kept in memory if their use count is > 0, thus meeting a useage    //
+//  requirement that iterators remain valid as long as they exist.                      //
+//                                                                                      //
+//  A user specified number of pages no longer in use are also kept in memory.          //
+//  An intrusive least-recently-used list of these, buffer_manager::available_buffers,  //
+//  manages the reuse of buffers when a page is finally discarded.                      //
+//                                                                                      //
+//--------------------------------------------------------------------------------------//
+
+
 namespace boost
 {
   namespace btree
@@ -167,20 +190,9 @@ namespace boost
       bool                        m_needs_write;
     };
 
-
 //--------------------------------------------------------------------------------------//
 //                                                                                      //
-//  buffer_manager - manages a binary disk file and its associated buffer objects       //
-//                                                                                      //
-//  Uses cases involve fixed length buffers, random access, and a need to minimize      //
-//  seeks via a buffer cache. The need for speed must be great enough that simply       //
-//  relying on operating system disk caching is not sufficient.                         //
-//                                                                                      //
-//  The associated buffer objects are owned by buffer_ptr smart pointers.               //
-//  Buffer objects are cached; the buffer_manager keeps a map of the buffers, keyed on  //
-//  buffer_id, so that requests for a buffer are always satisfied with a buffer_ptr to  //
-//  the same buffer object if it is in memory. To prevent memory allocation churn, a    //
-//  list of available buffers still in memory is also kept.                             //
+//                       buffer_mgr - disk buffer manager                               //
 //                                                                                      //
 //--------------------------------------------------------------------------------------//
 
@@ -254,7 +266,7 @@ namespace boost
       boost::uint64_t  new_buffer_requests() const  {return m_new_buffer_requests;}
       boost::uint64_t  buffer_allocs() const        {return m_buffer_allocs;}
       std::size_t      buffers_in_memory() const    {return buffers.size();}
-      std::size_t      buffers_available() const    {return buffer_cache.size();}
+      std::size_t      buffers_available() const    {return available_buffers.size();}
 
 #ifndef BOOST_BUFFER_MANAGER_TEST
     private:
@@ -263,16 +275,17 @@ namespace boost
       friend class buffer;
 
       typedef boost::intrusive::set<buffer>   buffers_type;
-      typedef boost::intrusive::list<buffer>  buffer_cache_type;
+      typedef boost::intrusive::list<buffer>  avail_buffers_type;
 
-      buffers_type   buffers;           // all buffers in memory that are being
-                                        // managed by this buffer manager, including
-                                        // buffers in use (use_count() > 0) and
-                                        // buffers in the buffer_cache (use_count() == 0)
+      buffers_type   buffers;             // all page buffers in memory that are being
+                                          // managed by this buffer manager, including
+                                          // buffers in use (use_count() > 0) and
+                                          // buffers in the available_buffers list
 
-      buffer_cache_type  buffer_cache;  // buffers in memory with use_count() == 0;
-                                        // least recently used (LRU) order, begin()
-                                        // being the least recently used buffer
+      avail_buffers_type  available_buffers;
+                                          // page buffers in memory with use_count() == 0;
+                                          // least recently used (LRU) order, begin()
+                                          // being the least recently used buffer
 
     private:
 
@@ -344,12 +357,12 @@ namespace boost
         }
         else
         {
-          if (manager()->buffer_cache.size()
-            && manager()->buffer_cache.size() >= manager()->max_cache_size())
+          if (manager()->available_buffers.size()
+            && manager()->available_buffers.size() >= manager()->max_cache_size())
           {
             // release a buffer
-            buffer* lru = &*manager()->buffer_cache.begin();
-            manager()->buffer_cache.pop_front();
+            buffer* lru = &*manager()->available_buffers.begin();
+            manager()->available_buffers.pop_front();
             manager()->buffers.erase(manager()->buffers.iterator_to(*lru));
             if (lru->needs_write())
             {
@@ -357,7 +370,7 @@ namespace boost
             }
             delete lru;
           }
-          manager()->buffer_cache.push_back(*this);
+          manager()->available_buffers.push_back(*this);
         }
       }
     }

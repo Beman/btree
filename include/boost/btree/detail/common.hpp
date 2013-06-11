@@ -77,6 +77,9 @@
 
   * Search all files for TODO, clear problems if possible, otherwise add to this list.
 
+  * buffer_manager is using an intrusive set (buffers_type) for page_id lookup. An
+    intrusive unordered_set might be more appropriate.
+
 */
 
 namespace boost

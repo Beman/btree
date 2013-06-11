@@ -24,7 +24,7 @@ void buffer_manager::close()
 {
   BOOST_ASSERT(is_open());
 
-  buffer_cache.clear();
+  available_buffers.clear();
 
   // clear buffers, deleting those with use_count() == 0
   for (buffers_type::iterator itr = buffers.begin(); itr != buffers.end();)
@@ -46,7 +46,7 @@ void buffer_manager::close()
       cur->manager(0);  // mark buffer as orphaned; it has outlived its manager
   }
   BOOST_ASSERT(buffers.empty());
-  BOOST_ASSERT(buffer_cache.empty());
+  BOOST_ASSERT(available_buffers.empty());
   //std::cout << " all buffers deleted" << std::endl;
   binary_file::close();
   m_buffer_count = 0;
@@ -75,7 +75,7 @@ bool buffer_manager::open(const boost::filesystem::path& p, oflag::bitmask flags
   BOOST_ASSERT(!is_open());
   BOOST_ASSERT(data_sz);
   BOOST_ASSERT(buffers.empty());
-  BOOST_ASSERT(buffer_cache.empty());
+  BOOST_ASSERT(available_buffers.empty());
 
   m_buffer_count = 0;
   m_data_size = data_sz;
@@ -117,8 +117,8 @@ buffer* buffer_manager::m_prepare_buffer(buffer_id_type pg_id)
 {
   buffer* pg;
 
-  if (buffer_cache.empty()
-    || buffer_cache.size() < max_cache_size())
+  if (available_buffers.empty()
+    || available_buffers.size() < max_cache_size())
   {
     // allocate a new buffer
     pg = m_alloc(pg_id, *this);
@@ -130,9 +130,9 @@ buffer* buffer_manager::m_prepare_buffer(buffer_id_type pg_id)
   else
   {
     // reuse an existing buffer
-    BOOST_ASSERT(!buffer_cache.empty());
-    pg = &*buffer_cache.begin();
-    buffer_cache.pop_front();
+    BOOST_ASSERT(!available_buffers.empty());
+    pg = &*available_buffers.begin();
+    available_buffers.pop_front();
     buffers.erase(buffers.iterator_to(*pg));
     if (pg->needs_write())
     {
@@ -181,11 +181,11 @@ buffer_ptr buffer_manager::read(buffer_id_type pg_id)
   }
   else // the buffer is in memory
   {
-    if (found->use_count() == 0)  // buffer not in use, but is in buffer_cache
+    if (found->use_count() == 0)  // buffer not in use, but is in available_buffers
     { 
       ++m_cached_buffers_read;
-      // remove from buffer_cache
-      buffer_cache.erase(buffer_cache.iterator_to(*found));  
+      // remove from available_buffers
+      available_buffers.erase(available_buffers.iterator_to(*found));  
     }
     else
       ++m_active_buffers_read;

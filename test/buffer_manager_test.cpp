@@ -47,7 +47,7 @@ namespace
     //  buffer_manager logic relies on iterator_to working as expected:
     BOOST_TEST(set.begin() == set.iterator_to(pg));
 
-    buffer_manager::buffer_cache_type list;
+    buffer_manager::avail_buffers_type list;
 
     list.push_back(pg);
     BOOST_TEST(&*list.begin() == &pg);
