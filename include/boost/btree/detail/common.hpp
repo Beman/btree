@@ -80,6 +80,10 @@
   * buffer_manager is using an intrusive set (buffers_type) for page_id lookup. An
     intrusive unordered_set might be more appropriate.
 
+  * bt_time does not actually implement -html option except for -stl
+
+  * bt_time should use high_res clock, perhaps in addition to cpu times?
+
 */
 
 namespace boost
