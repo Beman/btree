@@ -528,7 +528,8 @@ public:
   const filesystem::path&
                      file_path() const      { return m_mgr.file_path(); }
   bool               read_only() const      { return m_read_only; }
-  const header_page& header() const         {BOOST_ASSERT(is_open());
+  bool               cache_branches() const { return m_cache_branches; }
+  const header_page& header() const         { BOOST_ASSERT(is_open());
                                               return m_hdr;
                                             }
   void   dump_dot(std::ostream& os) const; // dump tree using Graphviz dot format
@@ -612,6 +613,7 @@ private:
 
   bool               m_read_only;
   bool               m_ok_to_pack;  // true while all inserts ordered and no erases
+  bool               m_cache_branches; 
                                                
 
 //--------------------------------------------------------------------------------------//
@@ -805,7 +807,7 @@ private:
     branch_iterator    m_parent_element;
 # ifndef NDEBUG
     node_id_type       m_parent_node_id;  // allows assert that m_parent has not been
-                                          // overwritten by faultylogic
+                                          // overwritten by faulty logic
 # endif
   };
 
@@ -939,7 +941,7 @@ private:
   // past-the-end leaf_iterator for iterator::m_node
   // postcondition: parent pointers are set, all the way up the chain to the root
 
-  btree_node_ptr m_new_node(boost::uint16_t lv);
+  btree_node_ptr m_new_node(node_level_type lv);
   void  m_new_root();
   const_iterator m_leaf_insert(iterator insert_iter, const key_type& key,
     const mapped_type& mapped_value);
@@ -951,6 +953,7 @@ private:
   void  m_free_node(btree_node* np)
   {
     np->needs_write(true);
+    np->never_free(false);
     np->level(0xFF);
     np->size(0);
     np->branch().begin()->node_id() = node_id_type(m_hdr.free_node_list_head_id());
@@ -1019,7 +1022,8 @@ std::ostream& operator<<(std::ostream& os,
 
 template <class Key, class Base, class Traits, class Comp>
 btree_base<Key,Base,Traits,Comp>::btree_base(const Comp& comp)
-  : m_mgr(m_node_alloc), m_comp(comp), m_value_comp(comp), m_branch_comp(comp)
+  : m_mgr(m_node_alloc), m_comp(comp), m_value_comp(comp), m_branch_comp(comp),
+    m_cache_branches(true)
 { 
   m_mgr.owner(this);
 
@@ -1033,7 +1037,8 @@ btree_base<Key,Base,Traits,Comp>::btree_base(const Comp& comp)
 template <class Key, class Base, class Traits, class Comp>
 btree_base<Key,Base,Traits,Comp>::btree_base(const boost::filesystem::path& p,
   flags::bitmask flgs, uint64_t signature, std::size_t node_sz, const Comp& comp)
-  : m_mgr(m_node_alloc), m_comp(comp), m_value_comp(comp), m_branch_comp(comp)
+  : m_mgr(m_node_alloc), m_comp(comp), m_value_comp(comp), m_branch_comp(comp),
+    m_cache_branches(true)
 { 
   m_mgr.owner(this);
 
@@ -1207,7 +1212,7 @@ btree_base<Key,Base,Traits,Comp>::last() const
 
 template <class Key, class Base, class Traits, class Comp>   
 typename btree_base<Key,Base,Traits,Comp>::btree_node_ptr 
-btree_base<Key,Base,Traits,Comp>::m_new_node(boost::uint16_t lv)
+btree_base<Key,Base,Traits,Comp>::m_new_node(node_level_type lv)
 {
   btree_node_ptr np;
   if (m_hdr.free_node_list_head_id())
@@ -1224,6 +1229,7 @@ btree_base<Key,Base,Traits,Comp>::m_new_node(boost::uint16_t lv)
   }
 
   np->needs_write(true);
+  np->never_free(lv > 0 && cache_branches());
   np->level(lv);
   np->size(0);
   return np;

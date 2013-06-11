@@ -146,12 +146,12 @@ namespace boost
 
       buffer()
         : m_buffer_id(-1), m_use_count(0), m_manager(0),
-          m_data(0), m_needs_write(false) {}
+          m_data(0), m_needs_write(false), m_never_free(false) {}
 
       //  construct a dummy buffer w/ id only
       explicit buffer(buffer_id_type id)
         : m_buffer_id(id), m_use_count(0), m_manager(0),
-          m_data(0), m_needs_write(false) {}
+          m_data(0), m_needs_write(false), m_never_free(false) {}
 
       //  construct a complete fully-managed buffer
       buffer(buffer_id_type id, buffer_manager& pm);
@@ -160,6 +160,7 @@ namespace boost
       use_count_type   use_count() const       { return m_use_count; }
       buffer_manager*  manager() const         { return m_manager; }  // may be 0; see below
       bool             needs_write() const     { return m_needs_write; }
+      bool             never_free() const      { return m_never_free; }
       bool operator<(const buffer& rhs) const  { return buffer_id() < rhs.buffer_id(); }
 
       void             manager(buffer_manager* pm) { m_manager = pm; }
@@ -170,11 +171,13 @@ namespace boost
       void             reuse(buffer_id_type id)
       {
         BOOST_ASSERT(m_use_count == 0);  // must not reuse buffer if still in use
-        BOOST_ASSERT(!m_needs_write);  // must not reuse buffer if it needs to be written
+        BOOST_ASSERT(!m_needs_write);    // must not reuse if it needs to be written
+        BOOST_ASSERT(!m_never_free);     // must not resuse if marked to always keep
         m_buffer_id = id;
       }
 
       void             needs_write(bool x)     { m_needs_write = x; }
+      void             never_free(bool x)      { m_never_free = x; }
 
       char*            data()                  { return m_data.get(); }
       const char*      data() const            { return m_data.get(); }
@@ -188,6 +191,8 @@ namespace boost
                                                    // manager closed but use_count > 0
       boost::scoped_array<char>   m_data;          // file buffer
       bool                        m_needs_write;
+      bool                        m_never_free;    // if page is ever loaded, always keep
+                                                   // in memory 
     };
 
 //--------------------------------------------------------------------------------------//
@@ -341,7 +346,7 @@ namespace boost
 
     inline buffer::buffer(buffer_id_type id, boost::btree::buffer_manager& pm)
       : m_buffer_id(id), m_use_count(0), m_manager(&pm),
-        m_data(new char[pm.data_size()]), m_needs_write(false) {}
+        m_data(new char[pm.data_size()]), m_needs_write(false), m_never_free(false) {}
 
     inline void buffer::dec_use_count()
     {
@@ -355,7 +360,7 @@ namespace boost
           BOOST_ASSERT(!needs_write());
           delete this;
         }
-        else
+        else if (!never_free())
         {
           if (manager()->available_buffers.size()
             && manager()->available_buffers.size() >= manager()->max_cache_size())

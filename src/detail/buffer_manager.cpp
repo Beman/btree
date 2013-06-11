@@ -181,11 +181,14 @@ buffer_ptr buffer_manager::read(buffer_id_type pg_id)
   }
   else // the buffer is in memory
   {
-    if (found->use_count() == 0)  // buffer not in use, but is in available_buffers
+    if (found->use_count() == 0)  // buffer not in use
     { 
       ++m_cached_buffers_read;
-      // remove from available_buffers
-      available_buffers.erase(available_buffers.iterator_to(*found));  
+      if (!found->never_free())  // but is in available_buffers
+      {
+        // remove from available_buffers
+        available_buffers.erase(available_buffers.iterator_to(*found)); 
+      }
     }
     else
       ++m_active_buffers_read;
