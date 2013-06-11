@@ -1092,6 +1092,8 @@ btree_base<Key,Base,Traits,Comp>::m_open(const boost::filesystem::path& p,
     open_flags |= oflag::out | oflag::truncate;
   if (flgs & flags::preload)
     open_flags |= oflag::preload;
+  if (flgs & flags::no_cache_branches)
+    m_cache_branches = false;
 
   m_read_only = (open_flags & oflag::out) == 0;
   m_ok_to_pack = true;

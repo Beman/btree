@@ -88,6 +88,8 @@ namespace boost
     {
       enum bitmask
       {
+        none          = 0,
+
         // bitmasks set by implemenation, ignored if passed in by user:
         unique        = 1,    // not multi; uniqueness required
         key_only      = 2,    // set or multiset
@@ -101,6 +103,8 @@ namespace boost
 
         // bitmask options set by user; not present in header:
         preload     = 0x1000, // existing file read to preload O/S file cache
+        no_cache_branches     // disable permanent cache of all branch pages touched
+                    = 0x2000, //   (but still cache temporarily as usual)
       };
 
       BOOST_BITMASK(bitmask);

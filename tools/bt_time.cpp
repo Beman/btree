@@ -45,6 +45,7 @@ namespace
   bool stl_tests (false);
   bool html (false);
   bool buffer_stats (true);
+  btree::flags::bitmask common_flags = btree::flags::none;
   const int places = 2;
   std::string path("bt_time.btree");
   std::string path_org("bt_time.btree.org");
@@ -68,7 +69,8 @@ namespace
       btree::flags::bitmask flgs =
         do_create ? btree::flags::truncate
                   : btree::flags::read_write;
-      if (!do_create && do_preload)
+     flgs |= common_flags;
+     if (!do_create && do_preload)
         flgs |= btree::flags::preload;
 
       cout << "\nopening " << path << endl;
@@ -104,9 +106,9 @@ namespace
         fs::remove(path_org);
         fs::rename(path, path_org);
         t.start();
-        BT bt_old(path_org);
+        BT bt_old(path_org, btree::flags::read_only | btree::flags::no_cache_branches);
         bt_old.max_cache_size(cache_sz);
-        BT bt_new(path, btree::flags::truncate, -1, node_sz);
+        BT bt_new(path, btree::flags::truncate | btree::flags::no_cache_branches, -1, node_sz);
         bt_new.max_cache_size(cache_sz);
         for (typename BT::iterator it = bt_old.begin(); it != bt_old.end(); ++it)
         {
@@ -122,7 +124,7 @@ namespace
         cout << "  " << path << "     file size: " << fs::file_size(path) << '\n';
         if (buffer_stats)
           cout << '\n' << bt.manager();
-        bt.open(path, btree::flags::read_write);
+        bt.open(path, btree::flags::read_write | common_flags);
         bt.max_cache_size(cache_sz);
       }
 
@@ -442,8 +444,10 @@ int cpp_main(int argc, char * argv[])
         whichaway = endian::order::little;
       else if ( std::strncmp( argv[2]+1, "native", 6 )==0 )
         whichaway = endian::order::native;
-      else if ( std::strncmp( argv[2]+1, "xbstats", 6 )==0 )
+      else if ( std::strncmp( argv[2]+1, "xbstats", 7 )==0 )
         buffer_stats = false;
+      else if ( std::strncmp( argv[2]+1, "no_cache_branches", 17 )==0 )
+        common_flags |= btree::flags::no_cache_branches;
       else if ( *(argv[2]+1) == 's' )
         seed = atol( argv[2]+2 );
       else if ( *(argv[2]+1) == 'n' )
