@@ -44,6 +44,7 @@ namespace
   bool verbose (false);
   bool stl_tests (false);
   bool html (false);
+  bool buffer_stats (true);
   const int places = 2;
   std::string path("bt_time.btree");
   std::string path_org("bt_time.btree.org");
@@ -92,6 +93,8 @@ namespace
         t.stop();
         insert_tm = t.elapsed();
         t.report();
+        if (buffer_stats)
+          cout << '\n' << bt.manager();
       }
 
       if (do_pack)
@@ -117,6 +120,8 @@ namespace
         t.report();
         cout << "  " << path_org << " file size: " << fs::file_size(path_org) << '\n';
         cout << "  " << path << "     file size: " << fs::file_size(path) << '\n';
+        if (buffer_stats)
+          cout << '\n' << bt.manager();
         bt.open(path, btree::flags::read_write);
         bt.max_cache_size(cache_sz);
       }
@@ -144,6 +149,8 @@ namespace
         t.stop();
         find_tm = t.elapsed(); 
         t.report();
+        if (buffer_stats)
+          cout << '\n' << bt.manager();
       }
 
       if (do_iterate)
@@ -164,6 +171,8 @@ namespace
         t.stop();
         iterate_tm = t.elapsed();
         t.report();
+        if (buffer_stats)
+          cout << '\n' << bt.manager();
         if (count != bt.size())
           throw std::runtime_error("btree iteration count error");
       }
@@ -172,7 +181,6 @@ namespace
       {
         bt.flush();
         cout << '\n' << bt << endl;
-        cout << bt.manager() << endl;
       }
 
       if (do_erase)
@@ -198,6 +206,8 @@ namespace
         t.stop();
         erase_tm = t.elapsed();
         t.report();
+        if (buffer_stats)
+          cout << '\n' << bt.manager();
       }
 
       cout << "B-tree timing complete" << endl;
@@ -206,7 +216,6 @@ namespace
       {
         bt.flush();
         cout << '\n' << bt << endl;
-        cout << bt.manager() << endl;
       }
 
       bt.close();
@@ -433,6 +442,8 @@ int cpp_main(int argc, char * argv[])
         whichaway = endian::order::little;
       else if ( std::strncmp( argv[2]+1, "native", 6 )==0 )
         whichaway = endian::order::native;
+      else if ( std::strncmp( argv[2]+1, "xbstats", 6 )==0 )
+        buffer_stats = false;
       else if ( *(argv[2]+1) == 's' )
         seed = atol( argv[2]+2 );
       else if ( *(argv[2]+1) == 'n' )
