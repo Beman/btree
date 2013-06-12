@@ -368,8 +368,6 @@ namespace boost
            && buffer_id() != static_cast<buffer_id_type>(-1)  // dummy buffers have id -1
          )
       {
-//        if (never_free())
-//          std::cout << "*** never_free() is " << never_free() << '\n';
         if (!manager())  // buffer is orphaned; it has outlived its manager
         {
           BOOST_ASSERT(!needs_write());
@@ -377,7 +375,6 @@ namespace boost
         }
         else if (never_free())
         {
-//          std::cout << "*** honoring never_free()\n";
           ++manager()->m_never_free_honored;
         }
         else

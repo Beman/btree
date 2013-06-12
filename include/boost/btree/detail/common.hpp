@@ -1012,16 +1012,17 @@ std::ostream& operator<<(std::ostream& os,
   const btree_base<Key,Base,Traits,Comp>& bt)
 {
   BOOST_ASSERT(bt.is_open());
-  os << "B+ tree \"" << bt.file_path().string() << "\"\n"
-     << bt.header().element_count() << " element count\n"  
-     << bt.header().node_size() << " node size\n"  
-     << bt.header().root_level()+1 << " levels in tree\n"
-     << bt.header().node_count() << " node count, including free list nodes\n"  
-     << bt.header().leaf_node_count() << " leaf node count, not including free list nodes\n"  
-     << bt.header().branch_node_count() << " branch node count, not including free list nodes\n"  
-     << bt.header().root_node_id() << " root node id\n"  
-     << bt.header().free_node_list_head_id() << " free node list head id\n"  
-     << "User supplied string: \"" << bt.header().user_c_str() << "\"\n"
+  os << "  element count ------------: " << bt.header().element_count() << "\n" 
+     << "  node size ----------------: " << bt.header().node_size() << "\n"
+     << "  levels in tree -----------: " << bt.header().root_level()+1 << "\n"
+     << "  node count, inc free list-: " << bt.header().node_count() << "\n"
+     << "  leaf node count ----------: " << bt.header().leaf_node_count() << "\n"
+     << "  branch node count --------: " << bt.header().branch_node_count() << "\n"
+     << "  node count, without free -: " << bt.header().leaf_node_count()
+                                            + bt.header().branch_node_count() << "\n"
+     << "  root node id -------------: " << bt.header().root_node_id() << "\n"
+     << "  free node list head id ---: " << bt.header().free_node_list_head_id() << "\n"
+     << "  User supplied string -----: \"" << bt.header().user_c_str() << "\"\n"
   ;
   return os;
 }

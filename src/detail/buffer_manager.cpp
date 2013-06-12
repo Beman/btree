@@ -247,7 +247,7 @@ BOOST_BTREE_DECL
 std::ostream& operator<<(std::ostream& os, const buffer_manager& pm)
 // aid for debugging, tuning
 {
-  os << pm.file_path() << " statistics:\n"
+  os 
     << "  buffer size --------------: " << pm.data_size() << "\n"  
     << "  buffer count -------------: " << pm.buffer_count() << "\n"  
     << "  buffer allocs ------------: " << pm.buffer_allocs() << "\n"
@@ -256,15 +256,14 @@ std::ostream& operator<<(std::ostream& os, const buffer_manager& pm)
     << "  file buffers written -----: " << pm.file_buffers_written() << "\n\n"  
     << "  cached buffers read ------: " << pm.cached_buffers_read() << "\n"  
     << "  file buffers read --------: " << pm.file_buffers_read() << "\n"
-    << "  ------------------------------\n"
     << "  total buffers read -------: " << pm.active_buffers_read() + pm.cached_buffers_read()
                                         + pm.file_buffers_read() << "\n\n"
-    << "  cached buffers -----------: " << pm.buffers_in_memory() << "\n"
-    << "  available cached buffers -: " << pm.buffers_available() << "\n\n"
-    << "  cache read breakdown:\n"
+    << "  cached read breakdown:\n"
     << "    active buffers ---------: " << pm.active_buffers_read() << "\n"  
     << "    available buffers ------: " << pm.available_buffers_read() << "\n"  
     << "    never-free buffers -----: " << pm.never_free_buffers_read() << "\n\n"  
+    << "  cached buffers -----------: " << pm.buffers_in_memory() << "\n"
+    << "  available cached buffers -: " << pm.buffers_available() << "\n"
       ;
   return os;
 }

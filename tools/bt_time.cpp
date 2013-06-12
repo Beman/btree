@@ -93,13 +93,15 @@ namespace
             std::cout << i << std::endl; 
           bt.emplace(key(), i);
         }
+        bt.flush();
         t.stop();
         insert_tm = t.elapsed();
         t.report();
+        cout << endl;
         if (header_info)
-          cout << bt << '\n';
+          cout << bt;
         if (buffer_stats)
-          cout << '\n' << bt.manager();
+          cout << bt.manager();
       }
 
       if (do_pack)
@@ -118,20 +120,23 @@ namespace
         {
           bt_new.emplace(it->key(), it->mapped_value());
         }
+        bt_new.flush();
         cout << "  bt_old.size() " << bt_old.size() << std::endl;
         cout << "  bt_new.size() " << bt_new.size() << std::endl;
         BOOST_ASSERT(bt_new.size() == bt_old.size());
         t.report();
-        cout << "  " << path_old << " file size: " << fs::file_size(path_old) << '\n';
-        cout << "  " << path << "     file size: " << fs::file_size(path) << '\n';
+        cout << endl;
+        cout << path_old << " file size: " << fs::file_size(path_old) << '\n';
         if (header_info)
-          cout << bt_old << '\n';
+          cout << bt_old;
         if (buffer_stats)
-          cout << '\n' << bt_old.manager();
+          cout << bt_old.manager();
+        cout << endl;
+        cout << path << "     file size: " << fs::file_size(path) << '\n';
         if (header_info)
-          cout << bt_new << '\n';
+          cout << bt_new;
         if (buffer_stats)
-          cout << '\n' << bt_new.manager();
+          cout << bt_new.manager();
         bt_old.close();
         bt_new.close();
         bt.open(path, btree::flags::read_write | common_flags);
@@ -162,10 +167,11 @@ namespace
         t.stop();
         find_tm = t.elapsed(); 
         t.report();
+        cout << endl;
         if (header_info)
-          cout << bt << '\n';
+          cout << bt;
         if (buffer_stats)
-          cout << '\n' << bt.manager();
+          cout << bt.manager();
       }
 
       if (do_iterate)
@@ -187,10 +193,11 @@ namespace
         t.stop();
         iterate_tm = t.elapsed();
         t.report();
+        cout << endl;
         if (header_info)
-          cout << bt << '\n';
+          cout << bt;
         if (buffer_stats)
-          cout << '\n' << bt.manager();
+          cout << bt.manager();
         if (count != bt.size())
           throw std::runtime_error("btree iteration count error");
       }
@@ -223,12 +230,14 @@ namespace
           bt.erase(key());
         }
         t.stop();
+        bt.flush();
         erase_tm = t.elapsed();
         t.report();
+        cout << endl;
         if (header_info)
-          cout << bt << '\n';
+          cout << bt;
         if (buffer_stats)
-          cout << '\n' << bt.manager();
+          cout << bt.manager();
       }
 
       cout << "B-tree timing complete" << endl;
