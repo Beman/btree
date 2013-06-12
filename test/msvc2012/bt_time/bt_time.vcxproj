@@ -114,7 +114,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PostBuildEvent>
-      <Command>"$(TargetDir)\$(TargetName).exe" 100 -stl -k</Command>
+      <Command>"$(TargetDir)\$(TargetName).exe" 10000 -k -c2 -n128 -no_cache_branches</Command>
       <Message>Executing test $(TargetName).exe...</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>

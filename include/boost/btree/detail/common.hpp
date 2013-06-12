@@ -956,6 +956,10 @@ private:
   iterator m_erase_branch_value(btree_node* np, branch_iterator value, node_id_type erasee);
   void  m_free_node(btree_node* np)
   {
+    if (np->is_leaf())
+      m_hdr.decrement_leaf_node_count();
+    else
+      m_hdr.decrement_branch_node_count();
     np->needs_write(true);
     np->never_free(false);
     np->level(0xFF);
@@ -1007,12 +1011,16 @@ template <class Key, class Base, class Traits, class Comp>
 std::ostream& operator<<(std::ostream& os,
   const btree_base<Key,Base,Traits,Comp>& bt)
 {
+  BOOST_ASSERT(bt.is_open());
   os << "B+ tree \"" << bt.file_path().string() << "\"\n"
-     << bt.header().element_count() << " records\n"  
+     << bt.header().element_count() << " element count\n"  
      << bt.header().node_size() << " node size\n"  
-     << bt.header().node_count() << " node count\n"  
-     << bt.header().root_node_id() << " root node id\n"  
      << bt.header().root_level()+1 << " levels in tree\n"
+     << bt.header().node_count() << " node count, including free list nodes\n"  
+     << bt.header().leaf_node_count() << " leaf node count, not including free list nodes\n"  
+     << bt.header().branch_node_count() << " branch node count, not including free list nodes\n"  
+     << bt.header().root_node_id() << " root node id\n"  
+     << bt.header().free_node_list_head_id() << " free node list head id\n"  
      << "User supplied string: \"" << bt.header().user_c_str() << "\"\n"
   ;
   return os;
@@ -1140,6 +1148,7 @@ btree_base<Key,Base,Traits,Comp>::m_open(const boost::filesystem::path& p,
     m_root = m_mgr.new_buffer();
     m_root->needs_write(true);
     m_hdr.increment_node_count();
+    m_hdr.increment_leaf_node_count();
     BOOST_ASSERT(m_root->node_id() == 1);
     m_hdr.root_node_id(m_root->node_id());
     m_hdr.first_node_id(m_root->node_id());
@@ -1234,8 +1243,15 @@ btree_base<Key,Base,Traits,Comp>::m_new_node(node_level_type lv)
     BOOST_ASSERT(m_hdr.node_count() == m_mgr.buffer_count());
   }
 
+  if (lv)  // is branch
+    m_hdr.increment_branch_node_count();
+  else
+    m_hdr.increment_leaf_node_count();
+
   np->needs_write(true);
   np->never_free(lv > 0 && cache_branches());
+//  cout << "******* lv:" << int(lv) << " cache_branches():" << cache_branches()
+//    << " never_free:" << np->never_free() << endl;;
   np->level(lv);
   np->size(0);
   return np;
@@ -1979,7 +1995,7 @@ void btree_base<Key,Base,Traits,Comp>::dump_dot(std::ostream& os) const
 
 ////  non-member functions  ----------------------------------------------------//
 
-///  non-member functions not implemented yet
+///  TODO: non-member functions not implemented yet
 /*
 template <typename Key, typename T, typename Comp>
 bool operator==(const common_base<Key,T,Comp,GetKey>& x,

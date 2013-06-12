@@ -254,24 +254,35 @@ namespace boost
       //  Returns: true iff any buffers written to disk
 
       // modifiers
-      void             max_cache_size(std::size_t m) {m_max_cache_size = m;}
+      void             max_cache_size(std::size_t m)   {m_max_cache_size = m;}
+      void             clear_statistics() const
+      {
+        m_active_buffers_read = m_available_buffers_read = m_never_free_buffers_read
+          = m_file_buffers_read = m_file_buffers_written = m_new_buffer_requests
+          = m_buffer_allocs = m_never_free_honored = 0;
+      }
 
       // observers
-      std::size_t      max_cache_size() const       {return m_max_cache_size;}
-      buffer_count_type  buffer_count() const       {return m_buffer_count;}
-      data_size_type   data_size() const            {return m_data_size;}  // on disk
+      std::size_t      max_cache_size() const          {return m_max_cache_size;}
+      buffer_count_type  buffer_count() const          {return m_buffer_count;}
+      data_size_type   data_size() const               {return m_data_size;}  // on disk
+                                                       
+      void*            owner() const                   {return m_owner;}
+      void             owner(void* p)                  {m_owner = p;}
 
-      void*            owner() const                {return m_owner;}
-      void             owner(void* p)               {m_owner = p;}
-
-      boost::uint64_t  active_buffers_read() const  {return m_active_buffers_read;}
-      boost::uint64_t  cached_buffers_read() const  {return m_cached_buffers_read;}
-      boost::uint64_t  file_buffers_read() const    {return m_file_buffers_read;}
-      boost::uint64_t  file_buffers_written() const {return m_file_buffers_written;}
-      boost::uint64_t  new_buffer_requests() const  {return m_new_buffer_requests;}
-      boost::uint64_t  buffer_allocs() const        {return m_buffer_allocs;}
-      std::size_t      buffers_in_memory() const    {return buffers.size();}
-      std::size_t      buffers_available() const    {return available_buffers.size();}
+      boost::uint64_t  active_buffers_read() const     {return m_active_buffers_read;}
+      boost::uint64_t  available_buffers_read() const  {return m_available_buffers_read;}
+      boost::uint64_t  never_free_buffers_read() const {return m_never_free_buffers_read;}
+      boost::uint64_t  cached_buffers_read() const     {return m_active_buffers_read
+                                                          + m_available_buffers_read
+                                                          + m_never_free_buffers_read;}
+      boost::uint64_t  file_buffers_read() const       {return m_file_buffers_read;}
+      boost::uint64_t  file_buffers_written() const    {return m_file_buffers_written;}
+      boost::uint64_t  new_buffer_requests() const     {return m_new_buffer_requests;}
+      boost::uint64_t  buffer_allocs() const           {return m_buffer_allocs;}
+      boost::uint64_t  never_free_honored() const      {return m_never_free_honored;}
+      std::size_t      buffers_in_memory() const       {return buffers.size();}
+      std::size_t      buffers_available() const       {return available_buffers.size();}
 
 #ifndef BOOST_BUFFER_MANAGER_TEST
     private:
@@ -301,12 +312,14 @@ namespace boost
       buffer_alloc        m_alloc;            // memory allocation function pointer
 
       //  activity counts
-      boost::uint64_t   m_active_buffers_read;
-      boost::uint64_t   m_cached_buffers_read;
-      boost::uint64_t   m_file_buffers_read;
-      boost::uint64_t   m_file_buffers_written;
-      boost::uint64_t   m_new_buffer_requests;
-      boost::uint64_t   m_buffer_allocs;
+     mutable boost::uint64_t   m_active_buffers_read;
+     mutable boost::uint64_t   m_available_buffers_read;
+     mutable boost::uint64_t   m_never_free_buffers_read;
+     mutable boost::uint64_t   m_file_buffers_read;
+     mutable boost::uint64_t   m_file_buffers_written;
+     mutable boost::uint64_t   m_new_buffer_requests;
+     mutable boost::uint64_t   m_buffer_allocs;
+     mutable boost::uint64_t   m_never_free_honored;
 
       buffer* m_prepare_buffer(buffer_id_type pg_id);
     };
@@ -355,12 +368,19 @@ namespace boost
            && buffer_id() != static_cast<buffer_id_type>(-1)  // dummy buffers have id -1
          )
       {
+//        if (never_free())
+//          std::cout << "*** never_free() is " << never_free() << '\n';
         if (!manager())  // buffer is orphaned; it has outlived its manager
         {
           BOOST_ASSERT(!needs_write());
           delete this;
         }
-        else if (!never_free())
+        else if (never_free())
+        {
+//          std::cout << "*** honoring never_free()\n";
+          ++manager()->m_never_free_honored;
+        }
+        else
         {
           if (manager()->available_buffers.size()
             && manager()->available_buffers.size() >= manager()->max_cache_size())

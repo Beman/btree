@@ -165,13 +165,15 @@ namespace boost
       node_id_type        m_root_node_id;
       node_id_type        m_first_node_id;
       node_id_type        m_last_node_id;
-      node_id_type        m_node_count;
+      node_id_type        m_node_count;          // total including free node list
+      node_id_type        m_leaf_node_count;     // active only; free nodes not include
+      node_id_type        m_branch_node_count;   // active only; free nodes not include
       node_id_type        m_free_node_list_head_id;  // list of recycleable nodes
-
+      node_id_type        m_unassigned[2];
       version_type        m_major_version;   
       version_type        m_minor_version; 
 
-      char                m_splash_c_str[32]; // " boost.org btree_map" or whatever;
+      char                m_splash_c_str[16]; // "boost.org btree" or whatever;
                                               // '\0' filled and terminated
       char                m_user_c_str[32];   // '\0' filled and terminated
 
@@ -210,6 +212,8 @@ namespace boost
       node_id_type     first_node_id() const         { return m_first_node_id; }
       node_id_type     last_node_id() const          { return m_last_node_id; }
       node_id_type     node_count() const            { return m_node_count; }
+      node_id_type     leaf_node_count() const       { return m_leaf_node_count; }
+      node_id_type     branch_node_count() const     { return m_branch_node_count; }
       node_id_type     free_node_list_head_id() const{ return m_free_node_list_head_id; }
       node_level_type  root_level() const            { return m_root_level; }
       node_level_type  levels() const                { return m_root_level+1; }
@@ -243,6 +247,12 @@ namespace boost
       void  last_node_id(node_id_type id)            { m_last_node_id = id; }
       void  node_count(node_id_type value)           { m_node_count = value; }
       void  increment_node_count()                   { ++m_node_count; }
+      void  leaf_node_count(node_id_type value)      { m_leaf_node_count = value; }
+      void  increment_leaf_node_count()              { ++m_leaf_node_count; }
+      void  decrement_leaf_node_count()              { --m_leaf_node_count; }
+      void  branch_node_count(node_id_type value)    { m_branch_node_count = value; }
+      void  increment_branch_node_count()            { ++m_branch_node_count; }
+      void  decrement_branch_node_count()            { --m_branch_node_count; }
       void  free_node_list_head_id(node_id_type id)  { m_free_node_list_head_id = id; }
       void  root_level(node_level_type value)        { m_root_level = value; }
       node_level_type  increment_root_level()        { return ++m_root_level; }
@@ -269,6 +279,8 @@ namespace boost
           endian::reverse(m_first_node_id);
           endian::reverse(m_last_node_id);
           endian::reverse(m_node_count);
+          endian::reverse(m_leaf_node_count);
+          endian::reverse(m_branch_node_count);
           endian::reverse(m_free_node_list_head_id);
         }
       }

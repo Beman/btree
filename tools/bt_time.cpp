@@ -45,10 +45,11 @@ namespace
   bool stl_tests (false);
   bool html (false);
   bool buffer_stats (true);
+  bool header_info (true);
   btree::flags::bitmask common_flags = btree::flags::none;
   const int places = 2;
   std::string path("bt_time.btree");
-  std::string path_org("bt_time.btree.org");
+  std::string path_old("bt_time.btree.old");
   BOOST_SCOPED_ENUM(endian::order) whichaway = endian::order::big;
 
   timer::cpu_times insert_tm;
@@ -95,6 +96,8 @@ namespace
         t.stop();
         insert_tm = t.elapsed();
         t.report();
+        if (header_info)
+          cout << bt << '\n';
         if (buffer_stats)
           cout << '\n' << bt.manager();
       }
@@ -102,11 +105,12 @@ namespace
       if (do_pack)
       {
         cout << "\npacking btree..." << endl;
+        bt.manager().clear_statistics();
         bt.close();
-        fs::remove(path_org);
-        fs::rename(path, path_org);
+        fs::remove(path_old);
+        fs::rename(path, path_old);
         t.start();
-        BT bt_old(path_org, btree::flags::read_only | btree::flags::no_cache_branches);
+        BT bt_old(path_old, btree::flags::read_only | btree::flags::no_cache_branches);
         bt_old.max_cache_size(cache_sz);
         BT bt_new(path, btree::flags::truncate | btree::flags::no_cache_branches, -1, node_sz);
         bt_new.max_cache_size(cache_sz);
@@ -117,13 +121,19 @@ namespace
         cout << "  bt_old.size() " << bt_old.size() << std::endl;
         cout << "  bt_new.size() " << bt_new.size() << std::endl;
         BOOST_ASSERT(bt_new.size() == bt_old.size());
+        t.report();
+        cout << "  " << path_old << " file size: " << fs::file_size(path_old) << '\n';
+        cout << "  " << path << "     file size: " << fs::file_size(path) << '\n';
+        if (header_info)
+          cout << bt_old << '\n';
+        if (buffer_stats)
+          cout << '\n' << bt_old.manager();
+        if (header_info)
+          cout << bt_new << '\n';
+        if (buffer_stats)
+          cout << '\n' << bt_new.manager();
         bt_old.close();
         bt_new.close();
-        t.report();
-        cout << "  " << path_org << " file size: " << fs::file_size(path_org) << '\n';
-        cout << "  " << path << "     file size: " << fs::file_size(path) << '\n';
-        if (buffer_stats)
-          cout << '\n' << bt.manager();
         bt.open(path, btree::flags::read_write | common_flags);
         bt.max_cache_size(cache_sz);
       }
@@ -131,6 +141,7 @@ namespace
       if (do_find)
       {
         cout << "\nfinding " << n << " btree elements..." << endl;
+        bt.manager().clear_statistics();
         rng.seed(seed);
         typename BT::const_iterator itr;
         long k;
@@ -151,6 +162,8 @@ namespace
         t.stop();
         find_tm = t.elapsed(); 
         t.report();
+        if (header_info)
+          cout << bt << '\n';
         if (buffer_stats)
           cout << '\n' << bt.manager();
       }
@@ -158,6 +171,7 @@ namespace
       if (do_iterate)
       {
         cout << "\niterating over " << bt.size() << " btree elements..." << endl;
+        bt.manager().clear_statistics();
         unsigned long count = 0;
         long prior_key = -1L;
         t.start();
@@ -173,6 +187,8 @@ namespace
         t.stop();
         iterate_tm = t.elapsed();
         t.report();
+        if (header_info)
+          cout << bt << '\n';
         if (buffer_stats)
           cout << '\n' << bt.manager();
         if (count != bt.size())
@@ -188,6 +204,7 @@ namespace
       if (do_erase)
       {
         cout << "\nerasing " << n << " btree elements..." << endl;
+        bt.manager().clear_statistics();
         rng.seed(seed);
         t.start();
         for (long i = 1; i <= n; ++i)
@@ -208,6 +225,8 @@ namespace
         t.stop();
         erase_tm = t.elapsed();
         t.report();
+        if (header_info)
+          cout << bt << '\n';
         if (buffer_stats)
           cout << '\n' << bt.manager();
       }
@@ -498,11 +517,13 @@ int cpp_main(int argc, char * argv[])
       "   -little  Use btree::little_endian_traits\n"
       "   -native  Use btree::native_traits\n"
       "   -html    Output html table of results to cerr\n"
+      "   -no_cache_branches    Disable permanent cache of branch pages touched\n"
       ;
     return 1;
   }
 
-  cout << "starting tests with node size " << node_sz
+  cout << "sizeof(bree::header_page) is " << sizeof(btree::header_page) << '\n'
+       << "starting tests with node size " << node_sz
        << ", maximum cache nodes " << cache_sz << ",\n";
 
   switch (whichaway)

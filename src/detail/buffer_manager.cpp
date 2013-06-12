@@ -81,8 +81,7 @@ bool buffer_manager::open(const boost::filesystem::path& p, oflag::bitmask flags
   m_data_size = data_sz;
   m_max_cache_size = max_cache_pgs;
 
-  m_active_buffers_read = m_cached_buffers_read = m_file_buffers_read
-    = m_file_buffers_written = m_new_buffer_requests = m_buffer_allocs = 0;
+  clear_statistics();
 
   if (flags & oflag::truncate)
     flags |= oflag::out;
@@ -183,12 +182,14 @@ buffer_ptr buffer_manager::read(buffer_id_type pg_id)
   {
     if (found->use_count() == 0)  // buffer not in use
     { 
-      ++m_cached_buffers_read;
       if (!found->never_free())  // but is in available_buffers
       {
         // remove from available_buffers
-        available_buffers.erase(available_buffers.iterator_to(*found)); 
+        available_buffers.erase(available_buffers.iterator_to(*found));
+        ++m_available_buffers_read;
       }
+      else
+        ++m_never_free_buffers_read;
     }
     else
       ++m_active_buffers_read;
@@ -247,21 +248,23 @@ std::ostream& operator<<(std::ostream& os, const buffer_manager& pm)
 // aid for debugging, tuning
 {
   os << pm.file_path() << " statistics:\n"
-    << "  buffer size -------------: " << pm.data_size() << "\n"  
-    << "  buffer count ------------: " << pm.buffer_count() << "\n"  
-    << "  buffer allocs -----------: " << pm.buffer_allocs() << "\n"
-    << "  new buffer requests -----: " << pm.new_buffer_requests() << "\n"  
-    << "  file buffers written ----: " << pm.file_buffers_written() << "\n\n"  
-    << "  in-use buffers read -----: " << pm.active_buffers_read() << "\n"  
-    << "  cached buffers read -----: " << pm.cached_buffers_read() << "\n"  
-    << "  file buffers read -------: " << pm.file_buffers_read() << "\n"
-    << "  -----------------------------\n"
-    << "  total buffers read ------: " << pm.active_buffers_read() + pm.cached_buffers_read()
+    << "  buffer size --------------: " << pm.data_size() << "\n"  
+    << "  buffer count -------------: " << pm.buffer_count() << "\n"  
+    << "  buffer allocs ------------: " << pm.buffer_allocs() << "\n"
+    << "  new buffer requests ------: " << pm.new_buffer_requests() << "\n"  
+    << "  never-free honored -------: " << pm.never_free_honored() << "\n"  
+    << "  file buffers written -----: " << pm.file_buffers_written() << "\n\n"  
+    << "  cached buffers read ------: " << pm.cached_buffers_read() << "\n"  
+    << "  file buffers read --------: " << pm.file_buffers_read() << "\n"
+    << "  ------------------------------\n"
+    << "  total buffers read -------: " << pm.active_buffers_read() + pm.cached_buffers_read()
                                         + pm.file_buffers_read() << "\n\n"
-    << "  buffers in use ----------: " << pm.buffers_in_memory() - pm.buffers_available() << "\n"
-    << "  buffers in cache --------: " << pm.buffers_available() << "\n"  
-    << "  -----------------------------\n"
-    << "  total buffers in memory -: " << pm.buffers_in_memory() << "\n"  
+    << "  cached buffers -----------: " << pm.buffers_in_memory() << "\n"
+    << "  available cached buffers -: " << pm.buffers_available() << "\n\n"
+    << "  cache read breakdown:\n"
+    << "    active buffers ---------: " << pm.active_buffers_read() << "\n"  
+    << "    available buffers ------: " << pm.available_buffers_read() << "\n"  
+    << "    never-free buffers -----: " << pm.never_free_buffers_read() << "\n\n"  
       ;
   return os;
 }
