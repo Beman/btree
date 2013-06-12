@@ -6,21 +6,39 @@ IT IS NOT SUITABLE FOR PRODUCTION WORK.
 To experiment with the library, various other boost libraries must be
 available. Here is one way to create such a setup:
 
+Windows:
+  cd where-you-want-trunk-ex-to-go
+  svn export http://svn.boost.org/svn/boost/trunk boost-trunk trunk-ex
+  cd trunk-ex\libs
   git clone git@github.com:Beman/Boost-Btree.git btree
-  cd ../boost
+  cd ..\boost
   mklink /d btree ..\libs\btree\include\boost\btree
   
+POSIX-like systems:
+  cd where-you-want-trunk-ex-to-go
+  svn export http://svn.boost.org/svn/boost/trunk boost-trunk trunk-ex
+  cd trunk-ex/libs
+  git clone git@github.com:Beman/Boost-Btree.git btree
+  cd ../boost
+  ln -s ../libs/btree/include/boost/btree btree
+  
 As a confidence test, the following should build b2, build various
-libraries and then run the regression tests.
+libraries and then run the btree regression tests.
 
-Windows (assumes bootstrap has been run):
-
-  cd boost-root/libs/btree/test
+Windows:
+  cd trunk-ex-parent
+  cd trunk-ex
+  bootstrap
+  .\b2
+  cd libs\btree\test
   ..\..\..\b2
 
-POSIX-like systems (assumes bootstrap has been run):
-
-  cd boost-root/libs/btree/test
+POSIX-like systems:
+  cd trunk-ex-parent
+  cd trunk-ex
+  ./bootstrap.sh
+  ./b2
+  cd libs/btree/test
   ../../../b2
 
 A Windows Visual Studio solution is included:  btree\test\msvc2012\btree.sln
