@@ -219,7 +219,10 @@ namespace boost
       explicit buffer_manager(buffer_alloc alloc = default_buffer_alloc)
         //  alloc function pointer allows management of classes derived from buffer
         //  yet still permits separate compilation
-        : m_buffer_count(0), m_data_size(0), m_max_cache_size(0), m_alloc(alloc) {}
+        : m_buffer_count(0), m_data_size(0), m_max_cache_size(0), m_owner(0), m_alloc(alloc)
+      {
+        clear_statistics(); 
+      }
 
       ~buffer_manager();
 

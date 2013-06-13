@@ -543,9 +543,17 @@ public:
   bool          empty() const               { return !size(); }
   size_type     size() const                { return m_hdr.element_count(); }
   //size_type     max_size() const            { return ; }
-  std::size_t   node_size() const           { return m_mgr.data_size(); }
-  std::size_t   max_cache_size() const      { return m_mgr.max_cache_size(); }
-  void          max_cache_size(std::size_t m) {m_mgr.max_cache_size(m);}
+
+  std::size_t   node_size() const           { BOOST_ASSERT(is_open());
+                                              return m_mgr.data_size(); }
+  std::size_t   max_cache_size() const      { BOOST_ASSERT(is_open());
+                                              return m_mgr.max_cache_size(); }
+  void          max_cache_size(std::size_t m)  // -1 indicates unlimited
+                                            { BOOST_ASSERT(is_open());
+                                              m_mgr.max_cache_size(m);}
+  void          max_cache_megabytes(std::size_t mb)
+                                            { BOOST_ASSERT(is_open());
+                                              m_mgr.max_cache_size((mb*1048576)/node_size());}
 
   //  The following element access functions are not provided. Returning references is
   //  far too dangerous, since the memory pointed to would be in a node buffer that can
