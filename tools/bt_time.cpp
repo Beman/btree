@@ -66,8 +66,8 @@ namespace
   {
     t.stop();
     timer::cpu_times now = t.elapsed();
-    cout << i << ", " << (now.wall-then.wall)/10000000000.0 << " sec, "
-          << lg / ((now.wall-then.wall)/10000000000.0) << " per sec" << endl;
+    cout << i << ", " << (now.wall-then.wall)/1000000000.0 << " sec, "
+          << lg / ((now.wall-then.wall)/1000000000.0) << " per sec" << endl;
     then = now;
     t.resume();
   }
