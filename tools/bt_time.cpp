@@ -69,13 +69,15 @@ namespace
    std::string do_grouping() const { return "\3"; }
 };
 
-
-  void log(timer::auto_cpu_timer& t, timer::cpu_times& then, int64_t i)
+  template <class BT>
+  void log(timer::auto_cpu_timer& t, timer::cpu_times& then, int64_t i, const BT& bt)
   {
     t.stop();
     timer::cpu_times now = t.elapsed();
     cout << i << ", " << (now.wall-then.wall)/sec << " sec, "
-         << lg / ((now.wall-then.wall)/sec) << " per sec" << endl;
+         << lg / ((now.wall-then.wall)/sec) << " per sec,  cache size "
+         << bt.manager().buffers_in_memory()
+         << endl;
     then = now;
     t.resume();
   }
@@ -113,7 +115,7 @@ namespace
         for (int64_t i = 1; i <= n; ++i)
         {
           if (lg && i % lg == 0)
-            log(t, then, i);
+            log(t, then, i, bt);
           bt.emplace(key(), i);
         }
         bt.flush();
@@ -178,7 +180,7 @@ namespace
         for (int64_t i = 1; i <= n; ++i)
         {
           if (lg && i % lg == 0)
-            log(t, then, i);
+            log(t, then, i, bt);
           k = key();
           itr = bt.find(k);
 #       if !defined(NDEBUG)
@@ -242,7 +244,7 @@ namespace
         for (int64_t i = 1; i <= n; ++i)
         {
           if (lg && i % lg == 0)
-            log(t, then, i);
+            log(t, then, i, bt);
           //int64_t k = key();
           //if (i >= n - 5)
           //{
@@ -285,11 +287,8 @@ namespace
       rng.seed(seed);
       timer::cpu_times this_tm;
       t.start();
-        timer::cpu_times then = t.elapsed();
       for (int64_t i = 1; i <= n; ++i)
       {
-        if (lg && i % lg == 0)
-          log(t, then, i);
         stl_type::value_type element(key(), i);
         stl.insert(element);
       }
