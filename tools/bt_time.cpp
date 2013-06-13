@@ -15,9 +15,14 @@
 
 #include <iostream>
 #include <string>
-#include <cstring>
-#include <cstdlib>  // for atol()
 #include <map>
+#include <cstring>
+#include <cstdlib>  // for atoll() or Microsoft equivalent
+#ifndef _MSC_VER
+# define BOOST_BTREE_ATOLL std::atoll
+#else
+# define BOOST_BTREE_ATOLL _atoi64
+#endif
 
 using namespace boost;
 namespace fs = boost::filesystem;
@@ -28,12 +33,11 @@ using std::endl;
 namespace
 {
   std::string command_args;
-  long n;
-  long initial_n;
-  long seed = 1;
-  long lg = 0;
-  int cache_sz = btree::default_max_cache_nodes;
-  int node_sz = btree::default_node_size;
+  int64_t n;        // number of test cases
+  int64_t seed = 1; // random number generator seed
+  int64_t lg = 0;   // if != 0, log every lg iterations
+  std::size_t cache_sz = btree::default_max_cache_nodes;
+  std::size_t node_sz = btree::default_node_size;
   bool do_create (true);
   bool do_preload (false);
   bool do_insert (true);
@@ -62,9 +66,9 @@ namespace
   void test()
   {
     timer::auto_cpu_timer t(3);
-    rand48  rng;
-    uniform_int<long> n_dist(0, n-1);
-    variate_generator<rand48&, uniform_int<long> > key(rng, n_dist);
+    mt19937_64  rng;
+    uniform_int<int64_t> n_dist(0, n-1);
+    variate_generator<mt19937_64&, uniform_int<int64_t> > key(rng, n_dist);
 
     {
       btree::flags::bitmask flgs =
@@ -87,7 +91,7 @@ namespace
         cout << "\ninserting " << n << " btree elements..." << endl;
         rng.seed(seed);
         t.start();
-        for (long i = 1; i <= n; ++i)
+        for (int64_t i = 1; i <= n; ++i)
         {
           if (lg && i % lg == 0)
             std::cout << i << std::endl; 
@@ -149,9 +153,9 @@ namespace
         bt.manager().clear_statistics();
         rng.seed(seed);
         typename BT::const_iterator itr;
-        long k;
+        int64_t k;
         t.start();
-        for (long i = 1; i <= n; ++i)
+        for (int64_t i = 1; i <= n; ++i)
         {
           if (lg && i % lg == 0)
             std::cout << i << std::endl;
@@ -178,8 +182,8 @@ namespace
       {
         cout << "\niterating over " << bt.size() << " btree elements..." << endl;
         bt.manager().clear_statistics();
-        unsigned long count = 0;
-        long prior_key = -1L;
+        uint64_t count = 0;
+        int64_t prior_key = -1L;
         t.start();
         for (typename BT::const_iterator itr = bt.begin();
           itr != bt.end();
@@ -214,11 +218,11 @@ namespace
         bt.manager().clear_statistics();
         rng.seed(seed);
         t.start();
-        for (long i = 1; i <= n; ++i)
+        for (int64_t i = 1; i <= n; ++i)
         {
           if (lg && i % lg == 0)
             std::cout << i << std::endl; 
-          //long k = key();
+          //int64_t k = key();
           //if (i >= n - 5)
           //{
           //  std::cout << i << ' ' << k << ' ' << bt.size() << std::endl;
@@ -251,7 +255,7 @@ namespace
       bt.close();
     }
 
-    typedef std::map<long, long>  stl_type;
+    typedef std::map<int64_t, int64_t>  stl_type;
     stl_type stl;
 
     if (stl_tests)
@@ -260,7 +264,7 @@ namespace
       rng.seed(seed);
       timer::cpu_times this_tm;
       t.start();
-      for (long i = 1; i <= n; ++i)
+      for (int64_t i = 1; i <= n; ++i)
       {
         if (lg && i % lg == 0)
           std::cout << i << std::endl; 
@@ -300,10 +304,10 @@ namespace
 
       cout << "\nfinding " << n << " std::map elements..." << endl;
       stl_type::const_iterator itr;
-      long k;
+      int64_t k;
       rng.seed(seed);
       t.start();
-      for (long i = 1; i <= n; ++i)
+      for (int64_t i = 1; i <= n; ++i)
       {
         if (lg && i % lg == 0)
           std::cout << i << std::endl; 
@@ -345,8 +349,8 @@ namespace
                 / (this_tm.system + this_tm.user) << '\n';
 
       cout << "\niterating over " << stl.size() << " stl elements..." << endl;
-      unsigned long count = 0;
-      long prior_key = -1L;
+      uint64_t count = 0;
+      int64_t prior_key = -1L;
       t.start();
       for (stl_type::const_iterator itr = stl.begin();
         itr != stl.end();
@@ -390,7 +394,7 @@ namespace
       cout << "\nerasing " << n << " std::map elements..." << endl;
       rng.seed(seed);
       t.start();
-      for (long i = 1; i <= n; ++i)
+      for (int64_t i = 1; i <= n; ++i)
       {
         if (lg && i % lg == 0)
           std::cout << i << std::endl; 
@@ -443,7 +447,7 @@ int cpp_main(int argc, char * argv[])
   cout << command_args << '\n';;
 
   if (argc >=2)
-    n = std::atol(argv[1]);
+    n = BOOST_BTREE_ATOLL(argv[1]);
 
   for (; argc > 2; ++argv, --argc) 
   {
@@ -477,15 +481,13 @@ int cpp_main(int argc, char * argv[])
       else if ( std::strncmp( argv[2]+1, "no_cache_branches", 17 )==0 )
         common_flags |= btree::flags::no_cache_branches;
       else if ( *(argv[2]+1) == 's' )
-        seed = atol( argv[2]+2 );
+        seed = BOOST_BTREE_ATOLL( argv[2]+2 );
       else if ( *(argv[2]+1) == 'n' )
         node_sz = atoi( argv[2]+2 );
       else if ( *(argv[2]+1) == 'c' )
         cache_sz = atoi( argv[2]+2 );
-      else if ( *(argv[2]+1) == 'i' )
-        initial_n = atol( argv[2]+2 );
       else if ( *(argv[2]+1) == 'l' )
-        lg = atol( argv[2]+2 );
+        lg = BOOST_BTREE_ATOLL( argv[2]+2 );
       else if ( *(argv[2]+1) == 'k' )
         do_pack = true;
       else if ( *(argv[2]+1) == 'r' )
@@ -539,15 +541,15 @@ int cpp_main(int argc, char * argv[])
   {
   case endian::order::big:
     cout << "and big endian traits\n";
-    test< btree::btree_map<long, long, btree::big_endian_traits> >();
+    test< btree::btree_map<int64_t, int64_t, btree::big_endian_traits> >();
     break;
   case endian::order::little:
     cout << "and little endian traits\n";
-    test< btree::btree_map<long, long, btree::little_endian_traits> >();
+    test< btree::btree_map<int64_t, int64_t, btree::little_endian_traits> >();
     break;
   case endian::order::native:
     cout << "and native endian traits\n";
-    test< btree::btree_map<long, long, btree::native_endian_traits> >();
+    test< btree::btree_map<int64_t, int64_t, btree::native_endian_traits> >();
     break;
   }
 
