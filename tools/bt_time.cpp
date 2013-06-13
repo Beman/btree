@@ -14,6 +14,7 @@
 #include <boost/detail/lightweight_main.hpp>
 
 #include <iostream>
+#include <locale>
 #include <string>
 #include <map>
 #include <cstring>
@@ -38,6 +39,7 @@ namespace
   int64_t lg = 0;   // if != 0, log every lg iterations
   std::size_t cache_sz = btree::default_max_cache_nodes;
   std::size_t node_sz = btree::default_node_size;
+  char thou_separator = ',';
   bool do_create (true);
   bool do_preload (false);
   bool do_insert (true);
@@ -60,14 +62,20 @@ namespace
   timer::cpu_times find_tm;
   timer::cpu_times iterate_tm;
   timer::cpu_times erase_tm;
-  const long double sec = 1000000000.0L;
+  const double sec = 1000000000.0;
+
+  struct thousands_separator : std::numpunct<char> { 
+   char do_thousands_sep() const { return thou_separator; } 
+   std::string do_grouping() const { return "\3"; }
+};
+
 
   void log(timer::auto_cpu_timer& t, timer::cpu_times& then, int64_t i)
   {
     t.stop();
     timer::cpu_times now = t.elapsed();
-    cout << i << ", " << (now.wall-then.wall)/1000000000.0 << " sec, "
-          << lg / ((now.wall-then.wall)/1000000000.0) << " per sec" << endl;
+    cout << i << ", " << (now.wall-then.wall)/sec << " sec, "
+         << lg / ((now.wall-then.wall)/sec) << " per sec" << endl;
     then = now;
     t.resume();
   }
@@ -504,6 +512,8 @@ int cpp_main(int argc, char * argv[])
         lg = BOOST_BTREE_ATOLL( argv[2]+2 );
       else if ( *(argv[2]+1) == 'k' )
         do_pack = true;
+      else if ( *(argv[2]+1) == 'p' )
+        thou_separator = *(argv[2]+2) ? *(argv[2]+2) : ' ';
       else if ( *(argv[2]+1) == 'r' )
         do_preload = true;
       else if ( *(argv[2]+1) == 'v' )
@@ -528,6 +538,7 @@ int cpp_main(int argc, char * argv[])
       "              Small node sizes are useful for stress testing\n"
       "   -c#      Cache size; default " << btree::default_max_cache_nodes << " nodes\n"
       "   -l#      log progress every # actions; default is to not log\n"
+      "   -p[char] cout thousands separator; space if char omitted, default -p,\n"
       "   -xc      No create; use file from prior -xe run\n"
       "   -xi      No insert test; forces -xc and doesn't do inserts\n"
       "   -xf      No find test\n"
@@ -546,7 +557,7 @@ int cpp_main(int argc, char * argv[])
       ;
     return 1;
   }
-
+  cout.imbue(std::locale(std::locale(), new thousands_separator));
   cout << "sizeof(bree::header_page) is " << sizeof(btree::header_page) << '\n'
        << "starting tests with node size " << node_sz
        << ", maximum cache nodes " << cache_sz << ",\n";
