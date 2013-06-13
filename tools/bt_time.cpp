@@ -62,6 +62,16 @@ namespace
   timer::cpu_times erase_tm;
   const long double sec = 1000000000.0L;
 
+  void log(timer::auto_cpu_timer& t, timer::cpu_times& then, int64_t i)
+  {
+    t.stop();
+    timer::cpu_times now = t.elapsed();
+    cout << i << ", " << (now.wall-then.wall)/10000000000.0 << " sec, "
+          << lg / ((now.wall-then.wall)/10000000000.0) << " per sec" << endl;
+    then = now;
+    t.resume();
+  }
+
   template <class BT>
   void test()
   {
@@ -91,10 +101,11 @@ namespace
         cout << "\ninserting " << n << " btree elements..." << endl;
         rng.seed(seed);
         t.start();
+        timer::cpu_times then = t.elapsed();
         for (int64_t i = 1; i <= n; ++i)
         {
           if (lg && i % lg == 0)
-            std::cout << i << std::endl; 
+            log(t, then, i);
           bt.emplace(key(), i);
         }
         bt.flush();
@@ -155,10 +166,11 @@ namespace
         typename BT::const_iterator itr;
         int64_t k;
         t.start();
+        timer::cpu_times then = t.elapsed();
         for (int64_t i = 1; i <= n; ++i)
         {
           if (lg && i % lg == 0)
-            std::cout << i << std::endl;
+            log(t, then, i);
           k = key();
           itr = bt.find(k);
 #       if !defined(NDEBUG)
@@ -218,10 +230,11 @@ namespace
         bt.manager().clear_statistics();
         rng.seed(seed);
         t.start();
+        timer::cpu_times then = t.elapsed();
         for (int64_t i = 1; i <= n; ++i)
         {
           if (lg && i % lg == 0)
-            std::cout << i << std::endl; 
+            log(t, then, i);
           //int64_t k = key();
           //if (i >= n - 5)
           //{
@@ -264,10 +277,11 @@ namespace
       rng.seed(seed);
       timer::cpu_times this_tm;
       t.start();
+        timer::cpu_times then = t.elapsed();
       for (int64_t i = 1; i <= n; ++i)
       {
         if (lg && i % lg == 0)
-          std::cout << i << std::endl; 
+          log(t, then, i);
         stl_type::value_type element(key(), i);
         stl.insert(element);
       }
