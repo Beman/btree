@@ -102,15 +102,18 @@ namespace boost
         truncate    = 0x400,   // same as read_write except existing file truncated
 
         // bitmask options set by user; not present in header:
-        preload     = 0x1000, // existing file read to preload O/S file cache
-        no_cache_branches     // disable permanent cache of all branch pages touched
-                    = 0x2000, //   (but still cache temporarily as usual)
+        preload        = 0x1000, // existing file read to preload O/S file cache
+        cache_branches = 0x2000, // enable permanent cache of all branch pages touched;
+                                 // otherwise make branch pages available when use count
+                                 // becomes 0, just like leaf pages.
       };
 
       BOOST_BITMASK(bitmask);
 
-      inline bitmask open_flags(bitmask m) {return m & (read_write|truncate|preload); }
-      inline bitmask permanent_flags(bitmask m) {return m & ~(read_write|truncate|preload); }
+      inline bitmask open_flags(bitmask m)
+        {return m & (read_write|truncate|preload|cache_branches); }
+      inline bitmask permanent_flags(bitmask m)
+        {return m & ~(read_write|truncate|preload|cache_branches); }
     }
 
     static const uint16_t major_version = 0;  // version identification

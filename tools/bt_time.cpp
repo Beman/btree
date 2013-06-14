@@ -19,6 +19,7 @@
 #include <map>
 #include <cstring>
 #include <cstdlib>  // for atoll() or Microsoft equivalent
+#include <cctype>   // for isdigit()
 #ifndef _MSC_VER
 # define BOOST_BTREE_ATOLL std::atoll
 #else
@@ -137,9 +138,9 @@ namespace
         fs::remove(path_old);
         fs::rename(path, path_old);
         t.start();
-        BT bt_old(path_old, btree::flags::read_only | btree::flags::no_cache_branches);
+        BT bt_old(path_old);
         bt_old.max_cache_size(cache_sz);
-        BT bt_new(path, btree::flags::truncate | btree::flags::no_cache_branches, -1, node_sz);
+        BT bt_new(path, btree::flags::truncate, -1, node_sz);
         bt_new.max_cache_size(cache_sz);
         for (typename BT::iterator it = bt_old.begin(); it != bt_old.end(); ++it)
         {
@@ -476,46 +477,48 @@ int cpp_main(int argc, char * argv[])
       path = argv[2];
     else
     {
-      if ( std::strncmp( argv[2]+1, "xe", 2 )==0 )
+      if ( std::strcmp( argv[2]+1, "xe" )==0 )
         do_erase = false;
-      else if ( std::strncmp( argv[2]+1, "xf", 2 )==0 )
+      else if ( std::strcmp( argv[2]+1, "xf" )==0 )
         do_find = false;
-      else if ( std::strncmp( argv[2]+1, "xc", 2 )==0 )
+      else if ( std::strcmp( argv[2]+1, "xc" )==0 )
         do_create = false;
-      else if ( std::strncmp( argv[2]+1, "xi", 2 )==0 )
+      else if ( std::strcmp( argv[2]+1, "xi" )==0 )
       {
         do_create = false;
         do_insert = false;
       }
-      else if ( std::strncmp( argv[2]+1, "stl", 3 )==0 )
+      else if ( std::strcmp( argv[2]+1, "stl" )==0 )
         stl_tests = true;
-      else if ( std::strncmp( argv[2]+1, "html", 4 )==0 )
+      else if ( std::strcmp( argv[2]+1, "html" )==0 )
         html = true;
-      else if ( std::strncmp( argv[2]+1, "big", 3 )==0 )
+      else if ( std::strcmp( argv[2]+1, "big" )==0 )
         whichaway = endian::order::big;
-      else if ( std::strncmp( argv[2]+1, "little", 6 )==0 )
+      else if ( std::strcmp( argv[2]+1, "little" )==0 )
         whichaway = endian::order::little;
-      else if ( std::strncmp( argv[2]+1, "native", 6 )==0 )
+      else if ( std::strcmp( argv[2]+1, "native" )==0 )
         whichaway = endian::order::native;
-      else if ( std::strncmp( argv[2]+1, "xbstats", 7 )==0 )
+      else if ( std::strcmp( argv[2]+1, "xbstats" )==0 )
         buffer_stats = false;
-      else if ( std::strncmp( argv[2]+1, "no_cache_branches", 17 )==0 )
-        common_flags |= btree::flags::no_cache_branches;
-      else if ( *(argv[2]+1) == 's' )
+      else if ( std::strcmp( argv[2]+1, "b" )==0 )
+        common_flags |= btree::flags::cache_branches;
+      else if ( *(argv[2]+1) == 's' && std::isdigit(*(argv[2]+2)) )
         seed = BOOST_BTREE_ATOLL( argv[2]+2 );
-      else if ( *(argv[2]+1) == 'n' )
+      else if ( *(argv[2]+1) == 'n' && std::isdigit(*(argv[2]+2)) )
         node_sz = atoi( argv[2]+2 );
-      else if ( *(argv[2]+1) == 'c' )
+      else if ( *(argv[2]+1) == 'c'
+          && (std::isdigit(*(argv[2]+2)) || *(argv[2]+2) == '-') )
         cache_sz = atoi( argv[2]+2 );
-      else if ( *(argv[2]+1) == 'l' )
+      else if ( *(argv[2]+1) == 'l' && std::isdigit(*(argv[2]+2)) )
         lg = BOOST_BTREE_ATOLL( argv[2]+2 );
-      else if ( *(argv[2]+1) == 'k' )
+      else if ( std::strcmp( argv[2]+1, "p" )==0 )
         do_pack = true;
-      else if ( *(argv[2]+1) == 'p' )
-        thou_separator = *(argv[2]+2) ? *(argv[2]+2) : ' ';
-      else if ( *(argv[2]+1) == 'r' )
+      else if ( std::strncmp( argv[2]+1, "sep", 3 )==0
+          && (std::ispunct(*(argv[2]+4)) || *(argv[2]+4)== '\0') )
+        thou_separator = *(argv[2]+4) ? *(argv[2]+4) : ' ';
+      else if ( std::strcmp( argv[2]+1, "r" )==0 )
         do_preload = true;
-      else if ( *(argv[2]+1) == 'v' )
+      else if ( std::strcmp( argv[2]+1, "v" )==0 )
         verbose = true;
       else
       {
@@ -537,13 +540,15 @@ int cpp_main(int argc, char * argv[])
       "              Small node sizes are useful for stress testing\n"
       "   -c#      Cache size; default " << btree::default_max_cache_nodes << " nodes\n"
       "   -l#      log progress every # actions; default is to not log\n"
-      "   -p[char] cout thousands separator; space if char omitted, default -p,\n"
+      "   -sep[punct] cout thousands separator; space if punct omitted, default -sep,\n"
       "   -xc      No create; use file from prior -xe run\n"
       "   -xi      No insert test; forces -xc and doesn't do inserts\n"
       "   -xf      No find test\n"
       "   -xi      No iterate test\n"
       "   -xe      No erase test; use to save file intact\n"
-      "   -k       Pack tree after insert test\n"
+      "   -b       Enable permanent cache of branch pages touched; default is\n"
+      "              to make available for flush when use count reaches 0\n"
+      "   -p       Pack tree after insert test\n"
       "   -v       Verbose output statistics\n"
       "   -stl     Also run the tests against std::map\n"
       "   -r       Read entire file to preload operating system disk cache;\n"
@@ -552,7 +557,6 @@ int cpp_main(int argc, char * argv[])
       "   -little  Use btree::little_endian_traits\n"
       "   -native  Use btree::native_traits\n"
       "   -html    Output html table of results to cerr\n"
-      "   -no_cache_branches    Disable permanent cache of branch pages touched\n"
       ;
     return 1;
   }

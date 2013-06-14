@@ -84,6 +84,9 @@
 
   * bt_time should use high_res clock, perhaps in addition to cpu times?
 
+  * When a command line argument is supposed to have a numeric value appended, check
+    is_digit(). If no value appended, use strcmp, NOT strncmp. See bt_time for examples.
+
 */
 
 namespace boost
@@ -1044,7 +1047,7 @@ std::ostream& operator<<(std::ostream& os,
 template <class Key, class Base, class Traits, class Comp>
 btree_base<Key,Base,Traits,Comp>::btree_base(const Comp& comp)
   : m_mgr(m_node_alloc), m_comp(comp), m_value_comp(comp), m_branch_comp(comp),
-    m_cache_branches(true)
+    m_cache_branches(false)
 { 
   m_mgr.owner(this);
 
@@ -1059,7 +1062,7 @@ template <class Key, class Base, class Traits, class Comp>
 btree_base<Key,Base,Traits,Comp>::btree_base(const boost::filesystem::path& p,
   flags::bitmask flgs, uint64_t signature, std::size_t node_sz, const Comp& comp)
   : m_mgr(m_node_alloc), m_comp(comp), m_value_comp(comp), m_branch_comp(comp),
-    m_cache_branches(true)
+    m_cache_branches(false)
 { 
   m_mgr.owner(this);
 
@@ -1109,8 +1112,8 @@ btree_base<Key,Base,Traits,Comp>::m_open(const boost::filesystem::path& p,
     open_flags |= oflag::out | oflag::truncate;
   if (flgs & flags::preload)
     open_flags |= oflag::preload;
-  if (flgs & flags::no_cache_branches)
-    m_cache_branches = false;
+  if (flgs & flags::cache_branches)
+    m_cache_branches = true;
 
   m_read_only = (open_flags & oflag::out) == 0;
   m_ok_to_pack = true;
