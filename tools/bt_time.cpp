@@ -17,6 +17,8 @@
 #include <locale>
 #include <string>
 #include <map>
+#include <utility>
+#include <algorithm>
 #include <cstring>
 #include <cstdlib>  // for atoll() or Microsoft equivalent
 #ifndef _MSC_VER
@@ -64,10 +66,11 @@ namespace
   timer::cpu_times erase_tm;
   const double sec = 1000000000.0;
 
-  struct thousands_separator : std::numpunct<char> { 
-   char do_thousands_sep() const { return thou_separator; } 
-   std::string do_grouping() const { return "\3"; }
-};
+  struct thousands_separator : std::numpunct<char>
+  { 
+    char do_thousands_sep() const { return thou_separator; } 
+    std::string do_grouping() const { return "\3"; }
+  };
 
   template <class BT>
   void log(timer::auto_cpu_timer& t, timer::cpu_times& then, int64_t i, const BT& bt)
@@ -81,6 +84,16 @@ namespace
     then = now;
     t.resume();
   }
+
+  struct element_type
+  {
+    int64_t key;
+    int64_t mapped;
+
+    bool operator<(const element_type& rhs) const {return key < rhs.key;}
+    bool operator==(const element_type& rhs) const {return key == rhs.key;}
+    bool operator!=(const element_type& rhs) const {return key != rhs.key;}
+  };
 
   template <class BT>
   void test()
@@ -109,14 +122,38 @@ namespace
       if (do_insert)
       {
         cout << "\ninserting " << n << " btree elements..." << endl;
+        const std::size_t max_sz = 10000000;
+        scoped_array<element_type> array(new element_type[max_sz]); 
+        element_type* array_begin = array.get();
+        element_type* array_cur_end = array.get();
+        element_type* array_end = array.get() + max_sz;  
         rng.seed(seed);
         t.start();
         timer::cpu_times then = t.elapsed();
         for (int64_t i = 1; i <= n; ++i)
         {
+          // stuff element into array (invariant: always at least one free slot)
+          array_cur_end->key = key();
+          array_cur_end->mapped = i;
+          ++array_cur_end;
+
+          // if the array is now full or there is no more input,
+          if (array_cur_end == array_end || i == n)
+          {
+            cout << "sorting..." << endl;
+            std::sort(array.get(), array_cur_end);  // sort the array
+            // emplace each array element into the btree
+            cout << "emplacing..." << endl;
+            for (element_type* cur = array.get(); cur != array_cur_end; ++cur)
+              bt.emplace(cur->key, cur->mapped);
+            // clear the array
+            array_cur_end = array.get();
+
+            cout << "resuming load..." << endl;
+          }
+
           if (lg && i % lg == 0)
             log(t, then, i, bt);
-          bt.emplace(key(), i);
         }
         bt.flush();
         t.stop();
