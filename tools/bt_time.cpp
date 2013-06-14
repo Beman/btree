@@ -63,6 +63,7 @@ namespace
 
   timer::cpu_times insert_tm;
   timer::cpu_times find_tm;
+  timer::cpu_times pack_tm;
   timer::cpu_times iterate_tm;
   timer::cpu_times erase_tm;
   const double sec = 1000000000.0;
@@ -74,15 +75,17 @@ namespace
   };
 
   template <class BT>
-  void log(timer::auto_cpu_timer& t, timer::cpu_times& then, int64_t i, const BT& bt)
+  void log(timer::auto_cpu_timer& t, timer::cpu_times& then,
+    int64_t i, int64_t& i_then, const BT& bt)
   {
     t.stop();
     timer::cpu_times now = t.elapsed();
     cout << i << ", " << (now.wall-then.wall)/sec << " sec, "
-         << lg / ((now.wall-then.wall)/sec) << " per sec,  cache size "
+         << (i-i_then) / ((now.wall-then.wall)/sec) << " per wall-clock sec,  cache size "
          << bt.manager().buffers_in_memory()
          << endl;
     then = now;
+    i_then = i;
     t.resume();
   }
 
@@ -131,6 +134,7 @@ namespace
         rng.seed(seed);
         t.start();
         timer::cpu_times then = t.elapsed();
+        int64_t i_then = 0;
         for (int64_t i = 1; i <= n; ++i)
         {
           // stuff element into array (invariant: always at least one free slot)
@@ -150,15 +154,17 @@ namespace
             // clear the array
             array_cur_end = array.get();
 
+            log(t, then, i, i_then, bt);
             cout << "resuming load..." << endl;
           }
 
-          if (lg && i % lg == 0)
-            log(t, then, i, bt);
+          //if (lg && i % lg == 0)
+          //  log(t, then, i, bt);
         }
         bt.flush();
         t.stop();
         insert_tm = t.elapsed();
+        cout  << n / (insert_tm.wall/sec) << " per wall-clock sec\n";
         t.report();
         cout << endl;
         if (header_info)
@@ -184,6 +190,9 @@ namespace
           bt_new.emplace(it->key(), it->mapped_value());
         }
         bt_new.flush();
+        t.stop();
+        pack_tm = t.elapsed();
+        cout  << n / (pack_tm.wall/sec) << " per wall-clock sec\n";
         cout << "  bt_old.size() " << bt_old.size() << std::endl;
         cout << "  bt_new.size() " << bt_new.size() << std::endl;
         BOOST_ASSERT(bt_new.size() == bt_old.size());
@@ -215,10 +224,11 @@ namespace
         int64_t k;
         t.start();
         timer::cpu_times then = t.elapsed();
+        int64_t i_then = 0;
         for (int64_t i = 1; i <= n; ++i)
         {
           if (lg && i % lg == 0)
-            log(t, then, i, bt);
+            log(t, then, i, i_then, bt);
           k = key();
           itr = bt.find(k);
 #       if !defined(NDEBUG)
@@ -230,6 +240,7 @@ namespace
         }
         t.stop();
         find_tm = t.elapsed(); 
+        cout  << n / (find_tm.wall/sec) << " per wall-clock sec\n";
         t.report();
         cout << endl;
         if (header_info)
@@ -245,6 +256,8 @@ namespace
         uint64_t count = 0;
         int64_t prior_key = -1L;
         t.start();
+        timer::cpu_times then = t.elapsed();
+        int64_t i_then = 0;
         for (typename BT::const_iterator itr = bt.begin();
           itr != bt.end();
           ++itr)
@@ -254,8 +267,10 @@ namespace
             throw std::runtime_error("btree iteration sequence error");
           prior_key = itr->key();
         }
+        log(t, then, bt.size(), i_then, bt);
         t.stop();
         iterate_tm = t.elapsed();
+        cout  << bt.size() / (iterate_tm.wall/sec) << " per wall-clock sec\n";
         t.report();
         cout << endl;
         if (header_info)
@@ -279,10 +294,11 @@ namespace
         rng.seed(seed);
         t.start();
         timer::cpu_times then = t.elapsed();
+        int64_t i_then = 0;
         for (int64_t i = 1; i <= n; ++i)
         {
           if (lg && i % lg == 0)
-            log(t, then, i, bt);
+            log(t, then, i, i_then, bt);
           //int64_t k = key();
           //if (i >= n - 5)
           //{
@@ -297,6 +313,7 @@ namespace
         t.stop();
         bt.flush();
         erase_tm = t.elapsed();
+        cout  << n / (erase_tm.wall/sec) << " per wall-clock sec\n";
         t.report();
         cout << endl;
         if (header_info)
