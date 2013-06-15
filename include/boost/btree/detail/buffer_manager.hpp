@@ -86,14 +86,14 @@ namespace boost
     public:
 
       buffer_ptr() : m_ptr(0) {}
-      buffer_ptr(buffer& p);
-      buffer_ptr(const buffer_ptr& r);
+      buffer_ptr(buffer& p);                      // increments buffer's use count
+      buffer_ptr(const buffer_ptr& r);            // if r(), increments buffer's use count
       buffer_ptr& operator=(const buffer_ptr& r)
       {
         buffer_ptr(r).swap(*this);  // correct for self-assignment
         return *this;
       }
-      ~buffer_ptr();
+      ~buffer_ptr();                            // if m_ptr, decrements buffer's use count
 
       void swap(buffer_ptr& r)
       {
@@ -102,7 +102,7 @@ namespace boost
         r.m_ptr = tmp;
       }
 
-      void reset();
+      void reset();   // if m_ptr, decrements buffer's use count. sets m_ptr = 0
 
       buffer* get() const {return m_ptr;}
 

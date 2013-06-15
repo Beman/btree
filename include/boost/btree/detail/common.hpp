@@ -788,9 +788,9 @@ private:
       return np;
     }
 
-    btree_node_ptr     prior_node()  // return next node at current level
+    btree_node_ptr     prior_node()  // return prior node at current level
     {
-      if (!parent())              // if this is the root, there is no next node
+      if (!parent())              // if this is the root, there is no prior node
         return btree_node_ptr();
 
       btree_node_ptr   par(m_parent);
@@ -828,7 +828,7 @@ private:
 
   //-------------------------------  btree_node_ptr  -----------------------------------//
 
-  class btree_node_ptr : public buffer_ptr
+  class btree_node_ptr : public buffer_ptr  // smart pointer; maintains buffer's use count
   {
   public:
 
@@ -958,14 +958,18 @@ private:
 
   btree_node_ptr m_new_node(node_level_type lv);
   void  m_new_root();
+
   const_iterator m_leaf_insert(iterator insert_iter, const key_type& key,
     const mapped_type& mapped_value);
+
   void  m_branch_insert(btree_node* np, branch_iterator element,
     const key_type& k, node_id_type id);
 
   iterator m_sub_tree_begin(node_id_type id);
+
   iterator m_erase_branch_value(btree_node* np, branch_iterator value, node_id_type erasee);
-  void  m_free_node(btree_node* np)
+
+  void  m_free_node(btree_node* np)  // add to free node list
   {
     if (np->is_leaf())
       m_hdr.decrement_leaf_node_count();
