@@ -87,6 +87,10 @@
   * When a command line argument is supposed to have a numeric value appended, check
     is_digit(). If no value appended, use strcmp, NOT strncmp. See bt_time for examples.
 
+  * It isn't at all clear that btree_base should expose manager() and header().
+    Instead provide observer functions that call the equivalent manager() and header()
+    observer functions.
+
 */
 
 namespace boost
@@ -426,11 +430,27 @@ namespace detail
 
 //--------------------------------------------------------------------------------------//
 //                                                                                      //
-//                                 class btree_base                                    //
-//                                                                                      //
-//                  a B+ tree with leaf-sequence doubly-linked list                     //
+//                                 class btree_base                                     //
 //                                                                                      //
 //--------------------------------------------------------------------------------------//
+
+/*
+
+  This class implements a B+tree.
+
+  Valid-chain-to-root invariant:
+
+    Iterators contain a (smart) btree_node_ptr to the leaf node that contains the
+    element being pointed to, and a (dumb) leaf_iterator to the element itself.
+    Leaf and branch nodes contain a btree_node_ptr to the parent node in the tree, and
+    a (dumb) branch_iterator to the parent element itself.
+
+    This chain, from iterator to root, is valid as long as the iterator is valid. Any
+    operations that create an iterator must establish this chain, and any operations
+    that advance the iterator forward or backward must maintain the validity of the
+    chain.
+
+*/
 
 template  <class Key,
            class Base,  // btree_map_base or btree_set_base
@@ -529,17 +549,18 @@ public:
 
   // observers:
 
-  const buffer_manager&
-                     manager() const        { return m_mgr; }
   bool               is_open() const        { return m_mgr.is_open(); }
   const filesystem::path&
                      file_path() const      { return m_mgr.file_path(); }
   bool               read_only() const      { return m_read_only; }
   bool               cache_branches() const { return m_cache_branches; }
-  const header_page& header() const         { BOOST_ASSERT(is_open());
-                                              return m_hdr;
-                                            }
   void   dump_dot(std::ostream& os) const; // dump tree using Graphviz dot format
+
+  // TODO: why are these two exposed? See main TODO list above.
+  const buffer_manager&
+                     manager() const        { return m_mgr; }
+  const header_page& header() const         { BOOST_ASSERT(is_open());
+                                              return m_hdr; }
 
   // capacity:
 
@@ -731,6 +752,14 @@ private:
 
   class btree_node : public buffer
   {
+  private:
+    btree_node_ptr     m_parent;          // by definition, the parent is a branch node.
+    branch_iterator    m_parent_element;
+# ifndef NDEBUG
+    node_id_type       m_parent_node_id;  // allows assert that m_parent has not been
+                                          // overwritten by faulty logic
+# endif
+
   public:
     btree_node() : buffer() {}
     btree_node(buffer::buffer_id_type id, buffer_manager& mgr)
@@ -759,10 +788,15 @@ private:
                                                = static_cast<uint_least32_t>(sz);}    
     bool               empty() const         {return leaf().m_size == 0;}
 
-    btree_node_ptr     next_node()  // return next node at current level
+    btree_node_ptr     next_node()  // return next node at current level while
+                                    // maintaining the child to parent chain
     {
       if (!parent())              // if this is the root, there is no next node
+      {
+//        BOOST_ASSERT(level() == owner().root_level();
+//  TODO: should be able to write "owner().root_level()"
         return btree_node_ptr();
+      }
 
       btree_node_ptr   par(m_parent);
       branch_iterator  par_element(m_parent_element);
@@ -780,6 +814,8 @@ private:
       }
 
       btree_node_ptr np(manager()->read(par_element->node_id()));
+
+      // maintain the child to parent chain
       np->parent(par);
       np->parent_element(par_element);
 #     ifndef NDEBUG
@@ -788,7 +824,8 @@ private:
       return np;
     }
 
-    btree_node_ptr     prior_node()  // return prior node at current level
+    btree_node_ptr     prior_node()  // return prior node at current level while
+                                     // maintaining the child to parent chain
     {
       if (!parent())              // if this is the root, there is no prior node
         return btree_node_ptr();
@@ -809,6 +846,8 @@ private:
       }
 
       btree_node_ptr np(manager()->read(par_element->node_id()));
+
+      // maintain the child to parent chain
       np->parent(par);
       np->parent_element(par_element);
 #     ifndef NDEBUG
@@ -816,14 +855,6 @@ private:
 #     endif
       return np;
     }
-
-  private:
-    btree_node_ptr     m_parent;          // by definition, the parent is a branch node.
-    branch_iterator    m_parent_element;
-# ifndef NDEBUG
-    node_id_type       m_parent_node_id;  // allows assert that m_parent has not been
-                                          // overwritten by faulty logic
-# endif
   };
 
   //-------------------------------  btree_node_ptr  -----------------------------------//
@@ -876,6 +907,9 @@ private:
         m_element(e) {}
 
   private:
+    typename btree_base::btree_node_ptr  m_node; 
+    typename btree_base::leaf_iterator   m_element;  // 0 for end iterator
+
     iterator_type(buffer_ptr p)  // used solely to setup the end iterator
       : m_node(static_cast<typename btree_base::btree_node_ptr>(p)),
         m_element(0) {}
@@ -883,9 +917,6 @@ private:
     friend class boost::iterator_core_access;
     friend class btree_base;
    
-    typename btree_base::btree_node_ptr  m_node; 
-    typename btree_base::leaf_iterator   m_element;  // 0 for end iterator
-
     T& dereference() const  { return *m_element; }
  
     bool equal(const iterator_type& rhs) const

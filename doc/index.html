@@ -105,8 +105,7 @@
 &nbsp;</li>
     </ul>
     </li>
-    <li>B<sup>+</sup>-tree disk structure with bidirectional page
-    sequence list. Modifications to the classic B<sup>+</sup>-tree
+    <li>B<sup>+</sup>-tree disk structure. Modifications to the classic B<sup>+</sup>-tree
     include: <br>
 &nbsp;<ul>
       <li>New-page-on-full (i.e. lazy) rather than split-on-full for ordered inserts.</li>
@@ -201,7 +200,11 @@
     respectively, it is sufficient to store &quot;B&quot; as the branch key rather than 
     &quot;BETA&quot;. Although the C predecessor library still uses computed branch keys 
     if keys are variable length, it has been a source of hard to track down 
-    bugs, and doesn't support deletion properly to this day in that library.</li>
+    bugs, and doesn't support deletion properly to this day in that library.<br>
+&nbsp;</li>
+    <li><b>Bidirectional page sequence list.</b> Adds page space overhead and 
+    insert/erase program complexity. Doing an inverted tree walk to the next 
+    page during traversal is simple and trouble free.</li>
   </ul>
 
   <h2>Bibliography</h2>
@@ -238,6 +241,6 @@
   "http://www.boost.org/LICENSE_1_0.txt">www.boost.org/LICENSE_1_0.txt</a></p>
 
   <p>Revised 
-  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->09 June 2013<!--webbot bot="Timestamp" endspan i-checksum="17584" --></p>
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->15 June 2013<!--webbot bot="Timestamp" endspan i-checksum="17577" --></p>
 </body>
 </html>
