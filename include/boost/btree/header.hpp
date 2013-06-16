@@ -219,7 +219,10 @@ namespace boost
       node_id_type     branch_node_count() const     { return m_branch_node_count; }
       node_id_type     free_node_list_head_id() const{ return m_free_node_list_head_id; }
       node_level_type  root_level() const            { return m_root_level; }
-      node_level_type  levels() const                { return m_root_level+1; }
+      unsigned         levels() const  // unsigned because it is disconcerting to write             
+        { return m_root_level+1; }     // levels() to a stream and have it be displayed as
+                                       // an unsigned char, which is to say '' for typical
+                                       // values of levels()
 
       //  user supplied-data members
       const char*      user_c_str() const            { return m_user_c_str; }
