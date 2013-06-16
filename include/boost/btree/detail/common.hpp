@@ -776,6 +776,11 @@ private:
     void               parent_node_id(node_id_type id)   {m_parent_node_id = id;}
 #   endif
 
+    const btree_base&  owner() const
+    {
+      BOOST_ASSERT(buffer::manager());
+      return *reinterpret_cast<const btree_base*>(buffer::manager()->owner());
+    }
     leaf_data&         leaf()       {return *reinterpret_cast<leaf_data*>(buffer::data());}
     const leaf_data&   leaf() const {return *reinterpret_cast<const leaf_data*>(buffer::data());}
     branch_data&       branch()     {return *reinterpret_cast<branch_data*>(buffer::data());}
@@ -793,7 +798,7 @@ private:
     {
       if (!parent())              // if this is the root, there is no next node
       {
-//        BOOST_ASSERT(level() == owner().root_level();
+        BOOST_ASSERT(level() == owner().header().root_level());
 //  TODO: should be able to write "owner().root_level()"
         return btree_node_ptr();
       }
@@ -828,7 +833,10 @@ private:
                                      // maintaining the child to parent chain
     {
       if (!parent())              // if this is the root, there is no prior node
+      {
+        BOOST_ASSERT(level() == owner().header().root_level());
         return btree_node_ptr();
+      }
 
       btree_node_ptr   par(m_parent);
       branch_iterator  par_element(m_parent_element);
