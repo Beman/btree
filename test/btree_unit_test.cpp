@@ -40,6 +40,8 @@ using std::make_pair;
 
 namespace
 {
+  bool dump_dot(false);
+
   struct fat
   {
     int x;
@@ -305,13 +307,16 @@ void open_existing()
     int key = 5;
     int mapped = 0x55;
     bt.emplace(key, mapped);
-    bt.dump_dot(std::cout);
+    if (dump_dot)
+      bt.dump_dot(std::cout);
     key = 4; mapped = 0x44;
     bt.emplace(key, mapped);
-    bt.dump_dot(std::cout);
+    if (dump_dot)
+      bt.dump_dot(std::cout);
     key = 6; mapped = 0x66;
     bt.emplace(key, mapped);
-    bt.dump_dot(std::cout);
+    if (dump_dot)
+      bt.dump_dot(std::cout);
   }
 
   {
@@ -358,7 +363,8 @@ void open_existing()
   BOOST_TEST_EQ(bt2.node_size(), 128U);
   BOOST_TEST_EQ(bt2.header().element_count(), 3U);
   BOOST_TEST_EQ(bt2.header().node_size(), 128U);
-  bt2.dump_dot(std::cout);
+  if (dump_dot)
+    bt2.dump_dot(std::cout);
 
   // TODO: test each header value
 
@@ -409,7 +415,8 @@ void small_variable_set()
   BOOST_TEST_EQ(bt.header().element_count(), 8U);
   BOOST_TEST_EQ(bt.header().node_size(), 128U);
 
-  bt.dump_dot(std::cout);
+  if (dump_dot)
+    bt.dump_dot(std::cout);
 
   cout << "    small_variable_set complete" << endl;
 }
@@ -459,7 +466,8 @@ void small_variable_map()
   BOOST_TEST_EQ(bt.header().element_count(), 8U);
   BOOST_TEST_EQ(bt.header().node_size(), 128U);
 
-  bt.dump_dot(std::cout);
+  if (dump_dot)
+    bt.dump_dot(std::cout);
 
   cout << "    small_variable_map complete" << endl;
 }
@@ -885,7 +893,8 @@ void find_and_bounds_tests(BTree& bt)
   }
 
   //cout << "root is node " << bt.header().root_node_id() << '\n'; 
-  bt.dump_dot(std::cout);
+  if (dump_dot)
+    bt.dump_dot(std::cout);
 
   //             i =   0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18
   const int  lwr[] = { 1, 1, 3, 3, 5, 5, 7, 7, 9, 9, 11, 11, 13, 13, 15, 15, 17, 17, -1};
@@ -1107,7 +1116,7 @@ void pack_optimization()
 
   typedef std::pair<int, int> value_type;
   const int node_sz = 128;
-  const int overhead = 12;
+  const int overhead = 12;  // TODO: is this still correct? 4 seems more likely.
   const int per_node = (node_sz - overhead) / sizeof(value_type);
   const int n = per_node * 2;  // sufficient to distinguish if pack optimization works
 
@@ -1116,14 +1125,16 @@ void pack_optimization()
     np.emplace(i, 0xffffff00+i);
 
   cout << "\nroot is node " << np.header().root_node_id() << '\n'; 
-  np.dump_dot(std::cout);
+  if (dump_dot)
+    np.dump_dot(std::cout);
   
   btree::btree_map<int, int> p("packed.btr", btree::flags::truncate, -1, node_sz);
   for (int i=1; i <= n; ++i)
     p.emplace(i, 0xffffff00+i);
 
   cout << "\nroot is node " << p.header().root_node_id() << '\n'; 
-  p.dump_dot(std::cout);
+  if (dump_dot)
+    p.dump_dot(std::cout);
 
   BOOST_TEST_EQ(np.size(), p.size());
   BOOST_TEST(p.header().node_count() < np.header().node_count());
@@ -1202,6 +1213,61 @@ void  reopen_btree_object_test()
   cout << "     reopen_btree_object_test complete" << endl;
 }
 
+//--------------------------------  cache_size_test  -------------------------------//
+
+void  cache_size_test()
+{
+  cout << "  cache_size_test..." << endl;
+
+  typedef fat value_type;
+  const int node_sz = 128;
+  const unsigned n_levels = 2;  // deep enough to be meaningful
+
+  btree::btree_multiset<fat> bt("cache_size_test.btr", btree::flags::truncate, -1, node_sz);
+  bt.max_cache_size(1);
+
+  cout << "       empty tree: levels=" << bt.header().levels()
+    << ", cache size=" << bt.manager().buffers_in_memory()
+    << ", cache available=" << bt.manager().buffers_available()
+    << ", branch pages =" << bt.header().branch_node_count()
+    << ", leaf pages =" << bt.header().leaf_node_count()
+    << ", size=" << bt.size()
+    << endl;
+
+  for (int i=2034875; bt.header().levels() < n_levels; i = (i*1234567891) + 11) // avoid ordered values
+  {
+    //BOOST_TEST(bt.manager().buffers_in_memory() == bt.header().levels());
+    { 
+      btree::btree_multiset<fat>::iterator itr = bt.insert(fat(i));
+      //assert here cache size, available
+      cout << "     after insert():"
+        << ", use count=" << itr.use_count()
+        << ", levels=" << bt.header().levels()
+        << ", cache size=" << bt.manager().buffers_in_memory()
+        << ", cache available=" << bt.manager().buffers_available()
+        << ", branch pages =" << bt.header().branch_node_count()
+        << ", leaf pages =" << bt.header().leaf_node_count()
+        << ", size=" << bt.size()
+        << endl;
+    }
+    //assert here  cache size, available
+//    cout << "    levels=" << bt.header().levels() << ", size=" << bt.size() << ", i=" << i <<'\n';
+    cout << "       after iterator freed: levels=" << bt.header().levels()
+      << ", cache size=" << bt.manager().buffers_in_memory()
+      << ", cache available=" << bt.manager().buffers_available()
+      << ", branch pages =" << bt.header().branch_node_count()
+      << ", leaf pages =" << bt.header().leaf_node_count()
+      << ", size=" << bt.size()
+      << endl;
+  }
+
+  cout << bt;
+  cout << bt.manager();
+
+
+  cout << "     cache_size_test complete" << endl;
+}
+
 //-------------------------------------  _test  ----------------------------------------//
 
 void  _test()
@@ -1215,8 +1281,41 @@ void  _test()
 
 //------------------------------------ cpp_main ----------------------------------------//
 
-int cpp_main(int, char*[])
+int cpp_main(int argc, char* argv[])
 {
+  std::string command_args;
+
+  for (int a = 0; a < argc; ++a)
+  {
+    command_args += argv[a];
+    if (a != argc-1)
+      command_args += ' ';
+  }
+
+  cout << command_args << '\n';;
+
+  for (; argc > 1; ++argv, --argc) 
+  {
+    if ( std::strcmp( argv[1]+1, "b" )==0 )
+      dump_dot = true;
+    else
+    {
+      cout << "Error - unknown option: " << argv[1] << "\n\n";
+      argc = -1;
+      break;
+    }
+  }
+
+  if (argc < 1) 
+  {
+    cout << "Usage: btree_unit_test [Options]\n"
+//      " The argument n specifies the number of test cases to run\n"
+      " Options:\n"
+//      "   path     Specifies the test file path; default test.btree\n"
+      "   -d       Dump tree using Graphviz dot format; default is no dump\n"
+      ;
+    return 1;
+  }
 
   instantiate();
   types_test();
@@ -1240,6 +1339,7 @@ int cpp_main(int, char*[])
   pack_optimization();
   reopen_btree_object_test();
   //fixstr();
+  cache_size_test();
   
 
   //{
