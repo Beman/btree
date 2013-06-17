@@ -63,6 +63,12 @@ namespace boost
 {
   namespace btree
   {
+    namespace detail
+    {
+      typedef boost::uint32_t    buffer_id_type;
+      typedef boost::uint32_t    use_count_type;
+    }
+
     class buffer_manager_error : public std::runtime_error
     {
     public:
@@ -84,13 +90,14 @@ namespace boost
     class buffer_ptr
     {
     public:
+      typedef detail::use_count_type  use_count_type;
 
       buffer_ptr() : m_ptr(0) {}
-      buffer_ptr(buffer& p);                      // increments buffer's use count
-      buffer_ptr(const buffer_ptr& r);            // if r(), increments buffer's use count
+      buffer_ptr(buffer& p);                    // increments buffer's use count
+      buffer_ptr(const buffer_ptr& r);          // if r(), increments buffer's use count
       buffer_ptr& operator=(const buffer_ptr& r)
       {
-        buffer_ptr(r).swap(*this);  // correct for self-assignment
+        buffer_ptr(r).swap(*this);              // correct for self-assignment
         return *this;
       }
       ~buffer_ptr();                            // if m_ptr, decrements buffer's use count
@@ -122,6 +129,8 @@ namespace boost
       operator unspecified_bool_type() const {return m_ptr == 0 ?0:unspecified_bool_true;} 
       bool operator! () const {return m_ptr == 0;}
 
+      use_count_type use_count() const;
+
       bool operator==(const buffer_ptr& r) const {return m_ptr == r.m_ptr;}
       bool operator!=(const buffer_ptr& r) const {return m_ptr != r.m_ptr;}
       bool operator< (const buffer_ptr& r) const {return m_ptr < r.m_ptr;}
@@ -141,8 +150,8 @@ namespace boost
         public boost::intrusive::list_base_hook<> 
     {
     public:
-      typedef boost::uint32_t    buffer_id_type;
-      typedef boost::uint32_t    use_count_type;
+      typedef detail::buffer_id_type    buffer_id_type;
+      typedef detail::use_count_type    use_count_type;
 
       buffer()
         : m_buffer_id(-1), m_use_count(0), m_manager(0),
@@ -264,6 +273,8 @@ namespace boost
           = m_file_buffers_read = m_file_buffers_written = m_new_buffer_requests
           = m_buffer_allocs = m_never_free_honored = 0;
       }
+      void             clear_cache()   // use with extreme caution!
+        {buffers.clear(); available_buffers.clear();}
 
       // observers
       std::size_t      max_cache_size() const          {return m_max_cache_size;}
@@ -359,6 +370,9 @@ namespace boost
         m_ptr = 0;
       }
     }
+
+    inline buffer_ptr::use_count_type buffer_ptr::use_count() const
+      {return m_ptr->use_count();}
 
     inline buffer::buffer(buffer_id_type id, boost::btree::buffer_manager& pm)
       : m_buffer_id(id), m_use_count(0), m_manager(&pm),

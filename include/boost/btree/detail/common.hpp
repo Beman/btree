@@ -909,10 +909,16 @@ private:
   {
 
   public:
+    typedef typename btree_base::btree_node_ptr::use_count_type use_count_type;
+
     iterator_type(): m_element(0) {}
     iterator_type(buffer_ptr p, leaf_iterator e)
       : m_node(static_cast<typename btree_base::btree_node_ptr>(p)),
         m_element(e) {}
+
+    typename
+    btree_base::btree_node_ptr::use_count_type use_count() const
+      {return m_node->use_count();}
 
   private:
     typename btree_base::btree_node_ptr  m_node; 
@@ -1112,6 +1118,7 @@ btree_base<Key,Base,Traits,Comp>::btree_base(const boost::filesystem::path& p,
   // set up the end iterator
   m_end_node.manager(&m_mgr);
   m_end_iterator = const_iterator(buffer_ptr(m_end_node));
+  BOOST_ASSERT(manager().buffers_in_memory() == 0);  // verify m_end_iterator not cached
 
   // open the file and set up data members
   m_open(p, flgs, signature, node_sz);
@@ -1196,11 +1203,13 @@ btree_base<Key,Base,Traits,Comp>::m_open(const boost::filesystem::path& p,
     m_hdr.key_size(Base::key_size());
     m_hdr.mapped_size(Base::mapped_size());
     m_hdr.increment_node_count();  // i.e. the header itself
-    m_mgr.new_buffer();  // force a buffer write, thus zeroing the header for its full size
-    flush();  // writes buffer and header
+    m_mgr.new_buffer();   // create a buffer, thus zeroing the header for its full size
+    flush();              // write the header buffer
+    m_mgr.clear_cache();  //  but don't cache it
 
     // set up an empty leaf as the initial root
     m_root = m_mgr.new_buffer();
+    flush();
     m_root->needs_write(true);
     m_hdr.increment_node_count();
     m_hdr.increment_leaf_node_count();

@@ -262,7 +262,7 @@ std::ostream& operator<<(std::ostream& os, const buffer_manager& pm)
     << "    active buffers ---------: " << pm.active_buffers_read() << "\n"  
     << "    available buffers ------: " << pm.available_buffers_read() << "\n"  
     << "    never-free buffers -----: " << pm.never_free_buffers_read() << "\n\n"  
-    << "  cached buffers -----------: " << pm.buffers_in_memory() << "\n"
+    << "  cache size ---------------: " << pm.buffers_in_memory() << "\n"
     << "  available cached buffers -: " << pm.buffers_available() << "\n"
       ;
   return os;
