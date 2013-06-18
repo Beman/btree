@@ -573,8 +573,10 @@ public:
   std::size_t   max_cache_size() const      { BOOST_ASSERT(is_open());
                                               return m_mgr.max_cache_size(); }
   void          max_cache_size(std::size_t m)  // -1 indicates unlimited
-                                            { BOOST_ASSERT(is_open());
-                                              m_mgr.max_cache_size(m);}
+  { 
+    BOOST_ASSERT(is_open());
+    m_mgr.max_cache_size(m >= (header().levels()+1) ? m : (header().levels()+1));
+  }
   void          max_cache_megabytes(std::size_t mb)
                                             { BOOST_ASSERT(is_open());
                                               m_mgr.max_cache_size((mb*1048576)/node_size());}
@@ -731,6 +733,10 @@ private:
   {
   public:
     branch_iterator  begin()    { return branch_iterator(m_value);}
+
+    // HEADS UP: end() branch_iterator is dereferenceable, although only the node_id
+    // is present. This because a B-Tree branch page has one more child id than the
+    // number of keys. See the branch invariants above.
     branch_iterator  end()      { return branch_iterator(m_value, size()); }
 
     //  offsetof() macro won't work for all branch_value_type's, so compute by hand
@@ -835,7 +841,13 @@ private:
     {
       if (!parent())              // if this is the root, there is no prior node
       {
-        BOOST_ASSERT(level() == owner().header().root_level());
+        //if (level() != owner().header().root_level())
+        //{
+        //  std::cout << "id=" << node_id() << ", "
+        //       << int(level()) << " " << int(owner().header().root_level()) << std::endl;
+        //}
+        BOOST_ASSERT(level()
+          == owner().header().root_level());  // possible cause is broken leaf-to-root chaine
         return btree_node_ptr();
       }
 
@@ -882,11 +894,9 @@ private:
     { 
       // if the use_count() is 1, and thus will become 0, the parent btree_node_ptr
       // needs to be released unless it is a dummy node.
+      // TODO: The order of release is sub-optimal when several levels are going to be reset
       if (m_ptr && use_count() == 1 && get()->node_id() != static_cast<node_id_type>(-1))
-      {
-std::cout << "reset parent for node " << get()->node_id() << std::endl;
         get()->parent_reset();
-      }
     }
 
     btree_node_ptr& operator=(const btree_node_ptr& r)
@@ -1266,6 +1276,8 @@ btree_base<Key,Base,Traits,Comp>::begin() const
   BOOST_ASSERT_MSG(is_open(), "begin() on unopen btree");
   if (empty())
     return end();
+
+  // starting at the root
   btree_node_ptr np = m_root;
 
   // work down the tree until a leaf is reached
@@ -1282,6 +1294,7 @@ btree_base<Key,Base,Traits,Comp>::begin() const
     np = child_np;
   }
 
+  BOOST_ASSERT(np->is_leaf());
   return const_iterator(np, np->leaf().begin());
 }
 
@@ -1294,8 +1307,24 @@ btree_base<Key,Base,Traits,Comp>::last() const
   BOOST_ASSERT_MSG(is_open(), "last() on unopen btree");
   if (empty())
     return end();
-  BOOST_ASSERT(header().last_node_id());
-  btree_node_ptr np(m_mgr.read(header().last_node_id()));
+
+  // starting at the root
+  btree_node_ptr np = m_root;
+
+  // work down the tree until a leaf is reached
+  while (np->is_branch())
+  {
+    // create the child->parent list
+    btree_node_ptr child_np = m_mgr.read(np->branch().end()->node_id());
+    child_np->parent(np);
+    child_np->parent_element(np->branch().end());
+#   ifndef NDEBUG
+    child_np->parent_node_id(np->node_id());
+#   endif
+
+    np = child_np;
+  }
+
   BOOST_ASSERT(np->is_leaf());
   return const_iterator(np, np->leaf().end()-1);
 }
@@ -1344,7 +1373,11 @@ btree_base<Key,Base,Traits,Comp>::m_new_root()
   btree_node_ptr old_root = m_root;
   node_id_type old_root_id(m_root->node_id());
   m_hdr.increment_root_level();
-//  m_set_max_cache_nodes();
+
+  //  maintain max_cache_size() > levels() invariant
+  if (max_cache_size() < header().levels() + 1)
+    max_cache_size(header().levels() + 1);
+
   m_root = m_new_node(m_hdr.root_level());
   m_hdr.root_node_id(m_root->node_id());
   m_root->branch().begin()->node_id() = old_root_id;
