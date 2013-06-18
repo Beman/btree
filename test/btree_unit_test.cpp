@@ -1236,7 +1236,7 @@ void  cache_size_test()
       btree::btree_multiset<fat>::iterator itr = bt.insert(fat(i));
       // There is one iterator in existance, so one buffer per level should be in memory
       // in addition to any available buffers
-      BOOST_TEST(itr.use_count() == 1);
+      BOOST_TEST(itr.use_count() == 1 || (bt.header().levels() == 1 && itr.use_count() == 2));
       BOOST_TEST(bt.manager().buffers_in_memory() - bt.manager().buffers_available()
         == bt.header().levels());
 

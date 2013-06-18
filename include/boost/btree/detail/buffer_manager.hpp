@@ -59,6 +59,7 @@
 //                                                                                      //
 //--------------------------------------------------------------------------------------//
 
+int ct = 0;
 
 namespace boost
 {
@@ -399,6 +400,7 @@ namespace boost
 
     inline void buffer::dec_use_count()
     {
+ std::cout << "ct " << ++ct << " ";
  std::cout << "buffer id=" << buffer_id() << ", decrement use count to " << use_count()-1 << std::endl; 
       BOOST_ASSERT(use_count() != 0);
       if ( --m_use_count == 0

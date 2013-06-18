@@ -878,6 +878,17 @@ private:
     btree_node_ptr(const btree_node_ptr& r) : buffer_ptr(r) {} 
     btree_node_ptr(const buffer_ptr& r) : buffer_ptr(r) {}
 
+   ~btree_node_ptr()
+    { 
+      // if the use_count() is 1, and thus will become 0, the parent btree_node_ptr
+      // needs to be released unless it is a dummy node.
+      if (m_ptr && use_count() == 1 && get()->node_id() != static_cast<node_id_type>(-1))
+      {
+std::cout << "reset parent for node " << get()->node_id() << std::endl;
+        get()->parent_reset();
+      }
+    }
+
     btree_node_ptr& operator=(const btree_node_ptr& r)
     {
       btree_node_ptr(r).swap(*this);  // correct for self-assignment
