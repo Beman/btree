@@ -769,6 +769,7 @@ private:
 
     btree_node*        parent()                          {return m_parent.get();}
     void               parent(btree_node_ptr p)          {m_parent = p;}
+    void               parent_reset()                    {m_parent.reset();}
     branch_iterator    parent_element()                  {return m_parent_element;}
     void               parent_element(branch_iterator p) {m_parent_element = p;}
 #   ifndef NDEBUG
@@ -876,6 +877,7 @@ private:
     btree_node_ptr(buffer& p) : buffer_ptr(p) {}
     btree_node_ptr(const btree_node_ptr& r) : buffer_ptr(r) {} 
     btree_node_ptr(const buffer_ptr& r) : buffer_ptr(r) {}
+
     btree_node_ptr& operator=(const btree_node_ptr& r)
     {
       btree_node_ptr(r).swap(*this);  // correct for self-assignment
@@ -908,6 +910,10 @@ private:
     : public boost::iterator_facade<iterator_type<T>, T, bidirectional_traversal_tag>
   {
 
+  private:
+    typename btree_base::btree_node_ptr  m_node; 
+    typename btree_base::leaf_iterator   m_element;  // 0 for end iterator
+
   public:
     typedef typename btree_base::btree_node_ptr::use_count_type use_count_type;
 
@@ -919,10 +925,6 @@ private:
     typename
     btree_base::btree_node_ptr::use_count_type use_count() const
       {return m_node->use_count();}
-
-  private:
-    typename btree_base::btree_node_ptr  m_node; 
-    typename btree_base::leaf_iterator   m_element;  // 0 for end iterator
 
     iterator_type(buffer_ptr p)  // used solely to setup the end iterator
       : m_node(static_cast<typename btree_base::btree_node_ptr>(p)),

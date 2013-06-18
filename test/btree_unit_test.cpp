@@ -1221,37 +1221,42 @@ void  cache_size_test()
 
   typedef fat value_type;
   const int node_sz = 128;
-  const unsigned n_levels = 2;  // deep enough to be meaningful
+  const unsigned n_levels = 3;  // deep enough to be meaningful
 
   btree::btree_multiset<fat> bt("cache_size_test.btr", btree::flags::truncate, -1, node_sz);
-  bt.max_cache_size(1);
-
-  cout << "       empty tree: levels=" << bt.header().levels()
-    << ", cache size=" << bt.manager().buffers_in_memory()
-    << ", cache available=" << bt.manager().buffers_available()
-    << ", branch pages =" << bt.header().branch_node_count()
-    << ", leaf pages =" << bt.header().leaf_node_count()
-    << ", size=" << bt.size()
-    << endl;
-
+  BOOST_TEST(bt.manager().buffers_in_memory() == 1);  // the root is cached
+  BOOST_TEST(bt.manager().buffers_available() == 0);  // the root buffer is not available
+  
+  bt.max_cache_size(128);
+  
   for (int i=2034875; bt.header().levels() < n_levels; i = (i*1234567891) + 11) // avoid ordered values
   {
     //BOOST_TEST(bt.manager().buffers_in_memory() == bt.header().levels());
     { 
       btree::btree_multiset<fat>::iterator itr = bt.insert(fat(i));
-      //assert here cache size, available
-      cout << "     after insert():"
-        << ", use count=" << itr.use_count()
-        << ", levels=" << bt.header().levels()
-        << ", cache size=" << bt.manager().buffers_in_memory()
-        << ", cache available=" << bt.manager().buffers_available()
-        << ", branch pages =" << bt.header().branch_node_count()
-        << ", leaf pages =" << bt.header().leaf_node_count()
-        << ", size=" << bt.size()
-        << endl;
+      // There is one iterator in existance, so one buffer per level should be in memory
+      // in addition to any available buffers
+      BOOST_TEST(itr.use_count() == 1);
+      BOOST_TEST(bt.manager().buffers_in_memory() - bt.manager().buffers_available()
+        == bt.header().levels());
+
+      //cout << "     after insert():"
+      //  << ", use count=" << itr.use_count()
+      //  << ", levels=" << bt.header().levels()
+      //  << ", cache size=" << bt.manager().buffers_in_memory()
+      //  << ", cache available=" << bt.manager().buffers_available()
+      //  << ", branch pages =" << bt.header().branch_node_count()
+      //  << ", leaf pages =" << bt.header().leaf_node_count()
+      //  << ", size=" << bt.size()
+      //  << endl;
+      if (bt.size() == 10)
+      {
+        bt.manager().dump_buffers(cout);
+        bt.manager().dump_available_buffers(cout);
+      }
     }
-    //assert here  cache size, available
-//    cout << "    levels=" << bt.header().levels() << ", size=" << bt.size() << ", i=" << i <<'\n';
+    // there are now no iterators in existance, so only the root buffer should be held
+    BOOST_TEST(bt.manager().buffers_in_memory() - bt.manager().buffers_available() == 1);
     cout << "       after iterator freed: levels=" << bt.header().levels()
       << ", cache size=" << bt.manager().buffers_in_memory()
       << ", cache available=" << bt.manager().buffers_available()
@@ -1259,6 +1264,12 @@ void  cache_size_test()
       << ", leaf pages =" << bt.header().leaf_node_count()
       << ", size=" << bt.size()
       << endl;
+    if (bt.size() == 10)
+    {
+      bt.dump_dot(std::cout);
+      bt.manager().dump_buffers(cout);
+      bt.manager().dump_available_buffers(cout);
+    }
   }
 
   cout << bt;
@@ -1317,28 +1328,28 @@ int cpp_main(int argc, char* argv[])
     return 1;
   }
 
-  instantiate();
-  types_test();
-  //btree_less();
-  //compare_function_objects();
-  construct_new();
-  single_insert();
-  open_existing();
-  small_variable_set();
-  small_variable_map();
-  //alignment();
-  insert();
-  insert_non_unique();
-  find_and_bounds();
-  //erase();
-  update_test();
-  //iteration();
-  //multi();
-  //parent_pointer_to_split_node();
-  //parent_pointer_lifetime();
-  pack_optimization();
-  reopen_btree_object_test();
-  //fixstr();
+  //instantiate();
+  //types_test();
+  ////btree_less();
+  ////compare_function_objects();
+  //construct_new();
+  //single_insert();
+  //open_existing();
+  //small_variable_set();
+  //small_variable_map();
+  ////alignment();
+  //insert();
+  //insert_non_unique();
+  //find_and_bounds();
+  ////erase();
+  //update_test();
+  ////iteration();
+  ////multi();
+  ////parent_pointer_to_split_node();
+  ////parent_pointer_lifetime();
+  //pack_optimization();
+  //reopen_btree_object_test();
+  ////fixstr();
   cache_size_test();
   
 

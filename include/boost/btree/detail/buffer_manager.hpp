@@ -22,6 +22,7 @@
 #include <iosfwd>
 #include <cstddef>  // for size_t
 #include <cstring>  // for memset
+#include <ostream>
 
 //#include <iostream>  // comment me out!
 
@@ -89,6 +90,9 @@ namespace boost
 
     class buffer_ptr
     {
+    protected:
+      buffer* m_ptr;
+
     public:
       typedef detail::use_count_type  use_count_type;
 
@@ -134,9 +138,6 @@ namespace boost
       bool operator==(const buffer_ptr& r) const {return m_ptr == r.m_ptr;}
       bool operator!=(const buffer_ptr& r) const {return m_ptr != r.m_ptr;}
       bool operator< (const buffer_ptr& r) const {return m_ptr < r.m_ptr;}
-
-    protected:
-      buffer* m_ptr;
     };
 
 //--------------------------------------------------------------------------------------//
@@ -174,7 +175,10 @@ namespace boost
 
       void             manager(buffer_manager* pm) { m_manager = pm; }
 
-      void inc_use_count()                     { ++m_use_count; }
+      void inc_use_count()                     { ++m_use_count;
+      std::cout << "buffer id=" << buffer_id() << ", increment use count to " << use_count() << std::endl; 
+
+       }
       void dec_use_count();
 
       void             reuse(buffer_id_type id)
@@ -298,6 +302,21 @@ namespace boost
       std::size_t      buffers_in_memory() const       {return buffers.size();}
       std::size_t      buffers_available() const       {return available_buffers.size();}
 
+      void dump_buffers(std::ostream& os) const
+      {
+        os << "buffers\n";
+        for (buffers_type::const_iterator it = buffers.begin(); it != buffers.end(); ++it)
+          os << " id=" << it->buffer_id() << " use-count=" << it->use_count() << std::endl;
+      }
+
+      void dump_available_buffers(std::ostream& os) const
+      {
+        os << "available buffers\n";
+        for (avail_buffers_type::const_iterator it = available_buffers.begin();
+             it != available_buffers.end(); ++it)
+          os << " id=" << it->buffer_id() << " use-count=" << it->use_count() << std::endl;
+      }
+
 #ifndef BOOST_BUFFER_MANAGER_TEST
     private:
 #endif
@@ -380,6 +399,7 @@ namespace boost
 
     inline void buffer::dec_use_count()
     {
+ std::cout << "buffer id=" << buffer_id() << ", decrement use count to " << use_count()-1 << std::endl; 
       BOOST_ASSERT(use_count() != 0);
       if ( --m_use_count == 0
            && buffer_id() != static_cast<buffer_id_type>(-1)  // dummy buffers have id -1
