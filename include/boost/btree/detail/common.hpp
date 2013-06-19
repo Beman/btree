@@ -38,6 +38,8 @@
     key and mapped size no longer set to -1 to indicate variable length. 
   
   * btree_unit_test.cpp: move erase tests out of insert test.
+  
+  * btree_unit_test.cpp: review tests that are commented out.
 
   * Upgrade m_update() to allow new dynamic size different from old dynamic size
 
@@ -625,6 +627,56 @@ public:
   const_iterator_range  equal_range(const key_type& k) const
                             { return std::make_pair(lower_bound(k), upper_bound(k)); }
 
+//------------------------------  inspect leaf-to-root  --------------------------------//
+
+  bool inspect_leaf_to_root(std::ostream& os, const const_iterator& itr)
+{
+  const btree_node* np = itr.node();
+  for (;
+       np->level() < header().root_level();
+       np = np->parent())
+  {
+    if (!np->parent())
+    {
+      os << "error: no parent(), yet level=" << np->level()
+          << ", use count=" << np->use_count()
+          << ", levels=" << header().levels()
+          << ", cache size=" << manager().buffers_in_memory()
+          << ", cache active=" << manager().buffers_in_memory()
+                                    - manager().buffers_available()
+          << ", cache avail=" << manager().buffers_available()
+          << ", branch pages =" << header().branch_node_count()
+          << ", leaf pages =" << header().leaf_node_count()
+          << ", size=" << size()
+          << endl;
+      manager().dump_buffers(os);
+      manager().dump_available_buffers(os);
+      dump_dot(os);
+      return false;
+    }
+  }
+  if (np->parent())
+  {
+    os << "error: root has parent, level=" << np->level()
+        << ", use count=" << np->use_count()
+        << ", levels=" << header().levels()
+        << ", cache size=" << manager().buffers_in_memory()
+        << ", cache active=" << manager().buffers_in_memory()
+                                  - manager().buffers_available()
+        << ", cache avail=" << manager().buffers_available()
+        << ", branch pages =" << header().branch_node_count()
+        << ", leaf pages =" << header().leaf_node_count()
+        << ", size=" << size()
+        << endl;
+    manager().dump_buffers(os);
+    manager().dump_available_buffers(os);
+    dump_dot(os);
+    return false;
+  }
+
+  return true;
+}
+
 //--------------------------------------------------------------------------------------//
 //                                private data members                                  //
 //--------------------------------------------------------------------------------------//
@@ -774,6 +826,7 @@ private:
     node_id_type       node_id() const                 {return node_id_type(buffer_id());}
 
     btree_node*        parent()                          {return m_parent.get();}
+    const btree_node*  parent() const                    {return m_parent.get();}
     void               parent(btree_node_ptr p)          {m_parent = p;}
     void               parent_reset()                    {m_parent.reset();}
     branch_iterator    parent_element()                  {return m_parent_element;}
@@ -880,7 +933,9 @@ private:
 
   //-------------------------------  btree_node_ptr  -----------------------------------//
 
-  class btree_node_ptr : public buffer_ptr  // smart pointer; maintains buffer's use count
+  //  smart pointer; maintains buffer's use count and clear leaf-to-root parent chain
+  //  when use count goes to 0.
+  class btree_node_ptr : public buffer_ptr  
   {
   public:
 
@@ -892,23 +947,45 @@ private:
 
    ~btree_node_ptr()
     { 
-      // if the use_count() is 1, and thus will become 0, the parent btree_node_ptr
-      // needs to be released unless it is a dummy node.
-      // TODO: The order of release is sub-optimal when several levels are going to be reset
-      if (m_ptr && use_count() == 1 && get()->node_id() != static_cast<node_id_type>(-1))
-        get()->parent_reset();
+      reset();  // reset handles parent chain if present
     }
 
     btree_node_ptr& operator=(const btree_node_ptr& r)
     {
-      btree_node_ptr(r).swap(*this);  // correct for self-assignment
+      btree_node_ptr tmp(r);  // if there is self-assignment, will ++ *this
+      if (m_ptr && use_count() == 1)
+        reset();  // reset handles parent chain if present 
+      tmp.swap(*this);
       return *this;
     }
+
     btree_node_ptr& operator=(const buffer_ptr& r)
     {
-      btree_node_ptr(r).swap(*this);  // correct for self-assignment
+      btree_node_ptr tmp(r);  // if there is self-assignment, will ++ *this
+      if (m_ptr && use_count() == 1)
+        reset();  // reset handles parent chain if present 
+      tmp.swap(*this);
       return *this;
     }
+
+    void reset()
+    {
+      if (m_ptr)
+      {
+        if (use_count() == 1     // reset will set use_count() to 0
+          && get()->parent()     // && there is a parent()
+          && get()->node_id() != static_cast<node_id_type>(-1)) // && not dummy
+        {
+          // reset the parent pointer
+          btree_node* p(get());
+          buffer_ptr::reset();   // reset the child before the parent
+          p->parent_reset();     // so that the parent is more recently used
+        }
+        else
+          buffer_ptr::reset();
+      }
+    }
+
     btree_node* get() const {return static_cast<btree_node*>(m_ptr);}
     btree_node& operator*() const
     {
@@ -965,6 +1042,9 @@ private:
 
     void increment();
     void decrement();
+
+    typedef typename btree_base::btree_node  btree_node;
+    const btree_node*  node() const {return m_node.get();}
   };
 
 //--------------------------------------------------------------------------------------//
@@ -2070,7 +2150,7 @@ void btree_base<Key,Base,Traits,Comp>::dump_dot(std::ostream& os) const
 
     if (np->is_leaf())
     {
-      os << "node" << p << "[label = \"<f0> ";
+      os << "node" << p << "[label = \"<f0> " << p << ", use-ct=" << np->use_count()-1 << "|";
       for (leaf_iterator it = np->leaf().begin(); it != np->leaf().end(); ++it)
       {
         if (it != np->leaf().begin())
@@ -2078,19 +2158,19 @@ void btree_base<Key,Base,Traits,Comp>::dump_dot(std::ostream& os) const
         os << *it;
       }
       os << "\",fillcolor=\"palegreen\"];\n";
-   }
+    }
     else if (np->is_branch())
     {
-      os << "node" << p << "[label = \"";
-      int f = 0;
+      os << "node" << p << "[label = \"<f0> " << p << ", use-ct=" << np->use_count()-1 << "|";
+      int f = 1;
       branch_iterator it;
       for (it = np->branch().begin(); it != np->branch().end(); ++it)
       {
-        os << "<f" << f << ">|" /*<< it->node_id() << ","*/ << it->key() << "|";
+        os << "<f" << f << ">|" << it->key() << "|";
         ++f;
       }
       os << "<f" << f << ">\",fillcolor=\"lightblue\"];\n";
-      f = 0;
+      f = 1;
       for (it = np->branch().begin(); it != np->branch().end(); ++it)
       {
         os << "\"node" << p << "\":f" << f << " -> \"node" << it->node_id() << "\":f0;\n";
