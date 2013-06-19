@@ -59,8 +59,6 @@
 //                                                                                      //
 //--------------------------------------------------------------------------------------//
 
-int ct = 0;
-
 namespace boost
 {
   namespace btree
@@ -98,14 +96,18 @@ namespace boost
       typedef detail::use_count_type  use_count_type;
 
       buffer_ptr() : m_ptr(0) {}
-      buffer_ptr(buffer& p);                    // increments buffer's use count
-      buffer_ptr(const buffer_ptr& r);          // if r(), increments buffer's use count
+      buffer_ptr(buffer& p);                    // increments p's use count
+      buffer_ptr(const buffer_ptr& r);          // if r(), increments r's use count
+
       buffer_ptr& operator=(const buffer_ptr& r)
-      {
-        buffer_ptr(r).swap(*this);              // correct for self-assignment
+      {                                         
+        buffer_ptr(r).swap(*this);              // buffer_ptr(r); if r(), ++ r's use count
+                                                // then dtor -- *this *m_ptr if any;
+                                                // correct for self-assignment
         return *this;
       }
-      ~buffer_ptr();                            // if m_ptr, decrements buffer's use count
+
+      ~buffer_ptr();                            // if m_ptr, decrements *m_ptr's use count
 
       void swap(buffer_ptr& r)
       {
@@ -114,7 +116,7 @@ namespace boost
         r.m_ptr = tmp;
       }
 
-      void reset();   // if m_ptr, decrements buffer's use count. sets m_ptr = 0
+      void reset();                      // if m_ptr, -- *m_ptr's use count. set m_ptr = 0
 
       buffer* get() const {return m_ptr;}
 
@@ -176,10 +178,7 @@ namespace boost
 
       void             manager(buffer_manager* pm) { m_manager = pm; }
 
-      void inc_use_count()                     { ++m_use_count;
-      std::cout << "buffer id=" << buffer_id() << ", increment use count to " << use_count() << std::endl; 
-
-       }
+      void inc_use_count()                     { ++m_use_count; }
       void dec_use_count();
 
       void             reuse(buffer_id_type id)
@@ -400,8 +399,6 @@ namespace boost
 
     inline void buffer::dec_use_count()
     {
- std::cout << "ct " << ++ct << " ";
- std::cout << "buffer id=" << buffer_id() << ", decrement use count to " << use_count()-1 << std::endl; 
       BOOST_ASSERT(use_count() != 0);
       if ( --m_use_count == 0
            && buffer_id() != static_cast<buffer_id_type>(-1)  // dummy buffers have id -1
