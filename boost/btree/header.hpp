@@ -101,7 +101,8 @@ namespace boost
 
       BOOST_BITMASK(bitmask);
 
-      bitmask user(bitmask m) {return m & (read_write|truncate|preload); }
+// zzzzzzzzzzzzzz bda: changed to inline
+      inline bitmask user(bitmask m) {return m & (read_write|truncate|preload); }
     }
 
     static const boost::uint8_t major_version = 0;  // version identification

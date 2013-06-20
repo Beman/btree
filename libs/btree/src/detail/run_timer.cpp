@@ -26,6 +26,7 @@ using boost::btree::times_t;
 using boost::system::error_code;
 
 # if defined(BOOST_WINDOWS_API)
+#   include "winsock2.h" // not needed by binary_file.cpp but needed by windows.h
 #   include <windows.h>
 # elif defined(BOOST_POSIX_API)
 #   include <sys/times.h>

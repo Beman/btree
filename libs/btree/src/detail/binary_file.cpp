@@ -16,7 +16,7 @@
 #define _LARGEFILE64_SOURCE
 
 #include <boost/btree/detail/binary_file.hpp>
-#include <boost/filesystem/v3/operations.hpp>
+#include <boost/filesystem/operations.hpp>
 #include <boost/system/error_code.hpp>
 #include <boost/assert.hpp>
 
@@ -28,6 +28,7 @@ using boost::system::error_code;
 using boost::system::system_category;
 
 # if defined(BOOST_WINDOWS_API)
+#   include "winsock2.h" // not needed by binary_file.cpp but needed by windows.h
 #   include "windows.h"
 #   define _CRT_NONSTDC_NO_DEPRECATE
 #   include "sys/stat.h"

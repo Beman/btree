@@ -22,6 +22,7 @@
 #include <cassert>
 
 # if defined(BOOST_WINDOWS_API)
+#   include "winsock2.h" // not needed by binary_file.cpp but needed by windows.h
 #   include <windows.h>
 # elif defined(BOOST_POSIX_API)
 #   include <unistd.h>

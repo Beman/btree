@@ -105,7 +105,7 @@ void buffer_manager::data_size(data_size_type sz)
   m_data_size = sz;
   offset_type file_size = binary_file::seek(0, seekdir::end);
   m_buffer_count = static_cast<buffer_count_type>(file_size / sz);
-  if (m_buffer_count * sz != file_size)
+  if ((data_size_type)(m_buffer_count * sz) != file_size)
     BOOST_BUFFER_FILE_THROW(buffer_manager_error(
       "buffer_manager_error: file size error; too large or not multiple of data size: ",
       binary_file::file_path()));

@@ -18,6 +18,8 @@
 #include <boost/detail/lightweight_main.hpp>
 #include <boost/detail/lightweight_test.hpp> 
 
+#include <boost/system/system_error.hpp>
+
 namespace fs = boost::filesystem;
 namespace bt = boost::btree;
 

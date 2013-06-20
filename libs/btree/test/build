@@ -1,0 +1,8 @@
+g++ -o binary_file_test binary_file_test.cpp -I../../.. -O2 ../src/detail/*.o -lboost_system-mt -lboost_filesystem
+
+g++ -o       btree_unit_test       btree_unit_test.cpp -I../../.. -O2 ../src/detail/*.o -lboost_system-mt -lboost_filesystem
+g++ -o   buffer_manager_test   buffer_manager_test.cpp -I../../.. -O2 ../src/detail/*.o -lboost_system-mt -lboost_filesystem
+g++ -o           fixstr_test           fixstr_test.cpp -I../../.. -O2 ../src/detail/*.o -lboost_system-mt -lboost_filesystem
+g++ -o       large_file_test       large_file_test.cpp -I../../.. -O2 ../src/detail/*.o -lboost_system-mt -lboost_filesystem
+g++ -o              stl_test              stl_test.cpp -I../../.. -O2 ../src/detail/*.o -lboost_system-mt -lboost_filesystem
+g++ -o            timer_test            timer_test.cpp -I../../.. -O2 ../src/detail/*.o -lboost_system-mt -lboost_filesystem

@@ -10,7 +10,7 @@
 #ifndef BOOST_BTREE_SET_HPP
 #define BOOST_BTREE_SET_HPP
 
-#define BOOST_FILESYSTEM_VERSION 3
+//#define BOOST_FILESYSTEM_VERSION 3
 
 #include <boost/config.hpp>
 #include <boost/cstdint.hpp>

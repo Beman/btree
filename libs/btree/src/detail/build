@@ -1,0 +1,5 @@
+g++ binary_file.cpp      -o binary_file.o     -O2 -c -I ../../../..
+g++ buffer_manager.cpp   -o buffer_manager.o  -O2 -c -I ../../../..
+g++ run_timer.cpp        -o run_timer.o       -O2 -c -I ../../../..
+g++ run_timer_ctors.cpp  -o run_timer_ctors.o -O2 -c -I ../../../..
+g++ timer.cpp            -o timer.o           -O2 -c -I ../../../..

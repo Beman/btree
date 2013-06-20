@@ -10,7 +10,7 @@
 #ifndef BOOST_BTREE_MAP_HPP
 #define BOOST_BTREE_MAP_HPP
 
-#define BOOST_FILESYSTEM_VERSION 3
+//#define BOOST_FILESYSTEM_VERSION 3
 
 #include <boost/config.hpp>
 #include <boost/cstdint.hpp>
@@ -80,17 +80,17 @@ namespace boost
 
       //  emplace(const Key&, const T&) special case not requiring c++0x support
       std::pair<typename btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>::const_iterator, bool>
-      emplace(const Key& key, const T& mapped_value)
+      emplace(const Key& _key, const T& mapped_value)
       {
         return btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>::m_insert_unique(
-          key, mapped_value);
+          _key, mapped_value);
       }
 
       std::pair<typename btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>::const_iterator, bool>
       insert(const map_value<Key, T>& value)
       {
         return btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>::m_insert_unique(
-          value->key(), value->mapped_value());
+          value.key(), value.mapped_value());
       }
 
       template <class InputIterator>
@@ -164,17 +164,17 @@ namespace boost
 
       //  emplace(const Key&, const T&) special case not requiring c++0x support
       typename btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>::const_iterator
-      emplace(const Key& key, const T& mapped_value)
+      emplace(const Key& _key, const T& mapped_value)
       {
         return btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>::m_insert_non_unique(
-          key, mapped_value);
+          _key, mapped_value);
       }
 
       typename btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>::const_iterator
       insert(const map_value<Key, T>& value)
       {
         return btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>::m_insert_non_unique(
-          value->key(), value->mapped_value());
+          value.key(), value.mapped_value());
       }
 
       template <class InputIterator>

@@ -7,15 +7,15 @@
 
 //  See http://www.boost.org/libs/system for documentation.
 
-#include <boost/system/timer.hpp>
+#include <boost/timer.hpp>
 #include <cstdlib> // for atol()
 #include <iostream>
 #include <locale>
 
-using boost::system::microsecond_t;
-using boost::system::times_t;
-using boost::system::timer;
-using boost::system::run_timer;
+using boost::microsecond_t;
+using boost::times_t;
+using boost::timer;
+using boost::run_timer;
 
 int main(int argc, char * argv[])
 {
