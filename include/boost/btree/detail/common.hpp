@@ -1053,7 +1053,7 @@ private:
     void decrement();
 
     typedef typename btree_base::btree_node_ptr  btree_node_ptr;
-    btree_node_ptr&  node() const {return m_node;}
+    const btree_node_ptr&  node() const {return m_node;}
   };
 
 //--------------------------------------------------------------------------------------//
@@ -1451,6 +1451,8 @@ btree_base<Key,Base,Traits,Comp>::m_new_node(node_level_type lv)
 //    << " never_free:" << np->never_free() << endl;;
   np->level(lv);
   np->size(0);
+  np->parent_reset();     // better safe than sorry
+  np->parent_element(branch_iterator());   // ditto
   return np;
 }
 
@@ -1501,6 +1503,7 @@ btree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter,
   leaf_iterator        insert_begin = insert_iter.m_element;
   btree_node_ptr       np2;
   
+  BOOST_ASSERT_MSG(np, "internal error");
   BOOST_ASSERT_MSG(np->is_leaf(), "internal error");
   BOOST_ASSERT_MSG(np->size() <= m_max_leaf_size, "internal error");
 
@@ -1560,7 +1563,6 @@ btree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter,
     // adjust np and insert_begin if they now fall on the new node due to the split
     if (&*split_begin < &*insert_begin)
     {
-      np->parent_reset();
       np = np2;
 
       insert_begin = leaf_iterator(&*np->leaf().begin(),
@@ -1587,11 +1589,14 @@ btree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter,
   // if there is a new node, its initial key and node_id are inserted into parent
   if (np2)
   {
-    BOOST_ASSERT(insert_iter.m_node->parent()->node_id() \
-      == insert_iter.m_node->parent_node_id()); // max_cache_size logic OK?
+    BOOST_ASSERT(insert_iter.m_node->parent()->node_id()
+      == insert_iter.m_node->parent_node_id()); // cache logic OK?
     m_branch_insert(insert_iter.m_node->parent(),
       insert_iter.m_node->parent_element(),
       this->key(*np2->leaf().begin()), np2);
+
+    BOOST_ASSERT(np2->parent());          // m_branch_insert should have set parent
+    BOOST_ASSERT(np2->parent_element() != branch_iterator());  // and parent_element
   }
 
 //std::cout << "***insert done" << std::endl;
@@ -1690,15 +1695,12 @@ btree_base<Key,Base,Traits,Comp>::m_branch_insert( btree_node_ptr np,
       char_distance(&unsplit_end->key(), &np->branch().end()->key())); 
     np->size(char_distance(&*np->branch().begin(), &*unsplit_end));
 
-    // adjust np and insert_begin if they now fall on the new node due to the split;
-    // also update the child-to-parent chain
+    // adjust np and insert_begin if they now fall on the new node due to the split
     if (&*split_begin <= &*element)
     {
       np = np2;
       insert_begin = reinterpret_cast<key_type*>(char_ptr(&np2->branch().begin()->key())
         + char_distance(&split_begin->key(), insert_begin));
-      child->parent(np);
-      // see below for update of child->parent_element();
     }
   }  // split finished
 
@@ -1729,8 +1731,10 @@ btree_base<Key,Base,Traits,Comp>::m_branch_insert( btree_node_ptr np,
   std::memcpy(char_ptr(insert_begin) + k_size, &child->node_id(), sizeof(node_id_type));
   np->size(np->size() + insert_size);
 
+  //  set the child's parent and parent_element
+  child->parent(np);
   child->parent_element(branch_iterator( 
-    reinterpret_cast<branch_value_type*>(reinterpret_cast<node_id_type*>(insert_begin)-1) ));
+    reinterpret_cast<branch_value_type*>(char_ptr(insert_begin) + k_size) ));
 
 #ifndef NDEBUG
   if (m_hdr.flags() & btree::flags::unique)
