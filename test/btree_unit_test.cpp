@@ -678,18 +678,24 @@ void insert_tests(BTree& bt)
   //cout << "after begin():\n";
   //bt.manager().dump_buffers(cout);
   //bt.manager().dump_available_buffers(cout);
+
   BOOST_TEST_EQ(cur->key().x, 0x0A);
+  BOOST_TEST(bt.inspect_leaf_to_root(cout, cur));
   ++cur;
   //cout << "after ++:\n";
   //bt.manager().dump_buffers(cout);
   //bt.manager().dump_available_buffers(cout);
   BOOST_TEST_EQ(cur->key().x, 0x0B);
+  BOOST_TEST(bt.inspect_leaf_to_root(cout, cur));
   ++cur;
   BOOST_TEST_EQ(cur->key().x, 0x0C);
+  BOOST_TEST(bt.inspect_leaf_to_root(cout, cur));
   ++cur;
   BOOST_TEST_EQ(cur->key().x, 0x0D);
+  BOOST_TEST(bt.inspect_leaf_to_root(cout, cur));
   ++cur;
   BOOST_TEST_EQ(cur->key().x, 0x0E);
+  BOOST_TEST(bt.inspect_leaf_to_root(cout, cur));
   ++cur;
   BOOST_TEST(cur == bt.end());
   //cout << "at end:\n";
@@ -929,6 +935,15 @@ void find_and_bounds_tests(BTree& bt)
 
     BOOST_TEST((bt.find(i) != bt.end() && bt.key(*bt.find(i)) == fnd[i])
       || (bt.find(i) == bt.end() && fnd[i] == -1));
+
+    BOOST_TEST(bt.lower_bound(i) == bt.end()
+      || bt.inspect_leaf_to_root(cout, bt.lower_bound(i)));
+
+    BOOST_TEST(bt.upper_bound(i) == bt.end()
+      || bt.inspect_leaf_to_root(cout, bt.upper_bound(i)));
+
+    BOOST_TEST(bt.find(i) == bt.end()
+      || bt.inspect_leaf_to_root(cout, bt.find(i)));
 
     if (bt.header().flags() & btree::flags::unique)
       BOOST_TEST(bt.count(i) == (cnt[i] ? 1 : 0));
@@ -1234,26 +1249,27 @@ void  cache_size_test()
 
   typedef fat value_type;
   const int node_sz = 128;
-  const unsigned n_levels = 4;  // enough to exercise both shallow and deep trees
+  const unsigned n_levels = 5;  // enough to exercise both shallow and deep trees
+  const std::size_t cache_max = 24;
 
   btree::btree_multiset<fat> bt("cache_size_test.btr", btree::flags::truncate, -1, node_sz);
   BOOST_TEST(bt.manager().buffers_in_memory() == 1);  // the root is cached
   BOOST_TEST(bt.manager().buffers_available() == 0);  // the root buffer is not available
   
-  bt.max_cache_size(128);
+  bt.max_cache_size(cache_max);
   
   for (int i=2034875; bt.header().levels() < n_levels; i = (i*1234567891) + 11) // avoid ordered values
   {
     { 
+//      cout << "     inserting " << bt.size() + 1 << ", key " << i << endl;
       btree::btree_multiset<fat>::iterator itr = bt.insert(fat(i));
       BOOST_TEST(bt.inspect_leaf_to_root(cout, itr));
       // There is one iterator in existance, so one buffer per level should be in memory
       // in addition to any available buffers
       BOOST_TEST(itr.use_count() == 1 || (bt.header().levels() == 1 && itr.use_count() == 2));
-      BOOST_TEST(bt.manager().buffers_in_memory() - bt.manager().buffers_available()
-        == bt.header().levels());
+      BOOST_TEST(bt.manager().buffers_in_use() == bt.header().levels());
 
-      if (bt.manager().buffers_in_memory() - bt.manager().buffers_available()
+      if (bt.manager().buffers_in_use()
         != bt.header().levels())
       {
         cout << "     after insert():"
@@ -1273,8 +1289,8 @@ void  cache_size_test()
       }
     }
     // there are now no iterators in existance, so only the root buffer should be held
-    BOOST_TEST(bt.manager().buffers_in_memory() - bt.manager().buffers_available() == 1);
-    if (bt.manager().buffers_in_memory() - bt.manager().buffers_available() != 1)
+    BOOST_TEST(bt.manager().buffers_in_use() == 1);
+    if (bt.manager().buffers_in_use() != 1)
     {
       cout << "       after insert block exit:" << bt.header().levels()
         << ", cache size=" << bt.manager().buffers_in_memory()
@@ -1290,9 +1306,15 @@ void  cache_size_test()
     }
   }
 
-  cout << bt;
-  cout << bt.manager();
-
+  bool ok=true;
+  BOOST_ASSERT(ok = (bt.manager().buffers_in_memory() <= cache_max + 1));
+  if (!ok)
+  {
+    cout << bt;
+    cout << bt.manager();
+    cout << endl;
+    bt.dump_dot(std::cerr);
+  }
 
   cout << "     cache_size_test complete" << endl;
 }
