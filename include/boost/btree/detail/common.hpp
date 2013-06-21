@@ -580,8 +580,10 @@ public:
     m_mgr.max_cache_size(m >= (header().levels()+1) ? m : (header().levels()+1));
   }
   void          max_cache_megabytes(std::size_t mb)
-                                            { BOOST_ASSERT(is_open());
-                                              m_mgr.max_cache_size((mb*1048576)/node_size());}
+  { 
+    BOOST_ASSERT(is_open());
+    m_mgr.max_cache_size((mb*1048576)/node_size());
+  }
 
   //  The following element access functions are not provided. Returning references is
   //  far too dangerous, since the memory pointed to would be in a node buffer that can
@@ -631,14 +633,15 @@ public:
 
   bool inspect_leaf_to_root(std::ostream& os, const const_iterator& itr)
 {
-  const btree_node* np = itr.node();
+  btree_node* np = itr.node().get();
   for (;
        np->level() < header().root_level();
-       np = np->parent())
+       np = np->parent().get())
   {
     if (!np->parent())
     {
-      os << "error: no parent(), yet level=" << np->level()
+      os  << "error: no parent() for " << np->node_id()
+          << ", yet level=" << np->level()
           << ", use count=" << np->use_count()
           << ", levels=" << header().levels()
           << ", cache size=" << manager().buffers_in_memory()
@@ -811,8 +814,8 @@ private:
   class btree_node : public buffer
   {
   private:
-    btree_node_ptr     m_parent;          // by definition, the parent is a branch node.
-    branch_iterator    m_parent_element;
+    mutable btree_node_ptr   m_parent;     // by definition, the parent is a branch node.
+    mutable branch_iterator  m_parent_element;
 # ifndef NDEBUG
     node_id_type       m_parent_node_id;  // allows assert that m_parent has not been
                                           // overwritten by faulty logic
@@ -825,8 +828,8 @@ private:
 
     node_id_type       node_id() const                 {return node_id_type(buffer_id());}
 
-    btree_node*        parent()                          {return m_parent.get();}
-    const btree_node*  parent() const                    {return m_parent.get();}
+    btree_node_ptr&    parent()                          {return m_parent;}
+//    const btree_node_ptr&  parent() const                    {return m_parent;}
     void               parent(btree_node_ptr p)          {m_parent = p;}
     void               parent_reset()                    {m_parent.reset();}
     branch_iterator    parent_element()                  {return m_parent_element;}
@@ -848,7 +851,7 @@ private:
     void               level(unsigned lv)    {leaf().m_level = lv;}
     bool               is_leaf() const       {return leaf().is_leaf();}
     bool               is_branch() const     {return leaf().is_branch();}
-    std::size_t        size() const          {return leaf().m_size;}  // std::size_t is correct!
+    std::size_t        size() const          {return leaf().m_size;}  // std::size_t correct!
     void               size(std::size_t sz)  {leaf().m_size           // ditto
                                                = static_cast<uint_least32_t>(sz);}    
     bool               empty() const         {return leaf().m_size == 0;}
@@ -900,7 +903,7 @@ private:
         //       << int(level()) << " " << int(owner().header().root_level()) << std::endl;
         //}
         BOOST_ASSERT(level()
-          == owner().header().root_level());  // possible cause is broken leaf-to-root chaine
+          == owner().header().root_level());  // possibly broken leaf-to-root chain
         return btree_node_ptr();
       }
 
@@ -946,7 +949,7 @@ private:
     btree_node_ptr(const buffer_ptr& r) : buffer_ptr(r) {}
 
    ~btree_node_ptr()
-    { 
+    {
       reset();  // reset handles parent chain if present
     }
 
@@ -972,17 +975,21 @@ private:
     {
       if (m_ptr)
       {
-        if (use_count() == 1     // reset will set use_count() to 0
+        if (use_count() == 1     // buffer_ptr::reset will set use_count() to 0
           && get()->parent()     // && there is a parent()
           && get()->node_id() != static_cast<node_id_type>(-1)) // && not dummy
         {
           // reset the parent pointer
-          btree_node* p(get());
-          buffer_ptr::reset();   // reset the child before the parent
-          p->parent_reset();     // so that the parent is more recently used
+          //btree_node* p(get());
+          //buffer_ptr::reset();   // reset the child before the parent
+          //p->parent_reset();     // so that the parent is more recently used
+          get()->parent_reset();     // so that the parent is more recently used
+          buffer_ptr::reset();
         }
         else
+        {
           buffer_ptr::reset();
+        }
       }
     }
 
@@ -1040,11 +1047,13 @@ private:
         && m_node->node_id() == rhs.m_node->node_id();
     }
 
+    //  TODO: make these protected? AFAICR, only special test and debug code needs them
+
     void increment();
     void decrement();
 
-    typedef typename btree_base::btree_node  btree_node;
-    const btree_node*  node() const {return m_node.get();}
+    typedef typename btree_base::btree_node_ptr  btree_node_ptr;
+    btree_node_ptr&  node() const {return m_node;}
   };
 
 //--------------------------------------------------------------------------------------//
@@ -1110,12 +1119,14 @@ private:
   const_iterator m_leaf_insert(iterator insert_iter, const key_type& key,
     const mapped_type& mapped_value);
 
-  void  m_branch_insert(btree_node* np, branch_iterator element,
-    const key_type& k, node_id_type id);
+  void m_branch_insert(btree_node_ptr np, branch_iterator element, const key_type& k,
+    btree_node_ptr child);  // insert key, child->node_id;
+                            // set child's parent, parent_element
 
   iterator m_sub_tree_begin(node_id_type id);
 
-  iterator m_erase_branch_value(btree_node* np, branch_iterator value, node_id_type erasee);
+  iterator m_erase_branch_value(btree_node* np, branch_iterator value,
+    node_id_type erasee);
 
   void  m_free_node(btree_node* np)  // add to free node list
   {
@@ -1484,7 +1495,8 @@ btree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter,
     ? 0
     : dynamic_size(mapped_value_);
   std::size_t          value_size = key_size + mapped_size;
-  //std::cout << "***insert key_size " << key_size << " value_size " << value_size << std::endl;
+  //std::cout << "***insert key_size " << key_size 
+  //  << " value_size " << value_size << std::endl;
   btree_node_ptr       np = insert_iter.m_node;
   leaf_iterator        insert_begin = insert_iter.m_element;
   btree_node_ptr       np2;
@@ -1504,9 +1516,10 @@ btree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter,
     
     np2 = m_new_node(np->level());  // create the new node 
 
-    // ck pack conditions now, since leaf seq list update may chg header().last_node_id()
+    // ck pack conditions now, since header().last_node_id() may change
     if (m_ok_to_pack
-        && (insert_begin != np->leaf().end() || np->node_id() != header().last_node_id()))
+        && (insert_begin != np->leaf().end()
+            || np->node_id() != header().last_node_id()))
       m_ok_to_pack = false;  // conditions for pack optimization not met
 
     if (np->node_id() == header().last_node_id())
@@ -1516,11 +1529,13 @@ btree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter,
     if (m_ok_to_pack)  // have all inserts been ordered and no erases occurred?
     {
       // pack optimization: instead of splitting np, just put value alone on np2
-      this->m_memcpy_value(&*np2->leaf().begin(), &key_, key_size, &mapped_value_, mapped_size);  // insert value
+      this->m_memcpy_value(&*np2->leaf().begin(), &key_, key_size,
+        &mapped_value_, mapped_size);  // insert value
       np2->size(value_size);
-      BOOST_ASSERT(np->parent()->node_id() == np->parent_node_id()); // max_cache_size logic OK?
+      BOOST_ASSERT(np->parent()->node_id()
+        == np->parent_node_id()); // max_cache_size logic OK?
       m_branch_insert(np->parent(), np->parent_element(),
-        this->key(*np2->leaf().begin()), np2->node_id());
+        this->key(*np2->leaf().begin()), np2);
       return const_iterator(np2, np2->leaf().begin());
     }
 
@@ -1532,8 +1547,9 @@ btree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter,
 
     // TODO: if the insert point will fall on the new node, it would be faster to
     // copy the portion before the insert point, copy the value being inserted, and
-    // finally copy the portion after the insert point. However, that's a fair amount of
-    // additional code for something that only happens on half of all leaf splits on average.
+    // finally copy the portion after the insert point. However, that's a fair amount
+    // of additional code for something that only happens on half of all leaf splits
+    // on average.
 
     std::memcpy(&*np2->leaf().begin(), &*split_begin, split_sz);
     np2->size(split_sz);
@@ -1544,7 +1560,9 @@ btree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter,
     // adjust np and insert_begin if they now fall on the new node due to the split
     if (&*split_begin < &*insert_begin)
     {
+      np->parent_reset();
       np = np2;
+
       insert_begin = leaf_iterator(&*np->leaf().begin(),
         char_distance(&*split_begin, &*insert_begin));  
     }
@@ -1561,7 +1579,8 @@ btree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter,
   BOOST_ASSERT(&*insert_begin <= &*np->leaf().end());
   std::memmove(char_ptr(&*insert_begin) + value_size,
     &*insert_begin, char_distance(&*insert_begin, &*np->leaf().end()));  // make room
-  this->m_memcpy_value(&*insert_begin, &key_, key_size, &mapped_value_, mapped_size);  // insert value
+  this->m_memcpy_value(&*insert_begin, &key_, key_size,
+    &mapped_value_, mapped_size);  // insert value
   np->size(np->size() + value_size);
 //std::cout << "np size " << np->size() << std::endl;
 
@@ -1572,7 +1591,7 @@ btree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter,
       == insert_iter.m_node->parent_node_id()); // max_cache_size logic OK?
     m_branch_insert(insert_iter.m_node->parent(),
       insert_iter.m_node->parent_element(),
-      this->key(*np2->leaf().begin()), np2->node_id());
+      this->key(*np2->leaf().begin()), np2);
   }
 
 //std::cout << "***insert done" << std::endl;
@@ -1584,21 +1603,25 @@ btree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter,
 //  This logic is very similar to the m_leaf_insert() logic, so it might seem they should
 //  combined into a single function. This was done in the 25 year-old C language function
 //  that the current function is based on, and it was very messy, hard to understand, and
-//  bug prone. The initial C++ attempt tried the a single function approach, and seemed
+//  bug prone. The initial C++ attempt tried this single function approach, and seemed
 //  subject to those same ills. The two function approach has been much less troublesome
 //  right from the start.
 
 template <class Key, class Base, class Traits, class Comp>   
 void
-btree_base<Key,Base,Traits,Comp>::m_branch_insert(
-  btree_node* np1, branch_iterator element, const key_type& k, node_id_type id) 
+btree_base<Key,Base,Traits,Comp>::m_branch_insert( btree_node_ptr np,
+  branch_iterator element, const key_type& k, btree_node_ptr child) 
 {
-  //std::cout << "branch insert key " << k << ", id " << id << std::endl;
+  //std::cout << "branch insert key " << k << ", id " << child->node_id() << std::endl;
 
   std::size_t       k_size = dynamic_size(k);
   std::size_t       insert_size = k_size + sizeof(node_id_type);
-  btree_node*       np = np1;
+
+  // TODO: insert_begin having a type of key_type* is a disaster, requiring numerous
+  // reinterpret casts and lots of confusing char* arithmetic. 
+  // What would happen if we just used element as-is?
   key_type*         insert_begin = &element->key();
+
   btree_node_ptr    np2;
 
   BOOST_ASSERT(np->is_branch());
@@ -1631,46 +1654,58 @@ btree_base<Key,Base,Traits,Comp>::m_branch_insert(
     // TODO: if the insert point will fall on the new node, it would be faster to
     // copy the portion before the insert point, copy the value being inserted, and
     // finally copy the portion after the insert point. However, that's a fair amount of
-    // additional code for something that only happens on half of all branch splits on average.
+    // additional code for something that only happens on half of all branch splits
+    // on average.
 
     //// if the insert will be at the start just copy everything to the proper location
     //if (split_begin == insert_begin)
     //{
     //  np2->branch().P0 = id;
-    //  std::memcpy(&*np2->branch().begin(), &*split_begin, split_sz); // move split values to new node
+    //  std::memcpy(&*np2->branch().begin(), &*split_begin,
+    //    split_sz); // move split values to new node
     //  np2->size(split_sz);
-    //  std::memset(&*split_begin, 0,  // zero unused space to make file dumps easier to read
+    //  std::memset(&*split_begin, 0,  // zero unused space so dumps easier to read
     //    (np->branch().end() - split_begin) * sizeof(branch_value_type)); 
     //  np->size(np->size() - split_sz);
-    //  BOOST_ASSERT(np->parent()->node_id() == np->parent_node_id()); // max_cache_size logic OK?
-    //  m_branch_insert(np->parent(), np->parent_element()+1, k, np2->node_id());
+    //  BOOST_ASSERT(np->parent()->node_id() == np->parent_node_id()); // cache logic OK?
+    //  m_branch_insert(np->parent(), np->parent_element()+1, k, np2);
     //  return;
     //}
 
     // copy the split elements, including the pseudo-end element, to p2
     BOOST_ASSERT(char_ptr(&*np2->branch().begin())+split_sz
       <= char_ptr(&*np2->branch().begin())+m_max_branch_size);
-    std::memcpy(&*np2->branch().begin(), &*split_begin, split_sz);  // include end pseudo element
+    std::memcpy(&*np2->branch().begin(), &*split_begin,
+      split_sz);  // include end pseudo element
     np2->size(split_sz - sizeof(node_id_type));  // exclude end pseudo element from size
 
-    BOOST_ASSERT(np->parent()->node_id() == np->parent_node_id()); // max_cache_size logic OK?
+    BOOST_ASSERT(np->parent()->node_id() == np->parent_node_id()); // cache logic OK?
 
-    // promote the key from the original node's new end pseudo element to the parent branch node
-    m_branch_insert(np->parent(), np->parent_element(), unsplit_end->key(), np2->node_id());
+    // promote the key from the original node's new end pseudo element to the parent
+    // branch node
+    m_branch_insert(np->parent(), np->parent_element(), unsplit_end->key(), np2);
 
     // finalize work on the original node
-    std::memset(&unsplit_end->key(), 0,  // zero unused space to make file dumps easier to read
+    std::memset(&unsplit_end->key(), 0,  // zero unused space so dumps easier to read
       char_distance(&unsplit_end->key(), &np->branch().end()->key())); 
     np->size(char_distance(&*np->branch().begin(), &*unsplit_end));
 
-    // adjust np and insert_begin if they now fall on the new node due to the split
+    // adjust np and insert_begin if they now fall on the new node due to the split;
+    // also update the child-to-parent chain
     if (&*split_begin <= &*element)
     {
-      np = np2.get();
+      np = np2;
       insert_begin = reinterpret_cast<key_type*>(char_ptr(&np2->branch().begin()->key())
         + char_distance(&split_begin->key(), insert_begin));
+      child->parent(np);
+      // see below for update of child->parent_element();
     }
-  }
+  }  // split finished
+
+  BOOST_ASSERT(np->size() + insert_size
+                 + sizeof(node_id_type) <= m_max_branch_size);
+                 // NOTE WELL: size() doesn't include
+                 // size of the end pseudo-element node_id    
 
   //  insert k, id, into np at insert_begin
 
@@ -1691,8 +1726,11 @@ btree_base<Key,Base,Traits,Comp>::m_branch_insert(
   BOOST_ASSERT(char_ptr(insert_begin) + k_size + sizeof(node_id_type)
     <= char_ptr(&*np->branch().begin())+m_max_branch_size);
   std::memcpy(insert_begin, &k, k_size);  // insert k
-  std::memcpy(char_ptr(insert_begin) + k_size, &id, sizeof(node_id_type));
+  std::memcpy(char_ptr(insert_begin) + k_size, &child->node_id(), sizeof(node_id_type));
   np->size(np->size() + insert_size);
+
+  child->parent_element(branch_iterator( 
+    reinterpret_cast<branch_value_type*>(reinterpret_cast<node_id_type*>(insert_begin)-1) ));
 
 #ifndef NDEBUG
   if (m_hdr.flags() & btree::flags::unique)
@@ -1734,7 +1772,7 @@ btree_base<Key,Base,Traits,Comp>::erase(const_iterator pos)
   //  nxt_key = key(*nxt);
 
   if (pos.m_node->node_id() != m_root->node_id()  // not root?
-    && (pos.m_node->size() == dynamic_size(*pos.m_node->leaf().begin())))  // only 1 element on node?
+    && (pos.m_node->size() == dynamic_size(*pos.m_node->leaf().begin())))  // 1 element node?
   {
     // erase a single value leaf node that is not the root
 
@@ -1754,7 +1792,7 @@ btree_base<Key,Base,Traits,Comp>::erase(const_iterator pos)
       m_hdr.last_node_id(prr_node->node_id());
     }
 
-    const_iterator nxt = m_erase_branch_value(pos.m_node->parent(),
+    const_iterator nxt = m_erase_branch_value(pos.m_node->parent().get(),
       pos.m_node->parent_element(), pos.m_node->node_id());
 
     m_free_node(pos.m_node.get());  // add node to free node list
@@ -1824,8 +1862,8 @@ btree_base<Key,Base,Traits,Comp>::m_erase_branch_value(
                    // i.e. after the erase, the entire sub-tree will be empty
   {
     BOOST_ASSERT(np->level() != header().root_level());
-    BOOST_ASSERT(np->parent()->node_id() == np->parent_node_id()); // max_cache_size logic OK?
-    iterator nxt = m_erase_branch_value(np->parent(),
+    BOOST_ASSERT(np->parent()->node_id() == np->parent_node_id()); // cache logic OK?
+    iterator nxt = m_erase_branch_value(np->parent().get(),
       np->parent_element(), np->node_id()); // erase parent value pointing to np
     m_free_node(np); // move node to free node list
     return nxt;
@@ -2142,7 +2180,8 @@ void btree_base<Key,Base,Traits,Comp>::dump_dot(std::ostream& os) const
 {
   BOOST_ASSERT_MSG(is_open(), "dump_dot() on unopen btree");
   os << "digraph btree {\nrankdir=LR;\nfontname=Courier;\n"
-    "node [shape = record,margin=.1,width=.1,height=.1,fontname=Courier,style=\"filled\"];\n";
+    "node [shape = record,margin=.1,width=.1,height=.1,fontname=Courier"
+    ",style=\"filled\"];\n";
 
   for (unsigned int p = 1; p < header().node_count(); ++p)
   {
@@ -2150,7 +2189,8 @@ void btree_base<Key,Base,Traits,Comp>::dump_dot(std::ostream& os) const
 
     if (np->is_leaf())
     {
-      os << "node" << p << "[label = \"<f0> " << p << ", use-ct=" << np->use_count()-1 << "|";
+      os << "node" << p << "[label = \"<f0> " << p
+         << ", use-ct=" << np->use_count()-1 << "|";
       for (leaf_iterator it = np->leaf().begin(); it != np->leaf().end(); ++it)
       {
         if (it != np->leaf().begin())
@@ -2161,7 +2201,8 @@ void btree_base<Key,Base,Traits,Comp>::dump_dot(std::ostream& os) const
     }
     else if (np->is_branch())
     {
-      os << "node" << p << "[label = \"<f0> " << p << ", use-ct=" << np->use_count()-1 << "|";
+      os << "node" << p << "[label = \"<f0> " << p
+         << ", use-ct=" << np->use_count()-1 << "|";
       int f = 1;
       branch_iterator it;
       for (it = np->branch().begin(); it != np->branch().end(); ++it)
@@ -2173,10 +2214,12 @@ void btree_base<Key,Base,Traits,Comp>::dump_dot(std::ostream& os) const
       f = 1;
       for (it = np->branch().begin(); it != np->branch().end(); ++it)
       {
-        os << "\"node" << p << "\":f" << f << " -> \"node" << it->node_id() << "\":f0;\n";
+        os << "\"node" << p << "\":f" << f
+           << " -> \"node" << it->node_id() << "\":f0;\n";
         ++f;
       }
-    os << "\"node" << p << "\":f" << f << " -> \"node" << it->node_id() << "\":f0;\n";
+    os << "\"node" << p << "\":f" << f 
+       << " -> \"node" << it->node_id() << "\":f0;\n";
     }
   }
 
