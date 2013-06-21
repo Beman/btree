@@ -980,11 +980,9 @@ private:
           && get()->node_id() != static_cast<node_id_type>(-1)) // && not dummy
         {
           // reset the parent pointer
-          //btree_node* p(get());
-          //buffer_ptr::reset();   // reset the child before the parent
-          //p->parent_reset();     // so that the parent is more recently used
-          get()->parent_reset();     // so that the parent is more recently used
-          buffer_ptr::reset();
+          btree_node* p(get());
+          buffer_ptr::reset();   // reset the child before the parent
+          p->parent_reset();     // so that the parent is more recently used
         }
         else
         {
