@@ -299,8 +299,11 @@ namespace boost
       boost::uint64_t  new_buffer_requests() const     {return m_new_buffer_requests;}
       boost::uint64_t  buffer_allocs() const           {return m_buffer_allocs;}
       boost::uint64_t  never_free_honored() const      {return m_never_free_honored;}
+
       std::size_t      buffers_in_memory() const       {return buffers.size();}
       std::size_t      buffers_available() const       {return available_buffers.size();}
+      std::size_t      buffers_in_use() const          {return buffers_in_memory()
+                                                          - buffers_available();}
 
       void dump_buffers(std::ostream& os) const
       {
