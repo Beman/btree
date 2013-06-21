@@ -43,8 +43,8 @@ namespace boost
     class buffer_manager_error : public std::runtime_error
     {
     public:
-      buffer_manager_error(const std::string& what, const boost::filesystem::path& p)
-        : runtime_error(what + p.string()) {}
+      buffer_manager_error(const std::string& _what, const boost::filesystem::path& p)
+        : runtime_error(_what + p.string()) {}
     };
 
     class buffer;

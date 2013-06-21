@@ -76,7 +76,8 @@ namespace btree
   };
 
 
-  std::ostream& operator<<(std::ostream& os, const strbuf& x)
+// zzzzz bda: changed to inline
+  inline std::ostream& operator<<(std::ostream& os, const strbuf& x)
   {
     os << x.c_str();
     return os;
