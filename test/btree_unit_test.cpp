@@ -290,7 +290,7 @@ void  single_insert()
     BOOST_TEST_EQ(result.first->mapped_value(), 456);
   }
  
-  cout << "     single_insert complete" << endl;
+  cout << "    single_insert complete" << endl;
 }
 
 //------------------------------------ open_existing -----------------------------------//
@@ -320,42 +320,42 @@ void open_existing()
   }
 
   {
-    cout << "  try to open with wrong signature" << endl;
+    cout << "      try to open with wrong signature" << endl;
     bool signature_ok = false;
     try {btree::btree_map<int, int> bt2(p,btree::flags::read_only,0);}
     catch (...) { signature_ok = true; }
     BOOST_TEST(signature_ok);
   }
   {
-    cout << "  try to open with wrong uniquenesss" << endl;
+    cout << "      try to open with wrong uniquenesss" << endl;
     bool uniqueness_ok = false;
     try {btree::btree_multimap<int, int> bt2(p);}
     catch (...) { uniqueness_ok = true; }
     BOOST_TEST(uniqueness_ok);
   }
   {
-    cout << "  try to open with set/map conflict" << endl;
+    cout << "      try to open with set/map conflict" << endl;
     bool set_vs_map_ok = false;
     try {btree::btree_set<int> bt2(p);}
     catch (...) { set_vs_map_ok = true; }
     BOOST_TEST(set_vs_map_ok);
   }
   {
-    cout << "  try to open with key size conflict" << endl;
+    cout << "      try to open with key size conflict" << endl;
     bool key_size_ok = false;
     try {btree::btree_map<char, int> bt2(p);}
     catch (...) { key_size_ok = true; }
     BOOST_TEST(key_size_ok);
   }
   {
-    cout << "  try to open with mapped_size conflict" << endl;
+    cout << "      try to open with mapped_size conflict" << endl;
     bool mapped_size_ok = false;
     try {btree::btree_map<int, char> bt2(p);}
     catch (...) { mapped_size_ok = true; }
     BOOST_TEST(mapped_size_ok);
   }
 
-  cout << "  verify header contents" << endl;
+  cout << "      verify header contents" << endl;
   btree::btree_map<int, int> bt2(p);
   BOOST_TEST(bt2.is_open());
   BOOST_TEST(!bt2.empty());
@@ -581,7 +581,7 @@ template <class BTree>
 void insert_tests(BTree& bt)
 {
   cout << "    testing \"" << bt.file_path().string() << "\" ..." << endl;
-  cout << '\n' << bt.manager() << '\n';
+  //cout << '\n' << bt.manager() << '\n';
 
   BOOST_TEST(bt.size() == 0U);
   BOOST_TEST(bt.empty());
@@ -667,8 +667,8 @@ void insert_tests(BTree& bt)
 
   result.first = cur = begin = end = empty_iterator;
 
-  bt.manager().dump_buffers(cout);
-  bt.manager().dump_available_buffers(cout);
+  //bt.manager().dump_buffers(cout);
+  //bt.manager().dump_available_buffers(cout);
 
   //cout << '\n' << bt.manager() << '\n';
   //cout << "\nroot is node " << bt.header().root_node_id() << ", size() " << bt.size() << '\n'; 
@@ -717,22 +717,24 @@ void insert_tests(BTree& bt)
 
   // erase tests
 
-  cout << "\n  erase all elements" << endl;
+  cout << "    erase all elements" << endl;
   cur = bt.find(0x0C);
   BOOST_TEST(cur != bt.end());
-  cout << "    erase " << cur->key() << endl;
+  //cout << "    erase " << cur->key() << endl;
   cur = bt.erase(cur);
 
   BOOST_TEST_EQ(cur->key().x, 0x0D);
   BOOST_TEST_EQ(bt.size(), 4U);
+  BOOST_TEST(bt.inspect_leaf_to_root(cout, cur));
 
   cur = bt.find(0x0B);
   BOOST_TEST(cur != bt.end());
-  cout << "    erase " << cur->key() << endl;
+  //cout << "    erase " << cur->key() << endl;
   cur = bt.erase(cur);
 
   BOOST_TEST_EQ(cur->key().x, 0x0D);
   BOOST_TEST_EQ(bt.size(), 3U);
+  BOOST_TEST(bt.inspect_leaf_to_root(cout, cur));
 
   cur = bt.find(0x0E);
   BOOST_TEST(cur != bt.end());
@@ -740,7 +742,7 @@ void insert_tests(BTree& bt)
   //cout << "root is node " << bt.header().root_node_id() << '\n'; 
   //bt.dump_dot(std::cout);
 
-  cout << "    erase " << cur->key() << endl;
+  //cout << "    erase " << cur->key() << endl;
   cur = bt.erase(cur);
 
   BOOST_TEST(cur == bt.end());
@@ -750,11 +752,12 @@ void insert_tests(BTree& bt)
 
   cur = bt.find(0x0A);
   BOOST_TEST(cur != bt.end());
-  cout << "    erase " << cur->key() << endl;
+  //cout << "    erase " << cur->key() << endl;
   cur = bt.erase(cur);
 
   BOOST_TEST(cur != bt.end());
   BOOST_TEST_EQ(cur->key().x, 0x0D);
+  BOOST_TEST(bt.inspect_leaf_to_root(cout, cur));
   BOOST_TEST(bt.begin() == cur);
   BOOST_TEST_EQ(bt.size(), 1U);
   BOOST_TEST_EQ(bt.header().root_node_id(), 4U);
@@ -766,8 +769,9 @@ void insert_tests(BTree& bt)
   //bt.dump_dot(std::cout);
 
   BOOST_TEST(cur != bt.end());
+  BOOST_TEST(bt.inspect_leaf_to_root(cout, cur));
 
-  cout << "    erase " << cur->key() << endl;
+  //cout << "    erase " << cur->key() << endl;
   cur = bt.erase(cur);
 
   BOOST_TEST(cur == bt.end());
@@ -779,7 +783,7 @@ void insert_tests(BTree& bt)
   //cout << "root is node " << bt.header().root_node_id() << '\n'; 
   //bt.dump_dot(std::cout);
 
-  cout << "\n  add enough elements to force branch node splits" << endl;
+  cout << "    add enough elements to force branch node splits" << endl;
   for (int i = 1; i <= 21; ++i )
   {
 // std::cout << "\n inserting " << i << std::endl;
@@ -794,7 +798,7 @@ void insert_tests(BTree& bt)
   //cout << "root is node " << bt.header().root_node_id() << '\n'; 
   //bt.dump_dot(std::cout);
 
-  cout << "\n  erase every other element" << endl;
+  cout << "    erase every other element" << endl;
   for (int i = 1; i <= 21; i += 2 )
   {
     BOOST_TEST_EQ(bt.erase(i), 1U);
@@ -805,7 +809,7 @@ void insert_tests(BTree& bt)
   //cout << "root is node " << bt.header().root_node_id() << '\n'; 
   //bt.dump_dot(std::cout);
 
-  cout << "\n  erase remaining elements and attempt to erase nonexistant elements" << endl;
+  cout << "    erase remaining elements and attempt to erase nonexistant elements" << endl;
   for (int i = 1; i <= 31; ++i )  // many of these won't exist
   {
     //cout << "\n  erase " << i << endl;
@@ -819,14 +823,14 @@ void insert_tests(BTree& bt)
   BOOST_TEST_EQ(bt.size(), 0U);
 
   bt.flush();
-  cout << '\n' << bt << '\n';
+//  cout << '\n' << bt << '\n';
 
-  cout << "  testing \"" << bt.file_path().string() << "\" complete" << endl;
+  cout << "    testing \"" << bt.file_path().string() << "\" complete" << endl;
 }
 
 void insert()
 {
-  cout << "  insert..." << endl;
+  cout << "    insert..." << endl;
 
   //  these tests use a value type that is large relative to the node size, thus stressing
   //  the code by causing a lot of node splits 
@@ -838,7 +842,7 @@ void insert()
     insert_tests(map);
   }
 
-  cout << "    insert complete" << endl;
+  cout << "      insert complete" << endl;
 }
 
 //---------------------------------- find_and_bounds -----------------------------------//
@@ -1258,7 +1262,10 @@ void  cache_size_test()
   
   bt.max_cache_size(cache_max);
   
-  for (int i=2034875; bt.header().levels() < n_levels; i = (i*1234567891) + 11) // avoid ordered values
+  cout << "    inserting..." << endl;
+  for (int i=2034875;
+    bt.header().levels() < n_levels;
+    i = (i*1234567891) + 11) // avoid ordered values
   {
     { 
 //      cout << "     inserting " << bt.size() + 1 << ", key " << i << endl;
@@ -1306,6 +1313,15 @@ void  cache_size_test()
     }
   }
 
+  cout << "    erasing..." << endl;
+  for (btree::btree_multiset<fat>::iterator itr = bt.begin();  itr != bt.end();)
+  {
+    BOOST_TEST(bt.inspect_leaf_to_root(cout, itr));
+    BOOST_TEST(itr == bt.begin());
+    //cout << "      erasing " << *itr << endl;
+    itr = bt.erase(itr);
+  }
+
   bool ok=true;
   BOOST_ASSERT(ok = (bt.manager().buffers_in_memory() <= cache_max + 1));
   if (!ok)
@@ -1316,7 +1332,7 @@ void  cache_size_test()
     bt.dump_dot(std::cerr);
   }
 
-  cout << "     cache_size_test complete" << endl;
+  cout << "    cache_size_test complete" << endl;
 }
 
 //-------------------------------------  _test  ----------------------------------------//

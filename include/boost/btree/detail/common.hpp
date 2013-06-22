@@ -93,6 +93,9 @@
     Instead provide observer functions that call the equivalent manager() and header()
     observer functions.
 
+  * Does header still need to contain first and last node ids? These were needed when
+    leaf nodes had next and prior node ids, but is there now any compeling use case?
+
 */
 
 namespace boost
@@ -1751,6 +1754,7 @@ btree_base<Key,Base,Traits,Comp>::m_branch_insert( btree_node_ptr np,
 
 //------------------------------------- erase() ----------------------------------------//
 
+//  erases leaf only; see m_erase_branch_value() for branches
 template <class Key, class Base, class Traits, class Comp>   
 typename btree_base<Key,Base,Traits,Comp>::const_iterator
 btree_base<Key,Base,Traits,Comp>::erase(const_iterator pos)
@@ -1767,25 +1771,20 @@ btree_base<Key,Base,Traits,Comp>::erase(const_iterator pos)
   pos.m_node->needs_write(true);
   m_hdr.decrement_element_count();
 
-  //key_type nxt_key;  // save next key to be able to find() iterator to be returned
-  //const_iterator nxt(pos);
-  //++nxt;
-  //if (nxt != end())
-  //  nxt_key = key(*nxt);
-
   if (pos.m_node->node_id() != m_root->node_id()  // not root?
     && (pos.m_node->size() == dynamic_size(*pos.m_node->leaf().begin())))  // 1 element node?
   {
     // erase a single value leaf node that is not the root
 
     BOOST_ASSERT(pos.m_node->parent()->node_id() \
-      == pos.m_node->parent_node_id()); // max_cache_size logic OK?
+      == pos.m_node->parent_node_id()); // cache logic OK?
+
+    btree_node_ptr next_node(pos.m_node->next_node());
 
     if (pos.m_node->node_id() == header().first_node_id())
     {
-      btree_node_ptr nxt_node(pos.m_node->next_node());
-      BOOST_ASSERT(nxt_node);
-      m_hdr.first_node_id(nxt_node->node_id());
+      BOOST_ASSERT(next_node);
+      m_hdr.first_node_id(next_node->node_id());
     }
     if (pos.m_node->node_id() == header().last_node_id())
     {
@@ -1794,11 +1793,11 @@ btree_base<Key,Base,Traits,Comp>::erase(const_iterator pos)
       m_hdr.last_node_id(prr_node->node_id());
     }
 
-    const_iterator nxt = m_erase_branch_value(pos.m_node->parent().get(),
+    m_erase_branch_value(pos.m_node->parent().get(),
       pos.m_node->parent_element(), pos.m_node->node_id());
 
     m_free_node(pos.m_node.get());  // add node to free node list
-    return nxt;
+    return !next_node ? cend() : const_iterator(next_node, next_node->leaf().begin());
   }
   else
   {
@@ -1817,11 +1816,13 @@ btree_base<Key,Base,Traits,Comp>::erase(const_iterator pos)
     if (pos.m_element != pos.m_node->leaf().end())
       return pos;
     btree_node_ptr next_node(pos.m_node->next_node());
-    return !next_node ? end() : iterator(next_node, next_node->leaf().begin());
+    return !next_node ? cend() : const_iterator(next_node, next_node->leaf().begin());
   }
 }
 
 //----------------------------------- m_sub_tree_begin() -------------------------------//
+
+// TODO: what is this used for?
 
 template <class Key, class Base, class Traits, class Comp>
 typename btree_base<Key,Base,Traits,Comp>::iterator
