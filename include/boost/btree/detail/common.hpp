@@ -1327,7 +1327,6 @@ btree_base<Key,Base,Traits,Comp>::m_open(const boost::filesystem::path& p,
     m_hdr.increment_leaf_node_count();
     BOOST_ASSERT(m_root->node_id() == 1);
     m_hdr.root_node_id(m_root->node_id());
-    m_hdr.first_node_id(m_root->node_id());
     m_hdr.last_node_id(m_root->node_id());
     m_root->level(0);
     m_root->size(0);
@@ -1346,7 +1345,6 @@ btree_base<Key,Base,Traits,Comp>::clear()
   manager().clear_write_needed();
   m_hdr.element_count(0);
   m_hdr.root_node_id(1);
-  m_hdr.first_node_id(1);
   m_hdr.last_node_id(1);
   m_hdr.root_level(0);
   m_hdr.node_count(0);
@@ -1778,11 +1776,6 @@ btree_base<Key,Base,Traits,Comp>::erase(const_iterator pos)
 
     btree_node_ptr next_node(pos.m_node->next_node());
 
-    if (pos.m_node->node_id() == header().first_node_id())
-    {
-      BOOST_ASSERT(next_node);
-      m_hdr.first_node_id(next_node->node_id());
-    }
     if (pos.m_node->node_id() == header().last_node_id())
     {
       btree_node_ptr prr_node(pos.m_node->prior_node());

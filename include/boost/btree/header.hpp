@@ -166,7 +166,6 @@ namespace boost
       node_size_type      m_node_size;           // disk node size in bytes
 
       node_id_type        m_root_node_id;
-      node_id_type        m_first_node_id;
       node_id_type        m_last_node_id;
       node_id_type        m_node_count;          // total including free node list
       node_id_type        m_leaf_node_count;     // active only; free nodes not include
@@ -212,7 +211,6 @@ namespace boost
       //  "updated" members that change as the file changes
       uint64_t         element_count() const         { return m_element_count; }
       node_id_type     root_node_id() const          { return m_root_node_id; }
-      node_id_type     first_node_id() const         { return m_first_node_id; }
       node_id_type     last_node_id() const          { return m_last_node_id; }
       node_id_type     node_count() const            { return m_node_count; }
       node_id_type     leaf_node_count() const       { return m_leaf_node_count; }
@@ -249,7 +247,6 @@ namespace boost
       void  increment_element_count()                { ++m_element_count; }
       void  decrement_element_count()                { --m_element_count; }
       void  root_node_id(node_id_type id)            { m_root_node_id = id; }
-      void  first_node_id(node_id_type id)           { m_first_node_id = id; }
       void  last_node_id(node_id_type id)            { m_last_node_id = id; }
       void  node_count(node_id_type value)           { m_node_count = value; }
       void  increment_node_count()                   { ++m_node_count; }
@@ -282,7 +279,6 @@ namespace boost
           endian::reverse(m_signature);
           endian::reverse(m_flags);
           endian::reverse(m_root_node_id);
-          endian::reverse(m_first_node_id);
           endian::reverse(m_last_node_id);
           endian::reverse(m_node_count);
           endian::reverse(m_leaf_node_count);
