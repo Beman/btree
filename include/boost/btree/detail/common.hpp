@@ -93,9 +93,6 @@
     Instead provide observer functions that call the equivalent manager() and header()
     observer functions.
 
-  * Does header still need to contain first and last node ids? These were needed when
-    leaf nodes had next and prior node ids, but is there now any compeling use case?
-
 */
 
 namespace boost
