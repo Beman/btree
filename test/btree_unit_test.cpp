@@ -1145,30 +1145,43 @@ void pack_optimization()
 {
   cout << "  pack_optimization..." << endl;
 
-  typedef std::pair<int, int> value_type;
+  typedef btree::btree_multiset<fat> set_type;
+  typedef set_type::value_type value_type;
   const int node_sz = 128;
-  const int overhead = 12;  // TODO: is this still correct? 4 seems more likely.
-  const int per_node = (node_sz - overhead) / sizeof(value_type);
-  const int n = per_node * 2;  // sufficient to distinguish if pack optimization works
+  const unsigned n_levels = 5;  // enough to exercise branch packing
 
-  btree::btree_map<int, int> np("not_packed.btr", btree::flags::truncate, -1, node_sz);
-  for (int i=n; i > 0; --i)
-    np.emplace(i, 0xffffff00+i);
+  set_type np("not_packed.btr", btree::flags::truncate, -1, node_sz);
 
-  cout << "\nroot is node " << np.header().root_node_id() << '\n'; 
-  if (dump_dot)
-    np.dump_dot(std::cout);
+  for (int i=2034875; np.header().levels() < n_levels;
+    i = (i*1234567891) + 11) // avoid ordered values
+  {
+    set_type::iterator itr = np.insert(fat(i));
+  }
+
+  //if (dump_dot)
+  //  np.dump_dot(std::cerr);
   
-  btree::btree_map<int, int> p("packed.btr", btree::flags::truncate, -1, node_sz);
-  for (int i=1; i <= n; ++i)
-    p.emplace(i, 0xffffff00+i);
+  set_type p("packed.btr", btree::flags::truncate, -1, node_sz);
+  for (set_type::const_iterator it = np.begin(); it != np.end(); ++it)
+  {
+    set_type::const_iterator it2 = p.insert(*it);
+    BOOST_TEST(p.inspect_leaf_to_root(cout, it2));
+  }
 
-  cout << "\nroot is node " << p.header().root_node_id() << '\n'; 
-  if (dump_dot)
-    p.dump_dot(std::cout);
+  //if (dump_dot)
+  //  p.dump_dot(std::cerr);
 
   BOOST_TEST_EQ(np.size(), p.size());
   BOOST_TEST(p.header().node_count() < np.header().node_count());
+  BOOST_TEST(p.header().leaf_node_count() < np.header().leaf_node_count());
+  BOOST_TEST(p.header().branch_node_count() < np.header().branch_node_count());
+
+  cout << "      " << np.header().branch_node_count() << " branch nodes before pack, "
+       << p.header().branch_node_count() << " branch nodes after pack\n"
+       << "      " << np.header().leaf_node_count() << " leaf nodes before pack, "
+       << p.header().leaf_node_count() << " leaf nodes after pack\n"
+       << "      " << np.header().levels() << " levels before pack, "
+       << p.header().levels() << " levels after pack\n";
 
   cout << "    pack_optimization complete" << endl;
 }

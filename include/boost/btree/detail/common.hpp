@@ -52,8 +52,6 @@
   * For multi-containers, add a test case of a deep tree with all the same key. Then
     test erasing various elements.
 
-  * Pack optimization should apply to branches too.
-
   * Either add code to align mapped() or add a requirement that PID, K does not
     require alignment.
 
@@ -92,6 +90,8 @@
   * It isn't at all clear that btree_base should expose manager() and header().
     Instead provide observer functions that call the equivalent manager() and header()
     observer functions.
+
+  * Non-member functions not implemented yet. See line 2190 or thereabouts.
 
 */
 
@@ -1512,7 +1512,7 @@ btree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter,
     
     np2 = m_new_node(np->level());  // create the new node 
 
-    // ck pack conditions now, since header().last_node_id() may change
+    // ck pack optimization now, since header().last_node_id() may change
     if (m_ok_to_pack
         && (insert_begin != np->leaf().end()
             || np->node_id() != header().last_node_id()))
@@ -1528,8 +1528,7 @@ btree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter,
       this->m_memcpy_value(&*np2->leaf().begin(), &key_, key_size,
         &mapped_value_, mapped_size);  // insert value
       np2->size(value_size);
-      BOOST_ASSERT(np->parent()->node_id()
-        == np->parent_node_id()); // max_cache_size logic OK?
+      BOOST_ASSERT(np->parent()->node_id() == np->parent_node_id()); // cache logic OK?
       m_branch_insert(np->parent(), np->parent_element(),
         this->key(*np2->leaf().begin()), np2);
       return const_iterator(np2, np2->leaf().begin());
@@ -1633,12 +1632,26 @@ btree_base<Key,Base,Traits,Comp>::m_branch_insert( btree_node_ptr np,
     > m_max_branch_size)  // no room on node?
   {
     //  no room on node, so node must be split
-    //std::cout << "Splitting branch\n";
 
     if (np->level() == m_hdr.root_level()) // splitting the root?
       m_new_root();  // create a new root
     
     np2 = m_new_node(np->level());  // create the new node
+
+    // apply pack optimization if applicable
+    if (m_ok_to_pack)  // have all inserts been ordered and no erases occurred?
+    {
+      // instead of splitting np, just copy child's node_id to np2
+      std::memcpy(&*np2->branch().begin(), &child->node_id(), sizeof(node_id_type));
+      //  set the child's parent and parent_element
+      child->parent(np2);
+      child->parent_element(np2->branch().begin()); 
+
+      BOOST_ASSERT(np->parent()->node_id() == np->parent_node_id()); // cache logic OK?
+
+      m_branch_insert(np->parent(), np->parent_element(), k, np2);
+      return;
+    }
 
     // split node np by moving half the elements, by size, to node p2
 
