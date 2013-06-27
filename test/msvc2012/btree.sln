@@ -41,6 +41,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bt_str_time", "bt_str_time\
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "volume_create_data", "volume_create_data\volume_create_data.vcxproj", "{3F085761-C0F8-4C72-9239-2CF92FAC3A90}"
+	ProjectSection(ProjectDependencies) = postProject
+		{61954631-3857-4C20-9E7C-1DA7BAAFF426} = {61954631-3857-4C20-9E7C-1DA7BAAFF426}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -200,12 +203,14 @@ Global
 		{3F085761-C0F8-4C72-9239-2CF92FAC3A90}.Debug|Mixed Platforms.Build.0 = Debug|Win32
 		{3F085761-C0F8-4C72-9239-2CF92FAC3A90}.Debug|Win32.ActiveCfg = Debug|Win32
 		{3F085761-C0F8-4C72-9239-2CF92FAC3A90}.Debug|Win32.Build.0 = Debug|Win32
-		{3F085761-C0F8-4C72-9239-2CF92FAC3A90}.Debug|x64.ActiveCfg = Debug|Win32
+		{3F085761-C0F8-4C72-9239-2CF92FAC3A90}.Debug|x64.ActiveCfg = Debug|x64
+		{3F085761-C0F8-4C72-9239-2CF92FAC3A90}.Debug|x64.Build.0 = Debug|x64
 		{3F085761-C0F8-4C72-9239-2CF92FAC3A90}.Release|Mixed Platforms.ActiveCfg = Release|Win32
 		{3F085761-C0F8-4C72-9239-2CF92FAC3A90}.Release|Mixed Platforms.Build.0 = Release|Win32
 		{3F085761-C0F8-4C72-9239-2CF92FAC3A90}.Release|Win32.ActiveCfg = Release|Win32
 		{3F085761-C0F8-4C72-9239-2CF92FAC3A90}.Release|Win32.Build.0 = Release|Win32
-		{3F085761-C0F8-4C72-9239-2CF92FAC3A90}.Release|x64.ActiveCfg = Release|Win32
+		{3F085761-C0F8-4C72-9239-2CF92FAC3A90}.Release|x64.ActiveCfg = Release|x64
+		{3F085761-C0F8-4C72-9239-2CF92FAC3A90}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
