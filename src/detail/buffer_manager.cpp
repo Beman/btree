@@ -175,7 +175,7 @@ buffer_ptr buffer_manager::read(buffer_id_type pg_id)
     ++m_file_buffers_read;
     buffer* pg = m_prepare_buffer(pg_id);
     binary_file::seek(pg_id * data_size());
-    binary_file::read(*pg->data(), data_size());
+    binary_file::read(pg->data(), data_size());
     return buffer_ptr(*pg);
   }
   else // the buffer is in memory

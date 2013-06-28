@@ -93,6 +93,12 @@
 
   * Non-member functions not implemented yet. See line 2190 or thereabouts.
 
+  * An insert_packed() function could avoid searching and cache thrashing by hanging onto
+    an iterator between calls. Check pack optimization applies (last page, etc) and verify
+    new element > previous element (>= if non-unique), then just tack on the end; see
+    m_branch_insert. Consider whether or not this could be combined with an insert-with-
+    hint function or insert-after function.
+
 */
 
 namespace boost
@@ -1089,7 +1095,7 @@ private:
   void m_read_header()
   {
     m_mgr.seek(0);
-    m_mgr.binary_file::read(m_hdr, sizeof(header_page));
+    m_mgr.binary_file::read(m_hdr);
     m_hdr.endian_flip_if_needed();
   }
 
@@ -1097,7 +1103,7 @@ private:
   {
     m_mgr.seek(0);
     m_hdr.endian_flip_if_needed();
-    m_mgr.binary_file::write(&m_hdr, sizeof(header_page));
+    m_mgr.binary_file::write(m_hdr);
     m_hdr.endian_flip_if_needed();
   }
 

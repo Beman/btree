@@ -26,6 +26,7 @@
 #include <boost/btree/detail/config.hpp>
 #include <boost/filesystem/path.hpp>
 #include <boost/detail/bitmask.hpp>
+#include <boost/type_traits/remove_extent.hpp>
 #include <boost/assert.hpp>
 #include <ios>
 #include <cstddef>  // for size_t
@@ -146,25 +147,51 @@ namespace boost
       // Throws: On error
 
       template<typename T>
-      bool read(T& target, std::size_t sz, system::error_code& ec)
+      bool read(T& target)
       // Requires: is_open()
-      // Effects: As if calls POSIX read(), except will finish partial
-      // reads. ec.clear() if no error, otherwise set ec to the system error code.
-      // Returns: true, except false if end-of-file or error.
-      {
-        BOOST_ASSERT(is_open());
-        return m_read(&target, sz, ec);
-      }
-
-      template<typename T>
-      bool read(T& target, std::size_t sz = sizeof(T))
-      // Requires: is_open()
-      // Effects: As if POSIX read(), except will finish partial reads.
+      // Effects: As if POSIX read(), except will finish partial reads. Length
+      // read is sizeof(T)
       // Throws: On error.
       // Returns: true, except false if end-of-file.
       {
         BOOST_ASSERT(is_open());
-        return m_read(&target, sz);
+        return m_read(&target, sizeof(T));
+      }
+
+      template<typename T>
+      bool read(T& target, system::error_code& ec)
+      // Requires: is_open()
+      // Effects: As if calls POSIX read(), except will finish partial reads.
+      // length read is sizeof(T). ec.clear() if no error, otherwise set ec
+      // to the system error code. 
+      // Returns: true, except false if end-of-file or error.
+      {
+        BOOST_ASSERT(is_open());
+        return m_read(&target, sizeof(T), ec);
+      }
+
+      template<typename T>
+      bool read(T* target, std::size_t n)
+      // Requires: is_open()
+      // Effects: As if POSIX read(), except will finish partial reads. Length
+      // read is n * sizeof(boost::remove_extent<T>::type)
+      // Throws: On error.
+      // Returns: true, except false if end-of-file.
+      {
+        BOOST_ASSERT(is_open());
+        return m_read(target, n * sizeof(boost::remove_extent<T>::type));
+      }
+
+      template<typename T>
+      bool read(T* target, std::size_t n, system::error_code& ec)
+      // Requires: is_open()
+      // Effects: As if calls POSIX read(), except will finish partial reads.
+      // length read is n * sizeof(boost::remove_extent<T>::type).
+      // ec.clear() if no error, otherwise set ec to the system error code. 
+      // Returns: true, except false if end-of-file or error.
+      {
+        BOOST_ASSERT(is_open());
+        return m_read(target, n * sizeof(boost::remove_extent<T>::type), ec);
       }
 
       std::size_t raw_write(const void* source, std::size_t sz,
@@ -181,43 +208,47 @@ namespace boost
       // Throws: On error
 
       template<typename T>
-      void write(const T& source, std::size_t sz, system::error_code& ec)
-      // Requires: is_open()
-      // Effects: As if, calls POSIX write(), except will finish partial
-      // writes. Sets ec to 0 if no error, otherwise to the system error code.
-      {
-        BOOST_ASSERT(is_open());
-        m_write(&source, sz, ec);
-      }
-
-      //template<typename T>
-      //void write(const T& source, std::size_t sz = sizeof(T))
-      //// Requires: is_open()
-      //// Effects: As if, POSIX write(), except will finish partial write.
-      //// Length of write is n* sizeof(boost::remove_extent<T>::type).
-      //// Throws: On error.
-      //{
-      //  BOOST_ASSERT(is_open());
-      //  m_write(&source, sz);
-      //}
-
-      void write(const void* source, std::size_t sz)
+      void write(const T& source)
       // Requires: is_open()
       // Effects: As if, POSIX write(), except will finish partial write.
-      // Length of write is n* sizeof(boost::remove_extent<T>::type).
+      // Length of write is sizeof(T).
       // Throws: On error.
       {
         BOOST_ASSERT(is_open());
-        m_write(source, sz);
+        m_write(&source, sizeof(T));
       }
-      void write(const char* source, std::size_t sz)
+
+      template<typename T>
+      void write(const T& source, system::error_code& ec)
       // Requires: is_open()
       // Effects: As if, POSIX write(), except will finish partial write.
-      // Length of write is n* sizeof(boost::remove_extent<T>::type).
+      // Length of write is sizeof(T). Sets ec to 0 if no error, otherwise
+      // sets ec to the system error code.
+      {
+        BOOST_ASSERT(is_open());
+        m_write(&source, sizeof(T), ec);
+      }
+
+      template<typename T>
+      void write(const T* source, std::size_t n)
+      // Requires: is_open()
+      // Effects: As if, POSIX write(), except will finish partial write.
+      // Length of write is n * sizeof(boost::remove_extent<T>::type).
       // Throws: On error.
       {
         BOOST_ASSERT(is_open());
-        m_write(source, sz);
+        m_write(source, n * sizeof(boost::remove_extent<T>::type));
+      }
+
+      template<typename T>
+      void write(const T* source, std::size_t n, system::error_code& ec)
+      // Requires: is_open()
+      // Effects: As if, POSIX write(), except will finish partial write.
+      // Length of write is n * sizeof(boost::remove_extent<T>::type). Sets ec to 0
+      // if no error, otherwise sets ec to the system error code.
+      {
+        BOOST_ASSERT(is_open());
+        m_write(source, n * sizeof(boost::remove_extent<T>::type), ec);
       }
 
       offset_type seek(offset_type offset, seekdir::pos from,
