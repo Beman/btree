@@ -11,8 +11,7 @@
 
 #include <boost/config/warning_disable.hpp>
 
-#define BOOST_FILESYSTEM_VERSION 3
-
+#include <iostream>
 #include <boost/btree/detail/binary_file.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <boost/detail/lightweight_main.hpp>
@@ -21,7 +20,6 @@
 namespace fs = boost::filesystem;
 namespace bt = boost::btree;
 
-#include <iostream>
 #include <iomanip>
 #include <string>
 #include <cstring>
@@ -65,7 +63,7 @@ namespace
       std::cout << "  oflag::in test, file exists..." << std::endl;   
       BOOST_TEST(fs::exists(p));
       bt::binary_file f(p, bt::oflag::in);
-      std::cout << " handle() returns " << f.handle() << std::endl;
+      std::cout << "    handle() returns " << f.handle() << std::endl;
       BOOST_TEST_EQ(fs::file_size(p), 3U);
     }
     {
@@ -135,6 +133,11 @@ int cpp_main(int argc, char * argv[])
   BOOST_TEST(f.seek(0, bt::seekdir::current) == gap + 17);
   BOOST_TEST(f.seek(0, bt::seekdir::end) == gap + 17);
 
+  int i = 12345;
+  f.write(i);
+  BOOST_TEST(f.seek(0, bt::seekdir::current) == gap + 17 + int(sizeof(i)));
+  BOOST_TEST(f.seek(0, bt::seekdir::end) == gap + 17 + int(sizeof(i)));
+  
   BOOST_TEST(f.seek(0, bt::seekdir::begin) == 0);
   
   BOOST_TEST(f.read(buf, 10));
@@ -145,13 +148,18 @@ int cpp_main(int argc, char * argv[])
   BOOST_TEST(f.read(buf, 7));
   BOOST_TEST(std::strcmp(buf, ending) == 0);
 
+  int j;
+  f.read(j);
+  BOOST_TEST_EQ(i, j);
+
   BOOST_TEST(!f.read(buf, 1));
 
   BOOST_TEST(f.is_open());
   f.close();
   BOOST_TEST(!f.is_open());
 
-  BOOST_TEST(fs::file_size(filename) == static_cast<boost::uintmax_t>(gap + 17));
+  BOOST_TEST_EQ(fs::file_size(filename),
+    static_cast<boost::uintmax_t>(gap + 17 + sizeof(i)));
 
   return boost::report_errors();
 }

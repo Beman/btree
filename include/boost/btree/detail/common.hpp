@@ -1095,7 +1095,7 @@ private:
   void m_read_header()
   {
     m_mgr.seek(0);
-    m_mgr.binary_file::read(m_hdr, sizeof(header_page));
+    m_mgr.binary_file::read(m_hdr);
     m_hdr.endian_flip_if_needed();
   }
 
@@ -1103,7 +1103,7 @@ private:
   {
     m_mgr.seek(0);
     m_hdr.endian_flip_if_needed();
-    m_mgr.binary_file::write(&m_hdr, sizeof(header_page));
+    m_mgr.binary_file::write(m_hdr);
     m_hdr.endian_flip_if_needed();
   }
 
