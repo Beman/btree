@@ -6,17 +6,25 @@
 //  See http://www.boost.org/LICENSE_1_0.txt
 
 #include "../volume_test/data.hpp"
-#include <boost/btree/bulk_loader.hpp>
+#include <boost/btree/bulk_load.hpp>
 #include <boost/detail/lightweight_main.hpp>
 #include <iostream>
 
+using namespace boost::btree;
+using std::cout; using std::endl;
+
 namespace
 {
-   boost::btree::bulk_loader<volume::data> loader;
-
+  boost::filesystem::path source("test.dat");
+  boost::filesystem::path target("test.btree");
+  std::size_t avail_mem
 }
 
 int cpp_main(int argc, char * argv[] ) 
 {
-  return loader.main(argc, argv, std::cout);
+
+  bulk_load_map<volume::u128_t, uint64_t>(source, target, cout,
+    10000, flags::truncate);
+
+  return 0;
 }

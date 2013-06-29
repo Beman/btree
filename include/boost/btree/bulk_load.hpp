@@ -8,87 +8,109 @@
 #ifndef BOOST_BTREE_BULK_LOADER_HPP
 #define BOOST_BTREE_BULK_LOADER_HPP
 
-#include <boost/btree/set.hpp>
 #include <boost/btree/map.hpp>
+#include <boost/btree/set.hpp>
+#include <boost/filesystem/operations.hpp>
+#include <boost/btree/detail/binary_file.hpp>
+#include <boost/scoped_array.hpp>
 #include <algorithm>
+#include <ostream>
+#include <istream>
+#include <fstream>
 
 namespace boost
 {
 namespace btree
 {
-  template <class T>
-  class bulk_loader
-  {
-  public:
-    typedef T value_type;
 
-    explicit bulk_loader(std::size_t avail_memory)
-      : m_available_memory(avail_memory) {}
+  template <class BTree>
+  void bulk_load(const boost::filesystem::path& source,
+    BTree& bt, std::ostream& msg_stream,
+    std::size_t available_memory);
 
-    template <class InputIterator, class BT>
-    void load(InputIterator begin, InputIterator end, BT& btree, std::ostream& msg); 
+  template <class Key, class T, class Traits = default_traits,
+    class Comp = btree::less<Key> >
+  void bulk_load_map(
+    const boost::filesystem::path& source,
+    const boost::filesystem::path& target,
+    std::ostream& msg_stream,
+    std::size_t available_memory,
+    flags::bitmask flgs = boost::btree::flags::read_write,
+    uint64_t signature = -1,  // for existing files, must match signature from creation
+    std::size_t node_sz = default_node_size,  // ignored if existing file
+    const Comp& comp = Comp()
+    );
 
-    int main(int argc, char * argv[], std::ostream& os);
-
-    // observers
-    std::size_t available_memory() const {return m_available_memory;}
-
-  private:
-    std::size_t m_available_memory;
-  };
-
+ 
   //------------------------------------------------------------------------------------//
   //                                  implementation                                    //
   //------------------------------------------------------------------------------------//
 
-  //-------------------------------------  load  ---------------------------------------//
+  //---------------------------------  bulk_load_map  ----------------------------------//
 
-    template <class InputIterator, class BT>
-    void bulk_loader<T>::load(InputIterator begin, InputIterator end, BT& btree)
+   template <class Key, class T, class Traits = default_traits,
+    class Comp = btree::less<Key> >
+  void bulk_load_map(const boost::filesystem::path& source,
+    const boost::filesystem::path& target, std::ostream& msg_stream,
+    std::size_t available_memory, flags::bitmask flgs, uint64_t signature,
+    std::size_t node_sz, const Comp& comp )
     {
-      std::size_t max_size = available_memory() / sizeof(T);
-      int n_files = 0;
+      boost::btree::btree_map<Key, T, Traits, Comp>
+        bt(target, flgs, signature, node_sz, comp);
+      bulk_load(source, bt, msg_stream, available_memory);
+    }
 
-      // TODO: put the files in a uniquely named directory.
+  //-----------------------------------  bulk_load  ------------------------------------//
 
-      typedef std::vector<T> vector_type;
-      vector_type v;
-      v.reserve(max_size);
+  template <class BTree>
+  void bulk_load(const boost::filesystem::path& source, BT& tree,
+    std::ostream& msg_stream, std::size_t available_memory)
+  {
+    const std::size_t max_elements_per_block = available_memory / sizeof(T);
+    uint64_t file_size = boost::filesystem::file_size(source);
+    uint64_t elements_in_file = file_size / sizeof(T);
 
-      //  load the vector, sort it, write contents to tempoary file
-      while (being != end)
+    if (elements_in_file % sizeof(T))
+    {
+      std::string emess(source.string());
+      emess += " file size is not a multiple of the data element size";
+      throw std::runtime_error(emess.c_str());
+    }
+
+// TODO: should be a temporary file.
+
+    std::fstream tmpfile("temp",
+      std::ios_base::out | std::ios_base::binary | std::ios_base::trunc);
+
+    //  load, sort, and save to distribution files
+    {
+      std::ifstream infile(source);
+
+      boost::scoped_array<T> buf(new T[max_elements_per_block]);
+      T* begin = buf.get();;
+
+      //  for each block
+      for (uint64_t element_count = 0; element_count < elements_in_file;)
       {
-        ++n_files;
-        std::string path("sort");
-        path += std::to_string(files);
-        path += ".tmp";
-        std::ofstream out(path, std::ios_base::out | std::ios_base::binary);
-        if (!out)
-        {
-          throw std::runtime_error(std::string("Could not open ") + path);
-        }
+        // elements to read, sort, write
+        uint64_t elements = (elements_in_file - element_count) < max_elements_per_block
+          ? (elements_in_file - element_count) :  max_elements_per_block;
 
-        // load the vector
-        for (; v.size() < max_size && begin != end; ++begin)
-        {
-          v.push_back(*begin);
-        }
+        infile.read(begin, elements);                // load
+        std::stable_sort(begin, begin + elements);   // sort
+        tmpfile.write(begin, elements);              // save
 
-        // sort the vector
-        std::stable_sort(v.begin(), v.end());
-
-        // write out the vector
-        out.write(reinterpret_cast<const char*>(v.data()), v.size()*sizeof(T));
-        out.close();
-
-        v.clear();
-
-        msg << "  file " << n_files << " created" << std::endl;
+        element_count += elements;
       }
+    }
 
-      // set up the merge iterators
+    //  insert phase
 
     }
+
+    // set up the merge iterators
+
+  }
 
   //-------------------------------------  main  ---------------------------------------//
 
