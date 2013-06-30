@@ -13,17 +13,25 @@
 using namespace boost::btree;
 using std::cout; using std::endl;
 
+/*
+TODO:
+
+* need to specify directory for temporary files
+
+
+*/
+
 namespace
 {
-  boost::filesystem::path source("test.dat");
-  boost::filesystem::path target("test.btree");
+  boost::filesystem::path source("d:/temp/btree.dat");
+  boost::filesystem::path target("d:/temp/btree.map");
   std::size_t avail_mem = 10000u;
 }
 
 int cpp_main(int argc, char* argv[]) 
 {
 
-  bulk_load_map<uint32_t, uint64_t> map;
+  bulk_load_map<uint32_t, uint32_t> map;    // KISS
   map(source, target, cout, avail_mem, flags::truncate);
 
   return 0;

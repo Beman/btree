@@ -13,6 +13,8 @@
 #include <boost/filesystem/operations.hpp>
 #include <boost/btree/detail/binary_file.hpp>
 #include <boost/scoped_array.hpp>
+#include <boost/shared_ptr.hpp>
+#include <iterator>
 #include <algorithm>
 #include <ostream>
 #include <istream>
@@ -22,6 +24,22 @@ namespace boost
 {
 namespace btree
 {
+  template <class Key>
+  struct set_data
+  {
+    Key key;
+
+    bool operator<(const set_data& rhs) const {return key < rhs.key;}
+  };
+
+  template <class Key, class Mapped>
+  struct map_data
+  {
+    Key key;
+    Mapped mapped;
+
+    bool operator<(const map_data& rhs) const {return key < rhs.key;}
+  };
 
   template <class BTree>
   void bulk_load(const boost::filesystem::path& source,
@@ -65,12 +83,14 @@ namespace btree
   //-----------------------------------  bulk_load  ------------------------------------//
 
   template <class BTree>
-  void bulk_load(const boost::filesystem::path& source, BTree& tree,
+  void bulk_load(const boost::filesystem::path& source, BTree& bt,
     std::ostream& msg_stream, std::size_t available_memory)
   {
     namespace bfs = boost::filesystem;
 
-    typedef typename BTree::value_type value_type;
+    typedef typename BTree::key_type         key_type;
+    typedef typename BTree::mapped_type      mapped_type;
+    typedef map_data<key_type, mapped_type>  value_type;
 
     std::size_t  max_elements_per_tmp_file  = available_memory / sizeof(value_type);
     uint64_t     file_size                  = bfs::file_size(source);
@@ -86,7 +106,10 @@ namespace btree
       throw std::runtime_error(emess.c_str());
     }
 
-    bfs::path temp_path(bfs::temp_directory_path() / bfs::unique_path());
+
+    // TODO: fix this
+    //bfs::path temp_path(bfs::temp_directory_path() / bfs::unique_path());
+    bfs::path temp_path("d:/temp/btree");
 
 
     //  distribution phase: load, sort, and save source contents to temporary files
@@ -100,8 +123,7 @@ namespace btree
       value_type* begin = buf.get();;
 
       //  for each temporary file
-
-      for (std::size_t file_n = 0; file_n < n_tmp_files; )
+      for (std::size_t file_n = 0; file_n < n_tmp_files; ++file_n)
       {
 
         // elements to read, sort, write
@@ -110,7 +132,7 @@ namespace btree
           ? static_cast<std::size_t>(n_elements - elements_completed)
           : max_elements_per_tmp_file;
 
-        msg_stream << "    temporary file " << file_n << ", " << elements << "elements\n"
+        msg_stream << "    temporary file " << file_n << ", " << elements << " elements\n"
                       "      reading..." << endl;
         infile.read(begin, elements);
 
@@ -120,7 +142,8 @@ namespace btree
         // TODO: if only one temp file, don't bother to write and then read it!
 
         msg_stream << "      writing..." << endl;
-        std::string tmppath = temp_path.string() + ".tmp" + std::to_string(file_n);
+
+        std::string tmppath = temp_path.string() + std::to_string(file_n) + ".tmp";
         boost::btree::binary_file tmpfile(tmppath, boost::btree::oflag::out);
         tmpfile.write(begin, elements);
 
@@ -134,8 +157,60 @@ namespace btree
 
     //  merge and insert phase
 
+    struct file_state
+    {
+      boost::shared_ptr<std::ifstream>  stream_ptr;
+      value_type                        element;  // current element
+      std::size_t                       bytes_left;
 
-    // set up the merge iterators
+      file_state() : stream_ptr(new std::ifstream)
+      {
+        stream_ptr->exceptions(std::ios_base::badbit | std::ios_base::failbit);
+      }
+
+      bool operator<(const file_state& rhs) const {return element < rhs.element;}
+
+    };
+
+    typedef std::vector<file_state> vector_type;
+
+    vector_type files;
+    files.reserve(n_tmp_files);
+
+    // open each temporary file and set up its current element
+    for (std::size_t file_n = 0; file_n < n_tmp_files; ++file_n)
+      {
+        std::string tmppath = temp_path.string() + std::to_string(file_n) + ".tmp";
+        msg_stream << "      opening " << tmppath << endl;
+        files[file_n].stream_ptr->open(tmppath.c_str(), std::ios_base::binary);
+        files[file_n].stream_ptr->read(
+          reinterpret_cast<char*>(&files[file_n].element),
+          sizeof(value_type));
+      }
+
+    // insert minimum element into btree, preserving stability
+    uint64_t inserts = 0;
+
+    while (!files.empty())
+    {
+      vector_type::iterator min = std::min_element(files.begin(), files.end());
+
+      bt.emplace(min->element.key, min->element.mapped);
+      ++inserts;
+
+      min->bytes_left -= sizeof(value_type);
+      if (min->bytes_left)
+        min->stream_ptr->read(
+          reinterpret_cast<char*>(&min->element), sizeof(value_type));
+      else
+        files.erase(min);
+    }
+    BOOST_ASSERT(inserts == n_elements);
+    // TODO throw if inserts != n_elements
+
+    cout << "  done!\n\n";
+
+    cout << bt << endl;
 
   }
 

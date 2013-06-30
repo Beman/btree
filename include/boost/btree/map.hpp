@@ -91,7 +91,7 @@ namespace boost
       insert(const map_value<Key, T>& value)
       {
         return btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>::m_insert_unique(
-          value->key(), value->mapped_value());
+          value.key(), value.mapped_value());
       }
 
       template <class InputIterator>
@@ -178,7 +178,7 @@ namespace boost
       insert(const map_value<Key, T>& value)
       {
         return btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>::m_insert_non_unique(
-          value->key(), value->mapped_value());
+          value.key(), value.mapped_value());
       }
 
       template <class InputIterator>
