@@ -17,14 +17,14 @@ namespace
 {
   boost::filesystem::path source("test.dat");
   boost::filesystem::path target("test.btree");
-  std::size_t avail_mem
+  std::size_t avail_mem = 10000u;
 }
 
-int cpp_main(int argc, char * argv[] ) 
+int cpp_main(int argc, char* argv[]) 
 {
 
-  bulk_load_map<volume::u128_t, uint64_t>(source, target, cout,
-    10000, flags::truncate);
+  bulk_load_map<uint32_t, uint64_t> map;
+  map(source, target, cout, avail_mem, flags::truncate);
 
   return 0;
 }

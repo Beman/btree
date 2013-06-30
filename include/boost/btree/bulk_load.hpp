@@ -25,21 +25,24 @@ namespace btree
 
   template <class BTree>
   void bulk_load(const boost::filesystem::path& source,
-    BTree& bt, std::ostream& msg_stream,
-    std::size_t available_memory);
+    BTree& bt, std::ostream& msg_stream, std::size_t available_memory);
 
   template <class Key, class T, class Traits = default_traits,
     class Comp = btree::less<Key> >
-  void bulk_load_map(
-    const boost::filesystem::path& source,
-    const boost::filesystem::path& target,
-    std::ostream& msg_stream,
-    std::size_t available_memory,
-    flags::bitmask flgs = boost::btree::flags::read_write,
-    uint64_t signature = -1,  // for existing files, must match signature from creation
-    std::size_t node_sz = default_node_size,  // ignored if existing file
-    const Comp& comp = Comp()
-    );
+  class bulk_load_map
+  {
+  public:
+    void operator()(
+      const boost::filesystem::path& source,
+      const boost::filesystem::path& target,
+      std::ostream& msg_stream,
+      std::size_t available_memory,
+      flags::bitmask flgs = boost::btree::flags::read_write,
+      uint64_t signature = -1,  // for existing files, must match signature from creation
+      std::size_t node_sz = default_node_size,  // ignored if existing file
+      const Comp& comp = Comp()
+      );
+  };
 
  
   //------------------------------------------------------------------------------------//
@@ -48,12 +51,11 @@ namespace btree
 
   //---------------------------------  bulk_load_map  ----------------------------------//
 
-   template <class Key, class T, class Traits = default_traits,
-    class Comp = btree::less<Key> >
-  void bulk_load_map(const boost::filesystem::path& source,
-    const boost::filesystem::path& target, std::ostream& msg_stream,
-    std::size_t available_memory, flags::bitmask flgs, uint64_t signature,
-    std::size_t node_sz, const Comp& comp )
+  template <class Key, class T, class Traits, class Comp>
+  void bulk_load_map<Key, T, Traits, Comp>::operator()(
+    const boost::filesystem::path& source, const boost::filesystem::path& target,
+    std::ostream& msg_stream, std::size_t available_memory, flags::bitmask flgs,
+    uint64_t signature, std::size_t node_sz, const Comp& comp )
     {
       boost::btree::btree_map<Key, T, Traits, Comp>
         bt(target, flgs, signature, node_sz, comp);
@@ -63,50 +65,75 @@ namespace btree
   //-----------------------------------  bulk_load  ------------------------------------//
 
   template <class BTree>
-  void bulk_load(const boost::filesystem::path& source, BT& tree,
+  void bulk_load(const boost::filesystem::path& source, BTree& tree,
     std::ostream& msg_stream, std::size_t available_memory)
   {
-    const std::size_t max_elements_per_block = available_memory / sizeof(T);
-    uint64_t file_size = boost::filesystem::file_size(source);
-    uint64_t elements_in_file = file_size / sizeof(T);
+    namespace bfs = boost::filesystem;
 
-    if (elements_in_file % sizeof(T))
+    typedef typename BTree::value_type value_type;
+
+    std::size_t  max_elements_per_tmp_file  = available_memory / sizeof(value_type);
+    uint64_t     file_size                  = bfs::file_size(source);
+    uint64_t     n_elements                 = file_size / sizeof(value_type);
+    std::size_t  n_tmp_files                = static_cast<std::size_t>
+                                                (1 + n_elements/max_elements_per_tmp_file);
+    uint64_t     elements_completed         = 0;
+
+    if (file_size % sizeof(value_type))
     {
       std::string emess(source.string());
-      emess += " file size is not a multiple of the data element size";
+      emess += " file size is not a multiple of the value_type size";
       throw std::runtime_error(emess.c_str());
     }
 
-// TODO: should be a temporary file.
+    bfs::path temp_path(bfs::temp_directory_path() / bfs::unique_path());
 
-    std::fstream tmpfile("temp",
-      std::ios_base::out | std::ios_base::binary | std::ios_base::trunc);
 
-    //  load, sort, and save to distribution files
+    //  distribution phase: load, sort, and save source contents to temporary files
+
     {
-      std::ifstream infile(source);
+      boost::btree::binary_file infile(source);
+      msg_stream << "  distributing " << source << " contents to " << n_tmp_files
+                 << " temporary file..." << std::endl;
 
-      boost::scoped_array<T> buf(new T[max_elements_per_block]);
-      T* begin = buf.get();;
+      boost::scoped_array<value_type> buf(new value_type[max_elements_per_tmp_file]);
+      value_type* begin = buf.get();;
 
-      //  for each block
-      for (uint64_t element_count = 0; element_count < elements_in_file;)
+      //  for each temporary file
+
+      for (std::size_t file_n = 0; file_n < n_tmp_files; )
       {
+
         // elements to read, sort, write
-        uint64_t elements = (elements_in_file - element_count) < max_elements_per_block
-          ? (elements_in_file - element_count) :  max_elements_per_block;
+        std::size_t elements = 
+          (n_elements - elements_completed) < max_elements_per_tmp_file
+          ? static_cast<std::size_t>(n_elements - elements_completed)
+          : max_elements_per_tmp_file;
 
-        infile.read(begin, elements);                // load
-        std::stable_sort(begin, begin + elements);   // sort
-        tmpfile.write(begin, elements);              // save
+        msg_stream << "    temporary file " << file_n << ", " << elements << "elements\n"
+                      "      reading..." << endl;
+        infile.read(begin, elements);
 
-        element_count += elements;
+        msg_stream << "      sorting..." << endl;
+        std::stable_sort(begin, begin + elements);
+
+        // TODO: if only one temp file, don't bother to write and then read it!
+
+        msg_stream << "      writing..." << endl;
+        std::string tmppath = temp_path.string() + ".tmp" + std::to_string(file_n);
+        boost::btree::binary_file tmpfile(tmppath, boost::btree::oflag::out);
+        tmpfile.write(begin, elements);
+
+        elements_completed += elements;
       }
+      BOOST_ASSERT(elements_completed == n_elements);
+
+      // TODO: throw if elements_completed != n_elements
+      // Maybe even throw if sum of file sizes != n_elements * sizeof(value_type)
     }
 
-    //  insert phase
+    //  merge and insert phase
 
-    }
 
     // set up the merge iterators
 

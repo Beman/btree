@@ -136,6 +136,10 @@ public:
 };
 
 template <class T1, class T2>
+bool operator<(const map_value<T1, T2>& l, const map_value<T1, T2>& r)
+  {return l.key() < r.key();}
+
+template <class T1, class T2>
 std::ostream& operator<<(std::ostream& os, const map_value<T1, T2>& x)
 {
   os << x.key() << ',' << x.mapped_value();
