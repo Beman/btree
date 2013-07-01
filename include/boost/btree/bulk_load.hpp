@@ -195,16 +195,28 @@ namespace btree
       files[file_n].bytes_left = bfs::file_size(tmppath.c_str()) - sizeof(value_type);
     }
 
-    // insert minimum element into btree, preserving stability
+    uint64_t emplace_calls = 0;
     uint64_t inserts = 0;
+    //  hold most recent iterator to minimize cache thrashing; may become unneccessary
+    //  if an packed_insert is implemented, but still needed if insert/emplace with
+    //  hint implemented.
+    std::pair<typename BTree::const_iterator, bool> result;  
 
+    //  until all elements done, insert minimum element
+    //    note well: stable due to stable_sort of each file, and then min_element
+    //    order guarantee that files will be checked in begin to end order
     while (!files.empty())
     {
       vector_type::iterator min = std::min_element(files.begin(), files.end());
 
       msg_stream << " emplace " << min->element.key << std::endl;
-      bt.emplace(min->element.key, min->element.mapped);
-      ++inserts;
+      result = bt.emplace(min->element.key, min->element.mapped);
+      ++emplace_calls;
+      if (result.second)
+      {
+        ++inserts;
+        BOOST_ASSERT(bt.inspect_leaf_to_root(msg_stream, result.first));
+      }
 
       if (min->bytes_left)
       {
@@ -216,11 +228,12 @@ namespace btree
         files.erase(min);
     }
 
-    msg_stream << inserts << " emplace calls\n";
+    msg_stream << emplace_calls << " emplace calls, " << inserts << " inserts\n";
 
     msg_stream << bt << std::endl;
+    msg_stream << bt.manager() << std::endl;
 
-    BOOST_ASSERT(inserts == n_elements);
+    BOOST_ASSERT(emplace_calls == n_elements);
     // TODO throw if inserts != n_elements
 
   }

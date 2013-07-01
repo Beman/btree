@@ -642,6 +642,7 @@ public:
 //------------------------------  inspect leaf-to-root  --------------------------------//
 
   bool inspect_leaf_to_root(std::ostream& os, const const_iterator& itr)
+    // Returns: true if no errors detected
 {
   btree_node* np = itr.node().get();
   for (;
