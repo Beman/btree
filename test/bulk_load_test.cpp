@@ -25,7 +25,7 @@ namespace
 {
   boost::filesystem::path source("d:/temp/btree.dat");
   boost::filesystem::path target("d:/temp/btree.map");
-  std::size_t avail_mem = 10000u;
+  std::size_t avail_mem = 200u;
 }
 
 int cpp_main(int argc, char* argv[]) 

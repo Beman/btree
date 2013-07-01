@@ -144,7 +144,8 @@ namespace btree
         msg_stream << "      writing..." << endl;
 
         std::string tmppath = temp_path.string() + std::to_string(file_n) + ".tmp";
-        boost::btree::binary_file tmpfile(tmppath, boost::btree::oflag::out);
+        boost::btree::binary_file tmpfile(tmppath, boost::btree::oflag::out
+          | boost::btree::oflag::truncate);
         tmpfile.write(begin, elements);
 
         elements_completed += elements;
@@ -153,6 +154,8 @@ namespace btree
 
       // TODO: throw if elements_completed != n_elements
       // Maybe even throw if sum of file sizes != n_elements * sizeof(value_type)
+
+      msg_stream << "   end of distribution phase" << endl;
     }
 
     //  merge and insert phase
@@ -172,6 +175,8 @@ namespace btree
 
     };
 
+     msg_stream << n_tmp_files << " temporary files to be processed by merge/insert phase" << endl;
+
     typedef std::vector<file_state> vector_type;
 
     vector_type files;
@@ -179,14 +184,16 @@ namespace btree
 
     // open each temporary file and set up its current element
     for (std::size_t file_n = 0; file_n < n_tmp_files; ++file_n)
-      {
-        std::string tmppath = temp_path.string() + std::to_string(file_n) + ".tmp";
-        msg_stream << "      opening " << tmppath << endl;
-        files[file_n].stream_ptr->open(tmppath.c_str(), std::ios_base::binary);
-        files[file_n].stream_ptr->read(
-          reinterpret_cast<char*>(&files[file_n].element),
-          sizeof(value_type));
-      }
+    {
+      std::string tmppath = temp_path.string() + std::to_string(file_n) + ".tmp";
+      msg_stream << "      opening " << tmppath << endl;
+      files.push_back(file_state());
+      files[file_n].stream_ptr->open(tmppath.c_str(), std::ios_base::binary);
+      files[file_n].stream_ptr->read(
+        reinterpret_cast<char*>(&files[file_n].element),
+        sizeof(value_type));
+      files[file_n].bytes_left = bfs::file_size(tmppath.c_str()) - sizeof(value_type);
+    }
 
     // insert minimum element into btree, preserving stability
     uint64_t inserts = 0;
@@ -195,22 +202,26 @@ namespace btree
     {
       vector_type::iterator min = std::min_element(files.begin(), files.end());
 
+      msg_stream << " emplace " << min->element.key << std::endl;
       bt.emplace(min->element.key, min->element.mapped);
       ++inserts;
 
-      min->bytes_left -= sizeof(value_type);
       if (min->bytes_left)
+      {
         min->stream_ptr->read(
           reinterpret_cast<char*>(&min->element), sizeof(value_type));
+        min->bytes_left -= sizeof(value_type);
+      }
       else
         files.erase(min);
     }
+
+    msg_stream << inserts << " emplace calls\n";
+
+    msg_stream << bt << std::endl;
+
     BOOST_ASSERT(inserts == n_elements);
     // TODO throw if inserts != n_elements
-
-    cout << "  done!\n\n";
-
-    cout << bt << endl;
 
   }
 
