@@ -7,6 +7,7 @@
 
 #include "../volume_test/data.hpp"
 #include <boost/btree/bulk_load.hpp>
+#include <boost/timer/timer.hpp>
 #include <boost/detail/lightweight_main.hpp>
 #include <iostream>
 
@@ -30,9 +31,13 @@ namespace
 
 int cpp_main(int argc, char* argv[]) 
 {
+  boost::timer::auto_cpu_timer t(3);
 
   bulk_load_map<uint32_t, uint32_t> map;    // KISS
   map(source, target, cout, avail_mem, flags::truncate);
+
+  t.stop();
+  t.report();
 
   return 0;
 }
