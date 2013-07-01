@@ -579,6 +579,7 @@ public:
   bool          empty() const               { return !size(); }
   size_type     size() const                { return m_hdr.element_count(); }
   //size_type     max_size() const            { return ; }
+  bool          ok_to_pack() const          { return m_ok_to_pack; }
 
   std::size_t   node_size() const           { BOOST_ASSERT(is_open());
                                               return m_mgr.data_size(); }
@@ -1203,6 +1204,7 @@ std::ostream& operator<<(std::ostream& os,
      << "  root node id -------------: " << bt.header().root_node_id() << "\n"
      << "  free node list head id ---: " << bt.header().free_node_list_head_id() << "\n"
      << "  User supplied string -----: \"" << bt.header().user_c_str() << "\"\n"
+     << "  OK to pack ---------------: " << bt.ok_to_pack() << "\n"
   ;
   return os;
 }
@@ -2150,52 +2152,52 @@ btree_base<Key,Base,Traits,Comp>::count(const key_type& k) const
 template <class Key, class Base, class Traits, class Comp>   
 void btree_base<Key,Base,Traits,Comp>::dump_dot(std::ostream& os) const
 {
-  BOOST_ASSERT_MSG(is_open(), "dump_dot() on unopen btree");
-  os << "digraph btree {\nrankdir=LR;\nfontname=Courier;\n"
-    "node [shape = record,margin=.1,width=.1,height=.1,fontname=Courier"
-    ",style=\"filled\"];\n";
+  //BOOST_ASSERT_MSG(is_open(), "dump_dot() on unopen btree");
+  //os << "digraph btree {\nrankdir=LR;\nfontname=Courier;\n"
+  //  "node [shape = record,margin=.1,width=.1,height=.1,fontname=Courier"
+  //  ",style=\"filled\"];\n";
 
-  for (unsigned int p = 1; p < header().node_count(); ++p)
-  {
-    btree_node_ptr np = m_mgr.read(p);
+  //for (unsigned int p = 1; p < header().node_count(); ++p)
+  //{
+  //  btree_node_ptr np = m_mgr.read(p);
 
-    if (np->is_leaf())
-    {
-      os << "node" << p << "[label = \"<f0> " << p
-         << ", use-ct=" << np->use_count()-1 << "|";
-      for (leaf_iterator it = np->leaf().begin(); it != np->leaf().end(); ++it)
-      {
-        if (it != np->leaf().begin())
-          os << '|';
-        os << *it;
-      }
-      os << "\",fillcolor=\"palegreen\"];\n";
-    }
-    else if (np->is_branch())
-    {
-      os << "node" << p << "[label = \"<f0> " << p
-         << ", use-ct=" << np->use_count()-1 << "|";
-      int f = 1;
-      branch_iterator it;
-      for (it = np->branch().begin(); it != np->branch().end(); ++it)
-      {
-        os << "<f" << f << ">|" << it->key() << "|";
-        ++f;
-      }
-      os << "<f" << f << ">\",fillcolor=\"lightblue\"];\n";
-      f = 1;
-      for (it = np->branch().begin(); it != np->branch().end(); ++it)
-      {
-        os << "\"node" << p << "\":f" << f
-           << " -> \"node" << it->node_id() << "\":f0;\n";
-        ++f;
-      }
-    os << "\"node" << p << "\":f" << f 
-       << " -> \"node" << it->node_id() << "\":f0;\n";
-    }
-  }
+  //  if (np->is_leaf())
+  //  {
+  //    os << "node" << p << "[label = \"<f0> " << p
+  //       << ", use-ct=" << np->use_count()-1 << "|";
+  //    for (leaf_iterator it = np->leaf().begin(); it != np->leaf().end(); ++it)
+  //    {
+  //      if (it != np->leaf().begin())
+  //        os << '|';
+  //      os << *it;
+  //    }
+  //    os << "\",fillcolor=\"palegreen\"];\n";
+  //  }
+  //  else if (np->is_branch())
+  //  {
+  //    os << "node" << p << "[label = \"<f0> " << p
+  //       << ", use-ct=" << np->use_count()-1 << "|";
+  //    int f = 1;
+  //    branch_iterator it;
+  //    for (it = np->branch().begin(); it != np->branch().end(); ++it)
+  //    {
+  //      os << "<f" << f << ">|" << it->key() << "|";
+  //      ++f;
+  //    }
+  //    os << "<f" << f << ">\",fillcolor=\"lightblue\"];\n";
+  //    f = 1;
+  //    for (it = np->branch().begin(); it != np->branch().end(); ++it)
+  //    {
+  //      os << "\"node" << p << "\":f" << f
+  //         << " -> \"node" << it->node_id() << "\":f0;\n";
+  //      ++f;
+  //    }
+  //  os << "\"node" << p << "\":f" << f 
+  //     << " -> \"node" << it->node_id() << "\":f0;\n";
+  //  }
+  //}
 
-  os << "}" << std::endl;
+  //os << "}" << std::endl;
 }
 
 ////  non-member functions  ----------------------------------------------------//

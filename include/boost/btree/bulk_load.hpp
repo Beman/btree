@@ -209,9 +209,18 @@ namespace btree
     {
       vector_type::iterator min = std::min_element(files.begin(), files.end());
 
-      msg_stream << " emplace " << min->element.key << std::endl;
+//      msg_stream << " emplace " << min->element.key << std::endl;
       result = bt.emplace(min->element.key, min->element.mapped);
       ++emplace_calls;
+
+      if (emplace_calls % 1000000 == 0)
+      {
+        msg_stream << "    " << emplace_calls << " emplace calls, "
+                             << inserts << " inserts";
+        msg_stream << ", this one from file " << (min - files.begin())
+                   << " of " << files.size()-1 << std::endl;
+      }
+
       if (result.second)
       {
         ++inserts;

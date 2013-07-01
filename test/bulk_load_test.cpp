@@ -26,14 +26,16 @@ namespace
 {
   boost::filesystem::path source("d:/temp/btree.dat");
   boost::filesystem::path target("d:/temp/btree.map");
-  std::size_t avail_mem = 200u;
+  //std::size_t avail_mem = 200u;
+  std::size_t avail_mem = 4000000000ULL;
 }
 
 int cpp_main(int argc, char* argv[]) 
 {
   boost::timer::auto_cpu_timer t(3);
 
-  bulk_load_map<uint32_t, uint32_t> map;    // KISS
+  //bulk_load_map<uint32_t, uint32_t> map;    // KISS
+  bulk_load_map<volume::u128_t, uint64_t> map;    
   map(source, target, cout, avail_mem, flags::truncate);
 
   t.stop();
