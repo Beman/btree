@@ -698,6 +698,17 @@ public:
 
 private:
 
+  //  The standard library mandates key_compare and value_compare types.
+  //  The implementation also needs to compare a value_type to a key_type, and a
+  //  branch_value_type to a key_type and visa versa.
+
+  key_compare        m_comp;
+  value_compare      m_value_comp;
+
+  //  The following is defined at the end of the btree_base definition because of some
+  //  complex ordering dependencies that I don't really understand:
+  //     branch_compare  m_branch_comp;
+
   mutable
     buffer_manager   m_mgr;
 
@@ -1170,12 +1181,6 @@ private:
 
   //------------------------ comparison function objects -------------------------------//
 
-  //  The standard library mandates key_compare and value_compare types.
-  //  The implementation also needs to compare a value_type to a key_type, and a
-  //  branch_value_type to a key_type and visa versa.
-
-  key_compare               m_comp;
-  value_compare             m_value_comp;
   branch_compare            m_branch_comp;
 
   branch_compare
@@ -1217,8 +1222,9 @@ std::ostream& operator<<(std::ostream& os,
 
 template <class Key, class Base, class Traits, class Comp>
 btree_base<Key,Base,Traits,Comp>::btree_base(const Comp& comp)
-  : m_mgr(m_node_alloc), m_comp(comp), m_value_comp(comp), m_branch_comp(comp),
-    m_cache_branches(false)
+  // initialize in the correct order to avoid voluminous gcc warnings:
+  : m_comp(comp), m_value_comp(comp), m_mgr(m_node_alloc),
+    m_cache_branches(false), m_branch_comp(comp)
 { 
   m_mgr.owner(this);
 
@@ -1232,8 +1238,9 @@ btree_base<Key,Base,Traits,Comp>::btree_base(const Comp& comp)
 template <class Key, class Base, class Traits, class Comp>
 btree_base<Key,Base,Traits,Comp>::btree_base(const boost::filesystem::path& p,
   flags::bitmask flgs, uint64_t signature, std::size_t node_sz, const Comp& comp)
-  : m_mgr(m_node_alloc), m_comp(comp), m_value_comp(comp), m_branch_comp(comp),
-    m_cache_branches(false)
+  // initialize in the correct order to avoid voluminous gcc warnings:
+  : m_comp(comp), m_value_comp(comp), m_mgr(m_node_alloc),
+    m_cache_branches(false), m_branch_comp(comp)
 { 
   m_mgr.owner(this);
 
