@@ -663,7 +663,7 @@ public:
           << ", branch pages =" << header().branch_node_count()
           << ", leaf pages =" << header().leaf_node_count()
           << ", size=" << size()
-          << endl;
+          << std::endl;
       manager().dump_buffers(os);
       manager().dump_available_buffers(os);
       dump_dot(os);
@@ -682,7 +682,7 @@ public:
         << ", branch pages =" << header().branch_node_count()
         << ", leaf pages =" << header().leaf_node_count()
         << ", size=" << size()
-        << endl;
+        << std::endl;
     manager().dump_buffers(os);
     manager().dump_available_buffers(os);
     dump_dot(os);
@@ -1655,7 +1655,7 @@ btree_base<Key,Base,Traits,Comp>::m_branch_insert( btree_node_ptr np,
     if (m_ok_to_pack)  // have all inserts been ordered and no erases occurred?
     {
       // instead of splitting np, just copy child's node_id to np2
-      std::memcpy(&*np2->branch().begin(), &child->node_id(), sizeof(node_id_type));
+      np2->branch().begin()->node_id() = child->node_id();
       //  set the child's parent and parent_element
       child->parent(np2);
       child->parent_element(np2->branch().begin()); 
@@ -1747,7 +1747,8 @@ btree_base<Key,Base,Traits,Comp>::m_branch_insert( btree_node_ptr np,
   BOOST_ASSERT(char_ptr(insert_begin) + k_size + sizeof(node_id_type)
     <= char_ptr(&*np->branch().begin())+m_max_branch_size);
   std::memcpy(insert_begin, &k, k_size);  // insert k
-  std::memcpy(char_ptr(insert_begin) + k_size, &child->node_id(), sizeof(node_id_type));
+  *reinterpret_cast<node_id_type*>(char_ptr(insert_begin) + k_size)
+    = child->node_id();
   np->size(np->size() + insert_size);
 
   //  set the child's parent and parent_element
