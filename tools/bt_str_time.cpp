@@ -486,7 +486,7 @@ int cpp_main(int argc, char * argv[])
         initial_n = atol( argv[2]+2 );
       else if ( *(argv[2]+1) == 'l' )
         lg = atol( argv[2]+2 );
-      else if ( *(argv[2]+1) == 'k' )
+      else if ( *(argv[2]+1) == 'p' )
         do_pack = true;
       else if ( *(argv[2]+1) == 'r' )
         do_preload = true;
@@ -518,7 +518,7 @@ int cpp_main(int argc, char * argv[])
       "   -xf      No find test\n"
       "   -xi      No iterate test\n"
       "   -xe      No erase test; use to save file intact\n"
-      "   -k       Pack tree after insert test\n"
+      "   -p       Pack tree after insert test\n"
       "   -v       Verbose output statistics\n"
       "   -stl     Also run the tests against std::map\n"
       "   -c_str_proxy   Also run the tests with class c_str_proxy\n"
