@@ -1312,9 +1312,11 @@ btree_base<Key,Base,Traits,Comp>::m_open(const boost::filesystem::path& p,
       m_close_and_throw("map/set differs");
     if ((m_hdr.flags() & flags::unique) != (flgs & flags::unique))
       m_close_and_throw("multi/non-multi differs");
-    if (m_hdr.key_size() != Base::key_size())
+    if (!(m_hdr.flags() & flags::key_varies)
+        && m_hdr.key_size() != Base::key_size())
       m_close_and_throw("key size differs");
-    if (m_hdr.key_size() != Base::mapped_size())
+    if (!(m_hdr.flags() & flags::mapped_varies)
+        && m_hdr.mapped_size() != Base::mapped_size())
       m_close_and_throw("mapped size differs");
 
     m_mgr.data_size(m_hdr.node_size());
