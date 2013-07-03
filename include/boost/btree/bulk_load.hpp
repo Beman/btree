@@ -83,6 +83,27 @@ namespace btree
   //                                  implementation                                    //
   //------------------------------------------------------------------------------------//
 
+  namespace detail
+  {
+    //  This helper was originally written as a local non-template class inside
+    //  bulk_load(), but GCC in C++03 mode correctly rejects use of a local class as a
+    //  template-argument for a template type-parameter.
+    template <class T>
+    struct file_state
+    {
+      boost::shared_ptr<std::ifstream>  stream_ptr;
+      T                                 element;  // current element
+      std::size_t                       bytes_left;
+
+      file_state() : stream_ptr(new std::ifstream)
+      {
+        stream_ptr->exceptions(std::ios_base::badbit | std::ios_base::failbit);
+      }
+
+      bool operator<(const file_state& rhs) const {return element < rhs.element;}
+     };
+  }
+
   //---------------------------------  bulk_load_map  ----------------------------------//
 
   template <class Key, class T, class Traits, class Comp>
@@ -179,25 +200,10 @@ namespace btree
 
     //  merge and insert phase
 
-    struct file_state
-    {
-      boost::shared_ptr<std::ifstream>  stream_ptr;
-      value_type                        element;  // current element
-      std::size_t                       bytes_left;
+    msg_stream << n_tmp_files
+               << " temporary files to be processed by merge/insert phase" << std::endl;
 
-      file_state() : stream_ptr(new std::ifstream)
-      {
-        stream_ptr->exceptions(std::ios_base::badbit | std::ios_base::failbit);
-      }
-
-      bool operator<(const file_state& rhs) const {return element < rhs.element;}
-
-    };
-
-     msg_stream << n_tmp_files
-                << " temporary files to be processed by merge/insert phase" << std::endl;
-
-    typedef std::vector<file_state> vector_type;
+    typedef std::vector<detail::file_state<value_type> > vector_type;
 
     vector_type files;
     files.reserve(n_tmp_files);
@@ -208,7 +214,7 @@ namespace btree
       std::string file_n_string = boost::lexical_cast<std::string>(file_n);
       bfs::path tmp_path = temp_dir / bfs::path("btree.tmp" + file_n_string);
       msg_stream << "      opening " << tmp_path << std::endl;
-      files.push_back(file_state());
+      files.push_back(detail::file_state<value_type>());
       files[file_n].stream_ptr->open(tmp_path.string().c_str(), std::ios_base::binary);
       files[file_n].stream_ptr->read(
         reinterpret_cast<char*>(&files[file_n].element),
