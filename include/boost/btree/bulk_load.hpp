@@ -15,6 +15,7 @@
 #include <boost/scoped_array.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/timer/timer.hpp>
 #include <iterator>
 #include <algorithm>
 #include <ostream>
@@ -70,7 +71,7 @@ namespace btree
       const boost::filesystem::path& temp_dir,
       std::ostream& msg_stream,
       std::size_t max_memory,
-      uint64_t log_point,
+      uint64_t log_point = 0,
       flags::bitmask flgs = boost::btree::flags::read_write,
       uint64_t signature = -1,  // for existing files, must match signature from creation
       std::size_t node_sz = default_node_size,  // ignored if existing file
@@ -87,7 +88,8 @@ namespace btree
   {
     //  This helper was originally written as a local non-template class inside
     //  bulk_load(), but GCC in C++03 mode correctly rejects use of a local class as a
-    //  template-argument for a template type-parameter.
+    //  template-argument for a template type-parameter. Asside: this restriction is
+    //  lifted in  C++11
     template <class T>
     struct file_state
     {
@@ -141,7 +143,7 @@ namespace btree
     typedef typename BTree::mapped_type      mapped_type;
     typedef map_data<key_type, mapped_type>  value_type;
 
-    std::size_t  max_elements_per_tmp_file  = max_memory / sizeof(value_type);
+    std::size_t  max_elements_per_tmp_file  = (max_memory / sizeof(value_type)) + 1;
     uint64_t     file_size                  = bfs::file_size(source);
     uint64_t     n_elements                 = file_size / sizeof(value_type);
     std::size_t  n_tmp_files                = static_cast<std::size_t>
@@ -156,8 +158,11 @@ namespace btree
     //  distribution phase: load, sort, and save source contents to temporary files
 
     uint64_t  elements_completed = 0;
+    boost::timer::auto_cpu_timer t(msg_stream, 1);
+
     {
-      boost::btree::binary_file infile(source);
+      boost::btree::binary_file infile(source, boost::btree::oflag::in
+        | boost::btree::oflag::sequential);
       msg_stream << "  distributing " << source << " contents to " << n_tmp_files
                  << " temporary file..." << std::endl;
 
@@ -175,18 +180,26 @@ namespace btree
 
         msg_stream << "    temporary file " << file_n << ", " << elements << " elements\n"
                       "      reading..." << std::endl;
+        t.start();
         infile.read(begin, elements);
+        t.stop();
+        t.report();
 
         msg_stream << "      sorting..." << std::endl;
+        t.start();
         std::stable_sort(begin, begin + elements);
+        t.stop();
+        t.report();
 
         msg_stream << "      writing..." << std::endl;
-
+        t.start();
         std::string file_n_string = boost::lexical_cast<std::string>(file_n);
         bfs::path tmp_path = temp_dir / bfs::path("btree.tmp" + file_n_string);
         boost::btree::binary_file tmpfile(tmp_path, boost::btree::oflag::out
-          | boost::btree::oflag::truncate);
+          | boost::btree::oflag::truncate | boost::btree::oflag::sequential);
         tmpfile.write(begin, elements);
+        t.stop();
+        t.report();
 
         elements_completed += elements;
       }
@@ -219,7 +232,7 @@ namespace btree
       files[file_n].stream_ptr->read(
         reinterpret_cast<char*>(&files[file_n].element),
         sizeof(value_type));
-      files[file_n].bytes_left = bfs::file_size(tmp_path.c_str()) - sizeof(value_type);
+      files[file_n].bytes_left = static_cast<std::size_t>(bfs::file_size(tmp_path.c_str())) - sizeof(value_type);
     }
 
     uint64_t emplace_calls = 0;
@@ -229,6 +242,9 @@ namespace btree
     //  hint implemented.
     std::pair<typename BTree::const_iterator, bool> result;  
 
+    t.start();
+    timer::cpu_times then = t.elapsed();
+
     //  until all elements done, insert minimum element
     //    note well: stable due to stable_sort of each file, and then min_element
     //    order guarantee that files will be checked in begin to end order
@@ -236,7 +252,6 @@ namespace btree
     {
       typename vector_type::iterator min = std::min_element(files.begin(), files.end());
 
-//      msg_stream << " emplace " << min->element.key << std::endl;
       result = bt.emplace(min->element.key, min->element.mapped);
       ++emplace_calls;
 
@@ -246,12 +261,19 @@ namespace btree
         BOOST_ASSERT(bt.inspect_leaf_to_root(msg_stream, result.first));
       }
 
-      if (emplace_calls % log_point == 0)
+      if (log_point && emplace_calls % log_point == 0)
       {
+        t.stop();
+        timer::cpu_times now = t.elapsed();
         msg_stream << "    " << emplace_calls << " emplace calls, "
-                             << inserts << " inserts";
-        msg_stream << ", this one from file " << (min - files.begin())
-                   << " of " << files.size()-1 << std::endl;
+                             << inserts << " inserts, "
+        //msg_stream << ", this one from file " << (min - files.begin())
+        //           << " of " << files.size()-1 << std::endl;
+                   << (now.wall-then.wall)/sec << " secs, "
+                   << log_point / ((now.wall-then.wall)/sec) << " per sec"
+                   << endl;
+        then = now;
+        t.resume();
       }
 
       if (min->bytes_left)
@@ -263,6 +285,8 @@ namespace btree
       else
         files.erase(min);
     }
+    t.stop();
+    t.report();
 
     msg_stream << emplace_calls << " emplace calls, " << inserts << " inserts\n";
 

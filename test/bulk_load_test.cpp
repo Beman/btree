@@ -83,8 +83,13 @@ int cpp_main(int argc, char* argv[])
       {
         if ( *(argv[req]+1) == 'm' && std::isdigit(*(argv[req]+2)) )
         {
-          max_memory_megabytes = BOOST_BTREE_ATOLL( argv[req]+2 );
+          max_memory_megabytes = static_cast<std::size_t>(BOOST_BTREE_ATOLL(argv[req]+2));
           max_memory = max_memory_megabytes * one_megabyte;
+        }
+        else if ( *(argv[req]+1) == 'k' && std::isdigit(*(argv[req]+2)) )
+        {
+          std::size_t tmp = static_cast<std::size_t>(BOOST_BTREE_ATOLL(argv[req]+2));
+          max_memory = tmp * 1024U;
         }
         else if ( *(argv[req]+1) == 'l' && std::isdigit(*(argv[req]+2)) )
           log_point = BOOST_BTREE_ATOLL( argv[req]+2 );
@@ -108,18 +113,21 @@ int cpp_main(int argc, char* argv[])
       "   target-path  BTree file the source data pairs will be inserted\n"
       "                into; error if already exists\n"
       " Options:\n"
-      "   temp-path    Directory for temporary files; default " << temp_path << "\n"
-      "   -m#          Maximum memory # megabytes; default " <<
-                       max_memory_megabytes <<"\n"
+      "   temp-path    Directory for temporary files; default: " << temp_path << "\n"
+      "   -m#          Maximum memory # megabytes; default: " <<
+                       max_memory_megabytes << "\n"
+      "                Note well: The number of temporary files will be\n"
+      "                source file size / maximum memory. Ensure this is reasonable!\n"
       "   -l#          Log progress every # actions; default is no such logging\n"
       "   -sep[punct]  Thousands separator; space if punct omitted, default -sep,\n"
+      "   -k#          Maximum memory # kilobytes; default: see -m#. Note: for testing only\n"
 // TODO:      "   -v       Verbose output statistics\n"
       ;
     return 1;
   }
 
   cout.imbue(std::locale(std::locale(), new thousands_separator));
-  boost::timer::auto_cpu_timer t(3);
+  boost::timer::auto_cpu_timer t(1);
 
   //bulk_load_map<uint32_t, uint32_t> map;    // KISS
   bulk_load_map<volume::u128_t, uint64_t> map;    
