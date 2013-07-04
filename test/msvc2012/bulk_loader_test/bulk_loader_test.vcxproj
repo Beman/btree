@@ -117,7 +117,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PostBuildEvent>
-      <Command>"$(TargetDir)\$(TargetName).exe"</Command>
+      <Command>"$(TargetDir)\$(TargetName).exe" ../../../test/test.dat btree.map d:/temp/temp -k5 -l50</Command>
     </PostBuildEvent>
     <PostBuildEvent>
       <Message>Executing test $(TargetName).exe...</Message>
