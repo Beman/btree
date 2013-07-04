@@ -263,6 +263,7 @@ namespace btree
 
       if (log_point && emplace_calls % log_point == 0)
       {
+        const double sec = 1000000000.0;
         t.stop();
         timer::cpu_times now = t.elapsed();
         msg_stream << "    " << emplace_calls << " emplace calls, "
@@ -271,7 +272,7 @@ namespace btree
         //           << " of " << files.size()-1 << std::endl;
                    << (now.wall-then.wall)/sec << " secs, "
                    << log_point / ((now.wall-then.wall)/sec) << " per sec"
-                   << endl;
+                   << std::endl;
         then = now;
         t.resume();
       }
