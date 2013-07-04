@@ -5,7 +5,7 @@
 //  Distributed under the Boost Software License, Version 1.0.
 //  See http://www.boost.org/LICENSE_1_0.txt
 
-#include "../volume_test/data.hpp"
+#include "../tools/data.hpp"
 #include <boost/btree/bulk_load.hpp>
 #include <boost/timer/timer.hpp>
 #include <boost/filesystem.hpp>
