@@ -21,6 +21,13 @@
 #include <ostream>
 #include <istream>
 #include <fstream>
+#include <stdexcept>
+
+#define BOOST_BTREE_CSTDIO
+#ifdef BOOST_BTREE_CSTDIO
+#include <cstdio>
+#include <boost/system/error_code.hpp>
+#endif
 
 /*
 
@@ -93,13 +100,23 @@ namespace btree
     template <class T>
     struct file_state
     {
+#ifdef BOOST_BTREE_CSTDIO
+      FILE*  stream_ptr;
+#else
       boost::shared_ptr<std::ifstream>  stream_ptr;
+#endif
       T                                 element;  // current element
       std::size_t                       bytes_left;
 
+#ifdef BOOST_BTREE_CSTDIO
+      file_state() : stream_ptr(0)
+#else
       file_state() : stream_ptr(new std::ifstream)
+#endif
       {
+#ifndef BOOST_BTREE_CSTDIO
         stream_ptr->exceptions(std::ios_base::badbit | std::ios_base::failbit);
+#endif
       }
 
       bool operator<(const file_state& rhs) const {return element < rhs.element;}
@@ -155,7 +172,9 @@ namespace btree
       throw std::runtime_error(emess.c_str());
     }
 
+    //----------------------------------------------------------------------------------//
     //  distribution phase: load, sort, and save source contents to temporary files
+    //----------------------------------------------------------------------------------//
 
     uint64_t  elements_completed = 0;
     boost::timer::auto_cpu_timer t(msg_stream, 1);
@@ -164,7 +183,7 @@ namespace btree
       boost::btree::binary_file infile(source, boost::btree::oflag::in
         | boost::btree::oflag::sequential);
       msg_stream << "  distributing " << source << " contents to " << n_tmp_files
-                 << " temporary file..." << std::endl;
+                 << " temporary files..." << std::endl;
 
       boost::scoped_array<value_type> buf(new value_type[max_elements_per_tmp_file]);
       value_type* begin = buf.get();;
@@ -183,12 +202,14 @@ namespace btree
         t.start();
         infile.read(begin, elements);
         t.stop();
+        msg_stream << "       ";
         t.report();
 
         msg_stream << "      sorting..." << std::endl;
         t.start();
         std::stable_sort(begin, begin + elements);
         t.stop();
+        msg_stream << "       " ;
         t.report();
 
         msg_stream << "      writing..." << std::endl;
@@ -199,6 +220,7 @@ namespace btree
           | boost::btree::oflag::truncate | boost::btree::oflag::sequential);
         tmpfile.write(begin, elements);
         t.stop();
+        msg_stream << "       ";
         t.report();
 
         elements_completed += elements;
@@ -211,7 +233,9 @@ namespace btree
       msg_stream << "   end of distribution phase" << std::endl;
     }
 
+    //----------------------------------------------------------------------------------//
     //  merge and insert phase
+    //----------------------------------------------------------------------------------//
 
     msg_stream << n_tmp_files
                << " temporary files to be processed by merge/insert phase" << std::endl;
@@ -228,11 +252,22 @@ namespace btree
       bfs::path tmp_path = temp_dir / bfs::path("btree.tmp" + file_n_string);
       msg_stream << "      opening " << tmp_path << std::endl;
       files.push_back(detail::file_state<value_type>());
+#ifdef BOOST_BTREE_CSTDIO
+      files[file_n].stream_ptr = std::fopen(tmp_path.string().c_str(), "rb");
+      if (!files[file_n].stream_ptr)
+        throw std::runtime_error(std::string("open failure: ") + tmp_path.string());
+      if (std::setvbuf(files[file_n].stream_ptr, 0, _IOFBF, 4096))
+        throw std::runtime_error(std::string("setvbuf failure: ") + tmp_path.string());
+      if (std::fread(&files[file_n].element,
+        sizeof(value_type), 1, files[file_n].stream_ptr) != 1)
+          throw std::runtime_error(std::string("read failure: ") + tmp_path.string());
+#else
       files[file_n].stream_ptr->open(tmp_path.string().c_str(), std::ios_base::binary);
-      files[file_n].stream_ptr->read(
-        reinterpret_cast<char*>(&files[file_n].element),
+      files[file_n].stream_ptr->read(reinterpret_cast<char*>(&files[file_n].element),
         sizeof(value_type));
-      files[file_n].bytes_left = static_cast<std::size_t>(bfs::file_size(tmp_path.c_str())) - sizeof(value_type);
+#endif
+      files[file_n].bytes_left = static_cast<std::size_t>(bfs::file_size(tmp_path.c_str()))
+        - sizeof(value_type);
     }
 
     uint64_t emplace_calls = 0;
@@ -279,12 +314,24 @@ namespace btree
 
       if (min->bytes_left)
       {
+#ifdef BOOST_BTREE_CSTDIO
+      if (std::fread(&min->element, sizeof(value_type), 1, min->stream_ptr) != 1)
+        throw std::runtime_error("temp file read failure");
+#else
         min->stream_ptr->read(
           reinterpret_cast<char*>(&min->element), sizeof(value_type));
+#endif
         min->bytes_left -= sizeof(value_type);
       }
       else
+      {
+#ifdef BOOST_BTREE_CSTDIO
+        std::fclose(min->stream_ptr);
+#else
+        min-stream_ptr->close();
+#endif
         files.erase(min);
+      }
     }
     t.stop();
     t.report();
