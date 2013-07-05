@@ -42,6 +42,7 @@ namespace
   std::size_t max_memory = max_memory_megabytes * one_megabyte;
 
   std::string command_args;
+  bulk_opts::bitmask opts = bulk_opts::none;
   int64_t log_point = 0;   // if != 0, log_point every lg iterations
 
   char thou_separator = ',';
@@ -93,6 +94,9 @@ int cpp_main(int argc, char* argv[])
         }
         else if ( *(argv[req]+1) == 'l' && std::isdigit(*(argv[req]+2)) )
           log_point = BOOST_BTREE_ATOLL( argv[req]+2 );
+        else if ( *(argv[req]+1) == 'x' && *(argv[req]+2) == 'd'
+                  && *(argv[req]+3) == '\0')
+          opts  |= bulk_opts::skip_distribution;
         else if ( std::strncmp( argv[req]+1, "sep", 3 )==0
             && (std::ispunct(*(argv[req]+4)) || *(argv[req]+4)== '\0') )
           thou_separator = *(argv[req]+4) ? *(argv[req]+4) : ' ';
@@ -118,7 +122,9 @@ int cpp_main(int argc, char* argv[])
                        max_memory_megabytes << "\n"
       "                Note well: The number of temporary files will be\n"
       "                source file size / maximum memory. Ensure this is reasonable!\n"
-      "   -l#          Log progress every # actions; default is no such logging\n"
+      "   -x           Skip distribution phase; use existing temporary files;\n"
+      "                default: do not skip"
+      "   -l#          Log progress every # actions; default: no action logging\n"
       "   -sep[punct]  Thousands separator; space if punct omitted, default -sep,\n"
       "   -k#          Maximum memory # kilobytes; default: see -m#. Note: for testing only\n"
 // TODO:      "   -v       Verbose output statistics\n"
@@ -130,8 +136,9 @@ int cpp_main(int argc, char* argv[])
   boost::timer::auto_cpu_timer t(1);
 
   //bulk_load_map<uint32_t, uint32_t> map;    // KISS
-  bulk_load_map<volume::u128_t, uint64_t> map;    
-  map(source_path, btree_path, temp_path, cout, max_memory, log_point, flags::truncate);
+  bulk_load_map<volume::u128_t, uint64_t> loader;    
+  loader(source_path, btree_path, temp_path, cout, max_memory, opts,
+   log_point, flags::truncate);
 
   t.stop();
   t.report();

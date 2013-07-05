@@ -16,6 +16,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/timer/timer.hpp>
+#include <boost/detail/bitmask.hpp>
 #include <iterator>
 #include <algorithm>
 #include <ostream>
@@ -58,6 +59,18 @@ namespace btree
     bool operator<(const map_data& rhs) const {return key < rhs.key;}
   };
 
+  namespace bulk_opts
+  {
+    enum bitmask
+    {
+      none          = 0,
+
+      skip_distribution = 1  // i.e. use existing temporary distribution files
+    };
+
+    BOOST_BITMASK(bitmask);
+  }
+
   template <class BTree>
   void bulk_load(
     const boost::filesystem::path& source,
@@ -65,6 +78,7 @@ namespace btree
     const boost::filesystem::path& temp_dir,
     std::ostream& msg_stream,
     std::size_t max_memory,
+    bulk_opts::bitmask opts,
     uint64_t log_point);
 
   template <class Key, class T, class Traits = default_traits,
@@ -78,6 +92,7 @@ namespace btree
       const boost::filesystem::path& temp_dir,
       std::ostream& msg_stream,
       std::size_t max_memory,
+      bulk_opts::bitmask opts = boost::btree::bulk_opts::none,
       uint64_t log_point = 0,
       flags::bitmask flgs = boost::btree::flags::read_write,
       uint64_t signature = -1,  // for existing files, must match signature from creation
@@ -132,6 +147,7 @@ namespace btree
       const boost::filesystem::path& temp_dir,
       std::ostream& msg_stream,
       std::size_t max_memory,
+      bulk_opts::bitmask opts,
       uint64_t log_point,
       flags::bitmask flgs,
       uint64_t signature,
@@ -140,7 +156,7 @@ namespace btree
     {
       boost::btree::btree_map<Key, T, Traits, Comp>
         bt(target, flgs, signature, node_sz, comp);
-      bulk_load(source, bt, temp_dir, msg_stream, max_memory, log_point);
+      bulk_load(source, bt, temp_dir, msg_stream, max_memory, opts, log_point);
     }
 
   //-----------------------------------  bulk_load  ------------------------------------//
@@ -152,6 +168,7 @@ namespace btree
     const boost::filesystem::path& temp_dir,
     std::ostream& msg_stream,
     std::size_t max_memory,
+    bulk_opts::bitmask opts,
     uint64_t log_point)
   {
     namespace bfs = boost::filesystem;
@@ -176,14 +193,18 @@ namespace btree
     //  distribution phase: load, sort, and save source contents to temporary files
     //----------------------------------------------------------------------------------//
 
-    uint64_t  elements_completed = 0;
     boost::timer::auto_cpu_timer t(msg_stream, 1);
 
+    if (!(opts & boost::btree::bulk_opts::skip_distribution))
     {
+      uint64_t  elements_completed = 0;
       boost::btree::binary_file infile(source, boost::btree::oflag::in
         | boost::btree::oflag::sequential);
       msg_stream << "  distributing " << source << " contents to " << n_tmp_files
-                 << " temporary files..." << std::endl;
+                 << " temporary files...\n"
+                 << "    allocating buffer, " << max_elements_per_tmp_file * sizeof(value_type)
+                 << " bytes"
+                 << std::endl;
 
       boost::scoped_array<value_type> buf(new value_type[max_elements_per_tmp_file]);
       value_type* begin = buf.get();;
@@ -231,7 +252,7 @@ namespace btree
       // Maybe even throw if sum of file sizes != n_elements * sizeof(value_type)
 
       msg_stream << "   end of distribution phase" << std::endl;
-    }
+    }  // distribution phase scope
 
     //----------------------------------------------------------------------------------//
     //  merge and insert phase
