@@ -91,13 +91,15 @@
     Instead provide observer functions that call the equivalent manager() and header()
     observer functions.
 
-  * Non-member functions not implemented yet. See line 2190 or thereabouts.
+  * Non-member btree_* functions not implemented yet. See line 2190 or thereabouts.
 
   * An insert_packed() function could avoid searching and cache thrashing by hanging onto
     an iterator between calls. Check pack optimization applies (last page, etc) and verify
     new element > previous element (>= if non-unique), then just tack on the end; see
     m_branch_insert. Consider whether or not this could be combined with an insert-with-
     hint function or insert-after function.
+
+  * Bulk load: If file_size(source) <= max_memory: just load, sort, and insert:-)
 
 */
 
