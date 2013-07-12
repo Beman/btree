@@ -1,0 +1,61 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Language" content="en-us">
+<meta name="GENERATOR" content="Microsoft FrontPage 5.0">
+<meta name="ProgId" content="FrontPage.Editor.Document">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Btree Two Layer Design</title>
+</head>
+
+<body>
+
+<h1>Boost Btree Two Layer Design</h1>
+<p><b>Problem:</b> Every attempt at implementing C++ variable length btree (VLBTR) 
+has been either an outright failure or has sub-optimal performance.&nbsp; 
+Abstracting away the difference between fixed-length and variable-length makes 
+the code difficult to understand and difficult to reason about.</p>
+<blockquote>
+  <p><b>Solution:</b> Btrees are fixed-length, period. Anything else should be 
+  layered on top of the unmodified fixed-length btree (FLBTR) implementation so 
+  that FLBTRs do what they do best, and don&#39;t become degraded by trying to do 
+  things they aren&#39;t suited for. The effect of a VLBTR is achieved by adding a 
+  level of indirection; a FLBTR acts as an index (i.e. a set of file offsets) 
+  into a separate flat file.</p>
+</blockquote>
+<p><b>Problem:</b> Btrees tend to become sub-optimal when the length of the 
+value type is large in relation to the optimal node size. The optimal node size 
+is closely related to the operating system&#39;s disk page size, and is not 
+something the btree library can alter.</p>
+<blockquote>
+  <p><b>Solution:</b> Add a layer of indirection; a FLBTR acts as an index (i.e. 
+  a set of file offsets) into a separate flat file. This has been the approach 
+  to the problem since the earliest days of Btrees and was described by Bayer 
+  himself.</p>
+</blockquote>
+<h3>Additional thoughts</h3>
+<p><b>1)</b> There is so little difference between the two proposed solutions 
+that it may be possible for a single implementation to solve both problems.</p>
+<p><b>2)</b> A memory-mapped file might be the ideal implementation technique 
+for the flat file.</p>
+<p><b>3)</b> A experimental prototype can be built on top of the current 
+implementation, without any changes to it. Removal of the current VLBTR code 
+isn&#39;t necessary to prove the concept.</p>
+<p><b>4)</b> If the offset (i.e. an id.) into the flat file is exposed, users 
+could access flat file elements directly. Such a feature was previously 
+implemented and found useful in another context.</p>
+<p><b>5)</b> Multiple indexes into a single flat file would be a possible future 
+extention.</p>
+<hr>
+<p><font size="2">Last revised:
+<!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%B %d, %Y" startspan -->July 12, 2013<!--webbot bot="Timestamp" endspan i-checksum="14152" --></font></p>
+<p><font size="2">© Beman Dawes 2013</font></p>
+<p><font size="2">Distributed under the Boost Software License, Version 1.0. See
+</font>
+<a href="http://www.boost.org/LICENSE_1_0.txt"><font size="2">www.boost.org/ LICENSE_1_0.txt</font></a></p>
+
+<p>&nbsp;</p>
+
+</body>
+
+</html>
