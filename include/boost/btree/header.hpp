@@ -12,9 +12,7 @@
 
 #include <boost/config/warning_disable.hpp>
 
-#include <boost/cstdint.hpp>
-#include <boost/detail/bitmask.hpp>
-#include <boost/endian/types.hpp>
+#include <boost/btree/helpers.hpp>
 #include <boost/endian/conversion.hpp>
 #include <boost/detail/scoped_enum_emulation.hpp>
 #include <boost/assert.hpp>
@@ -26,109 +24,6 @@ namespace boost
 {
   namespace btree
   {
-
-//--------------------------------------------------------------------------------------//
-//                                                                                      //
-//                                     Traits                                           //
-//                                                                                      //
-//  Traits provide the types for management objects on btree disk nodes. Nodes are      //
-//  typically 4096 bytes in length, and every byte wasted in overhead causes a          //
-//  measurable reduction in speed if the tree adds levels. That may favor unaligned     //
-//  traits, particularly if the user's key and mapped types are also unaligned.         //
-//                                                                                      //
-//  On the other hand, aligned types are more efficient and generate less code.         //
-//                                                                                      //
-//  Actual timing tests, however, show virtually no real-world speed differences        //
-//  between aligned and unaligned traits, or native and non-native endian traits.       //
-//  Other factors, such as maximum cache size, size of mapped data, portability, and    //
-//  so on, determine btree performance.                                                 //
-//                                                                                      //
-//  The big_endian_traits are choosen as the default because file dumps are easier to   //
-//  read, files are portable, and no other factors have any measurable effect on        //
-//  performance.                                                                        //
-//                                                                                      //
-//--------------------------------------------------------------------------------------//
-
-    struct big_endian_traits
-    {
-      typedef endian::big_uint32un_t  node_id_type;     // node ids are page numbers
-      typedef uint8_t                 node_level_type;  // level of node; 0 for leaf node.
-      typedef endian::big_uint24un_t  node_size_type;   // permits large node sizes
-      static const BOOST_SCOPED_ENUM(endian::order) header_endianness
-        = endian::order::big;
-      typedef endian::big_uint48un_t  flat_file_position_type;  // used only by index_*
-    };
-
-    struct little_endian_traits
-    {
-      typedef endian::little_uint32un_t  node_id_type;     // node ids are page numbers
-      typedef uint8_t                    node_level_type;  // level of node; 0 for leaf node.
-      typedef endian::little_uint24un_t  node_size_type;   // permits large node sizes
-      static const BOOST_SCOPED_ENUM(endian::order) header_endianness
-        = endian::order::little;
-      typedef endian::little_uint48un_t  flat_file_position_type;  // used only by index_*
-    };
-  
-    struct native_endian_traits
-    {
-      typedef endian::native_uint32un_t  node_id_type;     // node ids are page numbers
-      typedef uint8_t                    node_level_type;  // level of node; 0 for leaf node.
-      typedef endian::native_uint24un_t  node_size_type;   // permits large node sizes
-      static const BOOST_SCOPED_ENUM(endian::order) header_endianness
-#   ifdef BOOST_BIG_ENDIAN
-        = endian::order::big;
-#   else
-        = endian::order::little;
-#   endif
-      typedef endian::native_uint48un_t  flat_file_position_type;  // used only by index_*
-    };
-
-    typedef big_endian_traits  default_traits;  // see rationale above
-
-//--------------------------------------------------------------------------------------//
-
-    namespace flags
-    {
-      enum bitmask
-      {
-        none          = 0,
-
-        // bitmasks set by implemenation, ignored if passed in by user:
-        unique        = 1,    // not multi; uniqueness required
-        key_only      = 2,    // set or multiset
-        key_varies    = 4,    // key is variable length
-        mapped_varies = 8,    // mapped is variable length
- 
-        // open values (choose one):
-        read_only   = 0x100,   // file must exist
-        read_write  = 0x200,   // open existing file, otherwise create new file
-        truncate    = 0x400,   // same as read_write except existing file truncated
-
-        // bitmask options set by user; not present in header:
-        preload        = 0x1000, // existing file read to preload O/S file cache
-        cache_branches = 0x2000, // enable permanent cache of all branch pages touched;
-                                 // otherwise make branch pages available when use count
-                                 // becomes 0, just like leaf pages.
-      };
-
-      BOOST_BITMASK(bitmask);
-
-      inline bitmask open_flags(bitmask m)
-        {return m & (read_write|truncate|preload|cache_branches); }
-      inline bitmask permanent_flags(bitmask m)
-        {return m & ~(read_write|truncate|preload|cache_branches); }
-    }
-
-    static const uint16_t major_version = 0;  // version identification
-    static const uint16_t minor_version = 1;
-
-    static const std::size_t default_node_size = 4096;
-    static const std::size_t default_max_cache_nodes = 32;
-
-    namespace flags
-    {
-      enum bitmask;
-    }
 
 //--------------------------------------------------------------------------------------//
 //                                                                                      //
