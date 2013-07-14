@@ -37,12 +37,6 @@ namespace boost
     class index_set
     {
     public:
-      typedef std::size_t position_type;
-    private:
-      btree_set<position_type, Traits, Comp>  m_btree;
-      boost::iostreams::mapped_file           m_file;
-      std::size_t                             m_file_size;  // in bytes
-    public:
 
       BOOST_STATIC_ASSERT_MSG( !boost::is_pointer<Key>::value,
         "Key must not be a pointer type");
