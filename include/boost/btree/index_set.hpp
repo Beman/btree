@@ -10,9 +10,9 @@
 #ifndef BOOST_BTREE_SET_HPP
 #define BOOST_BTREE_SET_HPP
 
-#define BOOST_FILESYSTEM_VERSION 3
-
 #include <boost/config.hpp>
+#include <boost/btree/detail/index_common.hpp>
+
 #include <boost/btree/set.hpp>
 #include <boost/iostreams/device/mapped_file.hpp>
 #include <boost/cstdint.hpp>
@@ -22,15 +22,6 @@
 #include <boost/assert.hpp>
 #include <boost/static_assert.hpp>
 #include <boost/type_traits/is_pointer.hpp>
-
-/*
-
- *  m_file is always being opened boost::iostreams::mapmode::readwrite even if
-    btree is readonly.
-
- *  m_file length is defaulting to current length.
-
-*/
 
 namespace boost
 {
@@ -42,6 +33,7 @@ namespace boost
 //--------------------------------------------------------------------------------------//
 
     template <class Key, class Traits = default_traits, class Comp = btree::less<Key> >
+      : public index_base<Key, index_set_base<Key,Comp>, Traits, Comp>
     class index_set
     {
     public:
