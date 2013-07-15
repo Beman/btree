@@ -12,6 +12,7 @@
 
 #include <boost/config/warning_disable.hpp>
 
+#include <boost/btree/detail/config.hpp>
 #include <boost/cstdint.hpp>
 #include <boost/detail/bitmask.hpp>
 #include <boost/endian/types.hpp>
