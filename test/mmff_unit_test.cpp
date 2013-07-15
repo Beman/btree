@@ -47,7 +47,6 @@ void  open_test()
 {
   cout << "  open_test..." << endl;
 
-  BOOST_TEST_EQ(boost::filesystem::file_size(p), 0);
   {
     extendible_mapped_file  xmf;
     xmf.open(p, flags::truncate, 100);
@@ -65,6 +64,68 @@ void  open_test()
   BOOST_TEST_EQ(boost::filesystem::file_size(p), 0);
 
   cout << "     open_test complete" << endl;
+}
+
+//--------------------------------  ctor_open_test  ------------------------------------//
+
+void  ctor_open_test()
+{
+  cout << "  ctor_open_test..." << endl;
+
+  {
+    extendible_mapped_file  xmf(p, flags::truncate, 100);
+
+    BOOST_TEST(xmf.is_open());
+    BOOST_TEST_EQ(xmf.reopen_flags(), flags::read_write);
+    BOOST_TEST_EQ(xmf.mode(), boost::iostreams::mapped_file::readwrite);
+    BOOST_TEST_EQ(xmf.reserve(), 100);
+    BOOST_TEST_EQ(xmf.file_size(), 0);
+    BOOST_TEST_EQ(xmf.mapped_size(), 100);
+    BOOST_TEST_EQ(xmf.path(), p);
+    BOOST_TEST(xmf.data<char>());
+    BOOST_TEST_EQ(boost::filesystem::file_size(p), 100);
+  }
+  BOOST_TEST_EQ(boost::filesystem::file_size(p), 0);
+
+  cout << "     ctor_open_test complete" << endl;
+}
+
+//--------------------------------  create_test  ---------------------------------------//
+
+void  create_test()
+{
+  cout << "  create_test..." << endl;
+
+  {
+    extendible_mapped_file  xmf(p, flags::truncate, 100);
+
+    BOOST_TEST(xmf.is_open());
+    BOOST_TEST_EQ(xmf.reopen_flags(), flags::read_write);
+    BOOST_TEST_EQ(xmf.mode(), boost::iostreams::mapped_file::readwrite);
+    BOOST_TEST_EQ(xmf.reserve(), 100);
+    BOOST_TEST_EQ(xmf.file_size(), 0);
+    BOOST_TEST_EQ(xmf.mapped_size(), 100);
+    BOOST_TEST_EQ(xmf.path(), p);
+    BOOST_TEST(xmf.data<char>());
+    BOOST_TEST_EQ(boost::filesystem::file_size(p), 100);
+
+    const char* dat = "1234567890";
+    xmf.increment_file_size(10);
+    std::memcpy(xmf.data<char>(), dat, 10);
+    BOOST_TEST_EQ(xmf.file_size(), 10);
+    BOOST_TEST_EQ(xmf.reserve(), 100);      // should not have changed
+    BOOST_TEST_EQ(xmf.mapped_size(), 100);  // ditto
+
+    const char* dat2 = "abcdef";
+    xmf.increment_file_size(6);
+    std::memcpy(xmf.data<char>()+10, dat2, 6);
+    BOOST_TEST_EQ(xmf.file_size(), 16);
+    BOOST_TEST_EQ(xmf.reserve(), 100);      // should not have changed
+    BOOST_TEST_EQ(xmf.mapped_size(), 100);  // ditto
+  }
+  BOOST_TEST_EQ(boost::filesystem::file_size(p), 16);
+
+  cout << "     create_test complete" << endl;
 }
 
 //-------------------------------------  _test  ----------------------------------------//
@@ -96,6 +157,8 @@ int cpp_main(int argc, char* argv[])
 
   default_construct_test();
   open_test();
+  ctor_open_test();
+  create_test();
 
   cout << "all tests complete" << endl;
 

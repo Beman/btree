@@ -97,20 +97,20 @@ namespace btree
       }
     }
 
-    bool is_open() const                        {return m_file.is_open();}
-                                                
-    flags::bitmask reopen_flags() const         {return m_reopen_flags;}
-                                                
-    std::size_t reserve() const                 {return m_reserve;}
-                                                
-    boost::iostreams::mapped_file::mapmode      
-      mode() const                              {BOOST_ASSERT(is_open());
-                                                 return m_file.flags();}
-    std::size_t file_size() const               {BOOST_ASSERT(is_open());
-                                                 return m_file_size;}
-    std::size_t mapped_size() const             {BOOST_ASSERT(is_open());
-                                                 return m_file.size();}
-    const boost::filesystem::path& path() const {return m_path;} 
+    bool is_open() const                         {return m_file.is_open();}
+                                                 
+    flags::bitmask reopen_flags() const          {return m_reopen_flags;}
+                                                 
+    std::size_t reserve() const                  {return m_reserve;}
+                                                 
+    boost::iostreams::mapped_file::mapmode       
+      mode() const                               {BOOST_ASSERT(is_open());
+                                                  return m_file.flags();}
+    std::size_t file_size() const                {BOOST_ASSERT(is_open());
+                                                  return m_file_size;}
+    std::size_t mapped_size() const              {BOOST_ASSERT(is_open());
+                                                  return m_file.size();}
+    const boost::filesystem::path& path() const  {return m_path;} 
 
     void resize(std::size_t new_sz)
     {
@@ -120,7 +120,7 @@ namespace btree
       m_file.open(path().string(), reopen_flags());
     }
 
-    void increase_size(std::size_t inc)
+    void increment_file_size(std::size_t inc)
     {
       BOOST_ASSERT(is_open());
       m_file_size += inc;
