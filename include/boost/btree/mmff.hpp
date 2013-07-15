@@ -117,7 +117,9 @@ namespace btree
       BOOST_ASSERT(is_open());
       m_file.close();
       boost::filesystem::resize_file(path(), new_sz); 
-      m_file.open(path().string(), reopen_flags());
+      m_file.open(path().string(), reopen_flags() & flags::read_write
+        ? boost::iostreams::mapped_file::readwrite
+        : boost::iostreams::mapped_file::readonly);
     }
 
     void increment_file_size(std::size_t inc)

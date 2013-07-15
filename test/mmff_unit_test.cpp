@@ -17,7 +17,7 @@
 #include <boost/btree/mmff.hpp>
 #include <boost/detail/lightweight_main.hpp>
 #include <boost/detail/lightweight_test.hpp>
-#include <boost/btree/support/random_string.hpp>
+#include <cstring>
 
 #include <iostream>
 
@@ -59,6 +59,7 @@ void  open_test()
     BOOST_TEST_EQ(xmf.mapped_size(), 100);
     BOOST_TEST_EQ(xmf.path(), p);
     BOOST_TEST(xmf.data<char>());
+    BOOST_TEST(xmf.const_data<char>() == xmf.data<char>());
     BOOST_TEST_EQ(boost::filesystem::file_size(p), 100);
   }
   BOOST_TEST_EQ(boost::filesystem::file_size(p), 0);
@@ -83,6 +84,7 @@ void  ctor_open_test()
     BOOST_TEST_EQ(xmf.mapped_size(), 100);
     BOOST_TEST_EQ(xmf.path(), p);
     BOOST_TEST(xmf.data<char>());
+    BOOST_TEST(xmf.const_data<char>() == xmf.data<char>());
     BOOST_TEST_EQ(boost::filesystem::file_size(p), 100);
   }
   BOOST_TEST_EQ(boost::filesystem::file_size(p), 0);
@@ -107,6 +109,7 @@ void  create_test()
     BOOST_TEST_EQ(xmf.mapped_size(), 100);
     BOOST_TEST_EQ(xmf.path(), p);
     BOOST_TEST(xmf.data<char>());
+    BOOST_TEST(xmf.const_data<char>() == xmf.data<char>());
     BOOST_TEST_EQ(boost::filesystem::file_size(p), 100);
 
     const char* dat = "1234567890";
@@ -126,6 +129,60 @@ void  create_test()
   BOOST_TEST_EQ(boost::filesystem::file_size(p), 16);
 
   cout << "     create_test complete" << endl;
+}
+
+//--------------------------------  open_existing_test  --------------------------------//
+
+void  open_existing_test()
+{
+  cout << "  open_existing_test..." << endl;
+
+  {
+    extendible_mapped_file  xmf(p, flags::read_only, 20);
+
+    BOOST_TEST(xmf.is_open());
+    BOOST_TEST_EQ(xmf.reopen_flags(), flags::read_only);
+    BOOST_TEST_EQ(xmf.mode(), boost::iostreams::mapped_file::readonly);
+    BOOST_TEST_EQ(xmf.reserve(), 20);
+    BOOST_TEST_EQ(xmf.file_size(), 16);
+    BOOST_TEST_EQ(xmf.mapped_size(), xmf.file_size() + xmf.reserve());
+    BOOST_TEST_EQ(xmf.path(), p);
+    BOOST_TEST(!xmf.data<char>());
+    BOOST_TEST(xmf.const_data<char>());
+    BOOST_TEST_EQ(boost::filesystem::file_size(p), xmf.file_size() + xmf.reserve());
+    BOOST_TEST(std::memcmp(xmf.const_data<char>(), "1234567890abcdef", 16) == 0);
+  }
+  BOOST_TEST_EQ(boost::filesystem::file_size(p), 16);
+
+  cout << "     open_existing_test complete" << endl;
+}
+
+//----------------------  extend_existing_across_reserve_test  -------------------------//
+
+void  extend_existing_across_reserve_test()
+{
+  cout << "  extend_existing_across_reserve_test..." << endl;
+
+  {
+    extendible_mapped_file  xmf(p, flags::read_write, 4);
+
+    BOOST_TEST(xmf.is_open());
+    BOOST_TEST_EQ(xmf.reopen_flags(), flags::read_write);
+    BOOST_TEST_EQ(xmf.mode(), boost::iostreams::mapped_file::readwrite);
+    BOOST_TEST_EQ(xmf.reserve(), 4);
+    BOOST_TEST_EQ(xmf.file_size(), 16);
+    BOOST_TEST_EQ(xmf.mapped_size(), xmf.file_size() + xmf.reserve());
+    BOOST_TEST_EQ(xmf.path(), p);
+    BOOST_TEST(xmf.data<char>());
+    BOOST_TEST(xmf.const_data<char>() == xmf.data<char>());
+    BOOST_TEST_EQ(boost::filesystem::file_size(p), xmf.file_size() + xmf.reserve());
+    xmf.increment_file_size(5);
+    BOOST_TEST_EQ(xmf.file_size(), 21);
+    std::memcpy(xmf.data<char>() + 16, "vwxyz", 5);
+  }
+  BOOST_TEST_EQ(boost::filesystem::file_size(p), 21);
+
+  cout << "     extend_existing_across_reserve_test complete" << endl;
 }
 
 //-------------------------------------  _test  ----------------------------------------//
@@ -159,6 +216,8 @@ int cpp_main(int argc, char* argv[])
   open_test();
   ctor_open_test();
   create_test();
+  open_existing_test();
+  extend_existing_across_reserve_test();
 
   cout << "all tests complete" << endl;
 
