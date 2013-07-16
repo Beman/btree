@@ -19,8 +19,8 @@
 
 namespace boost
 {
-  namespace btree
-  {
+namespace btree
+{
 
 //--------------------------------------------------------------------------------------//
 //                                                                                      //
@@ -44,90 +44,103 @@ namespace boost
 //                                                                                      //
 //--------------------------------------------------------------------------------------//
 
-    struct big_endian_traits
-    {
-      typedef endian::big_uint32un_t  node_id_type;     // node ids are page numbers
-      typedef uint8_t                 node_level_type;  // level of node; 0 for leaf node.
-      typedef endian::big_uint24un_t  node_size_type;   // permits large node sizes
-      static const BOOST_SCOPED_ENUM(endian::order) header_endianness
-        = endian::order::big;
-      typedef endian::big_uint48un_t  flat_file_position_type;  // used only by index_*
-    };
+struct big_endian_traits
+{
+  typedef endian::big_uint32un_t  node_id_type;     // node ids are page numbers
+  typedef uint8_t                 node_level_type;  // level of node; 0 for leaf node.
+  typedef endian::big_uint24un_t  node_size_type;   // permits large node sizes
+  static const BOOST_SCOPED_ENUM(endian::order) header_endianness
+    = endian::order::big;
+  typedef endian::big_uint48un_t  file_position_type;  // used only by btree_index
+};
 
-    struct little_endian_traits
-    {
-      typedef endian::little_uint32un_t  node_id_type;     // node ids are page numbers
-      typedef uint8_t                    node_level_type;  // level of node; 0 for leaf node.
-      typedef endian::little_uint24un_t  node_size_type;   // permits large node sizes
-      static const BOOST_SCOPED_ENUM(endian::order) header_endianness
-        = endian::order::little;
-      typedef endian::little_uint48un_t  flat_file_position_type;  // used only by index_*
-    };
+struct little_endian_traits
+{
+  typedef endian::little_uint32un_t  node_id_type;     // node ids are page numbers
+  typedef uint8_t                    node_level_type;  // level of node; 0 for leaf node.
+  typedef endian::little_uint24un_t  node_size_type;   // permits large node sizes
+  static const BOOST_SCOPED_ENUM(endian::order) header_endianness
+    = endian::order::little;
+  typedef endian::little_uint48un_t  file_position_type;  // used only by btree_index
+};
   
-    struct native_endian_traits
-    {
-      typedef endian::native_uint32un_t  node_id_type;     // node ids are page numbers
-      typedef uint8_t                    node_level_type;  // level of node; 0 for leaf node.
-      typedef endian::native_uint24un_t  node_size_type;   // permits large node sizes
-      static const BOOST_SCOPED_ENUM(endian::order) header_endianness
+struct native_endian_traits
+{
+  typedef endian::native_uint32un_t  node_id_type;     // node ids are page numbers
+  typedef uint8_t                    node_level_type;  // level of node; 0 for leaf node.
+  typedef endian::native_uint24un_t  node_size_type;   // permits large node sizes
+  static const BOOST_SCOPED_ENUM(endian::order) header_endianness
 #   ifdef BOOST_BIG_ENDIAN
-        = endian::order::big;
+    = endian::order::big;
 #   else
-        = endian::order::little;
+    = endian::order::little;
 #   endif
-      typedef endian::native_uint48un_t  flat_file_position_type;  // used only by index_*
-    };
+  typedef endian::native_uint48un_t  file_position_type;  // used only by btree_index
+};
 
-    typedef big_endian_traits  default_traits;  // see rationale above
+typedef big_endian_traits  default_traits;  // see rationale above
 
 //--------------------------------------------------------------------------------------//
-//                                                                                      //
 //                                       flags                                          //
-//                                                                                      //
 //--------------------------------------------------------------------------------------//
 
-    namespace flags
-    {
-      enum bitmask
-      {
-        none          = 0,
+namespace flags
+{
+  enum bitmask
+  {
+    none          = 0,
 
-        // bitmasks set by implemenation, ignored if passed in by user:
-        unique        = 1,    // not multi; uniqueness required
-        key_only      = 2,    // set or multiset
-        key_varies    = 4,    // key is variable length
-        mapped_varies = 8,    // mapped is variable length
+    // bitmasks set by implemenation, ignored if passed in by user:
+    unique        = 1,    // not multi; uniqueness required
+    key_only      = 2,    // set or multiset
+    key_varies    = 4,    // key is variable length
+    mapped_varies = 8,    // mapped is variable length
  
-        // open values (choose one):
-        read_only   = 0x100,   // file must exist
-        read_write  = 0x200,   // open existing file, otherwise create new file
-        truncate    = 0x400,   // same as read_write except existing file truncated
+    // open values (choose one):
+    read_only   = 0x100,   // file must exist
+    read_write  = 0x200,   // open existing file, otherwise create new file
+    truncate    = 0x400,   // same as read_write except existing file truncated
 
-        // bitmask options set by user; not present in header:
-        preload        = 0x1000, // existing file read to preload O/S file cache
-        cache_branches = 0x2000, // enable permanent cache of all branch pages touched;
-                                 // otherwise make branch pages available when use count
-                                 // becomes 0, just like leaf pages.
-      };
+    // bitmask options set by user; not present in header:
+    preload        = 0x1000, // existing file read to preload O/S file cache
+    cache_branches = 0x2000, // enable permanent cache of all branch pages touched;
+                              // otherwise make branch pages available when use count
+                              // becomes 0, just like leaf pages.
+  };
 
-      BOOST_BITMASK(bitmask);
+  BOOST_BITMASK(bitmask);
 
-      inline bitmask open_flags(bitmask m)
-        {return m & (read_write|truncate|preload|cache_branches); }
-      inline bitmask permanent_flags(bitmask m)
-        {return m & ~(read_write|truncate|preload|cache_branches); }
-    }
+  inline bitmask open_flags(bitmask m)
+    {return m & (read_write|truncate|preload|cache_branches); }
+  inline bitmask permanent_flags(bitmask m)
+    {return m & ~(read_write|truncate|preload|cache_branches); }
+}
+
+//--------------------------------------------------------------------------------------//
+//                                 less function object                                 //
+//--------------------------------------------------------------------------------------//
+
+//  TODO: document rationale for not using std::less; is it just to allow easy debugging?
+
+template <class T> struct less
+{
+  typedef T first_argument_type;
+  typedef T second_argument_type;
+  typedef bool result_type;
+  bool operator()(const T& x, const T& y) const
+  {
+//    std::cout << "*** " << x << " < " << y << " is " << (x < y) << std::endl;
+    return x < y;
+  }
+};
+
+//--------------------------------------------------------------------------------------//
 
     static const uint16_t major_version = 0;  // version identification
     static const uint16_t minor_version = 1;
 
     static const std::size_t default_node_size = 4096;
     static const std::size_t default_max_cache_nodes = 32;
-
-    namespace flags
-    {
-      enum bitmask;
-    }
 
   }  // namespace btree
 }  // namespace boost

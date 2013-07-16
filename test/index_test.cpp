@@ -120,7 +120,7 @@ void instantiate()
 
   // set
   {
-    btree::index_set<int> x;
+    btree::btree_index<int> x;
     instantiate_test(x);
   }
   //{

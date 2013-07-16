@@ -44,6 +44,9 @@ namespace btree
 {
   class extendible_mapped_file
   {
+    // neither copyable nor copy assignable
+    extendible_mapped_file(const extendible_mapped_file&);
+    extendible_mapped_file& operator=(const extendible_mapped_file&);
   public:
     typedef std::size_t size_type;
 

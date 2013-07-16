@@ -155,20 +155,6 @@ inline std::size_t dynamic_size(const map_value<T1, T2>& x) {return x.size();}
 //                             general support functions                                //
 //--------------------------------------------------------------------------------------//
 
-//  less function object class
-
-template <class T> struct less
-{
-  typedef T first_argument_type;
-  typedef T second_argument_type;
-  typedef bool result_type;
-  bool operator()(const T& x, const T& y) const
-  {
-//    std::cout << "*** " << x << " < " << y << " is " << (x < y) << std::endl;
-    return x < y;
-  }
-};
-
 //  append
 //
 //  important optimization side-effect: resulting tree will be packed; at each level, all
