@@ -204,7 +204,8 @@ void  push_back_test()
     BOOST_TEST(xmf.data<char>());
     BOOST_TEST(xmf.const_data<char>() == xmf.data<char>());
     BOOST_TEST_EQ(boost::filesystem::file_size(p), xmf.file_size() + xmf.reserve());
-    BOOST_TEST_EQ((xmf.push_back("bingo!", 6u)), 21U);
+    const char bingo[] = "bingo!";
+    BOOST_TEST_EQ((xmf.push_back(bingo[0], 6u)), 21U);
     BOOST_TEST_EQ(xmf.file_size(), 27);
   }
   BOOST_TEST_EQ(boost::filesystem::file_size(p), 27);
@@ -218,8 +219,9 @@ void  final_value_test(const std::string& expected_value)
 {
   cout << "  final_value_test..." << endl;
 
-  extendible_mapped_file  xmf(p, flags::read_write, 6); 
-  BOOST_TEST_EQ((std::string(xmf.const_data<char>(), xmf.file_size())), expected_value);
+  extendible_mapped_file  xmf(p, flags::read_only);
+  std::string actual_value(xmf.const_data<char>(), xmf.file_size());
+  BOOST_TEST_EQ(actual_value, expected_value);
 
   cout << "     final_value_test complete" << endl;
 }

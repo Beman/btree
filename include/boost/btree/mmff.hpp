@@ -132,15 +132,18 @@ namespace btree
         resize(file_size() + reserve());
     }
 
+    // TODO: may wish to add overload for const char*, etc, std basic_string
+    // or remove_ptr and/or decay
+
     template <class T>
     size_type push_back(const T& value, size_type n = 1)
     {
       BOOST_ASSERT(m_file.is_open());
       BOOST_ASSERT(n);
-      BOOST_ASSERT_MSG(data<void>(), "Error: attempt to push_back read_only file");
+      BOOST_ASSERT_MSG(m_file.data(), "Error: attempt to push_back read_only file");
       size_type position = file_size();
       increment_file_size(sizeof(T)*n);
-      std::memcpy(data<char>()+position, &value, sizeof(T)*n);
+      std::memcpy(m_file.data()+position, &value, sizeof(T)*n);
       return position;
     }
 
