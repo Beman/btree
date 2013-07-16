@@ -16,7 +16,7 @@
 //--------------------------------------------------------------------------------------//
 
 //#include <boost/btree/map.hpp>
-#include <boost/btree/index_set.hpp>
+#include <boost/btree/index.hpp>
 #include <boost/btree/support/strbuf.hpp>
 #include <boost/btree/support/fixstr.hpp>
 #include <boost/detail/lightweight_main.hpp>
