@@ -45,10 +45,11 @@ namespace btree
   class extendible_mapped_file
   {
   public:
+    typedef std::size_t size_type;
 
     extendible_mapped_file() {}
     explicit extendible_mapped_file(boost::filesystem::path& p, 
-      flags::bitmask flgs = flags::read_only, std::size_t reserv = 0)
+      flags::bitmask flgs = flags::read_only, size_type reserv = 0)
     {
       open(p, flgs, reserv);
     }
@@ -57,7 +58,7 @@ namespace btree
 
     void open(const boost::filesystem::path& p, 
               flags::bitmask flgs = flags::read_only,
-              std::size_t reserv = 0)
+              size_type reserv = 0)
     {
       BOOST_ASSERT(!is_open());
       m_path = p;
@@ -101,18 +102,18 @@ namespace btree
                                                  
     flags::bitmask reopen_flags() const          {return m_reopen_flags;}
                                                  
-    std::size_t reserve() const                  {return m_reserve;}
+    size_type reserve() const                  {return m_reserve;}
                                                  
     boost::iostreams::mapped_file::mapmode       
       mode() const                               {BOOST_ASSERT(is_open());
                                                   return m_file.flags();}
-    std::size_t file_size() const                {BOOST_ASSERT(is_open());
+    size_type file_size() const                {BOOST_ASSERT(is_open());
                                                   return m_file_size;}
-    std::size_t mapped_size() const              {BOOST_ASSERT(is_open());
+    size_type mapped_size() const              {BOOST_ASSERT(is_open());
                                                   return m_file.size();}
     const boost::filesystem::path& path() const  {return m_path;} 
 
-    void resize(std::size_t new_sz)
+    void resize(size_type new_sz)
     {
       BOOST_ASSERT(is_open());
       m_file.close();
@@ -122,12 +123,25 @@ namespace btree
         : boost::iostreams::mapped_file::readonly);
     }
 
-    void increment_file_size(std::size_t inc)
+    void increment_file_size(size_type inc)
     {
       BOOST_ASSERT(is_open());
+      BOOST_ASSERT_MSG(data<void>(), "Error: attempt to extend read_only file");
       m_file_size += inc;
       if (file_size() > mapped_size())
         resize(file_size() + reserve());
+    }
+
+    template <class T>
+    size_type push_back(const T& value, size_type n = 1)
+    {
+      BOOST_ASSERT(m_file.is_open());
+      BOOST_ASSERT(n);
+      BOOST_ASSERT_MSG(data<void>(), "Error: attempt to push_back read_only file");
+      size_type position = file_size();
+      increment_file_size(sizeof(T)*n);
+      std::memcpy(data<char>()+position, &value, sizeof(T)*n);
+      return position;
     }
 
     template <class T>
@@ -149,9 +163,9 @@ namespace btree
   private:
     boost::filesystem::path        m_path;
     flags::bitmask                 m_reopen_flags;
-    std::size_t                    m_reserve;
+    size_type                    m_reserve;
     boost::iostreams::mapped_file  m_file;
-    std::size_t                    m_file_size;
+    size_type                    m_file_size;
   };
 
 

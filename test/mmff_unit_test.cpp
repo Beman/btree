@@ -185,6 +185,45 @@ void  extend_existing_across_reserve_test()
   cout << "     extend_existing_across_reserve_test complete" << endl;
 }
 
+//--------------------------------  push_back_test  ------------------------------------//
+
+void  push_back_test()
+{
+  cout << "  push_back_test, with reserve of exactly the size pushed..." << endl;
+
+  {
+    extendible_mapped_file  xmf(p, flags::read_write, 6); 
+
+    BOOST_TEST(xmf.is_open());
+    BOOST_TEST_EQ(xmf.reopen_flags(), flags::read_write);
+    BOOST_TEST_EQ(xmf.mode(), boost::iostreams::mapped_file::readwrite);
+    BOOST_TEST_EQ(xmf.reserve(), 6);
+    BOOST_TEST_EQ(xmf.file_size(), 21);
+    BOOST_TEST_EQ(xmf.mapped_size(), xmf.file_size() + xmf.reserve());
+    BOOST_TEST_EQ(xmf.path(), p);
+    BOOST_TEST(xmf.data<char>());
+    BOOST_TEST(xmf.const_data<char>() == xmf.data<char>());
+    BOOST_TEST_EQ(boost::filesystem::file_size(p), xmf.file_size() + xmf.reserve());
+    BOOST_TEST_EQ((xmf.push_back("bingo!", 6u)), 21U);
+    BOOST_TEST_EQ(xmf.file_size(), 27);
+  }
+  BOOST_TEST_EQ(boost::filesystem::file_size(p), 27);
+
+  cout << "     push_back_test complete" << endl;
+}
+
+//--------------------------------  final_value_test  ----------------------------------//
+
+void  final_value_test(const std::string& expected_value)
+{
+  cout << "  final_value_test..." << endl;
+
+  extendible_mapped_file  xmf(p, flags::read_write, 6); 
+  BOOST_TEST_EQ((std::string(xmf.const_data<char>(), xmf.file_size())), expected_value);
+
+  cout << "     final_value_test complete" << endl;
+}
+
 //-------------------------------------  _test  ----------------------------------------//
 
 void  _test()
@@ -218,6 +257,10 @@ int cpp_main(int argc, char* argv[])
   create_test();
   open_existing_test();
   extend_existing_across_reserve_test();
+  push_back_test();
+
+  // must be last test, expected value must be adjusted if file contents changed
+  final_value_test("1234567890abcdefvwxyzbingo!");
 
   cout << "all tests complete" << endl;
 
