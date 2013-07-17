@@ -183,7 +183,7 @@ namespace boost
       open(p, flags, ec);
       if (ec)
         BOOST_BTREE_THROW(filesystem::filesystem_error("binary_file::open",
-          file_path(), ec));
+          path(), ec));
     }
 
 //  -----------------------------------  close  ----------------------------------------  //
@@ -222,7 +222,7 @@ namespace boost
       close(ec);
       if (ec)
         BOOST_BTREE_THROW(filesystem::filesystem_error("binary_file::close",
-          file_path(), ec));
+          path(), ec));
     }
 
 //  --------------------------------  destructor  ------------------------------------  //
@@ -273,7 +273,7 @@ namespace boost
       std::size_t sz_read(raw_read(target, sz, ec));
       if (ec)
         BOOST_BTREE_THROW(filesystem::filesystem_error("binary_file::raw_read",
-          file_path(), ec));
+          path(), ec));
       return sz_read;
     }
 
@@ -333,7 +333,7 @@ namespace boost
       bool result(m_read(target, sz, ec));
       if (ec)
         BOOST_BTREE_THROW(filesystem::filesystem_error("binary_file::read",
-          file_path(), ec));
+          path(), ec));
       return result;
     }
 
@@ -372,7 +372,7 @@ namespace boost
       error_code ec;
       std::size_t sz_written(raw_write(source, sz, ec));
       if (ec)
-        BOOST_BTREE_THROW(filesystem::filesystem_error("binary_file::raw_write", file_path(), ec));
+        BOOST_BTREE_THROW(filesystem::filesystem_error("binary_file::raw_write", path(), ec));
       return sz_written;
     }
 
@@ -418,7 +418,7 @@ namespace boost
       error_code ec;
       m_write(source, sz, ec);
       if (ec)
-        BOOST_BTREE_THROW(filesystem::filesystem_error("binary_file::write", file_path(), ec));
+        BOOST_BTREE_THROW(filesystem::filesystem_error("binary_file::write", path(), ec));
     }
 
 //  -----------------------------------  seek  ---------------------------------------  //
@@ -474,7 +474,7 @@ namespace boost
       error_code ec;
       offset_type result = seek(offset, from, ec);
       if (ec)
-        BOOST_BTREE_THROW(filesystem::filesystem_error("binary_file::seek", file_path(), ec));
+        BOOST_BTREE_THROW(filesystem::filesystem_error("binary_file::seek", path(), ec));
       return result;
     }
   } // namespace btree

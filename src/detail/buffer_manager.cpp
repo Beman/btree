@@ -107,7 +107,7 @@ void buffer_manager::data_size(data_size_type sz)
   if (m_buffer_count * sz != file_size)
     BOOST_BUFFER_FILE_THROW(buffer_manager_error(
       "buffer_manager_error: file size error; too large or not multiple of data size: ",
-      binary_file::file_path()));
+      binary_file::path()));
 }
 
 //------------------------------- m_prepare_buffer() -----------------------------------//

@@ -119,8 +119,8 @@ public:
       index_compare_type(m_comp, m_file.get()));
   }
 
-  bool              is_open() const       {BOOST_ASSERT(m_set.is_open()
-                                             == m_file->is_open());
+  bool              is_open() const       {BOOST_ASSERT(!m_set.is_open()
+                                             || m_file->is_open());
                                            return m_set.is_open();}
   bool              index_empty() const   {return m_set.empty();}
   path_type         index_path() const    {return m_set.path();}
@@ -130,7 +130,7 @@ public:
   path_type         file_path() const     {BOOST_ASSERT(m_file);
                                            return m_file->path();}
   file_size_type    file_size() const     {BOOST_ASSERT(m_file);
-                                           return m_file->size();}
+                                           return m_file->file_size();}
   file_size_type    file_reserve() const  {BOOST_ASSERT(m_file);
                                            return m_file->reserve();}
 

@@ -241,7 +241,7 @@ void construct_new_test(BT& bt, const fs::path& p)
   bt.max_cache_megabytes(100);
   BOOST_TEST(bt.max_cache_size() == 25600);
  
-  BOOST_TEST(bt.file_path() == p);
+  BOOST_TEST(bt.path() == p);
 
   BOOST_TEST(bt.begin() == bt.end());
 
@@ -580,7 +580,7 @@ void small_variable_map()
 template <class BTree>
 void insert_tests(BTree& bt)
 {
-  cout << "    testing \"" << bt.file_path().string() << "\" ..." << endl;
+  cout << "    testing \"" << bt.path().string() << "\" ..." << endl;
   //cout << '\n' << bt.manager() << '\n';
 
   BOOST_TEST(bt.size() == 0U);
@@ -825,7 +825,7 @@ void insert_tests(BTree& bt)
   bt.flush();
 //  cout << '\n' << bt << '\n';
 
-  cout << "    testing \"" << bt.file_path().string() << "\" complete" << endl;
+  cout << "    testing \"" << bt.path().string() << "\" complete" << endl;
 }
 
 void insert()
@@ -874,7 +874,7 @@ void do_fb_insert(fb_multimap_type& bt, int i)
 template <class BTree>
 void find_and_bounds_tests(BTree& bt)
 {
-  cout << "    testing \"" << bt.file_path().string() << "\" ..." << endl;
+  cout << "    testing \"" << bt.path().string() << "\" ..." << endl;
 
   for (int i = 17; i > 0; i -= 2)
   {
@@ -957,7 +957,7 @@ void find_and_bounds_tests(BTree& bt)
 //    cout << "      i = " << i << ", bt.count(i) = " << bt.count(i) <<endl;
   }
 
-  cout << "    testing \"" << bt.file_path().string() << "\" complete" << endl;
+  cout << "    testing \"" << bt.path().string() << "\" complete" << endl;
 }
 
 void find_and_bounds()
@@ -1041,7 +1041,7 @@ void insert_non_unique_tests(BTree& bt)
     BOOST_TEST_EQ(j, i);
   }
 
-  cout << "  testing \"" << bt.file_path().string() << "\" complete" << endl;
+  cout << "  testing \"" << bt.path().string() << "\" complete" << endl;
 }
 
 void insert_non_unique()

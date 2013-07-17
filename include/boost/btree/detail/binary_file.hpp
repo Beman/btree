@@ -116,7 +116,7 @@ namespace boost
 
       handle_type handle() const  { return m_handle; }
 
-      const filesystem::path& file_path() const  { return m_path; }
+      const filesystem::path& path() const  { return m_path; }
 
       // -------------------------------------------------------------------------------//
  

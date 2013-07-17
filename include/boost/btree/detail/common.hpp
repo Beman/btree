@@ -554,7 +554,7 @@ public:
 
   bool               is_open() const        { return m_mgr.is_open(); }
   const filesystem::path&
-                     file_path() const      { return m_mgr.file_path(); }
+                     path() const           { return m_mgr.path(); }
   bool               read_only() const      { return m_read_only; }
   bool               cache_branches() const { return m_cache_branches; }
   void   dump_dot(std::ostream& os) const; // dump tree using Graphviz dot format
@@ -1094,7 +1094,7 @@ private:
   {
     if (is_open())
       close();
-    BOOST_BTREE_THROW(std::runtime_error(file_path().string()+" "+msg));
+    BOOST_BTREE_THROW(std::runtime_error(path().string()+" "+msg));
   }
 
   static buffer* m_node_alloc(buffer::buffer_id_type np_id, buffer_manager& mgr)

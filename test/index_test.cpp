@@ -1359,16 +1359,28 @@ void  open_all_new_test()
   {
     cout << "      default construct, then open..." << endl;
     btree::btree_index<int> idx;
-    idx.open(file_path, 1000000, idx1_path, btree::flags::truncate, -1, 128);
+    idx.open(file_path, 1000000u, idx1_path, btree::flags::truncate, -1, 128);
+    BOOST_TEST(idx.is_open());
+    BOOST_TEST_EQ(idx.file_path(), file_path);
+    BOOST_TEST_EQ(idx.file_size(), 0u);
+    BOOST_TEST_EQ(idx.file_reserve(), 1000000u);
+    BOOST_TEST_EQ(idx.index_path(), idx1_path);
+    BOOST_TEST_EQ(idx.index_size(), 0u);
   }
 
   {
     cout << "      open via constructor..." << endl;
     btree::btree_index<int> idx(file_path, 1000000,
       idx1_path, btree::flags::truncate, -1, 128);
+    BOOST_TEST(idx.is_open());
+    BOOST_TEST_EQ(idx.file_path(), file_path);
+    BOOST_TEST_EQ(idx.file_size(), 0u);
+    BOOST_TEST_EQ(idx.file_reserve(), 1000000u);
+    BOOST_TEST_EQ(idx.index_path(), idx1_path);
+    BOOST_TEST_EQ(idx.index_size(), 0u);
   }
 
-  cout << "     open_all_new_test complete" << endl;
+  cout << "    open_all_new_test complete" << endl;
 }
 
 //---------------------------------  open_new_index_test  ------------------------------//
@@ -1377,7 +1389,7 @@ void  open_new_index_test()
 {
   cout << "  open_new_index_test with existing flat file..." << endl;
 
-  cout << "     open_new_index_test with existing flat file complete" << endl;
+  cout << "    open_new_index_test with existing flat file complete" << endl;
 }
 
 //-------------------------------------  _test  ----------------------------------------//

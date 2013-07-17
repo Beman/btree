@@ -100,7 +100,7 @@ int cpp_main(int argc, char * argv[])
 
   std::string filename("file_with_gap");
   bt::binary_file f(filename, bt::oflag::in |bt::oflag::out | bt::oflag::truncate);
-  BOOST_TEST(f.file_path() == filename);
+  BOOST_TEST(f.path() == filename);
   BOOST_TEST(fs::exists(filename));
 
 
