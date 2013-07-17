@@ -55,9 +55,13 @@ class btree_index
 public:
   typedef typename Traits::file_position_type    file_position_type;  // in index
   typedef boost::filesystem::path                path_type;
+
+  typedef detail::indirect_compare<Key,
+    file_position_type, Comp>                    index_compare_type;
   typedef typename
-    btree_set<file_position_type, Traits, Comp>  index_type;
-  typedef index_type                             index_size_type;
+    btree_set<file_position_type, Traits,
+      index_compare_type>                        index_type;
+  typedef typename index_type::size_type         index_size_type;
 
   typedef boost::btree::extendible_mapped_file   file_type;
   typedef boost::shared_ptr<file_type>           file_ptr_type;
@@ -112,11 +116,11 @@ public:
     BOOST_ASSERT(flat_file->is_open());
     m_comp = comp;
     m_set.open(index_pth, flgs, sig, node_sz,
-      detail::indirect_compare<Key, file_position_type, Comp>(m_comp, *m_file));
+      index_compare_type(m_comp, m_file.get()));
   }
 
   bool              is_open() const       {BOOST_ASSERT(m_set.is_open()
-                                             == m_file->is_open())
+                                             == m_file->is_open());
                                            return m_set.is_open();}
   bool              index_empty() const   {return m_set.empty();}
   path_type         index_path() const    {return m_set.path();}
@@ -132,9 +136,9 @@ public:
 
 
 private:
-  btree_set<file_position_type, Traits, Comp>    m_set;
-  file_ptr_type                                  m_file;
-  Comp                                           m_comp;
+  index_type      m_set;
+  file_ptr_type   m_file;   // shared by all indices to this flat file
+  Comp            m_comp;
 };
   
 
@@ -147,25 +151,27 @@ namespace detail
   class indirect_compare
   {
     Comp                           m_comp;
-    const extendible_mapped_file&  m_file;
+    extendible_mapped_file*        m_file;
 
   public:
-    indirect_compare(Comp comp, const extendible_mapped_file& flat_file)
+
+    indirect_compare(){}
+    indirect_compare(Comp comp, extendible_mapped_file* flat_file)
       : m_comp(comp), m_file(flat_file) {}
 
     bool operator()(const Key& lhs, Pos rhs) const
     {
       return m_comp(lhs,
-        *reinterpret_cast<const Key*>(m_file.const_data()+rhs));
+        *reinterpret_cast<const Key*>(m_file->const_data()+rhs));
     }
     bool operator()(Pos lhs, const Key& rhs) const
     {
-      return m_comp(*reinterpret_cast<const Key*>(m_file.const_data()+lhs, rhs));
+      return m_comp(*reinterpret_cast<const Key*>(m_file->const_data()+lhs, rhs));
     }
     bool operator()(Pos lhs, Pos rhs) const
     {
-      return m_comp(*reinterpret_cast<const Key*>(m_file.const_data()+lhs),
-        *reinterpret_cast<const Key*>(m_file.const_data()+rhs));
+      return m_comp(*reinterpret_cast<const Key*>(m_file->const_data()+lhs),
+        *reinterpret_cast<const Key*>(m_file->const_data()+rhs));
     }
 
   };

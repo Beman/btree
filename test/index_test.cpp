@@ -72,8 +72,8 @@ template <class BT>
 void instantiate_test(BT& bt)
 { 
   BOOST_TEST(!bt.is_open());
-  BOOST_TEST(bt.size() == 0U);
-  BOOST_TEST(bt.empty());
+  BOOST_TEST(bt.index_size() == 0U);
+  BOOST_TEST(bt.index_empty());
 }
 
 void instantiate()
