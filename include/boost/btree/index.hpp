@@ -15,12 +15,21 @@
 
   Proof-of-concept; not intended for actual use.
 
+  TODO list:
+
+  * For fixed-length data, should be possible to traffic in ids rather than positions.
+
+  * Since file() exposes the flat file, do we need file_size(), file_path(), etc?
+    Yes, since file_type should be documented as an implementation supplied type.
+    
+
 */
 
 #ifndef BOOST_BTREE_INDEX_HPP
 #define BOOST_BTREE_INDEX_HPP
 
 #include <boost/btree/helpers.hpp>
+#include <boost/shared_ptr.hpp>
 #include <boost/btree/mmff.hpp>
 #include <boost/btree/set.hpp>
 #include <boost/assert.hpp>
@@ -43,36 +52,89 @@ template <class Key, class Traits = default_traits,
           class Comp = btree::less<Key> >
 class btree_index
 {
-  template <class T>
-    class iterator_type;
-
 public:
-  typedef typename Traits::file_position_type  file_position_type;
+  typedef typename Traits::file_position_type    file_position_type;  // in index
+  typedef boost::filesystem::path                path_type;
+  typedef typename
+    btree_set<file_position_type, Traits, Comp>  index_type;
+  typedef index_type                             index_size_type;
 
-private:
-  btree_set<file_position_type, Traits, Comp>  m_set;
-  extendible_mapped_file*                      m_file;
-  Comp                                         m_comp;
-public:
-  typedef typename btree_set<file_position_type, Traits, Comp>::size_type size_type;
+  typedef boost::btree::extendible_mapped_file   file_type;
+  typedef boost::shared_ptr<file_type>           file_ptr_type;
+  typedef file_type::size_type                   file_size_type;
 
-  void open(extendible_mapped_file& flat_file,            
-            const boost::filesystem::path& index_path,
+  btree_index() {}
+
+  btree_index(const path_type& file_pth,
+            file_size_type reserv,
+            const path_type& index_pth,
             flags::bitmask flgs = flags::read_only,
-            uint64_t signature = -1,  // for existing files, must match creation signature
+            uint64_t sig = -1,  // for existing files, must match creation signature
             std::size_t node_sz = default_node_size,  // ignored if existing file
             const Comp& comp = Comp())
   {
-    BOOST_ASSERT(flat_file.is_open());
-    m_comp = comp;
-    m_set.open(index_path, flgs, signature, node_sz,
-      detail::indirect_compare<Key, file_position_type, Comp>(m_comp, m_file));
+    open(file_pth, reserv, index_pth, flgs, sig, node_sz, comp);
   }
 
-  bool       is_open() const            {return m_set.is_open();}
-  bool       empty() const              {return m_set.empty();}
-  size_type  size() const               {return m_set.size();}
+  btree_index(file_ptr_type flat_file,            
+            const path_type& index_pth,
+            flags::bitmask flgs = flags::read_only,
+            uint64_t sig = -1,  // for existing files, must match creation signature
+            std::size_t node_sz = default_node_size,  // ignored if existing file
+            const Comp& comp = Comp())
+  {
+    open(flat_file, index_pth, flgs, sig, node_sz, comp);
+  }
 
+  void open(const path_type& file_pth,
+            file_size_type reserv,
+            const path_type& index_pth,
+            flags::bitmask flgs = flags::read_only,
+            uint64_t sig = -1,  // for existing files, must match creation signature
+            std::size_t node_sz = default_node_size,  // ignored if existing file
+            const Comp& comp = Comp())
+  {
+    BOOST_ASSERT(!m_set.is_open());
+    BOOST_ASSERT(!m_file.get());
+    m_file.reset(new file_type);
+    m_file->open(file_pth, flgs, reserv);
+    open(m_file, index_pth, flgs, sig, node_sz, comp);
+  }
+
+  void open(file_ptr_type flat_file,            
+            const path_type& index_pth,
+            flags::bitmask flgs = flags::read_only,
+            uint64_t sig = -1,  // for existing files, must match creation signature
+            std::size_t node_sz = default_node_size,  // ignored if existing file
+            const Comp& comp = Comp())
+  {
+    BOOST_ASSERT(!m_set.is_open());
+    BOOST_ASSERT(flat_file->is_open());
+    m_comp = comp;
+    m_set.open(index_pth, flgs, sig, node_sz,
+      detail::indirect_compare<Key, file_position_type, Comp>(m_comp, *m_file));
+  }
+
+  bool              is_open() const       {BOOST_ASSERT(m_set.is_open()
+                                             == m_file->is_open())
+                                           return m_set.is_open();}
+  bool              index_empty() const   {return m_set.empty();}
+  path_type         index_path() const    {return m_set.path();}
+  index_size_type   index_size() const    {return m_set.size();}
+
+  file_ptr_type     file() const          {return m_file;}
+  path_type         file_path() const     {BOOST_ASSERT(m_file);
+                                           return m_file->path();}
+  file_size_type    file_size() const     {BOOST_ASSERT(m_file);
+                                           return m_file->size();}
+  file_size_type    file_reserve() const  {BOOST_ASSERT(m_file);
+                                           return m_file->reserve();}
+
+
+private:
+  btree_set<file_position_type, Traits, Comp>    m_set;
+  file_ptr_type                                  m_file;
+  Comp                                           m_comp;
 };
   
 

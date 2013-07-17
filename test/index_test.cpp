@@ -11,11 +11,9 @@
 //                                                                                      //
 //  These tests lightly exercise many portions of the interface. They do not attempt    //
 //  to stress the many combinations of control paths possible in large scale use.       //
-//  See stl_equivalence_test.cpp for large scale stress testing.                        //
 //                                                                                      //
 //--------------------------------------------------------------------------------------//
 
-//#include <boost/btree/map.hpp>
 #include <boost/btree/index.hpp>
 #include <boost/btree/support/strbuf.hpp>
 #include <boost/btree/support/fixstr.hpp>
@@ -1347,16 +1345,50 @@ void instantiate()
 //
 //  cout << "    cache_size_test complete" << endl;
 //}
-//
-////-------------------------------------  _test  ----------------------------------------//
-//
-//void  _test()
-//{
-//  cout << "  _test..." << endl;
-//
-//  cout << "     _test complete" << endl;
-//}
-//
+
+filesystem::path file_path("test.file");
+filesystem::path idx1_path("test.1.idx");
+filesystem::path idx2_path("test.2.idx");
+
+//---------------------------------  open_all_new_test  --------------------------------//
+
+void  open_all_new_test()
+{
+  cout << "  open_all_new_test..." << endl;
+
+  {
+    cout << "      default construct, then open..." << endl;
+    btree::btree_index<int> idx;
+    idx.open(file_path, 1000000, idx1_path, btree::flags::truncate, -1, 128);
+  }
+
+  {
+    cout << "      open via constructor..." << endl;
+    btree::btree_index<int> idx(file_path, 1000000,
+      idx1_path, btree::flags::truncate, -1, 128);
+  }
+
+  cout << "     open_all_new_test complete" << endl;
+}
+
+//---------------------------------  open_new_index_test  ------------------------------//
+
+void  open_new_index_test()
+{
+  cout << "  open_new_index_test with existing flat file..." << endl;
+
+  cout << "     open_new_index_test with existing flat file complete" << endl;
+}
+
+//-------------------------------------  _test  ----------------------------------------//
+
+void  _test()
+{
+  cout << "  _test..." << endl;
+
+  cout << "     _test complete" << endl;
+}
+
 }  // unnamed namespace
 
 //------------------------------------ cpp_main ----------------------------------------//
@@ -1398,6 +1430,9 @@ int cpp_main(int argc, char* argv[])
   }
 
   instantiate();
+  open_all_new_test();
+  open_new_index_test();
+
   //types_test();
   ////btree_less();
   ////compare_function_objects();

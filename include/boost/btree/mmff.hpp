@@ -44,7 +44,7 @@ namespace btree
 {
   class extendible_mapped_file
   {
-    // neither copyable nor copy assignable
+    // non-copyable, non-copy assignable
     extendible_mapped_file(const extendible_mapped_file&);
     extendible_mapped_file& operator=(const extendible_mapped_file&);
   public:
@@ -105,14 +105,14 @@ namespace btree
                                                  
     flags::bitmask reopen_flags() const          {return m_reopen_flags;}
                                                  
-    size_type reserve() const                  {return m_reserve;}
+    size_type reserve() const                    {return m_reserve;}
                                                  
     boost::iostreams::mapped_file::mapmode       
       mode() const                               {BOOST_ASSERT(is_open());
                                                   return m_file.flags();}
-    size_type file_size() const                {BOOST_ASSERT(is_open());
+    size_type file_size() const                  {BOOST_ASSERT(is_open());
                                                   return m_file_size;}
-    size_type mapped_size() const              {BOOST_ASSERT(is_open());
+    size_type mapped_size() const                {BOOST_ASSERT(is_open());
                                                   return m_file.size();}
     const boost::filesystem::path& path() const  {return m_path;} 
 
@@ -169,9 +169,9 @@ namespace btree
   private:
     boost::filesystem::path        m_path;
     flags::bitmask                 m_reopen_flags;
-    size_type                    m_reserve;
+    size_type                      m_reserve;
     boost::iostreams::mapped_file  m_file;
-    size_type                    m_file_size;
+    size_type                      m_file_size;
   };
 
 
