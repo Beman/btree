@@ -101,6 +101,9 @@
 
   * Bulk load: If file_size(source) <= max_memory: just load, sort, and insert:-)
 
+  * Something is whacky: there are three data members m_comp, m_value_comp, and
+    m_branch_comp, but they are all initiallized to the same value! Makes no sense. 
+
 */
 
 namespace boost
@@ -513,8 +516,8 @@ public:
 
   // construct/destroy:
 
-  // TODO: why are these being exposed:
-  btree_base(const Comp& comp);
+  // TODO: why aren't these protected?
+  btree_base();
   btree_base(const boost::filesystem::path& p, flags::bitmask flgs, uint64_t signature,
    std::size_t node_sz, const Comp& comp);
   ~btree_base();
@@ -1080,7 +1083,7 @@ protected:
   iterator m_update(iterator itr, const mapped_type& mv);
 
   void m_open(const boost::filesystem::path& p, flags::bitmask flgs, uint64_t signature,
-              std::size_t node_sz);
+              std::size_t node_sz, const Comp& comp);
 
 //--------------------------------------------------------------------------------------//
 //                              private member functions                                //
@@ -1209,10 +1212,9 @@ std::ostream& operator<<(std::ostream& os,
 //------------------------------ construct without open --------------------------------//
 
 template <class Key, class Base, class Traits, class Comp>
-btree_base<Key,Base,Traits,Comp>::btree_base(const Comp& comp)
+btree_base<Key,Base,Traits,Comp>::btree_base()
   // initialize in the correct order to avoid voluminous gcc warnings:
-  : m_comp(comp), m_value_comp(comp), m_mgr(m_node_alloc),
-    m_cache_branches(false), m_branch_comp(comp)
+  : m_mgr(m_node_alloc),  m_cache_branches(false)
 { 
   m_mgr.owner(this);
 
@@ -1227,8 +1229,7 @@ template <class Key, class Base, class Traits, class Comp>
 btree_base<Key,Base,Traits,Comp>::btree_base(const boost::filesystem::path& p,
   flags::bitmask flgs, uint64_t signature, std::size_t node_sz, const Comp& comp)
   // initialize in the correct order to avoid voluminous gcc warnings:
-  : m_comp(comp), m_value_comp(comp), m_mgr(m_node_alloc),
-    m_cache_branches(false), m_branch_comp(comp)
+  : m_mgr(m_node_alloc), m_cache_branches(false)
 { 
   m_mgr.owner(this);
 
@@ -1238,7 +1239,7 @@ btree_base<Key,Base,Traits,Comp>::btree_base(const boost::filesystem::path& p,
   BOOST_ASSERT(manager().buffers_in_memory() == 0);  // verify m_end_iterator not cached
 
   // open the file and set up data members
-  m_open(p, flgs, signature, node_sz);
+  m_open(p, flgs, signature, node_sz, comp);
 }
 
 //----------------------------------- destructor ---------------------------------------//
@@ -1267,10 +1268,14 @@ void btree_base<Key,Base,Traits,Comp>::close()
 template <class Key, class Base, class Traits, class Comp>
 void
 btree_base<Key,Base,Traits,Comp>::m_open(const boost::filesystem::path& p,
-  flags::bitmask flgs, uint64_t signature, std::size_t node_sz) 
+  flags::bitmask flgs, uint64_t signature, std::size_t node_sz, const Comp& comp) 
 {
   BOOST_ASSERT(!is_open());
   BOOST_ASSERT(node_sz >= sizeof(btree::header_page));
+
+  m_comp = comp;
+  m_value_comp = comp;
+  m_branch_comp = comp;
 
   oflag::bitmask open_flags = oflag::in;
   if (flgs & flags::read_write)
