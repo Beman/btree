@@ -48,7 +48,8 @@ namespace btree
     extendible_mapped_file(const extendible_mapped_file&);
     extendible_mapped_file& operator=(const extendible_mapped_file&);
   public:
-    typedef std::size_t size_type;
+    typedef std::size_t size_type;       // size_type and position_type are the same
+    typedef std::size_t position_type;   // type; the names differ to denote purpose
 
     extendible_mapped_file() {}
     explicit extendible_mapped_file(boost::filesystem::path& p, 
@@ -139,7 +140,7 @@ namespace btree
     // or remove_ptr and/or decay
 
     template <class T>
-    size_type push_back(const T& value, size_type n = 1)
+    position_type push_back(const T& value, size_type n = 1)
     {
       BOOST_ASSERT(m_file.is_open());
       BOOST_ASSERT(n);
