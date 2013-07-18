@@ -38,7 +38,8 @@ namespace boost
     {
     public:
 
-      BOOST_STATIC_ASSERT_MSG( !boost::is_pointer<Key>::value, "Key must not be a pointer type");
+      BOOST_STATIC_ASSERT_MSG( !boost::is_pointer<Key>::value,
+        "Key must not be a pointer type");
 
       // <Key,Comp> is required by GCC but not by VC++
       explicit btree_set()
@@ -83,15 +84,19 @@ namespace boost
       }
 
       //  emplace(const Key&) special case not requiring c++0x support
-      std::pair<typename btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::const_iterator, bool>
-      emplace(const typename btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::value_type& value)
+      std::pair<typename
+        btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::const_iterator, bool>
+      emplace(const typename
+        btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::value_type& value)
       {
         return btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::m_insert_unique(
           value, value);
       }
 
-      std::pair<typename btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::const_iterator, bool>
-      insert(const typename btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::value_type& value)
+      std::pair<typename
+        btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::const_iterator, bool>
+      insert(const typename
+        btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::value_type& value)
       {
         return btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::m_insert_unique(
           value, value);
@@ -119,7 +124,8 @@ namespace boost
     {
     public:
 
-      BOOST_STATIC_ASSERT_MSG( !boost::is_pointer<Key>::value, "Key must not be a pointer type");
+      BOOST_STATIC_ASSERT_MSG( !boost::is_pointer<Key>::value,
+        "Key must not be a pointer type");
 
       // <Key,Comp> is required by GCC but not by VC++
       explicit btree_multiset()
@@ -160,18 +166,23 @@ namespace boost
       }
 
       //  emplace(const Key&) special case not requiring c++0x support
-      std::pair<typename btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::const_iterator, bool>
-      emplace(const typename btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::value_type& value)
+      std::pair<typename
+        btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::const_iterator, bool>
+      emplace(const typename
+        btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::value_type& value)
       {
-        return btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::m_insert_non_unique(
-          value, value);
+        return
+          btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::m_insert_non_unique(
+            value, value);
       }
 
       typename btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::const_iterator
-      insert(const typename btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::value_type& value)
+      insert(const typename
+        btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::value_type& value)
       {
-        return btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::m_insert_non_unique(
-          value, value);
+        return 
+          btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::m_insert_non_unique(
+            value, value);
       }
 
       template <class InputIterator>
