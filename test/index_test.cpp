@@ -36,6 +36,37 @@ filesystem::path file_path("test.file");
 filesystem::path idx1_path("test.1.idx");
 filesystem::path idx2_path("test.2.idx");
 
+struct stuff
+{
+  int x;
+  int y;
+  char unused[24];
+
+  stuff() : x(-1), y(-2) {}
+  stuff(int x_, int y_) : x(x_), y(y_) {}
+  stuff(const stuff& rhs) : x(rhs.x), y(rhs.y) {}
+  stuff& operator=(const stuff& rhs) {x = rhs.x; y = rhs.y; return *this; }
+  stuff& assign(int x_, int y_) {x = x_; y = y_; return *this; }
+
+  bool operator<(const stuff& rhs) const
+    {return x < rhs.x || (x == rhs.x && y < rhs.y);}
+  bool operator==(const stuff& rhs) const {return x == rhs.x && y == rhs.y;}
+  bool operator!=(const stuff& rhs) const {return x != rhs.x || y != rhs.y;}
+};
+
+std::ostream& operator<<(std::ostream& os, const stuff& s)
+{
+  os << s.x << "," << s.y;
+  return os;
+}
+
+struct stuff_reverse_order
+{
+  bool operator()(const stuff& lhs, const stuff& rhs) const
+  {
+    return rhs<lhs;
+  }
+};
 
 //-------------------------------------- instantiate -----------------------------------//
 
@@ -88,13 +119,45 @@ void  open_all_new_test()
   cout << "    open_all_new_test complete" << endl;
 }
 
-//---------------------------------  open_new_index_test  ------------------------------//
+//-------------------------------  open_new_index_test  --------------------------------//
 
 void  open_new_index_test()
 {
   cout << "  open_new_index_test with existing flat file..." << endl;
 
   cout << "    open_new_index_test with existing flat file complete" << endl;
+}
+
+//---------------------------------  two_index_test  -----------------------------------//
+
+void  two_index_test()
+{
+  cout << "  two_index_test..." << endl;
+
+  {
+    btree::btree_index<stuff> idx1(file_path, 1000000,
+      idx1_path, btree::flags::truncate, -1, 128);
+    btree::btree_index<stuff, btree::default_traits, stuff_reverse_order>
+      idx2(idx1.file(), idx2_path, btree::flags::truncate, -1, 128);
+
+    stuff x(2,2);
+    btree::btree_index<stuff>::position_type pos = idx1.push_back(x);
+    idx1.insert_position(pos);
+    idx2.insert_position(pos);
+
+    x.assign(1,3);
+    pos = idx1.push_back(x);
+    idx1.insert_position(pos);
+    idx2.insert_position(pos);
+
+    x.assign(3,1);
+    pos = idx1.push_back(x);
+    idx1.insert_position(pos);
+    idx2.insert_position(pos);
+  }
+
+
+  cout << "     two_index_test complete" << endl;
 }
 
 //-------------------------------------  _test  ----------------------------------------//
@@ -148,8 +211,8 @@ int cpp_main(int argc, char* argv[])
 
   instantiate_test();
   open_all_new_test();
-  open_new_index_test();
-
+  //open_new_index_test();
+  two_index_test();
 
   cout << "all tests complete" << endl;
 

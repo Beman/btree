@@ -32,6 +32,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/btree/mmff.hpp>
 #include <boost/btree/set.hpp>
+#include <boost/iterator/iterator_facade.hpp>
 #include <boost/assert.hpp>
 
 namespace boost
@@ -48,24 +49,32 @@ namespace btree
 //                                   btree_index                                        //
 //--------------------------------------------------------------------------------------//
 
-template <class Key, class Traits = default_traits,
-          class Comp = btree::less<Key> >
+template <class T, class Traits = default_traits,
+          class Comp = btree::less<T> >
 class btree_index
 {
+  template <class VT>
+  class iterator_type;
 public:
-  typedef typename Traits::file_position_type    file_position_type;  // in index
+  typedef T                                      value_type;
+
+  typedef iterator_type<const value_type>        iterator;
+  typedef iterator                               const_iterator;
+
+  typedef typename Traits::index_position_type   index_position_type;
   typedef boost::filesystem::path                path_type;
 
-  typedef detail::indirect_compare<Key,
-    file_position_type, Comp>                    index_compare_type;
+  typedef detail::indirect_compare<T,
+    index_position_type, Comp>                   index_compare_type;
   typedef typename
-    btree_set<file_position_type, Traits,
+    btree_set<index_position_type, Traits,
       index_compare_type>                        index_type;
   typedef typename index_type::size_type         index_size_type;
 
   typedef boost::btree::extendible_mapped_file   file_type;
   typedef boost::shared_ptr<file_type>           file_ptr_type;
   typedef file_type::size_type                   file_size_type;
+  typedef file_type::position_type               position_type; 
 
   btree_index() {}
 
@@ -119,6 +128,14 @@ public:
       index_compare_type(m_comp, m_file.get()));
   }
 
+  //  iterators
+
+  iterator begin()              {return iterator(m_set.begin(), file());}
+  const_iterator begin() const  {return const_iterator(m_set.begin(), file());}
+  iterator end()                {return iterator(m_set.end(), file());}
+  const_iterator end() const    {return const_iterator(m_set.end(), file());}
+
+  //  observers
   bool              is_open() const       {BOOST_ASSERT(!m_set.is_open()
                                              || m_file->is_open());
                                            return m_set.is_open();}
@@ -133,18 +150,92 @@ public:
                                            return m_file->file_size();}
   file_size_type    file_reserve() const  {BOOST_ASSERT(m_file);
                                            return m_file->reserve();}
+  //  modifiers
 
+  position_type push_back(const value_type& value)
+  // Effects: unconditional push_back into file(); index unaffected
+  {
+    return file()->push_back(value);
+  }
+
+  std::pair<const_iterator, bool>
+    insert_position(position_type pos)
+  {
+    std::pair<index_type::const_iterator, bool>
+      result(m_set.insert(index_position_type(pos)));
+    return std::pair<const_iterator, bool>(
+      const_iterator(result.first, file()->const_data<char>()), result.second);
+  }
+
+  std::pair<const_iterator, bool>
+    insert(const value_type& value)
+  //  Effects: if !find(k) then insert_position(push_back(value));
+  {
+    if (m_set.find(value) != m_set.end())
+    {
+      std::pair<index_type::const_iterator, bool>
+        result(m_set.insert(pos));
+      BOOST_ASSERT(result.second);
+      return std::pair<const_iterator, bool>(
+        const_iterator(result.first, file()->const_data<char>()), true);
+    }
+    return std::pair<const_iterator, bool>(const_iterator(), false);
+  }
+
+  // operations
+
+  position_type position(iterator itr) const;
 
 private:
   index_type      m_set;
-  file_ptr_type   m_file;   // shared by all indices to this flat file
+  file_ptr_type   m_file;   // shared_ptr to flat file shared with other indexes
   Comp            m_comp;
+
+  //------------------------------------------------------------------------------------//
+  //                                  iterator_type                                     //
+  //------------------------------------------------------------------------------------//
+ 
+  template <class T>
+  class iterator_type
+    : public boost::iterator_facade<iterator_type<T>, T, bidirectional_traversal_tag>
+  {
+  public:
+    typedef typename index_type::iterator  index_iterator_type;
+
+    iterator_type() {}  // constructs the end iterator
+
+    iterator_type(index_iterator_type itr, const char* memory_map)
+      : m_index_iterator(itr), m_memory_map(memory_map) {}
+
+  private:
+    friend class boost::iterator_core_access;
+
+    index_iterator_type   m_index_iterator;
+    const char*           m_memory_map;
+
+    T& dereference() const
+    { 
+      return *(reinterpret_cast<T*>(m_memory_map + *m_index_iterator));
+    }
+ 
+    bool equal(const iterator_type& rhs) const
+    { 
+      return m_memory_map == rhs.m_memory_map
+        && m_index_iterator == rhs.m_memory_iterator;
+    }
+
+    void increment() { ++m_index_iterator; }
+
+    void decrement() { --m_index_iterator; }
+
+  };
+
 };
   
 
 namespace detail
 {
-  // TODO: Pos needs to be a private type so no ambiguity arises if Key and
+  // TODO: Pos needs to be a distinct type so no ambiguity arises if Key and
   // file_position_type happen to be the same type
 
   template <class Key, class Pos, class Comp>
@@ -162,16 +253,16 @@ namespace detail
     bool operator()(const Key& lhs, Pos rhs) const
     {
       return m_comp(lhs,
-        *reinterpret_cast<const Key*>(m_file->const_data()+rhs));
+        *reinterpret_cast<const Key*>(m_file->const_data<char>()+rhs));
     }
     bool operator()(Pos lhs, const Key& rhs) const
     {
-      return m_comp(*reinterpret_cast<const Key*>(m_file->const_data()+lhs, rhs));
+      return m_comp(*reinterpret_cast<const Key*>(m_file->const_data<char>()+lhs, rhs));
     }
     bool operator()(Pos lhs, Pos rhs) const
     {
-      return m_comp(*reinterpret_cast<const Key*>(m_file->const_data()+lhs),
-        *reinterpret_cast<const Key*>(m_file->const_data()+rhs));
+      return m_comp(*reinterpret_cast<const Key*>(m_file->const_data<char>()+lhs),
+        *reinterpret_cast<const Key*>(m_file->const_data<char>()+rhs));
     }
 
   };

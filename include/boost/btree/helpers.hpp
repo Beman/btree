@@ -51,7 +51,7 @@ struct big_endian_traits
   typedef endian::big_uint24un_t  node_size_type;   // permits large node sizes
   static const BOOST_SCOPED_ENUM(endian::order) header_endianness
     = endian::order::big;
-  typedef endian::big_uint48un_t  file_position_type;  // used only by btree_index
+  typedef endian::big_uint48un_t  index_position_type;  // used only by btree_index
 };
 
 struct little_endian_traits
@@ -61,7 +61,7 @@ struct little_endian_traits
   typedef endian::little_uint24un_t  node_size_type;   // permits large node sizes
   static const BOOST_SCOPED_ENUM(endian::order) header_endianness
     = endian::order::little;
-  typedef endian::little_uint48un_t  file_position_type;  // used only by btree_index
+  typedef endian::little_uint48un_t  index_position_type;  // used only by btree_index
 };
   
 struct native_endian_traits
@@ -75,7 +75,7 @@ struct native_endian_traits
 #   else
     = endian::order::little;
 #   endif
-  typedef endian::native_uint48un_t  file_position_type;  // used only by btree_index
+  typedef endian::native_uint48un_t  index_position_type;  // used only by btree_index
 };
 
 typedef big_endian_traits  default_traits;  // see rationale above
