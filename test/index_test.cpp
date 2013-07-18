@@ -119,6 +119,35 @@ void  open_all_new_test()
   cout << "    open_all_new_test complete" << endl;
 }
 
+//-------------------------------  simple_insert_test  ---------------------------------//
+                                                                 
+void  simple_insert_test()
+{
+  cout << "  simple_insert_test..." << endl;
+
+  {
+    btree::btree_index<stuff> idx(file_path, 1000000, idx1_path,
+                                btree::flags::truncate, -1, 128);
+    stuff x(2,2);
+    btree::btree_index<stuff>::position_type pos = idx.push_back(x);
+    BOOST_TEST_EQ(pos, 0u);
+    BOOST_TEST_EQ(idx.file_size(), sizeof(stuff));
+    idx.insert_position(pos);
+    BOOST_TEST_EQ(idx.index_size(), 1u);
+
+    x.assign(1,3);
+    pos = idx.push_back(x);
+    BOOST_TEST_EQ(pos, sizeof(stuff));
+    BOOST_TEST_EQ(idx.file_size(), 2*sizeof(stuff));
+    idx.insert_position(pos);
+    BOOST_TEST_EQ(idx.index_size(), 2u);
+
+  }
+
+
+  cout << "     simple_insert_test complete" << endl;
+}
+
 //-------------------------------  open_new_index_test  --------------------------------//
 
 void  open_new_index_test()
@@ -211,8 +240,9 @@ int cpp_main(int argc, char* argv[])
 
   instantiate_test();
   open_all_new_test();
+  simple_insert_test();
   //open_new_index_test();
-  two_index_test();
+  //two_index_test();
 
   cout << "all tests complete" << endl;
 
