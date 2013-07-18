@@ -164,7 +164,7 @@ public:
     std::pair<index_type::const_iterator, bool>
       result(m_set.insert(index_position_type(pos)));
     return std::pair<const_iterator, bool>(
-      const_iterator(result.first, file()->const_data<char>()), result.second);
+      const_iterator(result.first, file()), result.second);
   }
 
   std::pair<const_iterator, bool>
@@ -177,7 +177,7 @@ public:
         result(m_set.insert(pos));
       BOOST_ASSERT(result.second);
       return std::pair<const_iterator, bool>(
-        const_iterator(result.first, file()->const_data<char>()), true);
+        const_iterator(result.first, file()), true);
     }
     return std::pair<const_iterator, bool>(const_iterator(), false);
   }
@@ -200,28 +200,29 @@ private:
     : public boost::iterator_facade<iterator_type<T>, T, bidirectional_traversal_tag>
   {
   public:
-    typedef typename index_type::iterator  index_iterator_type;
+    typedef typename index_type::iterator    index_iterator_type;
+    typedef typename btree_index::file_type  file_type;
 
     iterator_type() {}  // constructs the end iterator
 
-    iterator_type(index_iterator_type itr, const char* memory_map)
-      : m_index_iterator(itr), m_memory_map(memory_map) {}
+    iterator_type(index_iterator_type itr, const file_ptr_type& file)
+      : m_index_iterator(itr), m_file(file.get()) {}
 
   private:
     friend class boost::iterator_core_access;
 
     index_iterator_type   m_index_iterator;
-    const char*           m_memory_map;
+    file_type*            m_file;
 
     T& dereference() const
     { 
-      return *(reinterpret_cast<T*>(m_memory_map + *m_index_iterator));
+      return *(reinterpret_cast<T*>(m_file->const_data<char>() + *m_index_iterator));
     }
  
     bool equal(const iterator_type& rhs) const
-    { 
-      return m_memory_map == rhs.m_memory_map
-        && m_index_iterator == rhs.m_memory_iterator;
+    {
+      BOOST_ASSERT(m_file == rhs.m_file);
+      return m_index_iterator == rhs.m_index_iterator;
     }
 
     void increment() { ++m_index_iterator; }

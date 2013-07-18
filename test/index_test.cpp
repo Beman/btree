@@ -141,11 +141,40 @@ void  simple_insert_test()
     BOOST_TEST_EQ(idx.file_size(), 2*sizeof(stuff));
     idx.insert_position(pos);
     BOOST_TEST_EQ(idx.index_size(), 2u);
-
   }
+  BOOST_TEST_EQ(boost::filesystem::file_size(file_path), 2*sizeof(stuff));
 
 
   cout << "     simple_insert_test complete" << endl;
+}
+
+//-------------------------------  simple_iterator_test  -------------------------------//
+
+void  simple_iterator_test()
+{
+  cout << "  simple_iterator_test..." << endl;
+
+  typedef btree::btree_index<stuff> index_type;
+  index_type idx(file_path, 0, idx1_path);
+
+  index_type::iterator itr = idx.begin();
+  index_type::iterator end = idx.end();
+
+  BOOST_TEST(itr != end);
+  stuff s = *itr;
+  BOOST_TEST_EQ(s.x, 1);
+  BOOST_TEST_EQ(s.y, 3);
+
+  ++itr;
+  BOOST_TEST(itr != end);
+  s = *itr;
+  BOOST_TEST_EQ(s.x, 2);
+  BOOST_TEST_EQ(s.y, 2);
+
+  ++itr;
+  BOOST_TEST(itr == end);
+
+  cout << "     simple_iterator_test complete" << endl;
 }
 
 //-------------------------------  open_new_index_test  --------------------------------//
@@ -241,6 +270,7 @@ int cpp_main(int argc, char* argv[])
   instantiate_test();
   open_all_new_test();
   simple_insert_test();
+  simple_iterator_test();
   //open_new_index_test();
   //two_index_test();
 
