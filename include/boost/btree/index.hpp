@@ -45,6 +45,8 @@ namespace btree
       class indirect_compare;
   }
 
+  typedef boost::btree::extendible_mapped_file::position_type position_type;
+
 //--------------------------------------------------------------------------------------//
 //                                   btree_index                                        //
 //--------------------------------------------------------------------------------------//
@@ -74,7 +76,6 @@ public:
   typedef boost::btree::extendible_mapped_file   file_type;
   typedef boost::shared_ptr<file_type>           file_ptr_type;
   typedef file_type::size_type                   file_size_type;
-  typedef file_type::position_type               position_type; 
 
   btree_index() {}
 
@@ -123,6 +124,7 @@ public:
   {
     BOOST_ASSERT(!m_set.is_open());
     BOOST_ASSERT(flat_file->is_open());
+    m_file = flat_file;
     m_comp = comp;
     m_set.open(index_pth, flgs, sig, node_sz,
       index_compare_type(m_comp, m_file.get()));
@@ -152,14 +154,14 @@ public:
                                            return m_file->reserve();}
   //  modifiers
 
-  position_type push_back(const value_type& value)
+  btree::position_type push_back(const value_type& value)
   // Effects: unconditional push_back into file(); index unaffected
   {
     return file()->push_back(value);
   }
 
   std::pair<const_iterator, bool>
-    insert_position(position_type pos)
+    insert_position(btree::position_type pos)
   {
     std::pair<index_type::const_iterator, bool>
       result(m_set.insert(index_position_type(pos)));
@@ -184,7 +186,7 @@ public:
 
   // operations
 
-  position_type position(iterator itr) const;
+  btree::position_type position(iterator itr) const;
 
 private:
   index_type      m_set;

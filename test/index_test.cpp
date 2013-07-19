@@ -129,20 +129,27 @@ void  simple_insert_test()
     btree::btree_index<stuff> idx(file_path, 1000000, idx1_path,
                                 btree::flags::truncate, -1, 128);
     stuff x(2,2);
-    btree::btree_index<stuff>::position_type pos = idx.push_back(x);
+    btree::position_type pos = idx.push_back(x);
     BOOST_TEST_EQ(pos, 0u);
     BOOST_TEST_EQ(idx.file_size(), sizeof(stuff));
     idx.insert_position(pos);
     BOOST_TEST_EQ(idx.index_size(), 1u);
 
-    x.assign(1,3);
+    x.assign(3,1);
     pos = idx.push_back(x);
     BOOST_TEST_EQ(pos, sizeof(stuff));
     BOOST_TEST_EQ(idx.file_size(), 2*sizeof(stuff));
     idx.insert_position(pos);
     BOOST_TEST_EQ(idx.index_size(), 2u);
+
+    x.assign(1,3);
+    pos = idx.push_back(x);
+    BOOST_TEST_EQ(pos, 2*sizeof(stuff));
+    BOOST_TEST_EQ(idx.file_size(), 3*sizeof(stuff));
+    idx.insert_position(pos);
+    BOOST_TEST_EQ(idx.index_size(), 3u);
   }
-  BOOST_TEST_EQ(boost::filesystem::file_size(file_path), 2*sizeof(stuff));
+  BOOST_TEST_EQ(boost::filesystem::file_size(file_path), 3*sizeof(stuff));
 
 
   cout << "     simple_insert_test complete" << endl;
@@ -172,6 +179,12 @@ void  simple_iterator_test()
   BOOST_TEST_EQ(s.y, 2);
 
   ++itr;
+  BOOST_TEST(itr != end);
+  s = *itr;
+  BOOST_TEST_EQ(s.x, 3);
+  BOOST_TEST_EQ(s.y, 1);
+
+  ++itr;
   BOOST_TEST(itr == end);
 
   cout << "     simple_iterator_test complete" << endl;
@@ -199,7 +212,7 @@ void  two_index_test()
       idx2(idx1.file(), idx2_path, btree::flags::truncate, -1, 128);
 
     stuff x(2,2);
-    btree::btree_index<stuff>::position_type pos = idx1.push_back(x);
+    btree::position_type pos = idx1.push_back(x);
     idx1.insert_position(pos);
     idx2.insert_position(pos);
 
@@ -212,8 +225,11 @@ void  two_index_test()
     pos = idx1.push_back(x);
     idx1.insert_position(pos);
     idx2.insert_position(pos);
-  }
 
+    BOOST_TEST_EQ(idx1.index_size(), 3u);
+    BOOST_TEST_EQ(idx2.index_size(), 3u);
+  }
+  BOOST_TEST_EQ(boost::filesystem::file_size(file_path), 3*sizeof(stuff));
 
   cout << "     two_index_test complete" << endl;
 }
@@ -272,7 +288,7 @@ int cpp_main(int argc, char* argv[])
   simple_insert_test();
   simple_iterator_test();
   //open_new_index_test();
-  //two_index_test();
+  two_index_test();
 
   cout << "all tests complete" << endl;
 
