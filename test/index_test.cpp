@@ -234,6 +234,80 @@ void  two_index_test()
   cout << "     two_index_test complete" << endl;
 }
 
+//-------------------------------  two_index_iterator_test  -------------------------------//
+
+void  two_index_iterator_test()
+{
+  cout << "  two_index_iterator_test..." << endl;
+
+  {
+    cout << "       idx1..." << endl;
+
+    typedef btree::btree_index<stuff> index_type;
+    index_type idx(file_path, 0, idx1_path);
+
+    index_type::iterator itr = idx.begin();
+    index_type::iterator end = idx.end();
+
+    BOOST_TEST(itr != end);
+    stuff s = *itr;
+    BOOST_TEST_EQ(s.x, 1);
+    BOOST_TEST_EQ(s.y, 3);
+
+    ++itr;
+    BOOST_TEST(itr != end);
+    s = *itr;
+    BOOST_TEST_EQ(s.x, 2);
+    BOOST_TEST_EQ(s.y, 2);
+
+    ++itr;
+    BOOST_TEST(itr != end);
+    s = *itr;
+    BOOST_TEST_EQ(s.x, 3);
+    BOOST_TEST_EQ(s.y, 1);
+
+    ++itr;
+    BOOST_TEST(itr == end);
+
+    cout << "         idx1 complete" << endl;
+  }
+
+  {
+    cout << "       idx2..." << endl;
+
+    typedef btree::btree_index<stuff,
+      btree::default_traits, stuff_reverse_order> index_type;
+    index_type idx(file_path, 0, idx2_path);
+
+    index_type::iterator itr = idx.begin();
+    index_type::iterator end = idx.end();
+
+    BOOST_TEST(itr != end);
+    stuff s = *itr;
+    BOOST_TEST_EQ(s.x, 3);
+    BOOST_TEST_EQ(s.y, 1);
+
+    ++itr;
+    BOOST_TEST(itr != end);
+    s = *itr;
+    BOOST_TEST_EQ(s.x, 2);
+    BOOST_TEST_EQ(s.y, 2);
+
+    ++itr;
+    BOOST_TEST(itr != end);
+    s = *itr;
+    BOOST_TEST_EQ(s.x, 1);
+    BOOST_TEST_EQ(s.y, 3);
+
+    ++itr;
+    BOOST_TEST(itr == end);
+
+    cout << "         idx2 complete" << endl;
+  }
+
+  cout << "     two_index_iterator_test complete" << endl;
+}
+
 //-------------------------------------  _test  ----------------------------------------//
 
 void  _test()
@@ -285,11 +359,11 @@ int cpp_main(int argc, char* argv[])
 
   instantiate_test();
   open_all_new_test();
+  //open_new_index_test();
   simple_insert_test();
   simple_iterator_test();
-  //open_new_index_test();
   two_index_test();
-
+  two_index_iterator_test();
   cout << "all tests complete" << endl;
 
   return boost::report_errors();
