@@ -33,6 +33,8 @@
 
   TODO:
 
+  * If C++11 type traits are available, static assert set, map, index/file, types
+    meet is_trivially_copyable<>
 
   * flags for key_varies and mapped_varies added, but not being set or used yet.
     key and mapped size no longer set to -1 to indicate variable length. 
@@ -455,7 +457,7 @@ namespace detail
 
 */
 
-template  <class Key,
+template  <class Key,   // shall be trivially copyable type; see std 3.9 [basic.types]
            class Base,  // btree_map_base or btree_set_base
            class Traits,
            class Comp>

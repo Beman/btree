@@ -21,7 +21,8 @@
 
   * Since file() exposes the flat file, do we need file_size(), file_path(), etc?
     Yes, since file_type should be documented as an implementation supplied type.
-    
+  
+  * Need multi- version
 
 */
 
@@ -51,7 +52,8 @@ namespace btree
 //                                   btree_index                                        //
 //--------------------------------------------------------------------------------------//
 
-template <class T, class Traits = default_traits,
+template <class T,          // shall be trivially copyable type; see std 3.9 [basic.types]
+          class Traits = default_traits,
           class Comp = btree::less<T> >
 class btree_index
 {
