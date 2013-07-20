@@ -46,14 +46,28 @@ namespace btree
       class indirect_compare;
   }
 
+//--------------------------------------------------------------------------------------//
+//                                types and traits                                      //
+//--------------------------------------------------------------------------------------//
+
   typedef boost::btree::extendible_mapped_file::position_type position_type;
+
+  template <class Traits>
+  struct big_index_traits
+    : public Traits
+  {
+    typedef endian::big_uint48un_t  index_position_type;
+    typedef endian::big_uint16un_t  file_element_size_type; 
+  };
+
+  typedef big_index_traits<btree::default_traits> default_index_traits;
 
 //--------------------------------------------------------------------------------------//
 //                                   btree_index                                        //
 //--------------------------------------------------------------------------------------//
 
 template <class T,          // shall be trivially copyable type; see std 3.9 [basic.types]
-          class Traits = default_traits,
+          class Traits = default_index_traits,
           class Comp = btree::less<T> >
 class btree_index
 {
