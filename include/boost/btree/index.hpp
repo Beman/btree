@@ -210,7 +210,6 @@ public:
   // operations
 
   btree::position_type  position(iterator itr) const;
-  const_iterator       find(const key_type& k) const;
 
   const_iterator        find(const key_type& k) const;
   size_type             count(const key_type& k) const;
