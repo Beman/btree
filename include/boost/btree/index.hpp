@@ -24,6 +24,9 @@
   
   * Need multi- version
 
+  * Knows-own-size types like a C style (const char*) null terminated string should work.
+    Add test case, support header.
+
 */
 
 #ifndef BOOST_BTREE_INDEX_HPP
@@ -189,10 +192,10 @@ public:
     insert(const value_type& value)
   //  Effects: if !find(k) then insert_position(push_back(value));
   {
-    if (m_set.find(value) != m_set.end())
+    if (find(value) == end())
     {
-      std::pair<index_type::const_iterator, bool>
-        result(m_set.insert(pos));
+      std::pair<index_type::const_iterator, bool> result;
+      result = insert_position(push_back(value));
       BOOST_ASSERT(result.second);
       return std::pair<const_iterator, bool>(
         const_iterator(result.first, file()), true);
@@ -203,6 +206,7 @@ public:
   // operations
 
   btree::position_type position(iterator itr) const;
+  const_iterator       find(const key_type& k) const;
 
 private:
   index_type      m_set;
