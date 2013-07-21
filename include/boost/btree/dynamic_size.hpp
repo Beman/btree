@@ -32,7 +32,10 @@ namespace boost
     //     in the C++ standard, 3.9 [basic.types], paragraphs 2 and 3. 
 
     template <class T>
-    struct has_dynamic_size : public false_type{};
+    struct has_dynamic_size : public boost::false_type{};
+
+    template <class T>
+    struct knows_own_dynamic_size : public boost::false_type{};
 
     template <class T>
     inline const char* dynamic_data(const T& data);
@@ -43,6 +46,9 @@ namespace boost
 
     template <class T>
     inline void dynamic_assign(T& x, const char* ptr, std::size_t sz);
+
+    template <class T>
+    inline void dynamic_assign(T& x, const char* ptr);  // knows own size
   }
 }
 
