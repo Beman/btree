@@ -24,6 +24,9 @@
   
   * Need multi- version
 
+  * Knows-own-size types like a C style (const char*) null terminated string should work.
+    Add test case, support header.
+
 */
 
 #ifndef BOOST_BTREE_INDEX_HPP
@@ -46,14 +49,28 @@ namespace btree
       class indirect_compare;
   }
 
+//--------------------------------------------------------------------------------------//
+//                                types and traits                                      //
+//--------------------------------------------------------------------------------------//
+
   typedef boost::btree::extendible_mapped_file::position_type position_type;
+
+  template <class Traits>
+  struct big_index_traits
+    : public Traits
+  {
+    typedef endian::big_uint48un_t  index_position_type;
+    typedef endian::big_uint16un_t  file_element_size_type; 
+  };
+
+  typedef big_index_traits<btree::default_traits> default_index_traits;
 
 //--------------------------------------------------------------------------------------//
 //                                   btree_index                                        //
 //--------------------------------------------------------------------------------------//
 
 template <class T,          // shall be trivially copyable type; see std 3.9 [basic.types]
-          class Traits = default_traits,
+          class Traits = default_index_traits,
           class Comp = btree::less<T> >
 class btree_index
 {
@@ -179,10 +196,10 @@ public:
     insert(const value_type& value)
   //  Effects: if !find(k) then insert_position(push_back(value));
   {
-    if (m_set.find(value) != m_set.end())
+    if (find(value) == end())
     {
-      std::pair<index_type::const_iterator, bool>
-        result(m_set.insert(pos));
+      std::pair<index_type::const_iterator, bool> result;
+      result = insert_position(push_back(value));
       BOOST_ASSERT(result.second);
       return std::pair<const_iterator, bool>(
         const_iterator(result.first, file()), true);
@@ -193,6 +210,7 @@ public:
   // operations
 
   btree::position_type  position(iterator itr) const;
+  const_iterator       find(const key_type& k) const;
 
   const_iterator        find(const key_type& k) const;
   size_type             count(const key_type& k) const;

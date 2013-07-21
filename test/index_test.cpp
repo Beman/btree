@@ -264,7 +264,7 @@ void  two_index_test()
   {
     btree::btree_index<stuff> idx1(file_path, 1000000,
       idx1_path, btree::flags::truncate, -1, 128);
-    btree::btree_index<stuff, btree::default_traits, stuff_reverse_order>
+    btree::btree_index<stuff, btree::default_index_traits, stuff_reverse_order>
       idx2(idx1.file(), idx2_path, btree::flags::truncate, -1, 128);
 
     stuff x(2,2);
@@ -332,7 +332,7 @@ void  two_index_iterator_test()
     cout << "       idx2..." << endl;
 
     typedef btree::btree_index<stuff,
-      btree::default_traits, stuff_reverse_order> index_type;
+      btree::default_index_traits, stuff_reverse_order> index_type;
     index_type idx(file_path, 0, idx2_path);
 
     index_type::iterator itr = idx.begin();
