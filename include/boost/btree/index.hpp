@@ -61,9 +61,13 @@ class btree_index
   class iterator_type;
 public:
   typedef T                                      value_type;
+  typedef T                                      key_type;
+  typedef T                                      mapped_type;
 
   typedef iterator_type<const value_type>        iterator;
   typedef iterator                               const_iterator;
+  typedef std::pair<const_iterator,
+    const_iterator>                              const_iterator_range;
 
   typedef typename Traits::index_position_type   index_position_type;
   typedef boost::filesystem::path                path_type;
@@ -188,7 +192,16 @@ public:
 
   // operations
 
-  btree::position_type position(iterator itr) const;
+  btree::position_type  position(iterator itr) const;
+
+  const_iterator        find(const key_type& k) const;
+  size_type             count(const key_type& k) const;
+
+  const_iterator        lower_bound(const key_type& k) const;
+  const_iterator        upper_bound(const key_type& k) const;
+
+  const_iterator_range  equal_range(const key_type& k) const
+                          { return std::make_pair(lower_bound(k), upper_bound(k)); }
 
 private:
   index_type      m_set;

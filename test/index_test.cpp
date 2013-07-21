@@ -119,11 +119,11 @@ void  open_all_new_test()
   cout << "    open_all_new_test complete" << endl;
 }
 
-//-------------------------------  simple_insert_test  ---------------------------------//
+//-------------------------------  push_back_insert_pos_test  --------------------------//
                                                                  
-void  simple_insert_test()
+void  push_back_insert_pos_test()
 {
-  cout << "  simple_insert_test..." << endl;
+  cout << "  push_back_insert_pos_test..." << endl;
 
   {
     btree::btree_index<stuff> idx(file_path, 1000000, idx1_path,
@@ -152,14 +152,14 @@ void  simple_insert_test()
   BOOST_TEST_EQ(boost::filesystem::file_size(file_path), 3*sizeof(stuff));
 
 
-  cout << "     simple_insert_test complete" << endl;
+  cout << "     push_back_insert_pos_test complete" << endl;
 }
 
-//-------------------------------  simple_iterator_test  -------------------------------//
+//-------------------------------  iterator_test  -------------------------------//
 
-void  simple_iterator_test()
+void  iterator_test()
 {
-  cout << "  simple_iterator_test..." << endl;
+  cout << "  iterator_test..." << endl;
 
   typedef btree::btree_index<stuff> index_type;
   index_type idx(file_path, 0, idx1_path);
@@ -187,7 +187,63 @@ void  simple_iterator_test()
   ++itr;
   BOOST_TEST(itr == end);
 
-  cout << "     simple_iterator_test complete" << endl;
+  cout << "     iterator_test complete" << endl;
+}
+
+//----------------------------------  lower_bound_test  --------------------------------//
+
+//  insert() depends on find(), which depends on lower_bound(), so test lower_bound() now
+
+void  lower_bound_test()
+{
+  cout << "  lower_bound_test..." << endl;
+
+  typedef btree::btree_index<stuff> index_type;
+  index_type idx(file_path, 0, idx1_path);
+
+  index_type::iterator itr1 = idx.begin();
+  index_type::iterator itr2 = idx.begin(); ++itr2;
+  index_type::iterator itr3 = idx.begin(); ++itr2; ++itr3;
+
+  stuff s00 (0,0);
+  stuff s13 (1,3);
+  stuff s22 (2,2);
+  stuff s31 (3,1);
+  stuff s12 (1,2);
+  stuff s14 (1,4);
+  stuff s32 (3,2);
+
+  BOOST_TEST(idx.lower_bound(s00) == itr1);
+  BOOST_TEST(idx.lower_bound(s13) == itr1);
+  BOOST_TEST(idx.lower_bound(s22) == itr2);
+  BOOST_TEST(idx.lower_bound(s31) == itr3);
+  BOOST_TEST(idx.lower_bound(s12) == itr1);
+  BOOST_TEST(idx.lower_bound(s14) == itr2);
+  BOOST_TEST(idx.lower_bound(s32) == idx.end());
+
+  cout << "     lower_bound_test complete" << endl;
+}
+
+//------------------------------------  find_test  -------------------------------------//
+
+//  insert() depends on find(), so test find() now
+
+void  find_test()
+{
+  cout << "  find_test..." << endl;
+
+  cout << "     find_test complete" << endl;
+}
+
+//-----------------------------------  insert_test  ------------------------------------//
+
+//  dependencies have been tested, so test insert() now
+
+void  insert_test()
+{
+  cout << "  insert_test..." << endl;
+
+  cout << "     insert_test complete" << endl;
 }
 
 //-------------------------------  open_new_index_test  --------------------------------//
@@ -360,8 +416,11 @@ int cpp_main(int argc, char* argv[])
   instantiate_test();
   open_all_new_test();
   //open_new_index_test();
-  simple_insert_test();
-  simple_iterator_test();
+  push_back_insert_pos_test();
+  iterator_test();
+  lower_bound_test();
+  find_test();
+  insert_test();
   two_index_test();
   two_index_iterator_test();
   cout << "all tests complete" << endl;
