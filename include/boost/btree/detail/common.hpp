@@ -498,7 +498,7 @@ private:
     friend class btree_base;
   public:
     value_type*  begin()      {return m_value;}
-    value_type*  end()        {return {return &m_value[size()];}}
+    value_type*  end()        {return &m_value[size()];}
 
     //  offsetof() macro won't work for all value types, so compute by hand
     static std::size_t value_offset()
@@ -539,11 +539,12 @@ private:
     branch_value_type() {}
     branch_value_type(const Key& k, node_id_type id) : m_key(k), m_node_id(id) {}
 
-    Key           key() const      {return m_key;}
-    node_id_type  node_id() const  {return m_node_id;}
+    Key&          key()                     {return m_key;}
+    node_id_type  node_id() const           {return m_node_id;}
+    void          node_id(node_id_type id)  {m_node_id = id;}
   private:
-    Key           m_key;
-    node_id_type  m_node_id;
+    node_id_type  m_node_id;   // branch insert/erase depend on this data member
+    Key           m_key;       //  ordering
   };
 
   class branch_data : public btree_data
@@ -1056,10 +1057,10 @@ btree_base<Key,Base,Traits,Comp>::m_open(const boost::filesystem::path& p,
     if ((m_hdr.flags() & flags::unique) != (flgs & flags::unique))
       m_close_and_throw("multi/non-multi differs");
     if (!(m_hdr.flags() & flags::key_varies)
-        && m_hdr.key_size() != Base::key_size())
+        && m_hdr.key_size() != sizeof(key_type))
       m_close_and_throw("key size differs");
     if (!(m_hdr.flags() & flags::mapped_varies)
-        && m_hdr.mapped_size() != Base::mapped_size())
+        && m_hdr.mapped_size() != sizeof(mapped_type))
       m_close_and_throw("mapped size differs");
 
     m_mgr.data_size(m_hdr.node_size());
@@ -1294,10 +1295,10 @@ btree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter, const key_
       return const_iterator(np2, np2->leaf().begin());
     }
 
-    // split node np by moving half the elements to node n2
-    std::size_t split_sz = np->size() / 2;  // if size odd, round down for speed
+    // split node np by moving half the elements to node np2
+    std::size_t split_sz = np->size() / 2;  // round down to speed copy
     BOOST_ASSERT(split_sz);
-    value_type* split_begin = ng->leaf().begin() + (np->size() - split_sz);
+    value_type* split_begin = np->leaf().begin() + (np->size() - split_sz);
 
     // TODO: if the insert point will fall on the new node, it would be faster to
     // copy the portion before the insert point, copy the value being inserted, and
@@ -1358,19 +1359,9 @@ btree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter, const key_
 
 template <class Key, class Base, class Traits, class Comp>   
 void
-btree_base<Key,Base,Traits,Comp>::m_branch_insert( btree_node_ptr np,
+btree_base<Key,Base,Traits,Comp>::m_branch_insert(btree_node_ptr np,
   branch_value_type* element, const key_type& k, btree_node_ptr child) 
 {
-  //std::cout << "branch insert key " << k << ", id " << child->node_id() << std::endl;
-
-  std::size_t       k_size = dynamic_size(k);
-  std::size_t       insert_size = k_size + sizeof(node_id_type);
-
-  // TODO: insert_begin having a type of key_type* is a disaster, requiring numerous
-  // reinterpret casts and lots of confusing char* arithmetic. 
-  // What would happen if we just used element as-is?
-  key_type*         insert_begin = &element->key();
-
   btree_node_ptr    np2;
 
   BOOST_ASSERT(np->is_branch());
@@ -1378,10 +1369,7 @@ btree_base<Key,Base,Traits,Comp>::m_branch_insert( btree_node_ptr np,
 
   np->needs_write(true);
 
-  if (np->size() + insert_size
-                 + sizeof(node_id_type)  // NOTE WELL: size() doesn't include
-                                         // size of the end pseudo-element node_id
-    > m_max_branch_elements)  // no room on node?
+  if (np->size() == m_max_branch_elements)  // no room on node?
   {
     //  no room on node, so node must be split
 
@@ -1391,7 +1379,7 @@ btree_base<Key,Base,Traits,Comp>::m_branch_insert( btree_node_ptr np,
     np2 = m_new_node(np->level());  // create the new node
 
     // apply pack optimization if applicable
-    if (m_ok_to_pack)  // have all inserts been ordered and no erases occurred?
+    if (m_ok_to_pack)
     {
       // instead of splitting np, just copy child's node_id to np2
       np2->branch().begin()->node_id() = child->node_id();
@@ -1405,97 +1393,59 @@ btree_base<Key,Base,Traits,Comp>::m_branch_insert( btree_node_ptr np,
       return;
     }
 
-    // split node np by moving half the elements, by size, to node p2
+    // split node np by moving half the elements to node p2
 
-    branch_value_type* unsplit_end(np->branch().begin());
-    unsplit_end.advance_by_size(np->branch().size() / 2);
-    branch_value_type* split_begin(unsplit_end+1);
-    std::size_t split_sz = char_distance(&*split_begin, char_ptr(&*np->branch().end()) 
-      + sizeof(node_id_type));  // include the end pseudo-element node_id
-    BOOST_ASSERT(split_sz > sizeof(node_id_type));
+    std::size_t np2_sz = np->size() / 2;
+    std::size_t np_sz = np->size() - np2_sz;
+    np_size(np_sz - 1);  // -1 to account for end pseudo-element
 
-    // TODO: if the insert point will fall on the new node, it would be faster to
+    // promote the key from the new end pseudo element to the parent branch node
+    m_branch_insert(np->parent(), np->parent_element(), np2->branch().end()->key(), np2);
+
+    // Note: if the insert point will fall on the new node, it would be faster to
     // copy the portion before the insert point, copy the value being inserted, and
     // finally copy the portion after the insert point. However, that's a fair amount of
     // additional code for something that only happens on half of all branch splits
     // on average.
 
-    //// if the insert will be at the start just copy everything to the proper location
-    //if (split_begin == insert_begin)
-    //{
-    //  np2->branch().P0 = id;
-    //  std::memcpy(&*np2->branch().begin(), &*split_begin,
-    //    split_sz); // move split values to new node
-    //  np2->size(split_sz);
-    //  std::memset(&*split_begin, 0,  // zero unused space so dumps easier to read
-    //    (np->branch().end() - split_begin) * sizeof(branch_value_type)); 
-    //  np->size(np->size() - split_sz);
-    //  BOOST_ASSERT(np->parent()->node_id() == np->parent_node_id()); // cache logic OK?
-    //  m_branch_insert(np->parent(), np->parent_element()+1, k, np2);
-    //  return;
-    //}
+    // copy the split elements, including the pseudo-end element, to np2
+    branch_value_type* split_begin = np->branch().begin() + np_sz;
 
-    // copy the split elements, including the pseudo-end element, to p2
-    BOOST_ASSERT(char_ptr(&*np2->branch().begin())+split_sz
-      <= char_ptr(&*np2->branch().begin())+m_max_branch_elements);
-    std::memcpy(&*np2->branch().begin(), &*split_begin,
-      split_sz);  // include end pseudo element
-    np2->size(split_sz - sizeof(node_id_type));  // exclude end pseudo element from size
+    std::memcpy(np2->branch().begin(), np2->branch().end() + 1,
+      np2_sz * sizeof(branch_value_type) + sizeof(node_id_type));  // include end pseudo element
+    np2->size(np2_sz);  // exclude end pseudo element from size
 
     BOOST_ASSERT(np->parent()->node_id() == np->parent_node_id()); // cache logic OK?
 
-    // promote the key from the original node's new end pseudo element to the parent
-    // branch node
-    m_branch_insert(np->parent(), np->parent_element(), unsplit_end->key(), np2);
 
     // finalize work on the original node
 # ifndef NDEBUG
-    std::memset(&unsplit_end->key(), 0,  // zero unused space so dumps easier to read
-      char_distance(&unsplit_end->key(), &np->branch().end()->key())); 
+    std::memset(&np->branch().end()->key(), 0,  // zero unused space so dumps easier to read
+      (m_max_branch_elements - p->size()) * sizeof(branch_value_type) - sizeof(key_type)); 
 # endif
-    np->size(char_distance(&*np->branch().begin(), &*unsplit_end));
 
     // adjust np and insert_begin if they now fall on the new node due to the split
-    if (&*split_begin <= &*element)
+    if (!(element >= np->branch().begin() && element <= np->branch().begin()))
     {
+      element = np2->branch().begin() + (element - np->branch().end());
       np = np2;
-      insert_begin = reinterpret_cast<key_type*>(char_ptr(&np2->branch().begin()->key())
-        + char_distance(&split_begin->key(), insert_begin));
     }
   }  // split finished
 
-  BOOST_ASSERT(np->size() + insert_size
-                 + sizeof(node_id_type) <= m_max_branch_elements);
-                 // NOTE WELL: size() doesn't include
-                 // size of the end pseudo-element node_id    
+  BOOST_ASSERT(np->size() < m_max_branch_elements);
 
-  //  insert k, id, into np at insert_begin
-
-//std::cout << "node size " << np->size()
-//          << " insert size " << insert_size
-//          << " k_size " << k_size
-//          << " insert_begin " << insert_begin
-//          << " begin() " << &*np->branch().begin()
-//          << " char_distance " << char_distance(insert_begin, &np->branch().end()->key())
-//          << std::endl;
-  BOOST_ASSERT(insert_begin >= &np->branch().begin()->key());
-  BOOST_ASSERT(insert_begin <= &np->branch().end()->key());
-  BOOST_ASSERT(char_ptr(insert_begin) + insert_size            // start of memmove
-    + char_distance(insert_begin, &np->branch().end()->key())  // + size of memmove
-    <= char_ptr(&*np->branch().begin()) + m_max_branch_elements);
-  std::memmove(char_ptr(insert_begin) + insert_size,
-    insert_begin, char_distance(insert_begin, &np->branch().end()->key()));  // make room
-  BOOST_ASSERT(char_ptr(insert_begin) + k_size + sizeof(node_id_type)
-    <= char_ptr(&*np->branch().begin())+m_max_branch_elements);
-  std::memcpy(insert_begin, &k, k_size);  // insert k
-  *reinterpret_cast<node_id_type*>(char_ptr(insert_begin) + k_size)
-    = child->node_id();
-  np->size(np->size() + insert_size);
+  //  insert k, id, into np at &element->key()
+  BOOST_ASSERT(&element->key() >= &np->branch().begin()->key());
+  BOOST_ASSERT(&element->key() <= &np->branch().end()->key());
+  
+  std::size_t move_sz = (&np->branch().end() - element) * sizeof(branch_value_type);
+  std::memmove(&(element+1)->key(), &element->key(), move_sz);  // make room
+  std::memcpy(&element->key(), &k, sizeof(key_type));  // insert k
+  (element+1)->node_id(child->node_id());              // insert node_id
 
   //  set the child's parent and parent_element
   child->parent(np);
-  child->parent_element(branch_value_type*( 
-    reinterpret_cast<branch_value_type*>(char_ptr(insert_begin) + k_size) ));
+  child->parent_element(element+1)
 
 #ifndef NDEBUG
   if (m_hdr.flags() & btree::flags::unique)
@@ -1524,8 +1474,8 @@ btree_base<Key,Base,Traits,Comp>::erase(const_iterator pos)
   BOOST_ASSERT_MSG(pos != end(), "erase() on end iterator");
   BOOST_ASSERT(pos.m_node);
   BOOST_ASSERT(pos.m_node->is_leaf());
-  BOOST_ASSERT(&*pos.m_element < &*pos.m_node->leaf().end());
-  BOOST_ASSERT(&*pos.m_element >= &*pos.m_node->leaf().begin());
+  BOOST_ASSERT(pos.m_element < pos.m_node->leaf().end());
+  BOOST_ASSERT(pos.m_element >= pos.m_node->leaf().begin());
 
   m_ok_to_pack = false;  // TODO: is this too conservative?
   pos.m_node->needs_write(true);
@@ -1559,13 +1509,11 @@ btree_base<Key,Base,Traits,Comp>::erase(const_iterator pos)
     // on a leaf that is also the root; these use the same logic because they do not remove
     // the node from the tree.
 
-    value_type* erase_point = const_cast<value_type*>(pos.m_element);
-    std::size_t erase_sz = dynamic_size(*erase_point);
-    std::size_t move_sz = char_ptr(&*pos.m_node->leaf().end())
-      - (char_ptr(erase_point) + erase_sz); 
-    std::memmove(erase_point, char_ptr(erase_point) + erase_sz, move_sz);
-    pos.m_node->size(pos.m_node->size() - erase_sz);
-    std::memset(&*pos.m_node->leaf().end(), 0, erase_sz);
+    value_type* element = const_cast<value_type*>(pos.m_element);
+    std::memmove(element, element+1,
+      (pos.m_node->leaf().end() - element+1) * sizeof(value_type));
+    pos.m_node->size(pos.m_node->size() - 1);
+    std::memset(pos.m_node->leaf().end(), 0, sizeof(value_type));
 
     if (pos.m_element != pos.m_node->leaf().end())
       return pos;
