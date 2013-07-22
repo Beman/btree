@@ -14,7 +14,7 @@
 
 #include <boost/config.hpp>
 #include <boost/cstdint.hpp>
-#include <boost/btree/dynamic_size.hpp>
+//#include <boost/btree/dynamic_size.hpp>
 #include <boost/btree/header.hpp>
 #include <boost/filesystem/path.hpp>
 #include <boost/btree/detail/common.hpp>  // common to all 4 btree_* containers
@@ -95,7 +95,7 @@ namespace boost
 
       std::pair<typename 
         btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>::const_iterator, bool>
-      insert(const map_value<Key, T>& value)
+      insert(const value_type& value)
       {
         return btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>::m_insert_unique(
           value.key(), value.mapped_value());
@@ -189,7 +189,7 @@ namespace boost
       }
 
       typename btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>::const_iterator
-      insert(const map_value<Key, T>& value)
+      insert(const value_type& value)
       {
         return
           btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>::m_insert_non_unique(

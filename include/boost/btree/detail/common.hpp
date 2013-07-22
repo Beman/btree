@@ -15,10 +15,6 @@
 #include <boost/btree/detail/buffer_manager.hpp>
 #include <boost/assert.hpp>
 #include <boost/static_assert.hpp>
-#include <boost/type_traits/is_const.hpp>
-#include <boost/type_traits/remove_const.hpp>
-#include <boost/mpl/or.hpp>
-#include <boost/mpl/if.hpp>
 #include <cstddef>     // for size_t
 #include <cstring>
 #include <cassert>
@@ -114,49 +110,6 @@ namespace btree
 {
 
 //--------------------------------------------------------------------------------------//
-//                                                                                      //
-//                   Helpers for variable length keys and/or data                       //
-//                                                                                      //
-//--------------------------------------------------------------------------------------//
-
-//--------------------------------- map_value ------------------------------------------//
-
-// TODO: either add code to align mapped() or add a requirement that T2 does not
-// require alignment.
-
-template <class T1, class T2>
-class map_value
-{
-public:
-  const T1& key() const   { return *reinterpret_cast<const T1*>(this); }
-  const T2& mapped_value() const
-  {
-    return *reinterpret_cast<const T2*>(reinterpret_cast<const char*>(this)
-             + dynamic_size(key()));
-  }
-  std::size_t size() const
-  {
-    //std::cout << " dynamic_size key " << dynamic_size(key())
-    //  << ", mapped_value " << dynamic_size(mapped_value()) << std::endl;
-    return dynamic_size(key()) + dynamic_size(mapped_value());
-  }
-};
-
-template <class T1, class T2>
-bool operator<(const map_value<T1, T2>& l, const map_value<T1, T2>& r)
-  {return l.key() < r.key();}
-
-template <class T1, class T2>
-std::ostream& operator<<(std::ostream& os, const map_value<T1, T2>& x)
-{
-  os << x.key() << ',' << x.mapped_value();
-  return os;
-}
-
-template <class T1, class T2>
-inline std::size_t dynamic_size(const map_value<T1, T2>& x) {return x.size();}
-
-//--------------------------------------------------------------------------------------//
 //                             general support functions                                //
 //--------------------------------------------------------------------------------------//
 
@@ -189,8 +142,8 @@ public:
 
   const Key& key(const value_type& v) const {return v;}  // really handy, so expose
 
-  static std::size_t key_size()    { return sizeof(Key); }
-  static std::size_t mapped_size() { return sizeof(Key); }
+  //static std::size_t key_size()    { return sizeof(Key); }
+  //static std::size_t mapped_size() { return sizeof(Key); }
 
 protected:
   void m_memcpy_value(value_type* dest, const Key* k, std::size_t key_sz,
@@ -208,14 +161,14 @@ template <class Key, class T, class Comp>
 class btree_map_base
 {
 public:
-  typedef map_value<Key, T>  value_type;
-  typedef T                  mapped_type;
+  typedef std::pair<const Key, T>  value_type;
+  typedef T                        mapped_type;
 
   const Key& key(const value_type& v) const  // really handy, so expose
-    {return v.key();}
+    {return v.first;}
 
-  static std::size_t key_size()    { return sizeof(Key); }
-  static std::size_t mapped_size() { return sizeof(T); }
+  //static std::size_t key_size()    { return sizeof(Key); }
+  //static std::size_t mapped_size() { return sizeof(T); }
 
   class value_compare
   {
@@ -223,11 +176,11 @@ public:
     value_compare() {}
     value_compare(Comp comp) : m_comp(comp) {}
     bool operator()(const value_type& x, const value_type& y) const
-      { return m_comp(x.key(), y.key()); }
+      { return m_comp(x.first, y.first); }
     bool operator()(const value_type& x, const Key& y) const
-      { return m_comp(x.key(), y); }
+      { return m_comp(x.first, y); }
     bool operator()(const Key& x, const value_type& y) const
-      { return m_comp(x, y.key()); }
+      { return m_comp(x, y.first); }
   private:
     Comp    m_comp;
   };
@@ -242,196 +195,67 @@ protected:
 
 };
 
-namespace detail
-{
-  //--------------------------------- branch_value -------------------------------------//
-
-  template <class PID, class K>
-  class branch_value
-  {
-  public:
-    PID&  node_id() {return *reinterpret_cast<PID*>(this); }
-    K&  key()
-    {
-      return *reinterpret_cast<K*>(reinterpret_cast<char*>(this)
-               + sizeof(PID));
-    }
-    const K&  key() const
-    {
-      return *reinterpret_cast<const K*>(reinterpret_cast<const char*>(this)
-               + sizeof(PID));
-    }
-    std::size_t size() const
-    { 
-      return sizeof(PID) + dynamic_size(key());
-    }
-  };
-}  // namespace detail
-
-template <class PID, class K>
-std::size_t dynamic_size(const detail::branch_value<PID, K>& v) {return v.size();}
-
-namespace detail
-{
-
-  //-------------------------------- dynamic_iterator ----------------------------------//
-  //
-  //  Raw pointers to elements on a node won't work as iterators if the elements are
-  //  variable length. dynamic_iterator provides the correct semantics.
-
-  template <class T>
-  class dynamic_iterator
-    : public boost::iterator_facade<dynamic_iterator<T>, T, bidirectional_traversal_tag>
-  {
-  public:
-    dynamic_iterator() : m_ptr(0), m_begin(0)
-    {
-      //std::cout << "dynamic_iterator ctor 1\n";
-    } 
-    explicit dynamic_iterator(T* ptr) : m_ptr(ptr)
-    {
-      //std::cout << "dynamic_iterator ctor 2\n";
-      m_begin = ptr;
-    }
-    dynamic_iterator(T* ptr, std::size_t sz)
-      : m_ptr(reinterpret_cast<T*>(reinterpret_cast<char*>(ptr) + sz))
-    {
-      //std::cout << "dynamic_iterator ctor 3\n";
-      m_begin = ptr;
-    }
-
-    bool operator<(const dynamic_iterator& rhs) const
-    {
-      BOOST_ASSERT(m_begin == rhs.m_begin);  // on the same node
-      return m_ptr < rhs.m_ptr;
-    }
-
-    void advance_by_size(std::size_t max_sz)
-    {
-      BOOST_ASSERT(max_sz);
-      T* prior;
-      for (std::size_t sz = 0; sz <= max_sz; sz += dynamic_size(*m_ptr)) 
-      {
-        prior = m_ptr;
-        increment();
-      }
-      m_ptr = prior;
-    }
-
-  private:
-    friend class boost::iterator_core_access;
-
-    T* m_ptr;    // the pointer
-    T* m_begin;  // the begin pointer for decrements
-
-    T& dereference() const  { return *m_ptr; }
- 
-    bool equal(const dynamic_iterator& rhs) const
-    { 
-      return m_ptr == rhs.m_ptr;
-    }
-
-    void increment()
-    {
-      //std::cout << "***inc dynamic_size " << dynamic_size(*m_ptr) << std::endl;
-      m_ptr = reinterpret_cast<T*>(reinterpret_cast<char*>(m_ptr)
-        + dynamic_size(*m_ptr));
-    }
-
-    void decrement()
-    {
-      BOOST_ASSERT_MSG(m_ptr != m_begin, "internal logic error; decrement of begin");
-      T* prior = m_begin;
-      T* cur = m_begin;
-      for(;;)
-      {
-        cur = reinterpret_cast<T*>(reinterpret_cast<char*>(cur) + dynamic_size(*cur));
-        if (cur == m_ptr) break;
-        prior = cur;
-      }
-      m_ptr = prior;
-    }
-
-    void advance(std::ptrdiff_t n)
-    {
-      if (n > 0)
-        for (; n; --n)
-          increment();
-      else if (n < 0)
-        for (; n; ++n)
-          decrement();
-    }
-
-    std::ptrdiff_t distance_to(const dynamic_iterator& rhs) const
-    {
-      BOOST_ASSERT(false);   // is this function ever used?
-      return 0;
-    }
-
-  };
-
-  //-------------------------------- pointer_iterator ----------------------------------//
-  //
-  //  Raw pointer wrapper providing the same interface as dynamic_pointer, but as
-  //  a random access rather than bidirctional iterator. It is used when T is not a
-  //  dynamic-size type.
-
-  template <class T>
-  class pointer_iterator
-    : public boost::iterator_facade<pointer_iterator<T>, T, random_access_traversal_tag>
-  {
-  public:
-    pointer_iterator() : m_ptr(0) {} 
-    explicit pointer_iterator(T* ptr) : m_ptr(ptr) {}
-    pointer_iterator(T* ptr, std::size_t sz)
-      : m_ptr(reinterpret_cast<T*>(reinterpret_cast<char*>(ptr) + sz)) {}
-
-    bool operator<(const pointer_iterator& rhs) const  {return m_ptr < rhs.m_ptr;}
-
-    void advance_by_size(std::size_t max_sz)
-    {
-      BOOST_ASSERT(max_sz);
-      std::ptrdiff_t n = max_sz / btree::dynamic_size(*m_ptr);
-      m_ptr = reinterpret_cast<T*>(reinterpret_cast<char*>(m_ptr)
-        + n * static_cast<std::ptrdiff_t>(btree::dynamic_size(*m_ptr)));
-    }
-
-  private:
-    friend class boost::iterator_core_access;
-
-    T* m_ptr;    // the pointer
-
-    T& dereference() const  { return *m_ptr; }
- 
-    bool equal(const pointer_iterator& rhs) const {return m_ptr == rhs.m_ptr;}
-
-    void increment()
-    {
-      //std::cout << "***inc  " <<  btree::dynamic_size(*m_ptr) << '\n';
-      m_ptr = reinterpret_cast<T*>(reinterpret_cast<char*>(m_ptr)
-        + btree::dynamic_size(*m_ptr));
-    }
-    void decrement()
-    {
-      m_ptr = reinterpret_cast<T*>(reinterpret_cast<char*>(m_ptr)
-        - btree::dynamic_size(*m_ptr));
-    }
-    void advance(std::ptrdiff_t n)
-    {
-      m_ptr = reinterpret_cast<T*>(reinterpret_cast<char*>(m_ptr)
-        + n * static_cast<std::ptrdiff_t>(btree::dynamic_size(*m_ptr)));
-    }
-
-    std::ptrdiff_t distance_to(const pointer_iterator& rhs) const
-    {
-      return std::distance(reinterpret_cast<const char*>(m_ptr),
-        reinterpret_cast<const char*>(rhs.m_ptr))
-        / static_cast<std::ptrdiff_t>(btree::dynamic_size(*m_ptr));
-    }
-
-  };
-
-}  // namespace detail
+//namespace detail
+//{
+//  //-------------------------------- pointer_iterator ----------------------------------//
+//  //
+//
+//  template <class T>
+//  class pointer_iterator
+//    : public boost::iterator_facade<pointer_iterator<T>, T, random_access_traversal_tag>
+//  {
+//  public:
+//    pointer_iterator() : m_ptr(0) {} 
+//    explicit pointer_iterator(T* ptr) : m_ptr(ptr) {}
+//    pointer_iterator(T* ptr, std::size_t sz)
+//      : m_ptr(reinterpret_cast<T*>(reinterpret_cast<char*>(ptr) + sz)) {}
+//
+//    bool operator<(const pointer_iterator& rhs) const  {return m_ptr < rhs.m_ptr;}
+//
+//    void advance_by_size(std::size_t max_sz)
+//    {
+//      BOOST_ASSERT(max_sz);
+//      std::ptrdiff_t n = max_sz / btree::dynamic_size(*m_ptr);
+//      m_ptr = reinterpret_cast<T*>(reinterpret_cast<char*>(m_ptr)
+//        + n * static_cast<std::ptrdiff_t>(btree::dynamic_size(*m_ptr)));
+//    }
+//
+//  private:
+//    friend class boost::iterator_core_access;
+//
+//    T* m_ptr;    // the pointer
+//
+//    T& dereference() const  { return *m_ptr; }
+// 
+//    bool equal(const pointer_iterator& rhs) const {return m_ptr == rhs.m_ptr;}
+//
+//    void increment()
+//    {
+//      //std::cout << "***inc  " <<  btree::dynamic_size(*m_ptr) << '\n';
+//      m_ptr = reinterpret_cast<T*>(reinterpret_cast<char*>(m_ptr)
+//        + btree::dynamic_size(*m_ptr));
+//    }
+//    void decrement()
+//    {
+//      m_ptr = reinterpret_cast<T*>(reinterpret_cast<char*>(m_ptr)
+//        - btree::dynamic_size(*m_ptr));
+//    }
+//    void advance(std::ptrdiff_t n)
+//    {
+//      m_ptr = reinterpret_cast<T*>(reinterpret_cast<char*>(m_ptr)
+//        + n * static_cast<std::ptrdiff_t>(btree::dynamic_size(*m_ptr)));
+//    }
+//
+//    std::ptrdiff_t distance_to(const pointer_iterator& rhs) const
+//    {
+//      return std::distance(reinterpret_cast<const char*>(m_ptr),
+//        reinterpret_cast<const char*>(rhs.m_ptr))
+//        / static_cast<std::ptrdiff_t>(btree::dynamic_size(*m_ptr));
+//    }
+//
+//  };
+//
+//}  // namespace detail
 
 //--------------------------------------------------------------------------------------//
 //                                                                                      //
@@ -446,9 +270,9 @@ namespace detail
   Valid-chain-to-root invariant:
 
     Iterators contain a (smart) btree_node_ptr to the leaf node that contains the
-    element being pointed to, and a (dumb) leaf_iterator to the element itself.
+    element being pointed to, and a (dumb) pointer to the element itself.
     Leaf and branch nodes contain a btree_node_ptr to the parent node in the tree, and
-    a (dumb) branch_iterator to the parent element itself.
+    a (dumb) branch_value_type* to the parent element itself.
 
     This chain, from iterator to root, is valid as long as the iterator is valid. Any
     operations that create an iterator must establish this chain, and any operations
@@ -504,17 +328,8 @@ public:
   typedef typename Traits::node_size_type       node_size_type;
   typedef typename Traits::node_level_type      node_level_type;
 
-  // TODO: why are these being exposed:
-
-  typedef value_type                            leaf_value_type;
-  typedef typename boost::mpl::or_<
-    typename boost::btree::has_dynamic_size<key_type>::type,
-    typename boost::btree::has_dynamic_size<mapped_type>::type
-             >::type                            leaf_iterator_selector;
-  typedef typename boost::mpl::if_<leaf_iterator_selector,
-             detail::dynamic_iterator<leaf_value_type>,
-             detail::pointer_iterator<leaf_value_type>  
-             >::type                            leaf_iterator;
+  //// TODO: eliminate pointer_iterator and just use value_type*
+  //typedef detail::pointer_iterator<value_type>  leaf_iterator;
 
   // construct/destroy:
 
@@ -745,9 +560,9 @@ private:
                                              = static_cast<uint_least32_t>(sz);}  // ditto
 
 //  private:
-    node_level_type  m_level;        // leaf: 0, branches: distance from leaf,
-                                     // free node list entry: 0xFF
-    node_size_type   m_size;         // size in bytes of elements on node
+    node_level_type  m_level;    // leaf: 0, branches: distance from leaf,
+                                 // free node list entry: 0xFF
+    node_size_type   m_size;     // # of elements; on branches excludes end pseudo-element
   };
   
   //------------------------ leaf data formats and operations --------------------------//
@@ -756,8 +571,8 @@ private:
   {
     friend class btree_base;
   public:
-    leaf_iterator  begin()      { return leaf_iterator(m_value);}
-    leaf_iterator  end()        { return leaf_iterator(m_value, size()); }
+    value_type*  begin()      {return m_value;}
+    value_type*  end()        {return {return &m_value[size()];}}
 
     //  offsetof() macro won't work for all value types, so compute by hand
     static std::size_t value_offset()
@@ -769,7 +584,7 @@ private:
     }
 
     //  private:
-    leaf_value_type  m_value[1];
+    value_type  m_value[1];
   };
 
   std::size_t char_distance(const void* from, const void* to)
@@ -793,22 +608,27 @@ private:
       //                                            Kn <= Keys in Pn+1              //
       //----------------------------------------------------------------------------//
 
-  typedef detail::branch_value<node_id_type, key_type>  branch_value_type;
-  typedef typename boost::mpl::if_<
-    typename boost::btree::has_dynamic_size<key_type>::type,
-             detail::dynamic_iterator<branch_value_type>,
-             detail::pointer_iterator<branch_value_type>  
-             >::type                                    branch_iterator;
+  struct branch_value_type
+  {
+    branch_value_type() {}
+    branch_value_type(const Key& k, node_id_type id) : m_key(k), m_node_id(id) {}
+
+    Key           key() const      {return m_key;}
+    node_id_type  node_id() const  {return m_node_id;}
+  private:
+    Key           m_key;
+    node_id_type  m_node_id;
+  };
 
   class branch_data : public btree_data
   {
   public:
-    branch_iterator  begin()    { return branch_iterator(m_value);}
+    branch_value_type*  begin()    {return m_value;}
 
-    // HEADS UP: end() branch_iterator is dereferenceable, although only the node_id
+    // HEADS UP: end() branch_value_type* is dereferenceable, although only the node_id
     // is present. This because a B-Tree branch page has one more child id than the
     // number of keys. See the branch invariants above.
-    branch_iterator  end()      { return branch_iterator(m_value, size()); }
+    branch_value_type*  end()      {return &m_value[size()];}
 
     //  offsetof() macro won't work for all branch_value_type's, so compute by hand
     static std::size_t value_offset()
@@ -830,8 +650,8 @@ private:
   class btree_node : public buffer
   {
   private:
-    mutable btree_node_ptr   m_parent;     // by definition, the parent is a branch node.
-    mutable branch_iterator  m_parent_element;
+    mutable btree_node_ptr      m_parent;     // by definition, parent is a branch node
+    mutable branch_value_type*  m_parent_element;
 # ifndef NDEBUG
     node_id_type       m_parent_node_id;  // allows assert that m_parent has not been
                                           // overwritten by faulty logic
@@ -848,8 +668,8 @@ private:
 //    const btree_node_ptr&  parent() const                    {return m_parent;}
     void               parent(btree_node_ptr p)          {m_parent = p;}
     void               parent_reset()                    {m_parent.reset();}
-    branch_iterator    parent_element()                  {return m_parent_element;}
-    void               parent_element(branch_iterator p) {m_parent_element = p;}
+    branch_value_type* parent_element()                  {return m_parent_element;}
+    void               parent_element(branch_value_type* p) {m_parent_element = p;}
 #   ifndef NDEBUG
     node_id_type       parent_node_id()                  {return m_parent_node_id;}
     void               parent_node_id(node_id_type id)   {m_parent_node_id = id;}
@@ -883,7 +703,7 @@ private:
       }
 
       btree_node_ptr   par(m_parent);
-      branch_iterator  par_element(m_parent_element);
+      branch_value_type*  par_element(m_parent_element);
 
       if (par_element != par->branch().end())
       {
@@ -924,7 +744,7 @@ private:
       }
 
       btree_node_ptr   par(m_parent);
-      branch_iterator  par_element(m_parent_element);
+      branch_value_type*  par_element(m_parent_element);
 
       if (par_element != par->branch().begin())
       {
@@ -1031,13 +851,13 @@ private:
 
   private:
     typename btree_base::btree_node_ptr  m_node; 
-    typename btree_base::leaf_iterator   m_element;  // 0 for end iterator
+    typename T*                          m_element;  // 0 for end iterator
 
   public:
     typedef typename btree_base::btree_node_ptr::use_count_type use_count_type;
 
     iterator_type(): m_element(0) {}
-    iterator_type(buffer_ptr p, leaf_iterator e)
+    iterator_type(buffer_ptr p, T* e)
       : m_node(static_cast<typename btree_base::btree_node_ptr>(p)),
         m_element(e) {}
 
@@ -1076,10 +896,10 @@ private:
 protected:
 
   std::pair<const_iterator, bool>
-    m_insert_unique(const key_type& k, const mapped_type& mv);
+    m_insert_unique(const value_type& value);
 
   const_iterator
-    m_insert_non_unique(const key_type& k, const mapped_type& mv);
+    m_insert_non_unique(const value_type& value);
   // Remark: Insert after any elements with equivalent keys, per C++ standard
 
   iterator m_update(iterator itr, const mapped_type& mv);
@@ -1119,12 +939,12 @@ private:
 
   iterator m_special_lower_bound(const key_type& k) const;
   // returned iterator::m_element is the insertion point, and thus may be the 
-  // past-the-end leaf_iterator for iterator::m_node
+  // past-the-end leaf iterator for iterator::m_node
   // postcondition: parent pointers are set, all the way up the chain to the root
 
   iterator m_special_upper_bound(const key_type& k) const;
   // returned iterator::m_element is the insertion point, and thus may be the 
-  // past-the-end leaf_iterator for iterator::m_node
+  // past-the-end leaf iterator for iterator::m_node
   // postcondition: parent pointers are set, all the way up the chain to the root
 
   btree_node_ptr m_new_node(node_level_type lv);
@@ -1133,11 +953,11 @@ private:
   const_iterator m_leaf_insert(iterator insert_iter, const key_type& key,
     const mapped_type& mapped_value);
 
-  void m_branch_insert(btree_node_ptr np, branch_iterator element, const key_type& k,
+  void m_branch_insert(btree_node_ptr np, branch_value_type* element, const key_type& k,
     btree_node_ptr child);  // insert key, child->node_id;
                             // set child's parent, parent_element
 
-  void m_erase_branch_value(btree_node* np, branch_iterator value);
+  void m_erase_branch_value(btree_node* np, branch_value_type* value);
 
   void  m_free_node(btree_node* np)  // add to free node list
   {
@@ -1326,8 +1146,8 @@ btree_base<Key,Base,Traits,Comp>::m_open(const boost::filesystem::path& p,
     m_hdr.splash_c_str("boost.org btree");
     m_hdr.user_c_str("");
     m_hdr.node_size(node_sz);
-    m_hdr.key_size(Base::key_size());
-    m_hdr.mapped_size(Base::mapped_size());
+    m_hdr.key_size(sizeof(key_type));
+    m_hdr.mapped_size(sizeof(mapped_type));
     m_hdr.increment_node_count();  // i.e. the header itself
     m_mgr.new_buffer();   // create a buffer, thus zeroing the header for its full size
     flush();              // write the header buffer
@@ -1462,7 +1282,7 @@ btree_base<Key,Base,Traits,Comp>::m_new_node(node_level_type lv)
   np->level(lv);
   np->size(0);
   np->parent_reset();     // better safe than sorry
-  np->parent_element(branch_iterator());   // ditto
+  np->parent_element(0);   // ditto
   return np;
 }
 
@@ -1486,7 +1306,7 @@ btree_base<Key,Base,Traits,Comp>::m_new_root()
   m_root->branch().begin()->node_id() = old_root_id;
   m_root->size(0);  // the end pseudo-element doesn't count as an element
   m_root->parent(btree_node_ptr());  
-  m_root->parent_element(branch_iterator());
+  m_root->parent_element(0);
   old_root->parent(m_root);
   old_root->parent_element(m_root->branch().begin());
 # ifndef NDEBUG
@@ -1510,7 +1330,7 @@ btree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter,
   //std::cout << "***insert key_size " << key_size 
   //  << " value_size " << value_size << std::endl;
   btree_node_ptr       np = insert_iter.m_node;
-  leaf_iterator        insert_begin = insert_iter.m_element;
+  value_type*          insert_begin = const_cast<value_type*>(insert_iter.m_element);
   btree_node_ptr       np2;
   
   BOOST_ASSERT_MSG(np, "internal error");
@@ -1552,7 +1372,7 @@ btree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter,
     }
 
     // split node np by moving half the elements, by size, to node p2
-    leaf_iterator split_begin(np->leaf().begin());
+    value_type* split_begin(np->leaf().begin());
     split_begin.advance_by_size(np->leaf().size() / 2);
     ++split_begin; // for leaves, prefer more aggressive split begin
     std::size_t split_sz = char_distance(&*split_begin, &*np->leaf().end());
@@ -1574,7 +1394,8 @@ btree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter,
     {
       np = np2;
 
-      insert_begin = leaf_iterator(&*np->leaf().begin(),
+      ...
+      insert_begin = value_type*(&*np->leaf().begin(),
         char_distance(&*split_begin, &*insert_begin));  
     }
   }
@@ -1605,7 +1426,7 @@ btree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter,
       this->key(*np2->leaf().begin()), np2);
 
     BOOST_ASSERT(np2->parent());          // m_branch_insert should have set parent
-    BOOST_ASSERT(np2->parent_element() != branch_iterator());  // and parent_element
+    BOOST_ASSERT(np2->parent_element() != branch_value_type*());  // and parent_element
   }
 
 //std::cout << "***insert done" << std::endl;
@@ -1624,7 +1445,7 @@ btree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter,
 template <class Key, class Base, class Traits, class Comp>   
 void
 btree_base<Key,Base,Traits,Comp>::m_branch_insert( btree_node_ptr np,
-  branch_iterator element, const key_type& k, btree_node_ptr child) 
+  branch_value_type* element, const key_type& k, btree_node_ptr child) 
 {
   //std::cout << "branch insert key " << k << ", id " << child->node_id() << std::endl;
 
@@ -1672,9 +1493,9 @@ btree_base<Key,Base,Traits,Comp>::m_branch_insert( btree_node_ptr np,
 
     // split node np by moving half the elements, by size, to node p2
 
-    branch_iterator unsplit_end(np->branch().begin());
+    branch_value_type* unsplit_end(np->branch().begin());
     unsplit_end.advance_by_size(np->branch().size() / 2);
-    branch_iterator split_begin(unsplit_end+1);
+    branch_value_type* split_begin(unsplit_end+1);
     std::size_t split_sz = char_distance(&*split_begin, char_ptr(&*np->branch().end()) 
       + sizeof(node_id_type));  // include the end pseudo-element node_id
     BOOST_ASSERT(split_sz > sizeof(node_id_type));
@@ -1757,13 +1578,13 @@ btree_base<Key,Base,Traits,Comp>::m_branch_insert( btree_node_ptr np,
 
   //  set the child's parent and parent_element
   child->parent(np);
-  child->parent_element(branch_iterator( 
+  child->parent_element(branch_value_type*( 
     reinterpret_cast<branch_value_type*>(char_ptr(insert_begin) + k_size) ));
 
 #ifndef NDEBUG
   if (m_hdr.flags() & btree::flags::unique)
   {
-    branch_iterator cur = np->branch().begin();
+    branch_value_type* cur = np->branch().begin();
     const key_type* prev_key = &cur->key();
     ++cur;
     for(; cur != np->branch().end(); ++cur)
@@ -1822,7 +1643,7 @@ btree_base<Key,Base,Traits,Comp>::erase(const_iterator pos)
     // on a leaf that is also the root; these use the same logic because they do not remove
     // the node from the tree.
 
-    value_type* erase_point = &*pos.m_element;
+    value_type* erase_point = const_cast<value_type*>(pos.m_element);
     std::size_t erase_sz = dynamic_size(*erase_point);
     std::size_t move_sz = char_ptr(&*pos.m_node->leaf().end())
       - (char_ptr(erase_point) + erase_sz); 
@@ -1841,7 +1662,7 @@ btree_base<Key,Base,Traits,Comp>::erase(const_iterator pos)
 
 template <class Key, class Base, class Traits, class Comp>
 void btree_base<Key,Base,Traits,Comp>::m_erase_branch_value(
-  btree_node* np, branch_iterator element)
+  btree_node* np, branch_value_type* element)
 {
   BOOST_ASSERT(np->is_branch());
   BOOST_ASSERT(&*element >= &*np->branch().begin());
@@ -1891,7 +1712,7 @@ void btree_base<Key,Base,Traits,Comp>::m_erase_branch_value(
       m_hdr.decrement_root_level();
       m_root = m_mgr.read(header().root_node_id());
       m_root->parent(btree_node_ptr());
-      m_root->parent_element(branch_iterator());
+      m_root->parent_element(branch_value_type*());
       m_free_node(np); // move node to free node list
       np = m_root.get();
     }
@@ -1982,11 +1803,9 @@ btree_base<Key,Base,Traits,Comp>::m_update(iterator itr,
 {
   BOOST_ASSERT_MSG(is_open(), "update() on unopen btree");
   BOOST_ASSERT_MSG(!read_only(), "update() on read only btree");
-  BOOST_ASSERT_MSG(dynamic_size(new_mapped_value) == dynamic_size(itr->mapped_value()),
-    "update() size of the new mapped value not equal size of the old mapped value");
   itr.m_node->needs_write(true);
-  std::memcpy(const_cast<mapped_type*>(&itr->mapped_value()),
-    &new_mapped_value, dynamic_size(new_mapped_value));
+  std::memcpy(const_cast<mapped_type*>(&itr->second),
+    &new_mapped_value, sizeof(mapped_type));
   return itr;
 }
 
@@ -2022,7 +1841,7 @@ btree_base<Key,Base,Traits,Comp>::m_special_lower_bound(const key_type& k) const
   // search branches down the tree until a leaf is reached
   while (np->is_branch())
   {
-    branch_iterator low
+    branch_value_type* low
       = std::lower_bound(np->branch().begin(), np->branch().end(), k, branch_comp());
 
     if ((header().flags() & btree::flags::unique)
@@ -2043,7 +1862,7 @@ btree_base<Key,Base,Traits,Comp>::m_special_lower_bound(const key_type& k) const
   }
 
   //  search leaf
-  leaf_iterator low
+  value_type* low
     = std::lower_bound(np->leaf().begin(), np->leaf().end(), k, value_comp());
 
   return iterator(np, low);
@@ -2084,7 +1903,7 @@ btree_base<Key,Base,Traits,Comp>::m_special_upper_bound(const key_type& k) const
   // search branches down the tree until a leaf is reached
   while (np->is_branch())
   {
-    branch_iterator up
+    branch_value_type* up
       = std::upper_bound(np->branch().begin(), np->branch().end(), k, branch_comp());
 
     // create the child->parent list
@@ -2099,7 +1918,7 @@ btree_base<Key,Base,Traits,Comp>::m_special_upper_bound(const key_type& k) const
   }
 
   //  search leaf
-  leaf_iterator up
+  value_type* up
     = std::upper_bound(np->leaf().begin(), np->leaf().end(), k, value_comp());
 
   return iterator(np, up);
@@ -2170,7 +1989,7 @@ void btree_base<Key,Base,Traits,Comp>::dump_dot(std::ostream& os) const
   //  {
   //    os << "node" << p << "[label = \"<f0> " << p
   //       << ", use-ct=" << np->use_count()-1 << "|";
-  //    for (leaf_iterator it = np->leaf().begin(); it != np->leaf().end(); ++it)
+  //    for (value_type* it = np->leaf().begin(); it != np->leaf().end(); ++it)
   //    {
   //      if (it != np->leaf().begin())
   //        os << '|';
@@ -2183,7 +2002,7 @@ void btree_base<Key,Base,Traits,Comp>::dump_dot(std::ostream& os) const
   //    os << "node" << p << "[label = \"<f0> " << p
   //       << ", use-ct=" << np->use_count()-1 << "|";
   //    int f = 1;
-  //    branch_iterator it;
+  //    branch_value_type* it;
   //    for (it = np->branch().begin(); it != np->branch().end(); ++it)
   //    {
   //      os << "<f" << f << ">|" << it->key() << "|";
@@ -2244,11 +2063,10 @@ template <class T>
 void
 btree_base<Key,Base,Traits,Comp>::iterator_type<T>::increment()
 {
-  BOOST_ASSERT_MSG(m_element != typename btree_base::leaf_iterator(0),
-    "increment of end iterator"); 
+  BOOST_ASSERT_MSG(m_element != 0, "increment of end iterator"); 
   BOOST_ASSERT(m_node);
-  BOOST_ASSERT(&*m_element >= &*m_node->leaf().begin());
-  BOOST_ASSERT(&*m_element < &*m_node->leaf().end());
+  BOOST_ASSERT(m_element >= m_node->leaf().begin());
+  BOOST_ASSERT(m_element < m_node->leaf().end());
 
   if (++m_element != m_node->leaf().end())
     return;

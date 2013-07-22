@@ -198,29 +198,29 @@ void types_test()
   BOOST_TEST((boost::is_same< bt_map::mapped_type, long>::value));
 
   BOOST_TEST((boost::is_same<std_map::value_type, std::pair<const int, long> >::value));
-  BOOST_TEST((boost::is_same< bt_map::value_type, btree::map_value<int, long> >::value));
+  BOOST_TEST((boost::is_same< bt_map::value_type, std::pair<const int, long> >::value));
 
   // reference is "lvalue of T" where T is value_type
   BOOST_TEST((boost::is_same<std_map::reference,
     std::pair<const int, long>& >::value));
   BOOST_TEST((boost::is_same< bt_map::reference,
-    btree::map_value<int, long>& >::value));
+    std::pair<const int, long>& >::value));
 
   // const_reference is "const lvalue of T" where T is value_type
   BOOST_TEST((boost::is_same<std_map::const_reference,
     const std::pair<const int, long>& >::value));
   BOOST_TEST((boost::is_same< bt_map::const_reference,
-    const btree::map_value<int, long>& >::value));
+    const std::pair<const int, long>& >::value));
 
   BOOST_TEST((boost::is_same<std_map::iterator::reference,
     std::pair<const int, long>& >::value));
   BOOST_TEST((boost::is_same< bt_map::iterator::reference,
-    const btree::map_value<int, long>& >::value));
+    const std::pair<const int, long>& >::value));
 
   BOOST_TEST((boost::is_same<std_map::const_iterator::reference,
     const std::pair<const int, long>& >::value));
   BOOST_TEST((boost::is_same< bt_map::const_iterator::reference,
-    const btree::map_value<int, long>& >::value));
+    const std::pair<const int, long>& >::value));
 
   cout << "    types_test complete" << endl;
 }
@@ -286,8 +286,8 @@ void  single_insert()
 
     BOOST_TEST_EQ(x.size(), 1U);
     BOOST_TEST(result.second);
-    BOOST_TEST_EQ(result.first->key(), 123);
-    BOOST_TEST_EQ(result.first->mapped_value(), 456);
+    BOOST_TEST_EQ(result.first->first, 123);
+    BOOST_TEST_EQ(result.first->second, 456);
   }
  
   cout << "    single_insert complete" << endl;
@@ -602,15 +602,15 @@ void insert_tests(BTree& bt)
 
   result = bt.emplace(key, mapped_value);
   BOOST_TEST(result.second);
-  BOOST_TEST(result.first->key() == key);
-  BOOST_TEST_EQ(result.first->mapped_value(), mapped_value);
+  BOOST_TEST(result.first->first == key);
+  BOOST_TEST_EQ(result.first->second, mapped_value);
   BOOST_TEST(bt.size() == 1U);
   BOOST_TEST(!bt.empty());
   BOOST_TEST(bt.begin() != bt.end());
   cur = bt.find(key);
   BOOST_TEST(cur != bt.end());
-  BOOST_TEST(cur->key() == key);
-  BOOST_TEST(cur->mapped_value() == mapped_value);
+  BOOST_TEST(cur->first == key);
+  BOOST_TEST(cur->second == mapped_value);
   BOOST_TEST(bt.find(fat(0)) == bt.end());
   BOOST_TEST(bt.find(fat(1000)) == bt.end());
 
@@ -618,52 +618,52 @@ void insert_tests(BTree& bt)
   mapped_value = 0xAAAAAAAA;
   result = bt.emplace(key, mapped_value);
   BOOST_TEST(result.second);
-  BOOST_TEST_EQ(result.first->key().x, key.x);
-  BOOST_TEST_EQ(result.first->mapped_value(), mapped_value);
-  BOOST_TEST_EQ(bt.find(0x0A)->key().x, 0x0A);
-  BOOST_TEST_EQ(bt.find(0x0C)->key().x, 0x0C);
+  BOOST_TEST_EQ(result.first->first.x, key.x);
+  BOOST_TEST_EQ(result.first->second, mapped_value);
+  BOOST_TEST_EQ(bt.find(0x0A)->first.x, 0x0A);
+  BOOST_TEST_EQ(bt.find(0x0C)->first.x, 0x0C);
 
   key = 0x0E;
   mapped_value = 0xEEEEEEEE;
   result = bt.emplace(key, mapped_value);
   BOOST_TEST(result.second);
-  BOOST_TEST_EQ(result.first->key().x, key.x);
-  BOOST_TEST_EQ(result.first->mapped_value(), mapped_value);
-  BOOST_TEST_EQ(bt.find(0x0E)->key().x, 0x0E);
-  BOOST_TEST_EQ(bt.find(0x0A)->key().x, 0x0A);
-  BOOST_TEST_EQ(bt.find(0x0C)->key().x, 0x0C);
+  BOOST_TEST_EQ(result.first->first.x, key.x);
+  BOOST_TEST_EQ(result.first->second, mapped_value);
+  BOOST_TEST_EQ(bt.find(0x0E)->first.x, 0x0E);
+  BOOST_TEST_EQ(bt.find(0x0A)->first.x, 0x0A);
+  BOOST_TEST_EQ(bt.find(0x0C)->first.x, 0x0C);
 
   key = 0x0B;
   mapped_value = 0xBBBBBBBB;
   result = bt.emplace(key, mapped_value);
   BOOST_TEST(result.second);
-  BOOST_TEST_EQ(result.first->key().x, key.x);
-  BOOST_TEST_EQ(result.first->mapped_value(), mapped_value);
-  BOOST_TEST_EQ(bt.find(0x0B)->key().x, 0x0B);
-  BOOST_TEST_EQ(bt.find(0x0E)->key().x, 0x0E);
-  BOOST_TEST_EQ(bt.find(0x0A)->key().x, 0x0A);
-  BOOST_TEST_EQ(bt.find(0x0C)->key().x, 0x0C);
+  BOOST_TEST_EQ(result.first->first.x, key.x);
+  BOOST_TEST_EQ(result.first->second, mapped_value);
+  BOOST_TEST_EQ(bt.find(0x0B)->first.x, 0x0B);
+  BOOST_TEST_EQ(bt.find(0x0E)->first.x, 0x0E);
+  BOOST_TEST_EQ(bt.find(0x0A)->first.x, 0x0A);
+  BOOST_TEST_EQ(bt.find(0x0C)->first.x, 0x0C);
 
   key = 0x0D;
   mapped_value = 0xDDDDDDDD;
   result = bt.emplace(key, mapped_value);
   BOOST_TEST(result.second);
-  BOOST_TEST_EQ(result.first->key().x, key.x);
-  BOOST_TEST_EQ(result.first->mapped_value(), mapped_value);
-  BOOST_TEST_EQ(bt.find(0x0D)->key().x, 0x0D);
-  BOOST_TEST_EQ(bt.find(0x0B)->key().x, 0x0B);
-  BOOST_TEST_EQ(bt.find(0x0E)->key().x, 0x0E);
-  BOOST_TEST_EQ(bt.find(0x0A)->key().x, 0x0A);
-  BOOST_TEST_EQ(bt.find(0x0C)->key().x, 0x0C);
+  BOOST_TEST_EQ(result.first->first.x, key.x);
+  BOOST_TEST_EQ(result.first->second, mapped_value);
+  BOOST_TEST_EQ(bt.find(0x0D)->first.x, 0x0D);
+  BOOST_TEST_EQ(bt.find(0x0B)->first.x, 0x0B);
+  BOOST_TEST_EQ(bt.find(0x0E)->first.x, 0x0E);
+  BOOST_TEST_EQ(bt.find(0x0A)->first.x, 0x0A);
+  BOOST_TEST_EQ(bt.find(0x0C)->first.x, 0x0C);
   bt.flush();
 
   BOOST_TEST_EQ(bt.size(), 5U);
 
-  BOOST_TEST_EQ(bt.find(0x0A)->key().x, 0x0A);
-  BOOST_TEST_EQ(bt.find(0x0B)->key().x, 0x0B);
-  BOOST_TEST_EQ(bt.find(0x0C)->key().x, 0x0C);
-  BOOST_TEST_EQ(bt.find(0x0D)->key().x, 0x0D);
-  BOOST_TEST_EQ(bt.find(0x0E)->key().x, 0x0E);
+  BOOST_TEST_EQ(bt.find(0x0A)->first.x, 0x0A);
+  BOOST_TEST_EQ(bt.find(0x0B)->first.x, 0x0B);
+  BOOST_TEST_EQ(bt.find(0x0C)->first.x, 0x0C);
+  BOOST_TEST_EQ(bt.find(0x0D)->first.x, 0x0D);
+  BOOST_TEST_EQ(bt.find(0x0E)->first.x, 0x0E);
 
   result.first = cur = begin = end = empty_iterator;
 
@@ -679,22 +679,22 @@ void insert_tests(BTree& bt)
   //bt.manager().dump_buffers(cout);
   //bt.manager().dump_available_buffers(cout);
 
-  BOOST_TEST_EQ(cur->key().x, 0x0A);
+  BOOST_TEST_EQ(cur->first.x, 0x0A);
   BOOST_TEST(bt.inspect_leaf_to_root(cout, cur));
   ++cur;
   //cout << "after ++:\n";
   //bt.manager().dump_buffers(cout);
   //bt.manager().dump_available_buffers(cout);
-  BOOST_TEST_EQ(cur->key().x, 0x0B);
+  BOOST_TEST_EQ(cur->first.x, 0x0B);
   BOOST_TEST(bt.inspect_leaf_to_root(cout, cur));
   ++cur;
-  BOOST_TEST_EQ(cur->key().x, 0x0C);
+  BOOST_TEST_EQ(cur->first.x, 0x0C);
   BOOST_TEST(bt.inspect_leaf_to_root(cout, cur));
   ++cur;
-  BOOST_TEST_EQ(cur->key().x, 0x0D);
+  BOOST_TEST_EQ(cur->first.x, 0x0D);
   BOOST_TEST(bt.inspect_leaf_to_root(cout, cur));
   ++cur;
-  BOOST_TEST_EQ(cur->key().x, 0x0E);
+  BOOST_TEST_EQ(cur->first.x, 0x0E);
   BOOST_TEST(bt.inspect_leaf_to_root(cout, cur));
   ++cur;
   BOOST_TEST(cur == bt.end());
@@ -702,37 +702,37 @@ void insert_tests(BTree& bt)
   //bt.manager().dump_buffers(cout);
   //bt.manager().dump_available_buffers(cout);
   --cur;
-  BOOST_TEST_EQ(cur->key().x, 0x0E);
+  BOOST_TEST_EQ(cur->first.x, 0x0E);
   --cur;
-  BOOST_TEST_EQ(cur->key().x, 0x0D);
+  BOOST_TEST_EQ(cur->first.x, 0x0D);
   --cur;
-  BOOST_TEST_EQ(cur->key().x, 0x0C);
+  BOOST_TEST_EQ(cur->first.x, 0x0C);
   --cur;
-  BOOST_TEST_EQ(cur->key().x, 0x0B);
+  BOOST_TEST_EQ(cur->first.x, 0x0B);
   --cur;
-  BOOST_TEST_EQ(cur->key().x, 0x0A);
+  BOOST_TEST_EQ(cur->first.x, 0x0A);
   BOOST_TEST(cur == bt.begin());
 
-  BOOST_TEST_EQ(bt.last()->key().x, 0x0E);
+  BOOST_TEST_EQ(bt.last()->first.x, 0x0E);
 
   // erase tests
 
   cout << "    erase all elements" << endl;
   cur = bt.find(0x0C);
   BOOST_TEST(cur != bt.end());
-  //cout << "    erase " << cur->key() << endl;
+  //cout << "    erase " << cur->first << endl;
   cur = bt.erase(cur);
 
-  BOOST_TEST_EQ(cur->key().x, 0x0D);
+  BOOST_TEST_EQ(cur->first.x, 0x0D);
   BOOST_TEST_EQ(bt.size(), 4U);
   BOOST_TEST(bt.inspect_leaf_to_root(cout, cur));
 
   cur = bt.find(0x0B);
   BOOST_TEST(cur != bt.end());
-  //cout << "    erase " << cur->key() << endl;
+  //cout << "    erase " << cur->first << endl;
   cur = bt.erase(cur);
 
-  BOOST_TEST_EQ(cur->key().x, 0x0D);
+  BOOST_TEST_EQ(cur->first.x, 0x0D);
   BOOST_TEST_EQ(bt.size(), 3U);
   BOOST_TEST(bt.inspect_leaf_to_root(cout, cur));
 
@@ -742,7 +742,7 @@ void insert_tests(BTree& bt)
   //cout << "root is node " << bt.header().root_node_id() << '\n'; 
   //bt.dump_dot(std::cout);
 
-  //cout << "    erase " << cur->key() << endl;
+  //cout << "    erase " << cur->first << endl;
   cur = bt.erase(cur);
 
   BOOST_TEST(cur == bt.end());
@@ -752,11 +752,11 @@ void insert_tests(BTree& bt)
 
   cur = bt.find(0x0A);
   BOOST_TEST(cur != bt.end());
-  //cout << "    erase " << cur->key() << endl;
+  //cout << "    erase " << cur->first << endl;
   cur = bt.erase(cur);
 
   BOOST_TEST(cur != bt.end());
-  BOOST_TEST_EQ(cur->key().x, 0x0D);
+  BOOST_TEST_EQ(cur->first.x, 0x0D);
   BOOST_TEST(bt.inspect_leaf_to_root(cout, cur));
   BOOST_TEST(bt.begin() == cur);
   BOOST_TEST_EQ(bt.size(), 1U);
@@ -771,7 +771,7 @@ void insert_tests(BTree& bt)
   BOOST_TEST(cur != bt.end());
   BOOST_TEST(bt.inspect_leaf_to_root(cout, cur));
 
-  //cout << "    erase " << cur->key() << endl;
+  //cout << "    erase " << cur->first << endl;
   cur = bt.erase(cur);
 
   BOOST_TEST(cur == bt.end());
@@ -1023,8 +1023,8 @@ void insert_non_unique_tests(BTree& bt)
   {
     result = bt.emplace(k = 3, i);
     BOOST_TEST_EQ(bt.size(), static_cast<unsigned>(i));
-    BOOST_TEST_EQ(result->key().x, 3);
-    BOOST_TEST_EQ(result->mapped_value(), i);
+    BOOST_TEST_EQ(result->first.x, 3);
+    BOOST_TEST_EQ(result->second, i);
 
     //cout << "root is node " << bt.header().root_node_id() << '\n'; 
     //bt.dump_dot(std::cout);
@@ -1033,10 +1033,10 @@ void insert_non_unique_tests(BTree& bt)
     for (typename BTree::const_iterator_range range = bt.equal_range(3);
          range.first != range.second; ++range.first)
     {
-      //cout << range.first->key().x << ", " << range.first->mapped_value() << endl;
+      //cout << range.first->first.x << ", " << range.first->second << endl;
       ++j;
-      BOOST_TEST_EQ(range.first->key().x, 3);
-      BOOST_TEST_EQ(range.first->mapped_value(), j);
+      BOOST_TEST_EQ(range.first->first.x, 3);
+      BOOST_TEST_EQ(range.first->second, j);
     }
     BOOST_TEST_EQ(j, i);
   }
@@ -1083,17 +1083,17 @@ void update_test()
 
   for (bt_type::iterator itr = bt.begin(); itr != bt.end(); ++itr)
   {
-//    cout << "    " << itr->key() << "," << itr->mapped_value() << '\n';
-    int n = itr->mapped_value();
+//    cout << "    " << itr->first << "," << itr->second << '\n';
+    int n = itr->second;
     bt_type::iterator new_itr =  bt.update(itr, -n);
     BOOST_TEST(itr == new_itr);
-    BOOST_TEST(new_itr->mapped_value() == -n);
+    BOOST_TEST(new_itr->second == -n);
   }
 
   for (bt_type::iterator itr = bt.begin(); itr != bt.end(); ++itr)
   {
-//    cout << "    " << itr->key() << "," << itr->mapped_value() << '\n';
-    BOOST_TEST(itr->mapped_value() <= 0);
+//    cout << "    " << itr->first << "," << itr->second << '\n';
+    BOOST_TEST(itr->second <= 0);
   }
 
   cout << "     update_test complete" << endl;
@@ -1246,7 +1246,7 @@ void  reopen_btree_object_test()
   map_type bt2(path2);
   bt.open(path, btree::flags::truncate, -1, 128);
   for (map_type::iterator it = bt2.begin(); it != bt2.end(); ++it)
-    bt.emplace(it->key(), it->mapped_value());
+    bt.emplace(it->first, it->second);
   BOOST_TEST_EQ(bt.size(), bt2.size());
   bt2.close();
   bt.close();
