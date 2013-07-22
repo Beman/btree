@@ -140,10 +140,10 @@ public:
   typedef Key   mapped_type;
   typedef Comp  value_compare;
 
-  const Key& key(const value_type& v) const {return v;}  // really handy, so expose
-
-  //static std::size_t key_size()    { return sizeof(Key); }
-  //static std::size_t mapped_size() { return sizeof(Key); }
+  const Key&          key(const value_type& v) const   // really handy, so expose
+    {return v;}
+  const mapped_type&  mapped(const value_type& v) const
+    {return v;}
 
 protected:
   void m_memcpy_value(value_type* dest, const Key* k, std::size_t key_sz,
@@ -164,11 +164,10 @@ public:
   typedef std::pair<const Key, T>  value_type;
   typedef T                        mapped_type;
 
-  const Key& key(const value_type& v) const  // really handy, so expose
+  const Key&  key(const value_type& v) const  // really handy, so expose
     {return v.first;}
-
-  //static std::size_t key_size()    { return sizeof(Key); }
-  //static std::size_t mapped_size() { return sizeof(T); }
+  const T&    mapped(const value_type& v) const
+    {return v.first;}
 
   class value_compare
   {
@@ -192,70 +191,7 @@ protected:
     std::memcpy(dest, k, key_sz);
     std::memcpy(reinterpret_cast<char*>(dest) + key_sz, mapped_v, mapped_sz);
   }
-
 };
-
-//namespace detail
-//{
-//  //-------------------------------- pointer_iterator ----------------------------------//
-//  //
-//
-//  template <class T>
-//  class pointer_iterator
-//    : public boost::iterator_facade<pointer_iterator<T>, T, random_access_traversal_tag>
-//  {
-//  public:
-//    pointer_iterator() : m_ptr(0) {} 
-//    explicit pointer_iterator(T* ptr) : m_ptr(ptr) {}
-//    pointer_iterator(T* ptr, std::size_t sz)
-//      : m_ptr(reinterpret_cast<T*>(reinterpret_cast<char*>(ptr) + sz)) {}
-//
-//    bool operator<(const pointer_iterator& rhs) const  {return m_ptr < rhs.m_ptr;}
-//
-//    void advance_by_size(std::size_t max_sz)
-//    {
-//      BOOST_ASSERT(max_sz);
-//      std::ptrdiff_t n = max_sz / btree::dynamic_size(*m_ptr);
-//      m_ptr = reinterpret_cast<T*>(reinterpret_cast<char*>(m_ptr)
-//        + n * static_cast<std::ptrdiff_t>(btree::dynamic_size(*m_ptr)));
-//    }
-//
-//  private:
-//    friend class boost::iterator_core_access;
-//
-//    T* m_ptr;    // the pointer
-//
-//    T& dereference() const  { return *m_ptr; }
-// 
-//    bool equal(const pointer_iterator& rhs) const {return m_ptr == rhs.m_ptr;}
-//
-//    void increment()
-//    {
-//      //std::cout << "***inc  " <<  btree::dynamic_size(*m_ptr) << '\n';
-//      m_ptr = reinterpret_cast<T*>(reinterpret_cast<char*>(m_ptr)
-//        + btree::dynamic_size(*m_ptr));
-//    }
-//    void decrement()
-//    {
-//      m_ptr = reinterpret_cast<T*>(reinterpret_cast<char*>(m_ptr)
-//        - btree::dynamic_size(*m_ptr));
-//    }
-//    void advance(std::ptrdiff_t n)
-//    {
-//      m_ptr = reinterpret_cast<T*>(reinterpret_cast<char*>(m_ptr)
-//        + n * static_cast<std::ptrdiff_t>(btree::dynamic_size(*m_ptr)));
-//    }
-//
-//    std::ptrdiff_t distance_to(const pointer_iterator& rhs) const
-//    {
-//      return std::distance(reinterpret_cast<const char*>(m_ptr),
-//        reinterpret_cast<const char*>(rhs.m_ptr))
-//        / static_cast<std::ptrdiff_t>(btree::dynamic_size(*m_ptr));
-//    }
-//
-//  };
-//
-//}  // namespace detail
 
 //--------------------------------------------------------------------------------------//
 //                                                                                      //
@@ -532,8 +468,8 @@ private:
 
   header_page        m_hdr;
 
-  std::size_t        m_max_leaf_size;
-  std::size_t        m_max_branch_size;
+  std::size_t        m_max_leaf_elements;
+  std::size_t        m_max_branch_elements;
 
   bool               m_read_only;
   bool               m_ok_to_pack;  // true while all inserts ordered and no erases
@@ -587,15 +523,15 @@ private:
     value_type  m_value[1];
   };
 
-  std::size_t char_distance(const void* from, const void* to)
-  {
-    return reinterpret_cast<const char*>(to) - reinterpret_cast<const char*>(from);
-  }
+  //std::size_t char_distance(const void* from, const void* to)
+  //{
+  //  return reinterpret_cast<const char*>(to) - reinterpret_cast<const char*>(from);
+  //}
 
-  char* char_ptr(void* from)
-  {
-    return reinterpret_cast<char*>(from);
-  }
+  //char* char_ptr(void* from)
+  //{
+  //  return reinterpret_cast<char*>(from);
+  //}
 
   //------------------------ branch data formats and operations ------------------------//
 
@@ -896,13 +832,13 @@ private:
 protected:
 
   std::pair<const_iterator, bool>
-    m_insert_unique(const value_type& value);
+    m_insert_unique(const value_type& v);
 
   const_iterator
-    m_insert_non_unique(const value_type& value);
+    m_insert_non_unique(const value_type& v);
   // Remark: Insert after any elements with equivalent keys, per C++ standard
 
-  iterator m_update(iterator itr, const mapped_type& mv);
+  iterator m_update(iterator itr, const value_type& v);
 
   void m_open(const boost::filesystem::path& p, flags::bitmask flgs, uint64_t signature,
               std::size_t node_sz, const Comp& comp);
@@ -950,8 +886,7 @@ private:
   btree_node_ptr m_new_node(node_level_type lv);
   void  m_new_root();
 
-  const_iterator m_leaf_insert(iterator insert_iter, const key_type& key,
-    const mapped_type& mapped_value);
+  const_iterator m_leaf_insert(iterator insert_iter, const value_type& v);
 
   void m_branch_insert(btree_node_ptr np, branch_value_type* element, const key_type& k,
     btree_node_ptr child);  // insert key, child->node_id;
@@ -1111,8 +1046,11 @@ btree_base<Key,Base,Traits,Comp>::m_open(const boost::filesystem::path& p,
 
   m_read_only = (open_flags & oflag::out) == 0;
   m_ok_to_pack = true;
-  m_max_leaf_size = node_sz - leaf_data::value_offset();
-  m_max_branch_size = node_sz - branch_data::value_offset();
+  m_max_leaf_elements
+    = (node_sz - leaf_data::value_offset()) / sizeof(value_type);
+  m_max_branch_elements
+    = (node_sz - sizeof(node_id_type) - branch_data::value_offset())
+      / sizeof(branch_value_type);
 
   if (m_mgr.open(p, open_flags, btree::default_max_cache_nodes, node_sz))
   { // existing non-truncated file
@@ -1185,7 +1123,6 @@ btree_base<Key,Base,Traits,Comp>::clear()
   m_hdr.free_node_list_head_id(0);
 
   m_mgr.close();
-
 }
 
 //------------------------------------- begin() ----------------------------------------//
@@ -1320,27 +1257,20 @@ btree_base<Key,Base,Traits,Comp>::m_new_root()
 template <class Key, class Base, class Traits, class Comp>   
 typename btree_base<Key,Base,Traits,Comp>::const_iterator
 btree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter,
-  const key_type& key_, const mapped_type& mapped_value_)
+  const value_type& v)
 {
-  std::size_t          key_size= dynamic_size(key_);
-  std::size_t          mapped_size = (header().flags() & btree::flags::key_only)
-    ? 0
-    : dynamic_size(mapped_value_);
-  std::size_t          value_size = key_size + mapped_size;
-  //std::cout << "***insert key_size " << key_size 
-  //  << " value_size " << value_size << std::endl;
-  btree_node_ptr       np = insert_iter.m_node;
+  btree_node_ptr       np = insert_iter.node();
   value_type*          insert_begin = const_cast<value_type*>(insert_iter.m_element);
   btree_node_ptr       np2;
   
   BOOST_ASSERT_MSG(np, "internal error");
   BOOST_ASSERT_MSG(np->is_leaf(), "internal error");
-  BOOST_ASSERT_MSG(np->size() <= m_max_leaf_size, "internal error");
+  BOOST_ASSERT_MSG(np->size() <= m_max_leaf_elements, "internal error");
 
   m_hdr.increment_element_count();
   np->needs_write(true);
 
-  if (np->size() + value_size > m_max_leaf_size)  // no room on node?
+  if (np->size() == m_max_leaf_elements)  // no room on node?
   {
     //  no room on node, so node must be split
 
@@ -1355,66 +1285,58 @@ btree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter,
             || np->node_id() != header().last_node_id()))
       m_ok_to_pack = false;  // conditions for pack optimization not met
 
+    // if last leaf node being split, update header
     if (np->node_id() == header().last_node_id())
       m_hdr.last_node_id(np2->node_id());
 
     // apply pack optimization if applicable
-    if (m_ok_to_pack)  // have all inserts been ordered and no erases occurred?
+    if (m_ok_to_pack)
     {
       // pack optimization: instead of splitting np, just put value alone on np2
-      this->m_memcpy_value(&*np2->leaf().begin(), &key_, key_size,
-        &mapped_value_, mapped_size);  // insert value
-      np2->size(value_size);
+      std::memcpy(&*np2->leaf().begin(), &v, sizeof(value_type));  // insert value
+      np2->size(1);
       BOOST_ASSERT(np->parent()->node_id() == np->parent_node_id()); // cache logic OK?
       m_branch_insert(np->parent(), np->parent_element(),
         this->key(*np2->leaf().begin()), np2);
       return const_iterator(np2, np2->leaf().begin());
     }
 
-    // split node np by moving half the elements, by size, to node p2
-    value_type* split_begin(np->leaf().begin());
-    split_begin.advance_by_size(np->leaf().size() / 2);
-    ++split_begin; // for leaves, prefer more aggressive split begin
-    std::size_t split_sz = char_distance(&*split_begin, &*np->leaf().end());
+    // split node np by moving half the elements to node n2
+    std::size_t split_sz = np->size() / 2;  // if size odd, round down for speed
+    BOOST_ASSERT(split_sz);
+    value_type* split_begin = ng->leaf().begin() + (np->size() - split_sz);
 
     // TODO: if the insert point will fall on the new node, it would be faster to
     // copy the portion before the insert point, copy the value being inserted, and
     // finally copy the portion after the insert point. However, that's a fair amount
-    // of additional code for something that only happens on half of all leaf splits
-    // on average.
+    // of additional code for something that on average only happens on half of all
+    // leaf splits.
 
-    std::memcpy(&*np2->leaf().begin(), &*split_begin, split_sz);
+    std::memcpy(np2->leaf().begin(), split_begin, split_sz * sizeof(value_type));
     np2->size(split_sz);
-    std::memset(&*split_begin, 0,                         // zero unused space to make
-      char_distance(&*split_begin, &*np->leaf().end()));  //  file dumps easier to read
+
+    // finalize work on the original node
+# ifndef NDEBUG
+    std::memset(split_begin, 0,                         // zero unused space to make
+      (np->leaf().end()-split_begin)*sizeof(value_type));  //  file dumps easier to read
+# endif
     np->size(np->size() - split_sz);
 
     // adjust np and insert_begin if they now fall on the new node due to the split
-    if (&*split_begin < &*insert_begin)
+    if (split_begin < insert_begin)
     {
       np = np2;
-
-      ...
-      insert_begin = value_type*(&*np->leaf().begin(),
-        char_distance(&*split_begin, &*insert_begin));  
+      insert_begin = np->leaf().begin() + (insert_begin - split_begin);
     }
   }
 
   //  insert value into np at insert_begin
-//std::cout << "np size " << np->size()
-//          << " insert_begin " << &*insert_begin
-//          << " begin() " << &*np->leaf().begin()
-//          << " end() " << &*np->leaf().end()
-//          << " char_distance " << char_distance(&*insert_begin, &*np->leaf().end())
-//          << std::endl;
-  BOOST_ASSERT(&*insert_begin >= &*np->leaf().begin());
-  BOOST_ASSERT(&*insert_begin <= &*np->leaf().end());
-  std::memmove(char_ptr(&*insert_begin) + value_size,
-    &*insert_begin, char_distance(&*insert_begin, &*np->leaf().end()));  // make room
-  this->m_memcpy_value(&*insert_begin, &key_, key_size,
-    &mapped_value_, mapped_size);  // insert value
-  np->size(np->size() + value_size);
-//std::cout << "np size " << np->size() << std::endl;
+  BOOST_ASSERT(insert_begin >= np->leaf().begin());
+  BOOST_ASSERT(insert_begin <= np->leaf().end());
+  std::size_t memmove_sz = (np->leaf().end() - insert_begin) * sizeof(value_type);
+  std::memmove(insert_begin+1, insert_begin, memmove_sz);  // make room
+  std::memcpy(insert_begin, &v, sizeof(value_type));   // insert value
+  np->size(np->size()+1);
 
   // if there is a new node, its initial key and node_id are inserted into parent
   if (np2)
@@ -1426,10 +1348,9 @@ btree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter,
       this->key(*np2->leaf().begin()), np2);
 
     BOOST_ASSERT(np2->parent());          // m_branch_insert should have set parent
-    BOOST_ASSERT(np2->parent_element() != branch_value_type*());  // and parent_element
+    BOOST_ASSERT(np2->parent_element() != 0);  // and parent_element
   }
 
-//std::cout << "***insert done" << std::endl;
   return const_iterator(np, insert_begin);
 }
 
@@ -1460,14 +1381,14 @@ btree_base<Key,Base,Traits,Comp>::m_branch_insert( btree_node_ptr np,
   btree_node_ptr    np2;
 
   BOOST_ASSERT(np->is_branch());
-  BOOST_ASSERT(np->size() <= m_max_branch_size);
+  BOOST_ASSERT(np->size() <= m_max_branch_elements);
 
   np->needs_write(true);
 
   if (np->size() + insert_size
                  + sizeof(node_id_type)  // NOTE WELL: size() doesn't include
                                          // size of the end pseudo-element node_id
-    > m_max_branch_size)  // no room on node?
+    > m_max_branch_elements)  // no room on node?
   {
     //  no room on node, so node must be split
 
@@ -1523,7 +1444,7 @@ btree_base<Key,Base,Traits,Comp>::m_branch_insert( btree_node_ptr np,
 
     // copy the split elements, including the pseudo-end element, to p2
     BOOST_ASSERT(char_ptr(&*np2->branch().begin())+split_sz
-      <= char_ptr(&*np2->branch().begin())+m_max_branch_size);
+      <= char_ptr(&*np2->branch().begin())+m_max_branch_elements);
     std::memcpy(&*np2->branch().begin(), &*split_begin,
       split_sz);  // include end pseudo element
     np2->size(split_sz - sizeof(node_id_type));  // exclude end pseudo element from size
@@ -1535,8 +1456,10 @@ btree_base<Key,Base,Traits,Comp>::m_branch_insert( btree_node_ptr np,
     m_branch_insert(np->parent(), np->parent_element(), unsplit_end->key(), np2);
 
     // finalize work on the original node
+# ifndef NDEBUG
     std::memset(&unsplit_end->key(), 0,  // zero unused space so dumps easier to read
       char_distance(&unsplit_end->key(), &np->branch().end()->key())); 
+# endif
     np->size(char_distance(&*np->branch().begin(), &*unsplit_end));
 
     // adjust np and insert_begin if they now fall on the new node due to the split
@@ -1549,7 +1472,7 @@ btree_base<Key,Base,Traits,Comp>::m_branch_insert( btree_node_ptr np,
   }  // split finished
 
   BOOST_ASSERT(np->size() + insert_size
-                 + sizeof(node_id_type) <= m_max_branch_size);
+                 + sizeof(node_id_type) <= m_max_branch_elements);
                  // NOTE WELL: size() doesn't include
                  // size of the end pseudo-element node_id    
 
@@ -1566,11 +1489,11 @@ btree_base<Key,Base,Traits,Comp>::m_branch_insert( btree_node_ptr np,
   BOOST_ASSERT(insert_begin <= &np->branch().end()->key());
   BOOST_ASSERT(char_ptr(insert_begin) + insert_size            // start of memmove
     + char_distance(insert_begin, &np->branch().end()->key())  // + size of memmove
-    <= char_ptr(&*np->branch().begin()) + m_max_branch_size);
+    <= char_ptr(&*np->branch().begin()) + m_max_branch_elements);
   std::memmove(char_ptr(insert_begin) + insert_size,
     insert_begin, char_distance(insert_begin, &np->branch().end()->key()));  // make room
   BOOST_ASSERT(char_ptr(insert_begin) + k_size + sizeof(node_id_type)
-    <= char_ptr(&*np->branch().begin())+m_max_branch_size);
+    <= char_ptr(&*np->branch().begin())+m_max_branch_elements);
   std::memcpy(insert_begin, &k, k_size);  // insert k
   *reinterpret_cast<node_id_type*>(char_ptr(insert_begin) + k_size)
     = child->node_id();
@@ -1759,21 +1682,18 @@ btree_base<Key,Base,Traits,Comp>::erase(const_iterator first, const_iterator las
 
 template <class Key, class Base, class Traits, class Comp>   
 std::pair<typename btree_base<Key,Base,Traits,Comp>::const_iterator, bool>
-btree_base<Key,Base,Traits,Comp>::m_insert_unique(const key_type& k,
-  const mapped_type& mv)
+btree_base<Key,Base,Traits,Comp>::m_insert_unique(const value_type& v)
 {
   BOOST_ASSERT_MSG(is_open(), "insert() on unopen btree");
   BOOST_ASSERT_MSG(!read_only(), "insert() on read only btree");
-  //BOOST_ASSERT_MSG(dynamic_size(k) + (&k != &mv ? dynamic_size(mv) : 0)
-  //  < node_size()/3, "insert() value size too large for node size");
-  iterator insert_point = m_special_lower_bound(k);
+  iterator insert_point = m_special_lower_bound(key(v));
 
   bool is_unique = insert_point.m_element == insert_point.m_node->leaf().end()
-                || key_comp()(k, this->key(*insert_point))
-                || key_comp()(this->key(*insert_point), k);
+                || key_comp()(key(v), this->key(*insert_point))
+                || key_comp()(this->key(*insert_point), key(v));
 
   if (is_unique)
-    return std::pair<const_iterator, bool>(m_leaf_insert(insert_point, k, mv), true);
+    return std::pair<const_iterator, bool>(m_leaf_insert(insert_point, v), true);
 
   return std::pair<const_iterator, bool>(
     const_iterator(insert_point.m_node, insert_point.m_element), false); 
@@ -1783,23 +1703,19 @@ btree_base<Key,Base,Traits,Comp>::m_insert_unique(const key_type& k,
 
 template <class Key, class Base, class Traits, class Comp>   
 inline typename btree_base<Key,Base,Traits,Comp>::const_iterator
-btree_base<Key,Base,Traits,Comp>::m_insert_non_unique(const key_type& k,
-  const mapped_type& mv)
+btree_base<Key,Base,Traits,Comp>::m_insert_non_unique(const value_type& v)
 {
   BOOST_ASSERT_MSG(is_open(), "insert() on unopen btree");
   BOOST_ASSERT_MSG(!read_only(), "insert() on read only btree");
-  //BOOST_ASSERT_MSG(dynamic_size(k) + (&k != &mv ? dynamic_size(mv) : 0)
-  //  < node_size()/3, "insert() value size too large for node size");
-  iterator insert_point = m_special_upper_bound(k);
-  return m_leaf_insert(insert_point, k, mv);
+  iterator insert_point = m_special_upper_bound(key(v));
+  return m_leaf_insert(insert_point, v);
 }
 
 //----------------------------------- m_update() ---------------------------------------//
 
 template <class Key, class Base, class Traits, class Comp>   
 typename btree_base<Key,Base,Traits,Comp>::iterator
-btree_base<Key,Base,Traits,Comp>::m_update(iterator itr,
-  const mapped_type& new_mapped_value)
+btree_base<Key,Base,Traits,Comp>::m_update(iterator itr,  const value_type& v)
 {
   BOOST_ASSERT_MSG(is_open(), "update() on unopen btree");
   BOOST_ASSERT_MSG(!read_only(), "update() on read only btree");
