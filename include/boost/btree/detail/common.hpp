@@ -1,6 +1,6 @@
 //  boost/btree/detail/common.hpp  -----------------------------------------------------//
 
-//  Copyright Beman Dawes 2000, 2006, 2010
+//  Copyright Beman Dawes 2000, 2006, 2010, 2013
 
 //  Distributed under the Boost Software License, Version 1.0.
 //  See http://www.boost.org/LICENSE_1_0.txt
@@ -144,13 +144,6 @@ public:
     {return v;}
   const mapped_type&  mapped(const value_type& v) const
     {return v;}
-
-protected:
-  void m_memcpy_value(value_type* dest, const Key* k, std::size_t key_sz,
-    const Key*, std::size_t)
-  {
-    std::memcpy(dest, k, key_sz);
-  }
 };
 
 //--------------------------------------------------------------------------------------//
@@ -184,13 +177,6 @@ public:
     Comp    m_comp;
   };
 
-protected:
-  void m_memcpy_value(value_type* dest, const Key* k, std::size_t key_sz,
-    const T* mapped_v, std::size_t mapped_sz)
-  {
-    std::memcpy(dest, k, key_sz);
-    std::memcpy(reinterpret_cast<char*>(dest) + key_sz, mapped_v, mapped_sz);
-  }
 };
 
 //--------------------------------------------------------------------------------------//
@@ -202,6 +188,8 @@ protected:
 /*
 
   This class implements a B+tree.
+  
+  There is no leaf node linked-list; a tree-walk provides equivalent functionality.
 
   Valid-chain-to-root invariant:
 
@@ -214,6 +202,11 @@ protected:
     operations that create an iterator must establish this chain, and any operations
     that advance the iterator forward or backward must maintain the validity of the
     chain.
+
+  To facilitate emplace semantics, internal leaf inserts insert the key only, and if
+  sizeof(key_type) is less than sizeof(value_type) (i.e. it is a map rather than a set)
+  leave a space of the mapped_type. The map calling functions are responsible for
+  actually emplacing/inserting the mapped_type contents.
 
 */
 
@@ -263,9 +256,6 @@ public:
   typedef typename Traits::node_id_type         node_id_type;
   typedef typename Traits::node_size_type       node_size_type;
   typedef typename Traits::node_level_type      node_level_type;
-
-  //// TODO: eliminate pointer_iterator and just use value_type*
-  //typedef detail::pointer_iterator<value_type>  leaf_iterator;
 
   // construct/destroy:
 
@@ -832,13 +822,13 @@ private:
 protected:
 
   std::pair<const_iterator, bool>
-    m_insert_unique(const value_type& v);
+    m_insert_unique(const key_type& k);
 
   const_iterator
-    m_insert_non_unique(const value_type& v);
+    m_insert_non_unique(const key_type& k);
   // Remark: Insert after any elements with equivalent keys, per C++ standard
 
-  iterator m_update(iterator itr, const value_type& v);
+  iterator m_update(iterator itr);
 
   void m_open(const boost::filesystem::path& p, flags::bitmask flgs, uint64_t signature,
               std::size_t node_sz, const Comp& comp);
@@ -886,7 +876,7 @@ private:
   btree_node_ptr m_new_node(node_level_type lv);
   void  m_new_root();
 
-  const_iterator m_leaf_insert(iterator insert_iter, const value_type& v);
+  const_iterator m_leaf_insert(iterator insert_iter, const key_type& k);
 
   void m_branch_insert(btree_node_ptr np, branch_value_type* element, const key_type& k,
     btree_node_ptr child);  // insert key, child->node_id;
@@ -1254,10 +1244,13 @@ btree_base<Key,Base,Traits,Comp>::m_new_root()
 
 //---------------------------------- m_leaf_insert() -----------------------------------//
 
+//  The key only is inserted; for sets the key_type is the value_type so nothing further
+//  is required, but for maps the map class must emplace the mapped type into the element.
+//  See include/boost/btree/map.hpp for the code that handles this.
+
 template <class Key, class Base, class Traits, class Comp>   
 typename btree_base<Key,Base,Traits,Comp>::const_iterator
-btree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter,
-  const value_type& v)
+btree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter, const key_type& k)
 {
   btree_node_ptr       np = insert_iter.node();
   value_type*          insert_begin = const_cast<value_type*>(insert_iter.m_element);
@@ -1293,7 +1286,7 @@ btree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter,
     if (m_ok_to_pack)
     {
       // pack optimization: instead of splitting np, just put value alone on np2
-      std::memcpy(&*np2->leaf().begin(), &v, sizeof(value_type));  // insert value
+      std::memcpy(&*np2->leaf().begin(), &k, sizeof(key_type));  // insert key
       np2->size(1);
       BOOST_ASSERT(np->parent()->node_id() == np->parent_node_id()); // cache logic OK?
       m_branch_insert(np->parent(), np->parent_element(),
@@ -1330,12 +1323,12 @@ btree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter,
     }
   }
 
-  //  insert value into np at insert_begin
+  //  insert key into np at insert_begin
   BOOST_ASSERT(insert_begin >= np->leaf().begin());
   BOOST_ASSERT(insert_begin <= np->leaf().end());
   std::size_t memmove_sz = (np->leaf().end() - insert_begin) * sizeof(value_type);
   std::memmove(insert_begin+1, insert_begin, memmove_sz);  // make room
-  std::memcpy(insert_begin, &v, sizeof(value_type));   // insert value
+  std::memcpy(insert_begin, &k, sizeof(key_type));   // insert value
   np->size(np->size()+1);
 
   // if there is a new node, its initial key and node_id are inserted into parent
@@ -1682,18 +1675,18 @@ btree_base<Key,Base,Traits,Comp>::erase(const_iterator first, const_iterator las
 
 template <class Key, class Base, class Traits, class Comp>   
 std::pair<typename btree_base<Key,Base,Traits,Comp>::const_iterator, bool>
-btree_base<Key,Base,Traits,Comp>::m_insert_unique(const value_type& v)
+btree_base<Key,Base,Traits,Comp>::m_insert_unique(const key_type& k)
 {
   BOOST_ASSERT_MSG(is_open(), "insert() on unopen btree");
   BOOST_ASSERT_MSG(!read_only(), "insert() on read only btree");
-  iterator insert_point = m_special_lower_bound(key(v));
+  iterator insert_point = m_special_lower_bound(k);
 
   bool is_unique = insert_point.m_element == insert_point.m_node->leaf().end()
-                || key_comp()(key(v), this->key(*insert_point))
-                || key_comp()(this->key(*insert_point), key(v));
+                || key_comp()(k, this->key(*insert_point))
+                || key_comp()(this->key(*insert_point), k);
 
   if (is_unique)
-    return std::pair<const_iterator, bool>(m_leaf_insert(insert_point, v), true);
+    return std::pair<const_iterator, bool>(m_leaf_insert(insert_point, k), true);
 
   return std::pair<const_iterator, bool>(
     const_iterator(insert_point.m_node, insert_point.m_element), false); 
@@ -1703,25 +1696,23 @@ btree_base<Key,Base,Traits,Comp>::m_insert_unique(const value_type& v)
 
 template <class Key, class Base, class Traits, class Comp>   
 inline typename btree_base<Key,Base,Traits,Comp>::const_iterator
-btree_base<Key,Base,Traits,Comp>::m_insert_non_unique(const value_type& v)
+btree_base<Key,Base,Traits,Comp>::m_insert_non_unique(const key_type& k)
 {
   BOOST_ASSERT_MSG(is_open(), "insert() on unopen btree");
   BOOST_ASSERT_MSG(!read_only(), "insert() on read only btree");
-  iterator insert_point = m_special_upper_bound(key(v));
-  return m_leaf_insert(insert_point, v);
+  iterator insert_point = m_special_upper_bound(k);
+  return m_leaf_insert(insert_point, k);
 }
 
 //----------------------------------- m_update() ---------------------------------------//
 
 template <class Key, class Base, class Traits, class Comp>   
 typename btree_base<Key,Base,Traits,Comp>::iterator
-btree_base<Key,Base,Traits,Comp>::m_update(iterator itr,  const value_type& v)
+btree_base<Key,Base,Traits,Comp>::m_update(iterator itr)
 {
   BOOST_ASSERT_MSG(is_open(), "update() on unopen btree");
   BOOST_ASSERT_MSG(!read_only(), "update() on read only btree");
   itr.m_node->needs_write(true);
-  std::memcpy(const_cast<mapped_type*>(&itr->second),
-    &new_mapped_value, sizeof(mapped_type));
   return itr;
 }
 

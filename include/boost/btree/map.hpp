@@ -1,6 +1,6 @@
 //  boost/btree/map.hpp  ---------------------------------------------------------------//
 
-//  Copyright Beman Dawes 2000, 2006, 2010
+//  Copyright Beman Dawes 2000, 2006, 2010, 2013
 
 //  Distributed under the Boost Software License, Version 1.0.
 //  http://www.boost.org/LICENSE_1_0.txt
@@ -10,17 +10,15 @@
 #ifndef BOOST_BTREE_MAP_HPP
 #define BOOST_BTREE_MAP_HPP
 
-#define BOOST_FILESYSTEM_VERSION 3
-
 #include <boost/config.hpp>
 #include <boost/cstdint.hpp>
-//#include <boost/btree/dynamic_size.hpp>
 #include <boost/btree/header.hpp>
 #include <boost/filesystem/path.hpp>
 #include <boost/btree/detail/common.hpp>  // common to all 4 btree_* containers
 #include <boost/assert.hpp>
 #include <boost/static_assert.hpp>
 #include <boost/type_traits/is_pointer.hpp>
+#include <cstring>
 
 namespace boost
 {
@@ -89,16 +87,25 @@ namespace boost
         btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>::const_iterator, bool>
       emplace(const Key& key, const T& mapped_value)
       {
-        return btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>::m_insert_unique(
-          key, mapped_value);
+        std::pair<const_iterator, bool> result(
+          btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>::m_insert_unique(
+            key));
+        if (result.second)
+          std::memcpy(const_cast<T*>(&result.first->second),
+            &mapped_value, sizeof(T));
+        return result;
       }
 
       std::pair<typename 
         btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>::const_iterator, bool>
       insert(const value_type& value)
       {
-        return btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>::m_insert_unique(
-          value.key(), value.mapped_value());
+        std::pair<const_iterator, bool> result(
+          btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>::m_insert_unique(
+            key(value)));
+        if (result.second)
+          std::memcpy(const_cast<T*>(&result.first->second), &mapped(value), sizeof(T));
+        return result;
       }
 
       template <class InputIterator>
@@ -106,8 +113,12 @@ namespace boost
       { 
         for (; begin != end; ++begin) 
         {
-          btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>::m_insert_unique(
-            begin->key(), begin->mapped_value());
+           std::pair<const_iterator, bool> result(
+            btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>::m_insert_unique(
+              key(*begin)));
+          if (result.second)
+            std::memcpy(const_cast<T*>(&mapped(result.first->second)),
+              &mapped(*begin), sizeof(T));
         }
       }
 
@@ -116,8 +127,8 @@ namespace boost
         btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>::iterator itr,
           const T& mapped_value)
       {
-        return btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>::m_update(
-          itr, mapped_value);
+        std::memcpy(const_cast<T*>(&itr->second), &mapped_value, sizeof(T));
+        return btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>::m_update(itr);
       }
 
      };
@@ -183,17 +194,21 @@ namespace boost
       typename btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>::const_iterator
       emplace(const Key& key, const T& mapped_value)
       {
-        return
+        const_iterator result(
           btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>::m_insert_non_unique(
-            key, mapped_value);
+            key));
+        std::memcpy(const_cast<T*>(&result->second), &mapped_value, sizeof(T));
+        return result;          
       }
 
       typename btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>::const_iterator
       insert(const value_type& value)
       {
-        return
+        const_iterator result(
           btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>::m_insert_non_unique(
-            value.key(), value.mapped_value());
+            key(value)));
+        std::memcpy(const_cast<T*>(&result->second), &mapped(value), sizeof(T));
+        return result;          
       }
 
       template <class InputIterator>
@@ -201,8 +216,10 @@ namespace boost
       {
         for (; begin != end; ++begin)
         {
-          btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>::m_insert_non_unique(
-            begin->key(), begin->mapped_value());
+          const_iterator result(
+            btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>::m_insert_non_unique(
+              key(*begin)));
+          std::memcpy(const_cast<T*>(&result->second), &mapped(*begin), sizeof(T));
         }
       }
 
@@ -211,8 +228,8 @@ namespace boost
         btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>::iterator itr,
           const T& mapped_value)
       {
-        return btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>::m_update(
-          itr, mapped_value);
+        std::memcpy(const_cast<T*>(&itr->second), &mapped_value, sizeof(T));
+        return btree_base<Key,btree_map_base<Key,T,Comp>,Traits,Comp>::m_update(itr);
       }
     };
 

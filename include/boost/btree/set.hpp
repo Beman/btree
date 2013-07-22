@@ -1,6 +1,6 @@
 //  boost/btree/set.hpp  ---------------------------------------------------------------//
 
-//  Copyright Beman Dawes 2000, 2006, 2010
+//  Copyright Beman Dawes 2000, 2006, 2010, 2013
 
 //  Distributed under the Boost Software License, Version 1.0.
 //  http://www.boost.org/LICENSE_1_0.txt
@@ -14,7 +14,6 @@
 
 #include <boost/config.hpp>
 #include <boost/cstdint.hpp>
-//#include <boost/btree/dynamic_size.hpp>
 #include <boost/btree/header.hpp>
 #include <boost/filesystem/path.hpp>
 #include <boost/btree/detail/common.hpp> // common to all 4 btree_* containers
@@ -84,14 +83,14 @@ namespace boost
           node_sz, comp);
       }
 
-      //  emplace(const Key&) special case not requiring c++0x support
+      //  emplace() special case not requiring c++0x support
       std::pair<typename
         btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::const_iterator, bool>
       emplace(const typename
         btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::value_type& value)
       {
         return btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::m_insert_unique(
-          value, value);
+          value);
       }
 
       std::pair<typename
@@ -100,7 +99,7 @@ namespace boost
         btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::value_type& value)
       {
         return btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::m_insert_unique(
-          value, value);
+          value);
       }
 
       template <class InputIterator>
@@ -109,7 +108,7 @@ namespace boost
         for (; begin != end; ++begin)
         {
           btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::m_insert_unique(
-            *begin, *begin);
+            *begin);
         }
       }
     };
@@ -175,7 +174,7 @@ namespace boost
       {
         return
           btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::m_insert_non_unique(
-            value, value);
+            value);
       }
 
       typename btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::const_iterator
@@ -184,7 +183,7 @@ namespace boost
       {
         return 
           btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::m_insert_non_unique(
-            value, value);
+            value);
       }
 
       template <class InputIterator>
@@ -193,7 +192,7 @@ namespace boost
         for (; begin != end; ++begin) 
         {
           btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::m_insert_non_unique(
-            *begin, *begin);
+            *begin);
         }
       }
     };
