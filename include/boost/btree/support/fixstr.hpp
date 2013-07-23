@@ -5,6 +5,16 @@
 //  Distributed under the Boost Software License, Version 1.0.
 //  http://www.boost.org/LICENSE_1_0.txt
 
+//--------------------------------------------------------------------------------------//
+//                                                                                      //
+//                            fixed maximum-length string holder                        //
+//                                                                                      //
+//   The interface for this class needs to be revised in light of the basic_string_view //
+//   Technical Specification (TS).                                                      //
+//                                                                                      //
+//                                                                                      //
+//--------------------------------------------------------------------------------------//
+
 #include <string>
 #include <cstring>
 #include <boost/assert.hpp>
@@ -64,6 +74,12 @@ namespace btree
     bool operator>=(const fixstr& fxs) const { return std::strcmp(rep, fxs.rep) >= 0; }
   };
 
+template <unsigned MaxSize>
+std::ostream& operator<<(std::ostream& os, const fixstr<MaxSize>& x)
+  {
+    os << x.c_str();
+    return os;
+  }
 }
 }
 

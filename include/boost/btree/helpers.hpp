@@ -90,8 +90,6 @@ namespace flags
     // bitmasks set by implemenation, ignored if passed in by user:
     unique        = 1,    // not multi; uniqueness required
     key_only      = 2,    // set or multiset
-    key_varies    = 4,    // key is variable length
-    mapped_varies = 8,    // mapped is variable length
  
     // open values (choose one):
     read_only   = 0x100,   // file must exist

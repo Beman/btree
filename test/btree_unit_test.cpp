@@ -17,7 +17,6 @@
 
 #include <boost/btree/map.hpp>
 #include <boost/btree/set.hpp>
-#include <boost/btree/support/strbuf.hpp>
 #include <boost/btree/support/fixstr.hpp>
 #include <boost/detail/lightweight_main.hpp>
 #include <boost/detail/lightweight_test.hpp>
@@ -308,15 +307,15 @@ void open_existing()
     int mapped = 0x55;
     bt.emplace(key, mapped);
     if (dump_dot)
-      bt.dump_dot(std::cout);
+      btree::dump_dot(std::cout, bt);
     key = 4; mapped = 0x44;
     bt.emplace(key, mapped);
     if (dump_dot)
-      bt.dump_dot(std::cout);
+      btree::dump_dot(std::cout, bt);
     key = 6; mapped = 0x66;
     bt.emplace(key, mapped);
     if (dump_dot)
-      bt.dump_dot(std::cout);
+      btree::dump_dot(std::cout, bt);
   }
 
   {
@@ -364,7 +363,7 @@ void open_existing()
   BOOST_TEST_EQ(bt2.header().element_count(), 3U);
   BOOST_TEST_EQ(bt2.header().node_size(), 128U);
   if (dump_dot)
-    bt2.dump_dot(std::cout);
+    btree::dump_dot(std::cout, bt2);
 
   // TODO: test each header value
 
@@ -377,24 +376,23 @@ void small_variable_set()
 {
   cout << "  small_variable_set..." << endl;
 
+  typedef btree::fixstr<16> data_type;
+
   fs::path p("btree_set.btree");
   fs::remove(p);
-  typedef btree::btree_set<btree::strbuf> btree_type;
+  typedef btree::btree_set<data_type> btree_type;
   btree_type bt(p, btree::flags::truncate, -1, 128);
   std::pair<btree_type::iterator, bool> result;
 
-  btree::strbuf stuff;
+  data_type stuff;
 
   stuff = "now";
-  BOOST_TEST_EQ(boost::btree::dynamic_size(stuff), 5U);
   result = bt.insert(stuff);
   BOOST_TEST_EQ(bt.size(), 1U);
   BOOST_TEST(result.second);
   BOOST_TEST(std::strcmp(result.first->c_str(), "now") == 0 );
-  //bt.dump_dot(std::cout);
   stuff = "is";
   bt.insert(stuff);
-  //bt.dump_dot(std::cout);
   stuff = "the";
   bt.emplace(stuff);  // try the emplace() overload
   stuff = "time";
@@ -406,7 +404,9 @@ void small_variable_set()
   stuff = "good";
   bt.insert(stuff);
   stuff = "...";
+//  btree::dump_dot(std::cout, bt);
   bt.insert(stuff);
+//  btree::dump_dot(std::cout, bt);
 
   BOOST_TEST(bt.is_open());
   BOOST_TEST(!bt.empty());
@@ -416,7 +416,7 @@ void small_variable_set()
   BOOST_TEST_EQ(bt.header().node_size(), 128U);
 
   if (dump_dot)
-    bt.dump_dot(std::cout);
+    btree::dump_dot(std::cout, bt);
 
   cout << "    small_variable_set complete" << endl;
 }
@@ -427,12 +427,14 @@ void small_variable_map()
 {
   cout << "  small_variable_map..." << endl;
 
+  typedef btree::fixstr<16> data_type;
+
   fs::path p("btree_map.btree");
   fs::remove(p);
-  btree::btree_map<btree::strbuf, btree::strbuf> bt(p, btree::flags::truncate, -1, 128);
+  btree::btree_map<data_type, data_type> bt(p, btree::flags::truncate, -1, 128);
 
-  btree::strbuf key;
-  btree::strbuf value;
+  data_type key;
+  data_type value;
 
   key = "now";
   value = "won";
@@ -467,7 +469,7 @@ void small_variable_map()
   BOOST_TEST_EQ(bt.header().node_size(), 128U);
 
   if (dump_dot)
-    bt.dump_dot(std::cout);
+    btree::dump_dot(std::cout, bt);
 
   cout << "    small_variable_map complete" << endl;
 }
@@ -672,7 +674,7 @@ void insert_tests(BTree& bt)
 
   //cout << '\n' << bt.manager() << '\n';
   //cout << "\nroot is node " << bt.header().root_node_id() << ", size() " << bt.size() << '\n'; 
-//  bt.dump_dot(std::cout);
+//  btree::dump_dot(std::cout, bt);
 
   cur = bt.begin();
   //cout << "after begin():\n";
@@ -740,7 +742,7 @@ void insert_tests(BTree& bt)
   BOOST_TEST(cur != bt.end());
 
   //cout << "root is node " << bt.header().root_node_id() << '\n'; 
-  //bt.dump_dot(std::cout);
+  //btree::dump_dot(std::cout, bt);
 
   //cout << "    erase " << cur->first << endl;
   cur = bt.erase(cur);
@@ -766,7 +768,7 @@ void insert_tests(BTree& bt)
   cur = bt.find(0x0D);
 
   //cout << "root is node " << bt.header().root_node_id() << '\n'; 
-  //bt.dump_dot(std::cout);
+  //btree::dump_dot(std::cout, bt);
 
   BOOST_TEST(cur != bt.end());
   BOOST_TEST(bt.inspect_leaf_to_root(cout, cur));
@@ -781,7 +783,7 @@ void insert_tests(BTree& bt)
   BOOST_TEST_EQ(bt.header().root_level(), 0U);
   
   //cout << "root is node " << bt.header().root_node_id() << '\n'; 
-  //bt.dump_dot(std::cout);
+  //btree::dump_dot(std::cout, bt);
 
   cout << "    add enough elements to force branch node splits" << endl;
   for (int i = 1; i <= 21; ++i )
@@ -791,12 +793,12 @@ void insert_tests(BTree& bt)
     mapped_value = i * 100;
     bt.emplace(key, mapped_value);
 //std::cout << "root is node " << bt.header().root_node_id() << '\n'; 
-  //bt.dump_dot(std::cout);
+  //btree::dump_dot(std::cout, bt);
   }
   BOOST_TEST_EQ(bt.size(), 21U);
   
   //cout << "root is node " << bt.header().root_node_id() << '\n'; 
-  //bt.dump_dot(std::cout);
+  //btree::dump_dot(std::cout, bt);
 
   cout << "    erase every other element" << endl;
   for (int i = 1; i <= 21; i += 2 )
@@ -807,7 +809,7 @@ void insert_tests(BTree& bt)
   BOOST_TEST_EQ(bt.size(), 10U);
 
   //cout << "root is node " << bt.header().root_node_id() << '\n'; 
-  //bt.dump_dot(std::cout);
+  //btree::dump_dot(std::cout, bt);
 
   cout << "    erase remaining elements and attempt to erase nonexistant elements" << endl;
   for (int i = 1; i <= 31; ++i )  // many of these won't exist
@@ -818,7 +820,7 @@ void insert_tests(BTree& bt)
     BOOST_TEST_EQ(count_result, erase_result);
     //cout << "     erase count " << ct << ", size() " << bt.size() << endl;
     //cout << "root is node " << bt.header().root_node_id() << '\n'; 
-    //bt.dump_dot(std::cout);
+    //btree::dump_dot(std::cout, bt);
   }
   BOOST_TEST_EQ(bt.size(), 0U);
 
@@ -880,7 +882,7 @@ void find_and_bounds_tests(BTree& bt)
   {
     do_fb_insert(bt, i);
     //std::cout << "   size is " << bt.size() << std::endl;
-    //bt.dump_dot(std::cout);
+    //btree::dump_dot(std::cout, bt);
   }
 
   BOOST_TEST_EQ(bt.size(), 9U);
@@ -888,27 +890,27 @@ void find_and_bounds_tests(BTree& bt)
   if (!(bt.header().flags() & btree::flags::unique))
   {
     //cout << "root is node " << bt.header().root_node_id() << '\n'; 
-    //bt.dump_dot(std::cout);
+    //btree::dump_dot(std::cout, bt);
     //cout << "insert 3" << endl;
     do_fb_insert(bt, 3);
     //cout << "root is node " << bt.header().root_node_id() << '\n'; 
-    //bt.dump_dot(std::cout);
+    //btree::dump_dot(std::cout, bt);
     //cout << "insert 7" << endl;
     do_fb_insert(bt, 7);
     //cout << "root is node " << bt.header().root_node_id() << '\n'; 
-    //bt.dump_dot(std::cout);
+    //btree::dump_dot(std::cout, bt);
     //cout << "insert 7" << endl;
     do_fb_insert(bt, 7);
     for (int i = 0; i < 10; ++i)
     {
       //cout << "root is node " << bt.header().root_node_id() << '\n'; 
-      //bt.dump_dot(std::cout);
+      //btree::dump_dot(std::cout, bt);
 
       //cout << "insert 15" << endl;
       do_fb_insert(bt, 15);
     }
     //cout << "root is node " << bt.header().root_node_id() << '\n'; 
-    //bt.dump_dot(std::cout);
+    //btree::dump_dot(std::cout, bt);
 
 
     BOOST_TEST_EQ(bt.size(), 22U);
@@ -916,7 +918,7 @@ void find_and_bounds_tests(BTree& bt)
 
   //cout << "root is node " << bt.header().root_node_id() << '\n'; 
   if (dump_dot)
-    bt.dump_dot(std::cout);
+    btree::dump_dot(std::cout, bt);
 
   //             i =   0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18
   const int  lwr[] = { 1, 1, 3, 3, 5, 5, 7, 7, 9, 9, 11, 11, 13, 13, 15, 15, 17, 17, -1};
@@ -1027,7 +1029,7 @@ void insert_non_unique_tests(BTree& bt)
     BOOST_TEST_EQ(result->second, i);
 
     //cout << "root is node " << bt.header().root_node_id() << '\n'; 
-    //bt.dump_dot(std::cout);
+    //btree::dump_dot(std::cout, bt);
    
     int j = 0;
     for (typename BTree::const_iterator_range range = bt.equal_range(3);
@@ -1305,7 +1307,7 @@ void  cache_size_test()
           << endl;
         bt.manager().dump_buffers(cout);
         bt.manager().dump_available_buffers(cout);
-        bt.dump_dot(std::cout);
+        btree::dump_dot(std::cout, bt);
       }
     }
     // there are now no iterators in existance, so only the root buffer should be held
@@ -1322,7 +1324,7 @@ void  cache_size_test()
 
       bt.manager().dump_buffers(cout);
       bt.manager().dump_available_buffers(cout);
-      bt.dump_dot(std::cout);
+      btree::dump_dot(std::cout, bt);
     }
   }
 
@@ -1342,7 +1344,7 @@ void  cache_size_test()
     cout << bt;
     cout << bt.manager();
     cout << endl;
-    bt.dump_dot(std::cerr);
+    btree::dump_dot(std::cerr, bt);
   }
 
   cout << "    cache_size_test complete" << endl;

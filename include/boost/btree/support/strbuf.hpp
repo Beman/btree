@@ -5,6 +5,15 @@
 //  Distributed under the Boost Software License, Version 1.0.
 //  http://www.boost.org/LICENSE_1_0.txt
 
+//--------------------------------------------------------------------------------------//
+//                                                                                      //
+//                            variable length string holder                             //
+//                                                                                      //
+//   It is not yet clear whether there is any need for this class in the two-layer      //
+//   design that limits B+trees to strictly fixed-length value types.                   //
+//                                                                                      //
+//--------------------------------------------------------------------------------------//
+
 #include <boost/btree/dynamic_size.hpp>
 #include <string>
 #include <cstring>
@@ -73,7 +82,7 @@ namespace btree
 
   private:
     m_size_type    m_size;  // std::strlen(m_buf); for speed, particularly on large strings 
-    char            m_buf[max_size+1];  // '\0' terminated
+    char           m_buf[max_size+1];  // '\0' terminated
   };
 
 

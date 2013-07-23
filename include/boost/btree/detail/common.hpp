@@ -300,7 +300,6 @@ public:
                      path() const           { return m_mgr.path(); }
   bool               read_only() const      { return m_read_only; }
   bool               cache_branches() const { return m_cache_branches; }
-  void   dump_dot(std::ostream& os) const; // dump tree using Graphviz dot format
 
   // TODO: why are these two exposed? See main TODO list above.
   const buffer_manager&
@@ -400,7 +399,6 @@ public:
           << std::endl;
       manager().dump_buffers(os);
       manager().dump_available_buffers(os);
-      dump_dot(os);
       return false;
     }
   }
@@ -419,7 +417,6 @@ public:
         << std::endl;
     manager().dump_buffers(os);
     manager().dump_available_buffers(os);
-    dump_dot(os);
     return false;
   }
 
@@ -1819,60 +1816,12 @@ btree_base<Key,Base,Traits,Comp>::count(const key_type& k) const
   return count;
 }
 
-//----------------------------------- dump_dot -----------------------------------------//
-
-template <class Key, class Base, class Traits, class Comp>   
-void btree_base<Key,Base,Traits,Comp>::dump_dot(std::ostream& os) const
-{
-  BOOST_ASSERT_MSG(is_open(), "dump_dot() on unopen btree");
-  os << "digraph btree {\nrankdir=LR;\nfontname=Courier;\n"
-    "node [shape = record,margin=.1,width=.1,height=.1,fontname=Courier"
-    ",style=\"filled\"];\n";
-
-  for (unsigned int p = 1; p < header().node_count(); ++p)
-  {
-    btree_node_ptr np = m_mgr.read(p);
-
-    if (np->is_leaf())
-    {
-      os << "node" << p << "[label = \"<f0> " << p
-         << ", use-ct=" << np->use_count()-1 << "|";
-      for (value_type* it = np->leaf().begin(); it != np->leaf().end(); ++it)
-      {
-        if (it != np->leaf().begin())
-          os << '|';
-        os << *it;
-      }
-      os << "\",fillcolor=\"palegreen\"];\n";
-    }
-    else if (np->is_branch())
-    {
-      os << "node" << p << "[label = \"<f0> " << p
-         << ", use-ct=" << np->use_count()-1 << "|";
-      int f = 1;
-      branch_value_type* it;
-      for (it = np->branch().begin(); it != np->branch().end(); ++it)
-      {
-        os << "<f" << f << ">|" << it->key << "|";
-        ++f;
-      }
-      os << "<f" << f << ">\",fillcolor=\"lightblue\"];\n";
-      f = 1;
-      for (it = np->branch().begin(); it != np->branch().end(); ++it)
-      {
-        os << "\"node" << p << "\":f" << f
-           << " -> \"node" << it->node_id << "\":f0;\n";
-        ++f;
-      }
-      os << "\"node" << p << "\":f" << f 
-         << " -> \"node" << it->node_id << "\":f0;\n";
-    }
-  }
-
-  os << "}" << std::endl;
-}
-
 ////  non-member functions  ----------------------------------------------------//
+
+// dump tree using Graphviz dot format
+template <class Btree>
+void   dump_dot(std::ostream& os, const Btree& bt); 
+
 
 ///  TODO: non-member functions not implemented yet
 /*
@@ -1904,6 +1853,60 @@ template <typename Key, typename T, typename Comp>
 void swap(common_base<Key,T,Comp,GetKey>& x,
         common_base<Key,T,Comp,GetKey>& y);
 */
+
+//----------------------------------- dump_dot -----------------------------------------//
+
+template <class Btree>
+void dump_dot(std::ostream& os, const Btree& bt) 
+{
+  //BOOST_ASSERT_MSG(is_open(), "dump_dot() on unopen btree");
+  //os << "digraph btree {\nrankdir=LR;\nfontname=Courier;\n"
+  //  "node [shape = record,margin=.1,width=.1,height=.1,fontname=Courier"
+  //  ",style=\"filled\"];\n";
+
+  //for (unsigned int p = 1; p < header().node_count(); ++p)
+  //{
+  //  btree_node_ptr np = m_mgr.read(p);
+
+  //  if (np->is_leaf())
+  //  {
+  //    os << "node" << p << "[label = \"<f0> " << p
+  //       << ", use-ct=" << np->use_count()-1 << "|";
+  //    for (value_type* it = np->leaf().begin(); it != np->leaf().end(); ++it)
+  //    {
+  //      if (it != np->leaf().begin())
+  //        os << '|';
+  //      os << *it;
+  //    }
+  //    os << "\",fillcolor=\"palegreen\"];\n";
+  //  }
+  //  else if (np->is_branch())
+  //  {
+  //    os << "node" << p << "[label = \"<f0> " << p
+  //       << ", use-ct=" << np->use_count()-1 << "|";
+  //    int f = 1;
+  //    branch_value_type* it;
+  //    for (it = np->branch().begin(); it != np->branch().end(); ++it)
+  //    {
+  //      os << "<f" << f << ">|" << it->key << "|";
+  //      ++f;
+  //    }
+  //    os << "<f" << f << ">\",fillcolor=\"lightblue\"];\n";
+  //    f = 1;
+  //    for (it = np->branch().begin(); it != np->branch().end(); ++it)
+  //    {
+  //      os << "\"node" << p << "\":f" << f
+  //         << " -> \"node" << it->node_id << "\":f0;\n";
+  //      ++f;
+  //    }
+  //    os << "\"node" << p << "\":f" << f 
+  //       << " -> \"node" << it->node_id << "\":f0;\n";
+  //  }
+  //}
+
+  //os << "}" << std::endl;
+}
+
 //--------------------------------------------------------------------------------------//
 
 template <class Key, class Base, class Traits, class Comp>
