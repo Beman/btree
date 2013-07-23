@@ -1052,11 +1052,9 @@ btree_base<Key,Base,Traits,Comp>::m_open(const boost::filesystem::path& p,
       m_close_and_throw("map/set differs");
     if ((m_hdr.flags() & flags::unique) != (flgs & flags::unique))
       m_close_and_throw("multi/non-multi differs");
-    if (!(m_hdr.flags() & flags::key_varies)
-        && m_hdr.key_size() != sizeof(key_type))
+    if (m_hdr.key_size() != sizeof(key_type))
       m_close_and_throw("key size differs");
-    if (!(m_hdr.flags() & flags::mapped_varies)
-        && m_hdr.mapped_size() != sizeof(mapped_type))
+    if (m_hdr.mapped_size() != sizeof(mapped_type))
       m_close_and_throw("mapped size differs");
 
     m_mgr.data_size(m_hdr.node_size());
@@ -1436,8 +1434,9 @@ btree_base<Key,Base,Traits,Comp>::m_branch_insert(btree_node_ptr np,
   
   std::size_t move_sz = np->branch().end() - element;
   std::memmove(&(element+1)->key, &element->key, move_sz);  // make room
-  std::memcpy(&element->key, &k, sizeof(key_type));  // insert k
-  (element+1)->node_id = child->node_id();              // insert node_id
+  std::memcpy(&element->key, &k, sizeof(key_type));         // insert k
+  (element+1)->node_id = child->node_id();                  // insert node_id
+  np->size(np->size() + 1);
 
   //  set the child's parent and parent_element
   child->parent(np);
@@ -1478,7 +1477,7 @@ btree_base<Key,Base,Traits,Comp>::erase(const_iterator pos)
   m_hdr.decrement_element_count();
 
   if (pos.m_node->node_id() != m_root->node_id()  // not root?
-    && (pos.m_node->size() == dynamic_size(*pos.m_node->leaf().begin())))  // 1 element node?
+    && pos.m_node->size() == sizeof(value_type))  // 1 element node?
   {
     // erase a single value leaf node that is not the root
 
@@ -1825,52 +1824,52 @@ btree_base<Key,Base,Traits,Comp>::count(const key_type& k) const
 template <class Key, class Base, class Traits, class Comp>   
 void btree_base<Key,Base,Traits,Comp>::dump_dot(std::ostream& os) const
 {
-  //BOOST_ASSERT_MSG(is_open(), "dump_dot() on unopen btree");
-  //os << "digraph btree {\nrankdir=LR;\nfontname=Courier;\n"
-  //  "node [shape = record,margin=.1,width=.1,height=.1,fontname=Courier"
-  //  ",style=\"filled\"];\n";
+  BOOST_ASSERT_MSG(is_open(), "dump_dot() on unopen btree");
+  os << "digraph btree {\nrankdir=LR;\nfontname=Courier;\n"
+    "node [shape = record,margin=.1,width=.1,height=.1,fontname=Courier"
+    ",style=\"filled\"];\n";
 
-  //for (unsigned int p = 1; p < header().node_count(); ++p)
-  //{
-  //  btree_node_ptr np = m_mgr.read(p);
+  for (unsigned int p = 1; p < header().node_count(); ++p)
+  {
+    btree_node_ptr np = m_mgr.read(p);
 
-  //  if (np->is_leaf())
-  //  {
-  //    os << "node" << p << "[label = \"<f0> " << p
-  //       << ", use-ct=" << np->use_count()-1 << "|";
-  //    for (value_type* it = np->leaf().begin(); it != np->leaf().end(); ++it)
-  //    {
-  //      if (it != np->leaf().begin())
-  //        os << '|';
-  //      os << *it;
-  //    }
-  //    os << "\",fillcolor=\"palegreen\"];\n";
-  //  }
-  //  else if (np->is_branch())
-  //  {
-  //    os << "node" << p << "[label = \"<f0> " << p
-  //       << ", use-ct=" << np->use_count()-1 << "|";
-  //    int f = 1;
-  //    branch_value_type* it;
-  //    for (it = np->branch().begin(); it != np->branch().end(); ++it)
-  //    {
-  //      os << "<f" << f << ">|" << it->key() << "|";
-  //      ++f;
-  //    }
-  //    os << "<f" << f << ">\",fillcolor=\"lightblue\"];\n";
-  //    f = 1;
-  //    for (it = np->branch().begin(); it != np->branch().end(); ++it)
-  //    {
-  //      os << "\"node" << p << "\":f" << f
-  //         << " -> \"node" << it->node_id() << "\":f0;\n";
-  //      ++f;
-  //    }
-  //  os << "\"node" << p << "\":f" << f 
-  //     << " -> \"node" << it->node_id() << "\":f0;\n";
-  //  }
-  //}
+    if (np->is_leaf())
+    {
+      os << "node" << p << "[label = \"<f0> " << p
+         << ", use-ct=" << np->use_count()-1 << "|";
+      for (value_type* it = np->leaf().begin(); it != np->leaf().end(); ++it)
+      {
+        if (it != np->leaf().begin())
+          os << '|';
+        os << *it;
+      }
+      os << "\",fillcolor=\"palegreen\"];\n";
+    }
+    else if (np->is_branch())
+    {
+      os << "node" << p << "[label = \"<f0> " << p
+         << ", use-ct=" << np->use_count()-1 << "|";
+      int f = 1;
+      branch_value_type* it;
+      for (it = np->branch().begin(); it != np->branch().end(); ++it)
+      {
+        os << "<f" << f << ">|" << it->key << "|";
+        ++f;
+      }
+      os << "<f" << f << ">\",fillcolor=\"lightblue\"];\n";
+      f = 1;
+      for (it = np->branch().begin(); it != np->branch().end(); ++it)
+      {
+        os << "\"node" << p << "\":f" << f
+           << " -> \"node" << it->node_id << "\":f0;\n";
+        ++f;
+      }
+      os << "\"node" << p << "\":f" << f 
+         << " -> \"node" << it->node_id << "\":f0;\n";
+    }
+  }
 
-  //os << "}" << std::endl;
+  os << "}" << std::endl;
 }
 
 ////  non-member functions  ----------------------------------------------------//
