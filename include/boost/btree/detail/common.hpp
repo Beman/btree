@@ -831,6 +831,8 @@ protected:
 //                              private member functions                                //
 //--------------------------------------------------------------------------------------//
 private:
+  template <class Btree>
+  friend void dump_dot(std::ostream& os, const Btree& bt); 
   
   void m_close_and_throw(const std::string& msg)
   {
@@ -1244,6 +1246,7 @@ template <class Key, class Base, class Traits, class Comp>
 typename btree_base<Key,Base,Traits,Comp>::const_iterator
 btree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter, const key_type& k)
 {
+  std::cout << "m_leaf_insert: " << k << std::endl;
   btree_node_ptr       np = insert_iter.node();
   value_type*          insert_begin = const_cast<value_type*>(insert_iter.m_element);
   btree_node_ptr       np2;
@@ -1353,6 +1356,8 @@ void
 btree_base<Key,Base,Traits,Comp>::m_branch_insert(btree_node_ptr np,
   branch_value_type* element, const key_type& k, btree_node_ptr child) 
 {
+  std::cout << "m_branch_insert, node " << np->node_id() << ", level " << np->level()
+            << ", key " << k << std::endl;
   btree_node_ptr    np2;
 
   BOOST_ASSERT(np->is_branch());
@@ -1429,7 +1434,7 @@ btree_base<Key,Base,Traits,Comp>::m_branch_insert(btree_node_ptr np,
   BOOST_ASSERT(&element->key >= &np->branch().begin()->key);
   BOOST_ASSERT(&element->key <= &np->branch().end()->key);
   
-  std::size_t move_sz = np->branch().end() - element;
+  std::size_t move_sz = (np->branch().end() - element) * sizeof(branch_value_type);
   std::memmove(&(element+1)->key, &element->key, move_sz);  // make room
   std::memcpy(&element->key, &k, sizeof(key_type));         // insert k
   (element+1)->node_id = child->node_id();                  // insert node_id
@@ -1443,11 +1448,12 @@ btree_base<Key,Base,Traits,Comp>::m_branch_insert(btree_node_ptr np,
   if (m_hdr.flags() & btree::flags::unique)
   {
     branch_value_type* cur = np->branch().begin();
-    const key_type* prev_key = &cur->key;
-    ++cur;
+    const key_type* prev_key;
     for(; cur != np->branch().end(); ++cur)
     {
-      BOOST_ASSERT(key_comp()(*prev_key, cur->key));
+      std::cout << "m_branch_insert audit key: " << cur->key << std::endl;
+      BOOST_ASSERT(cur == np->branch().begin()
+        || key_comp()(*prev_key, cur->key));
       prev_key = &cur->key;
     }
   }
@@ -1468,6 +1474,8 @@ btree_base<Key,Base,Traits,Comp>::erase(const_iterator pos)
   BOOST_ASSERT(pos.m_node->is_leaf());
   BOOST_ASSERT(pos.m_element < pos.m_node->leaf().end());
   BOOST_ASSERT(pos.m_element >= pos.m_node->leaf().begin());
+
+  std::cout << "erase" << std::endl;
 
   m_ok_to_pack = false;  // TODO: is this too conservative?
   pos.m_node->needs_write(true);
@@ -1859,52 +1867,54 @@ void swap(common_base<Key,T,Comp,GetKey>& x,
 template <class Btree>
 void dump_dot(std::ostream& os, const Btree& bt) 
 {
-  //BOOST_ASSERT_MSG(is_open(), "dump_dot() on unopen btree");
-  //os << "digraph btree {\nrankdir=LR;\nfontname=Courier;\n"
-  //  "node [shape = record,margin=.1,width=.1,height=.1,fontname=Courier"
-  //  ",style=\"filled\"];\n";
+  BOOST_ASSERT_MSG(bt.is_open(), "dump_dot() on unopen btree");
 
-  //for (unsigned int p = 1; p < header().node_count(); ++p)
-  //{
-  //  btree_node_ptr np = m_mgr.read(p);
+  os << "digraph btree {\nrankdir=LR;\nfontname=Courier;\n"
+    "node [shape = record,margin=.1,width=.1,height=.1,fontname=Courier"
+    ",style=\"filled\"];\n";
 
-  //  if (np->is_leaf())
-  //  {
-  //    os << "node" << p << "[label = \"<f0> " << p
-  //       << ", use-ct=" << np->use_count()-1 << "|";
-  //    for (value_type* it = np->leaf().begin(); it != np->leaf().end(); ++it)
-  //    {
-  //      if (it != np->leaf().begin())
-  //        os << '|';
-  //      os << *it;
-  //    }
-  //    os << "\",fillcolor=\"palegreen\"];\n";
-  //  }
-  //  else if (np->is_branch())
-  //  {
-  //    os << "node" << p << "[label = \"<f0> " << p
-  //       << ", use-ct=" << np->use_count()-1 << "|";
-  //    int f = 1;
-  //    branch_value_type* it;
-  //    for (it = np->branch().begin(); it != np->branch().end(); ++it)
-  //    {
-  //      os << "<f" << f << ">|" << it->key << "|";
-  //      ++f;
-  //    }
-  //    os << "<f" << f << ">\",fillcolor=\"lightblue\"];\n";
-  //    f = 1;
-  //    for (it = np->branch().begin(); it != np->branch().end(); ++it)
-  //    {
-  //      os << "\"node" << p << "\":f" << f
-  //         << " -> \"node" << it->node_id << "\":f0;\n";
-  //      ++f;
-  //    }
-  //    os << "\"node" << p << "\":f" << f 
-  //       << " -> \"node" << it->node_id << "\":f0;\n";
-  //  }
-  //}
+  for (unsigned int p = 1; p < bt.header().node_count(); ++p)
+  {
+    typename Btree::btree_node_ptr np = bt.m_mgr.read(p);
 
-  //os << "}" << std::endl;
+    if (np->is_leaf())
+    {
+      os << "node" << p << "[label = \"<f0> " << p
+         << ", use-ct=" << np->use_count()-1 << "|";
+      for (typename Btree::value_type* it = np->leaf().begin();
+        it != np->leaf().end(); ++it)
+      {
+        if (it != np->leaf().begin())
+          os << '|';
+        os << bt.key(*it);
+      }
+      os << "\",fillcolor=\"palegreen\"];\n";
+    }
+    else if (np->is_branch())
+    {
+      os << "node" << p << "[label = \"<f0> " << p
+         << ", use-ct=" << np->use_count()-1 << "|";
+      int f = 1;
+      typename Btree::branch_value_type* it;
+      for (it = np->branch().begin(); it != np->branch().end(); ++it)
+      {
+        os << "<f" << f << ">|" << it->key << "|";
+        ++f;
+      }
+      os << "<f" << f << ">\",fillcolor=\"lightblue\"];\n";
+      f = 1;
+      for (it = np->branch().begin(); it != np->branch().end(); ++it)
+      {
+        os << "\"node" << p << "\":f" << f
+           << " -> \"node" << it->node_id << "\":f0;\n";
+        ++f;
+      }
+      os << "\"node" << p << "\":f" << f 
+         << " -> \"node" << it->node_id << "\":f0;\n";
+    }
+  }
+
+  os << "}" << std::endl;
 }
 
 //--------------------------------------------------------------------------------------//
