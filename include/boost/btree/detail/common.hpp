@@ -537,14 +537,10 @@ private:
   struct branch_value_type
   {
     branch_value_type() {}
-    branch_value_type(const Key& k, node_id_type id) : m_key(k), m_node_id(id) {}
+    branch_value_type(Key& k, node_id_type id) : node_id(id), key(k) {}
 
-    Key&          key()                     {return m_key;}
-    node_id_type  node_id() const           {return m_node_id;}
-    void          node_id(node_id_type id)  {m_node_id = id;}
-  private:
-    node_id_type  m_node_id;   // branch insert/erase depend on this data member
-    Key           m_key;       //  ordering
+    node_id_type  node_id;   // branch insert/erase depend on this data member
+    Key           key;       //  ordering
   };
 
   class branch_data : public btree_data
@@ -644,7 +640,7 @@ private:
         par_element = par->branch().begin();
       }
 
-      btree_node_ptr np(manager()->read(par_element->node_id()));
+      btree_node_ptr np(manager()->read(par_element->node_id));
 
       // maintain the child to parent chain
       np->parent(par);
@@ -685,7 +681,7 @@ private:
         par_element = par->branch().end();
       }
 
-      btree_node_ptr np(manager()->read(par_element->node_id()));
+      btree_node_ptr np(manager()->read(par_element->node_id));
 
       // maintain the child to parent chain
       np->parent(par);
@@ -895,7 +891,7 @@ private:
     np->never_free(false);
     np->level(0xFF);
     np->size(0);
-    np->branch().begin()->node_id() = node_id_type(m_hdr.free_node_list_head_id());
+    np->branch().begin()->node_id = node_id_type(m_hdr.free_node_list_head_id());
     m_hdr.free_node_list_head_id(np->node_id());
   }
 
@@ -911,11 +907,11 @@ private:
     branch_compare(Comp comp) : m_comp(comp) {}
   public:
    bool operator()(const branch_value_type& x, const branch_value_type& y) const
-      {return m_comp(x.key(), y.key());}
+      {return m_comp(x.key(), y.key);}
    bool operator()(const Key& x, const branch_value_type& y) const
-      {return m_comp(x, y.key());}
+      {return m_comp(x, y.key);}
    bool operator()(const branch_value_type& x, const Key& y) const
-      {return m_comp(x.key(), y);}
+      {return m_comp(x.key, y);}
   };
 
   //------------------------ comparison function objects -------------------------------//
@@ -1133,7 +1129,7 @@ btree_base<Key,Base,Traits,Comp>::begin() const
   while (np->is_branch())
   {
     // create the child->parent list
-    btree_node_ptr child_np = m_mgr.read(np->branch().begin()->node_id());
+    btree_node_ptr child_np = m_mgr.read(np->branch().begin()->node_id);
     child_np->parent(np);
     child_np->parent_element(np->branch().begin());
 #   ifndef NDEBUG
@@ -1164,7 +1160,7 @@ btree_base<Key,Base,Traits,Comp>::last() const
   while (np->is_branch())
   {
     // create the child->parent list
-    btree_node_ptr child_np = m_mgr.read(np->branch().end()->node_id());
+    btree_node_ptr child_np = m_mgr.read(np->branch().end()->node_id);
     child_np->parent(np);
     child_np->parent_element(np->branch().end());
 #   ifndef NDEBUG
@@ -1189,7 +1185,7 @@ btree_base<Key,Base,Traits,Comp>::m_new_node(node_level_type lv)
   {
     np = m_mgr.read(m_hdr.free_node_list_head_id());
     BOOST_ASSERT(np->level() == 0xFF);  // free node list entry
-    m_hdr.free_node_list_head_id(np->branch().begin()->node_id());
+    m_hdr.free_node_list_head_id(np->branch().begin()->node_id);
   }
   else
   {
@@ -1231,7 +1227,7 @@ btree_base<Key,Base,Traits,Comp>::m_new_root()
 
   m_root = m_new_node(m_hdr.root_level());
   m_hdr.root_node_id(m_root->node_id());
-  m_root->branch().begin()->node_id() = old_root_id;
+  m_root->branch().begin()->node_id = old_root_id;
   m_root->size(0);  // the end pseudo-element doesn't count as an element
   m_root->parent(btree_node_ptr());  
   m_root->parent_element(0);
@@ -1382,7 +1378,7 @@ btree_base<Key,Base,Traits,Comp>::m_branch_insert(btree_node_ptr np,
     if (m_ok_to_pack)
     {
       // instead of splitting np, just copy child's node_id to np2
-      np2->branch().begin()->node_id() = child->node_id();
+      np2->branch().begin()->node_id = child->node_id();
       //  set the child's parent and parent_element
       child->parent(np2);
       child->parent_element(np2->branch().begin()); 
@@ -1397,10 +1393,10 @@ btree_base<Key,Base,Traits,Comp>::m_branch_insert(btree_node_ptr np,
 
     std::size_t np2_sz = np->size() / 2;
     std::size_t np_sz = np->size() - np2_sz;
-    np_size(np_sz - 1);  // -1 to account for end pseudo-element
+    np->size(np_sz - 1);  // -1 to account for end pseudo-element
 
     // promote the key from the new end pseudo element to the parent branch node
-    m_branch_insert(np->parent(), np->parent_element(), np2->branch().end()->key(), np2);
+    m_branch_insert(np->parent(), np->parent_element(), np2->branch().end()->key, np2);
 
     // Note: if the insert point will fall on the new node, it would be faster to
     // copy the portion before the insert point, copy the value being inserted, and
@@ -1420,8 +1416,8 @@ btree_base<Key,Base,Traits,Comp>::m_branch_insert(btree_node_ptr np,
 
     // finalize work on the original node
 # ifndef NDEBUG
-    std::memset(&np->branch().end()->key(), 0,  // zero unused space so dumps easier to read
-      (m_max_branch_elements - p->size()) * sizeof(branch_value_type) - sizeof(key_type)); 
+    std::memset(&np->branch().end()->key, 0,  // zero unused space so dumps easier to read
+      (m_max_branch_elements - np->size()) * sizeof(branch_value_type) - sizeof(key_type)); 
 # endif
 
     // adjust np and insert_begin if they now fall on the new node due to the split
@@ -1434,29 +1430,29 @@ btree_base<Key,Base,Traits,Comp>::m_branch_insert(btree_node_ptr np,
 
   BOOST_ASSERT(np->size() < m_max_branch_elements);
 
-  //  insert k, id, into np at &element->key()
-  BOOST_ASSERT(&element->key() >= &np->branch().begin()->key());
-  BOOST_ASSERT(&element->key() <= &np->branch().end()->key());
+  //  insert k, id, into np at &element->key
+  BOOST_ASSERT(&element->key >= &np->branch().begin()->key);
+  BOOST_ASSERT(&element->key <= &np->branch().end()->key);
   
-  std::size_t move_sz = (&np->branch().end() - element) * sizeof(branch_value_type);
-  std::memmove(&(element+1)->key(), &element->key(), move_sz);  // make room
-  std::memcpy(&element->key(), &k, sizeof(key_type));  // insert k
-  (element+1)->node_id(child->node_id());              // insert node_id
+  std::size_t move_sz = np->branch().end() - element;
+  std::memmove(&(element+1)->key, &element->key, move_sz);  // make room
+  std::memcpy(&element->key, &k, sizeof(key_type));  // insert k
+  (element+1)->node_id = child->node_id();              // insert node_id
 
   //  set the child's parent and parent_element
   child->parent(np);
-  child->parent_element(element+1)
+  child->parent_element(element+1);
 
 #ifndef NDEBUG
   if (m_hdr.flags() & btree::flags::unique)
   {
     branch_value_type* cur = np->branch().begin();
-    const key_type* prev_key = &cur->key();
+    const key_type* prev_key = &cur->key;
     ++cur;
     for(; cur != np->branch().end(); ++cur)
     {
-      BOOST_ASSERT(key_comp()(*prev_key, cur->key()));
-      prev_key = &cur->key();
+      BOOST_ASSERT(key_comp()(*prev_key, cur->key));
+      prev_key = &cur->key;
     }
   }
 #endif
@@ -1529,8 +1525,8 @@ void btree_base<Key,Base,Traits,Comp>::m_erase_branch_value(
   btree_node* np, branch_value_type* element)
 {
   BOOST_ASSERT(np->is_branch());
-  BOOST_ASSERT(&*element >= &*np->branch().begin());
-  BOOST_ASSERT(&*element <= &*np->branch().end());  // equal to end if pseudo-element only
+  BOOST_ASSERT(element >= np->branch().begin());
+  BOOST_ASSERT(element <= np->branch().end());  // equal to end if pseudo-element only
 
   if (np->empty()) // end pseudo-element only element on node?
                    // i.e. after the erase, the entire sub-tree will be empty
@@ -1543,26 +1539,24 @@ void btree_base<Key,Base,Traits,Comp>::m_erase_branch_value(
     m_free_node(np); // move node to free node list
   }
   else
-  {
-    void* erase_point;
+  { // erase element that is not on a P0-only page
 
-    node_id_type next_id (element == np->branch().end() ? 0 : (element+1)->node_id());
-  
+    char* erase_ptr;
+
     if (element != np->branch().begin())
     {
       --element;
-      erase_point = &element->key();
+      erase_ptr = reinterpret_cast<char*>(&element->key);
     }
     else
-    {
-      erase_point = &element->node_id();
-    }
-    std::size_t erase_sz = dynamic_size(element->key()) + sizeof(node_id_type); 
-    std::size_t move_sz = char_distance(
-      char_ptr(erase_point)+erase_sz, &np->branch().end()->key());
-    std::memmove(erase_point, char_ptr(erase_point) + erase_sz, move_sz);
-    np->size(np->size() - erase_sz);
-    std::memset(char_ptr(&*np->branch().end()) + sizeof(node_id_type), 0, erase_sz);
+      erase_ptr = reinterpret_cast<char*>(&element->node_id);
+
+    std::size_t move_sz = np->branch().end() - (element+1);
+    std::memmove(erase_ptr, erase_ptr + sizeof(branch_value_type), move_sz);
+
+    np->size(np->size() - 1);
+    std::memset(reinterpret_cast<char*>(np->branch().end()) + sizeof(node_id_type),
+      0, sizeof(branch_value_type));
     np->needs_write(true);
 
     //  recursively free the root node if it is now empty, promoting the end
@@ -1572,11 +1566,11 @@ void btree_base<Key,Base,Traits,Comp>::m_erase_branch_value(
       && np->level() == header().root_level())   // node is the root
     {
       // make the end pseudo-element the new root and then free this node
-      m_hdr.root_node_id(np->branch().end()->node_id());
+      m_hdr.root_node_id(np->branch().end()->node_id);
       m_hdr.decrement_root_level();
       m_root = m_mgr.read(header().root_node_id());
       m_root->parent(btree_node_ptr());
-      m_root->parent_element(branch_value_type*());
+      m_root->parent_element(0);
       m_free_node(np); // move node to free node list
       np = m_root.get();
     }
@@ -1701,12 +1695,12 @@ btree_base<Key,Base,Traits,Comp>::m_special_lower_bound(const key_type& k) const
 
     if ((header().flags() & btree::flags::unique)
       && low != np->branch().end()
-      && !key_comp()(k, low->key())) // if k isn't less that low->key(), it is equal
+      && !key_comp()(k, low->key)) // if k isn't less that low->key(), it is equal
       ++low;                         // and so must be incremented; this follows from
                                      // the branch node invariant for unique containers
 
     // create the child->parent list
-    btree_node_ptr child_np = m_mgr.read(low->node_id());
+    btree_node_ptr child_np = m_mgr.read(low->node_id);
     child_np->parent(np);
     child_np->parent_element(low);
 #   ifndef NDEBUG
@@ -1762,7 +1756,7 @@ btree_base<Key,Base,Traits,Comp>::m_special_upper_bound(const key_type& k) const
       = std::upper_bound(np->branch().begin(), np->branch().end(), k, branch_comp());
 
     // create the child->parent list
-    btree_node_ptr child_np = m_mgr.read(up->node_id());
+    btree_node_ptr child_np = m_mgr.read(up->node_id);
     child_np->parent(np);
     child_np->parent_element(up);
 #   ifndef NDEBUG
