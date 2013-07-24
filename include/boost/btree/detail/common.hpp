@@ -1251,7 +1251,7 @@ template <class Key, class Base, class Traits, class Comp>
 typename btree_base<Key,Base,Traits,Comp>::const_iterator
 btree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter, const key_type& k)
 {
-  std::cout << "m_leaf_insert: " << k << std::endl;
+  //std::cout << "m_leaf_insert: " << k << std::endl;
   btree_node_ptr       np = insert_iter.node();
   value_type*          insert_begin = const_cast<value_type*>(insert_iter.m_element);
   btree_node_ptr       np2;
@@ -1361,10 +1361,10 @@ void
 btree_base<Key,Base,Traits,Comp>::m_branch_insert(btree_node_ptr np,
   branch_value_type* element, const key_type& k, btree_node_ptr child) 
 {
-  std::cout << "m_branch_insert into node " << np->node_id() << ", level " << np->level()
-            << ", id " << child->node_id()
-            << ", key " << k
-            << std::endl;
+  //std::cout << "m_branch_insert into node " << np->node_id() << ", level " << np->level()
+  //          << ", id " << child->node_id()
+  //          << ", key " << k
+  //          << std::endl;
   btree_node_ptr    np2;
 
   BOOST_ASSERT(np->is_branch());
@@ -1453,18 +1453,18 @@ btree_base<Key,Base,Traits,Comp>::m_branch_insert(btree_node_ptr np,
 #ifndef NDEBUG
   if (m_hdr.flags() & btree::flags::unique)
   {
-    std::cout << "audit node " << np->node_id()
-              << ", size " << np->size() << std::endl;
+    //std::cout << "audit node " << np->node_id()
+    //          << ", size " << np->size() << std::endl;
     branch_value_type* cur = np->branch().begin();
     const key_type* prev_key;
     for(; cur != np->branch().end(); ++cur)
     {
-      std::cout << "m_branch_insert audit key: " << cur->key << std::endl;
+      //std::cout << "m_branch_insert audit key: " << cur->key << std::endl;
       BOOST_ASSERT(cur == np->branch().begin()
         || key_comp()(*prev_key, cur->key));
       prev_key = &cur->key;
     }
-    std::cout << " audit done" << std::endl;
+    //std::cout << " audit done" << std::endl;
   }
 #endif
 }
@@ -1484,7 +1484,7 @@ btree_base<Key,Base,Traits,Comp>::erase(const_iterator pos)
   BOOST_ASSERT(pos.m_element < pos.m_node->leaf().end());
   BOOST_ASSERT(pos.m_element >= pos.m_node->leaf().begin());
 
-  std::cout << "erase " << key(*pos.m_element) << std::endl;
+  //std::cout << "erase " << key(*pos.m_element) << std::endl;
 
   m_ok_to_pack = false;  // TODO: is this too conservative?
   pos.m_node->needs_write(true);
@@ -1519,8 +1519,10 @@ btree_base<Key,Base,Traits,Comp>::erase(const_iterator pos)
     // the node from the tree.
 
     value_type* element = const_cast<value_type*>(pos.m_element);
-    std::memmove(element, element+1,
-      (pos.m_node->leaf().end() - element+1) * sizeof(value_type));
+    std::size_t move_sz = (pos.m_node->leaf().end() - (element+1)) * sizeof(value_type);
+    BOOST_ASSERT(element + 1 + move_sz/sizeof(value_type) <= pos.m_node->leaf().end());
+    //std::cout << "moving " << move_sz << std::endl;
+    std::memmove(element, element+1, move_sz);
     pos.m_node->size(pos.m_node->size() - 1);
     std::memset(pos.m_node->leaf().end(), 0, sizeof(value_type));
 
@@ -1586,11 +1588,11 @@ void btree_base<Key,Base,Traits,Comp>::m_erase_branch_value(
       && np->branch().begin() == np->branch().end()  // node empty except for P0
       && np->level() == header().root_level())   // node is the root
     {
-      std::cout << "old root " << header().root_node_id() << std::endl;
+      //std::cout << "old root " << header().root_node_id() << std::endl;
       // make the end pseudo-element the new root and then free this node
       np->needs_write(true);
       m_hdr.root_node_id(np->branch().end()->node_id);
-      std::cout << "new root " << header().root_node_id() << std::endl;
+      //std::cout << "new root " << header().root_node_id() << std::endl;
       m_hdr.decrement_root_level();
       m_root = m_mgr.read(header().root_node_id());
       m_root->parent(btree_node_ptr());
