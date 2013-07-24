@@ -1,4 +1,4 @@
-//  boost/btree/detail/common.hpp  -----------------------------------------------------//
+//  boost/btree/detail/common.hpp  ---------------------------------m_erase_branch_value--------------------//
 
 //  Copyright Beman Dawes 2000, 2006, 2010, 2013
 
@@ -404,7 +404,8 @@ public:
   }
   if (np->parent())
   {
-    os << "error: root has parent, level=" << np->level()
+    os  << "error: root " << np->node_id() << " has parent\n" 
+        << "  level=" << np->level()
         << ", use count=" << np->use_count()
         << ", levels=" << header().levels()
         << ", cache size=" << manager().buffers_in_memory()
@@ -1475,14 +1476,14 @@ btree_base<Key,Base,Traits,Comp>::erase(const_iterator pos)
   BOOST_ASSERT(pos.m_element < pos.m_node->leaf().end());
   BOOST_ASSERT(pos.m_element >= pos.m_node->leaf().begin());
 
-  std::cout << "erase" << std::endl;
+  std::cout << "erase " << key(*pos.m_element) << std::endl;
 
   m_ok_to_pack = false;  // TODO: is this too conservative?
   pos.m_node->needs_write(true);
   m_hdr.decrement_element_count();
 
   if (pos.m_node->node_id() != m_root->node_id()  // not root?
-    && pos.m_node->size() == sizeof(value_type))  // 1 element node?
+        && pos.m_node->size() == 1)  // 1 element node?
   {
     // erase a single value leaf node that is not the root
 
@@ -1546,16 +1547,24 @@ void btree_base<Key,Base,Traits,Comp>::m_erase_branch_value(
   { // erase element that is not on a P0-only page
 
     char* erase_ptr;
+    std::size_t move_sz;
 
     if (element != np->branch().begin())
     {
+      move_sz = (np->branch().end() - element) * sizeof(branch_value_type);
       --element;
       erase_ptr = reinterpret_cast<char*>(&element->key);
     }
     else
+    {
       erase_ptr = reinterpret_cast<char*>(&element->node_id);
+      move_sz = ((np->size() - 1 ) * sizeof(branch_value_type)) + sizeof(node_id_type);
+    }
 
-    std::size_t move_sz = np->branch().end() - (element+1);
+ //std::cout << "move_sz " << move_sz
+ //          << " move target " << std::size_t(erase_ptr) 
+ //          << " move source " << std::size_t(erase_ptr + sizeof(branch_value_type)) 
+ //          << std::endl;
     std::memmove(erase_ptr, erase_ptr + sizeof(branch_value_type), move_sz);
 
     np->size(np->size() - 1);
@@ -1564,13 +1573,16 @@ void btree_base<Key,Base,Traits,Comp>::m_erase_branch_value(
     np->needs_write(true);
 
     //  recursively free the root node if it is now empty, promoting the end
-    //  pseudo element to be the new root
+    //  pseudo element node_id to be the new root
     while (np->level()   // not the leaf (which can happen if iteration reaches leaf)
       && np->branch().begin() == np->branch().end()  // node empty except for P0
       && np->level() == header().root_level())   // node is the root
     {
+      std::cout << "old root " << header().root_node_id() << std::endl;
       // make the end pseudo-element the new root and then free this node
+      np->needs_write(true);
       m_hdr.root_node_id(np->branch().end()->node_id);
+      std::cout << "new root " << header().root_node_id() << std::endl;
       m_hdr.decrement_root_level();
       m_root = m_mgr.read(header().root_node_id());
       m_root->parent(btree_node_ptr());
