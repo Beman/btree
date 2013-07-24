@@ -144,7 +144,7 @@ namespace
         bt_new.max_cache_size(cache_sz);
         for (typename BT::iterator it = bt_old.begin(); it != bt_old.end(); ++it)
         {
-          bt_new.emplace(it->key(), it->mapped_value());
+          bt_new.emplace(bt_old.key(*it), bt_old.mapped(*it));
         }
         bt_new.flush();
         cout << "  bt_old.size() " << bt_old.size() << std::endl;
@@ -187,7 +187,7 @@ namespace
 #       if !defined(NDEBUG)
           if (itr == bt.end())
             throw std::runtime_error("btree find() returned end()");
-          if (itr->key() != k)
+          if (bt.key(*itr) != k)
             throw std::runtime_error("btree find() returned wrong iterator");
 #       endif 
         }
@@ -213,9 +213,9 @@ namespace
           ++itr)
         {
           ++count;
-          if (itr->key() <= prior_key)
+          if (itr->first <= prior_key)
             throw std::runtime_error("btree iteration sequence error");
-          prior_key = itr->key();
+          prior_key = itr->first;
         }
         t.stop();
         iterate_tm = t.elapsed();

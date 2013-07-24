@@ -36,7 +36,7 @@ int main()
 
   cout << "bt_map:\n";
   for (btree_map_type::iterator it = bt_map.begin(); it != bt_map.end(); ++it)
-    cout << "  " << it->key() << " --> " << it->mapped_value() << '\n';
+    cout << "  " << bt_map.key(*it) << " --> " << bt_map.mapped(*it) << '\n';
 
   return 0;
 }

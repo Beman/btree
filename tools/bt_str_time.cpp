@@ -126,7 +126,7 @@ namespace
         BT bt_new(path, btree::flags::truncate, -1, node_sz);
         for (typename BT::iterator it = bt_old.begin(); it != bt_old.end(); ++it)
         {
-          bt_new.emplace(it->key(), it->mapped_value());
+          bt_new.emplace(bt_old.key(*it), bt_old.mapped(*it));
         }
         cout << "  bt_old.size() " << bt_old.size() << std::endl;
         cout << "  bt_new.size() " << bt_new.size() << std::endl;

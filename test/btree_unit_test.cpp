@@ -15,6 +15,7 @@
 //                                                                                      //
 //--------------------------------------------------------------------------------------//
 
+#include <iostream>
 #include <boost/btree/map.hpp>
 #include <boost/btree/set.hpp>
 #include <boost/btree/support/fixstr.hpp>
@@ -24,7 +25,6 @@
 #include <boost/random.hpp>
 #include <boost/btree/support/random_string.hpp>
 
-#include <iostream>
 #include <iomanip>
 #include <utility>
 #include <map>
@@ -720,10 +720,16 @@ void insert_tests(BTree& bt)
   // erase tests
 
   cout << "    erase all elements" << endl;
+
+  //cout << "root is node " << bt.header().root_node_id() << '\n'; 
+  //btree::dump_dot(cout, bt);
+
   cur = bt.find(0x0C);
   BOOST_TEST(cur != bt.end());
-  //cout << "    erase " << cur->first << endl;
   cur = bt.erase(cur);
+
+  //cout << "root is node " << bt.header().root_node_id() << '\n'; 
+  //btree::dump_dot(std::cout, bt);
 
   BOOST_TEST_EQ(cur->first.x, 0x0D);
   BOOST_TEST_EQ(bt.size(), 4U);
@@ -733,6 +739,9 @@ void insert_tests(BTree& bt)
   BOOST_TEST(cur != bt.end());
   //cout << "    erase " << cur->first << endl;
   cur = bt.erase(cur);
+
+  //cout << "root is node " << bt.header().root_node_id() << '\n'; 
+  //btree::dump_dot(std::cout, bt);
 
   BOOST_TEST_EQ(cur->first.x, 0x0D);
   BOOST_TEST_EQ(bt.size(), 3U);
@@ -744,8 +753,10 @@ void insert_tests(BTree& bt)
   //cout << "root is node " << bt.header().root_node_id() << '\n'; 
   //btree::dump_dot(std::cout, bt);
 
-  //cout << "    erase " << cur->first << endl;
   cur = bt.erase(cur);
+
+  //cout << "root is node " << bt.header().root_node_id() << '\n'; 
+  //btree::dump_dot(std::cout, bt);
 
   BOOST_TEST(cur == bt.end());
   BOOST_TEST_EQ(bt.size(), 2U);
@@ -754,8 +765,11 @@ void insert_tests(BTree& bt)
 
   cur = bt.find(0x0A);
   BOOST_TEST(cur != bt.end());
-  //cout << "    erase " << cur->first << endl;
   cur = bt.erase(cur);
+
+  //cout << "root is node " << bt.header().root_node_id() << '\n'; 
+  //btree::dump_dot(std::cout, bt);
+
 
   BOOST_TEST(cur != bt.end());
   BOOST_TEST_EQ(cur->first.x, 0x0D);
@@ -766,9 +780,6 @@ void insert_tests(BTree& bt)
   BOOST_TEST_EQ(bt.header().root_level(), 0U);
 
   cur = bt.find(0x0D);
-
-  //cout << "root is node " << bt.header().root_node_id() << '\n'; 
-  //btree::dump_dot(std::cout, bt);
 
   BOOST_TEST(cur != bt.end());
   BOOST_TEST(bt.inspect_leaf_to_root(cout, cur));
@@ -788,7 +799,7 @@ void insert_tests(BTree& bt)
   cout << "    add enough elements to force branch node splits" << endl;
   for (int i = 1; i <= 21; ++i )
   {
-// std::cout << "\n inserting " << i << std::endl;
+    //std::cout << "\n inserting " << i << std::endl;
     key = i;
     mapped_value = i * 100;
     bt.emplace(key, mapped_value);
@@ -797,7 +808,6 @@ void insert_tests(BTree& bt)
   }
   BOOST_TEST_EQ(bt.size(), 21U);
   
-  //cout << "root is node " << bt.header().root_node_id() << '\n'; 
   //btree::dump_dot(std::cout, bt);
 
   cout << "    erase every other element" << endl;
@@ -808,7 +818,6 @@ void insert_tests(BTree& bt)
   }
   BOOST_TEST_EQ(bt.size(), 10U);
 
-  //cout << "root is node " << bt.header().root_node_id() << '\n'; 
   //btree::dump_dot(std::cout, bt);
 
   cout << "    erase remaining elements and attempt to erase nonexistant elements" << endl;
@@ -819,7 +828,6 @@ void insert_tests(BTree& bt)
     typename BTree::size_type erase_result = bt.erase(i);
     BOOST_TEST_EQ(count_result, erase_result);
     //cout << "     erase count " << ct << ", size() " << bt.size() << endl;
-    //cout << "root is node " << bt.header().root_node_id() << '\n'; 
     //btree::dump_dot(std::cout, bt);
   }
   BOOST_TEST_EQ(bt.size(), 0U);
@@ -830,9 +838,9 @@ void insert_tests(BTree& bt)
   cout << "    testing \"" << bt.path().string() << "\" complete" << endl;
 }
 
-void insert()
+void insert_and_erase_test()
 {
-  cout << "    insert..." << endl;
+  cout << "  insert_and_erase_test..." << endl;
 
   //  these tests use a value type that is large relative to the node size, thus stressing
   //  the code by causing a lot of node splits 
@@ -844,7 +852,7 @@ void insert()
     insert_tests(map);
   }
 
-  cout << "      insert complete" << endl;
+  cout << "    insert_and_erase_test complete" << endl;
 }
 
 //---------------------------------- find_and_bounds -----------------------------------//
@@ -1409,7 +1417,7 @@ int cpp_main(int argc, char* argv[])
   small_variable_set();
   small_variable_map();
   //alignment();
-  insert();
+  insert_and_erase_test();
   insert_non_unique();
   find_and_bounds();
   //erase();
