@@ -100,7 +100,11 @@
   * Bulk load: If file_size(source) <= max_memory: just load, sort, and insert:-)
 
   * Something is whacky: there are three data members m_comp, m_value_comp, and
-    m_branch_comp, but they are all initiallized to the same value! Makes no sense. 
+    m_branch_comp, but they are all initiallized to the same value! Makes no sense.
+
+  * If an erase causes the tree size to become 0, pack optimization should be reenabled.
+    (That may require redoing sequence of inserts in btree_unit_test section that says
+    "add enough elements to force branch node splits"
 
 */
 
@@ -1357,8 +1361,10 @@ void
 btree_base<Key,Base,Traits,Comp>::m_branch_insert(btree_node_ptr np,
   branch_value_type* element, const key_type& k, btree_node_ptr child) 
 {
-  std::cout << "m_branch_insert, node " << np->node_id() << ", level " << np->level()
-            << ", key " << k << std::endl;
+  std::cout << "m_branch_insert into node " << np->node_id() << ", level " << np->level()
+            << ", id " << child->node_id()
+            << ", key " << k
+            << std::endl;
   btree_node_ptr    np2;
 
   BOOST_ASSERT(np->is_branch());
@@ -1397,7 +1403,7 @@ btree_base<Key,Base,Traits,Comp>::m_branch_insert(btree_node_ptr np,
     np->size(np_sz - 1);  // -1 to account for end pseudo-element
 
     // promote the key from the new end pseudo element to the parent branch node
-    m_branch_insert(np->parent(), np->parent_element(), np2->branch().end()->key, np2);
+    m_branch_insert(np->parent(), np->parent_element(), np->branch().end()->key, np2);
 
     // Note: if the insert point will fall on the new node, it would be faster to
     // copy the portion before the insert point, copy the value being inserted, and
@@ -1406,9 +1412,7 @@ btree_base<Key,Base,Traits,Comp>::m_branch_insert(btree_node_ptr np,
     // on average.
 
     // copy the split elements, including the pseudo-end element, to np2
-    branch_value_type* split_begin = np->branch().begin() + np_sz;
-
-    std::memcpy(np2->branch().begin(), np2->branch().end() + 1,
+    std::memcpy(np2->branch().begin(), np->branch().end() + 1,
       np2_sz * sizeof(branch_value_type) + sizeof(node_id_type));  // include end pseudo element
     np2->size(np2_sz);  // exclude end pseudo element from size
 
@@ -1422,9 +1426,10 @@ btree_base<Key,Base,Traits,Comp>::m_branch_insert(btree_node_ptr np,
 # endif
 
     // adjust np and insert_begin if they now fall on the new node due to the split
-    if (!(element >= np->branch().begin() && element <= np->branch().begin()))
+    if (!(element >= np->branch().begin() && element <= np->branch().end()))
     {
-      element = np2->branch().begin() + (element - np->branch().end());
+      std::size_t element_offset =  element - np->branch().end() - 1;
+      element = np2->branch().begin() + element_offset;
       np = np2;
     }
   }  // split finished
@@ -1432,8 +1437,8 @@ btree_base<Key,Base,Traits,Comp>::m_branch_insert(btree_node_ptr np,
   BOOST_ASSERT(np->size() < m_max_branch_elements);
 
   //  insert k, id, into np at &element->key
-  BOOST_ASSERT(&element->key >= &np->branch().begin()->key);
-  BOOST_ASSERT(&element->key <= &np->branch().end()->key);
+  BOOST_ASSERT(element >= np->branch().begin());
+  BOOST_ASSERT(element <= np->branch().end());
   
   std::size_t move_sz = (np->branch().end() - element) * sizeof(branch_value_type);
   std::memmove(&(element+1)->key, &element->key, move_sz);  // make room
@@ -1448,6 +1453,8 @@ btree_base<Key,Base,Traits,Comp>::m_branch_insert(btree_node_ptr np,
 #ifndef NDEBUG
   if (m_hdr.flags() & btree::flags::unique)
   {
+    std::cout << "audit node " << np->node_id()
+              << ", size " << np->size() << std::endl;
     branch_value_type* cur = np->branch().begin();
     const key_type* prev_key;
     for(; cur != np->branch().end(); ++cur)
@@ -1457,6 +1464,7 @@ btree_base<Key,Base,Traits,Comp>::m_branch_insert(btree_node_ptr np,
         || key_comp()(*prev_key, cur->key));
       prev_key = &cur->key;
     }
+    std::cout << " audit done" << std::endl;
   }
 #endif
 }
