@@ -114,7 +114,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PostBuildEvent>
-      <Command>"$(TargetDir)\$(TargetName).exe" 35000 -l10000 -c0 -n128 -b</Command>
+      <Command>"$(TargetDir)\$(TargetName).exe" 35000 -l10000 -c0 -n128 -p -html</Command>
       <Message>Executing test $(TargetName).exe...</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
