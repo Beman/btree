@@ -1,4 +1,4 @@
-//  boost/btree/detail/common.hpp  ---------------------------------m_erase_branch_value--------------------//
+//  boost/btree/detail/common.hpp  -----------------------------------------------------//
 
 //  Copyright Beman Dawes 2000, 2006, 2010, 2013
 
@@ -370,15 +370,15 @@ public:
 
   // operations:
 
-  const_iterator     find(const key_type& k) const;
-  size_type          count(const key_type& k) const;
+  template <class K> const_iterator  find(const K& k) const;
 
-  const_iterator     lower_bound(const key_type& k) const;
-  template <class K> const_iterator lower_bound(const K& k) const;
+  template <class K> size_type       count(const K& k) const;
 
-  const_iterator     upper_bound(const key_type& k) const;
+  template <class K> const_iterator  lower_bound(const K& k) const;
 
-  const_iterator_range  equal_range(const key_type& k) const
+  template <class K> const_iterator  upper_bound(const K& k) const;
+
+  template <class K> const_iterator_range  equal_range(const K& k) const
                             { return std::make_pair(lower_bound(k), upper_bound(k)); }
 
 //------------------------------  inspect leaf-to-root  --------------------------------//
@@ -868,12 +868,14 @@ private:
     m_hdr.endian_flip_if_needed();
   }
 
-  iterator m_special_lower_bound(const key_type& k) const;
+  template <class K>
+  iterator m_special_lower_bound(const K& k) const;
   // returned iterator::m_element is the insertion point, and thus may be the 
   // past-the-end leaf iterator for iterator::m_node
   // postcondition: parent pointers are set, all the way up the chain to the root
 
-  iterator m_special_upper_bound(const key_type& k) const;
+  template <class K> 
+  iterator m_special_upper_bound(const K& k) const;
   // returned iterator::m_element is the insertion point, and thus may be the 
   // past-the-end leaf iterator for iterator::m_node
   // postcondition: parent pointers are set, all the way up the chain to the root
@@ -1690,9 +1692,10 @@ btree_base<Key,Base,Traits,Comp>::m_update(iterator itr)
 
 //----------------------------- m_special_lower_bound() --------------------------------//
 
-template <class Key, class Base, class Traits, class Comp>   
+template <class Key, class Base, class Traits, class Comp>
+template <class K>
 typename btree_base<Key,Base,Traits,Comp>::iterator
-btree_base<Key,Base,Traits,Comp>::m_special_lower_bound(const key_type& k) const
+btree_base<Key,Base,Traits,Comp>::m_special_lower_bound(const K& k) const
 //  m_special_lower_bound() differs from lower_bound() in that if the search key is not
 //  present and the first key greater than the search key is the first key on a leaf
 //  other than the first leaf, the returned iterator points to the end element of
@@ -1749,9 +1752,10 @@ btree_base<Key,Base,Traits,Comp>::m_special_lower_bound(const key_type& k) const
 
 //---------------------------------- lower_bound() -------------------------------------//
 
-template <class Key, class Base, class Traits, class Comp>   
+template <class Key, class Base, class Traits, class Comp>
+template <class K>
 typename btree_base<Key,Base,Traits,Comp>::const_iterator
-btree_base<Key,Base,Traits,Comp>::lower_bound(const key_type& k) const
+btree_base<Key,Base,Traits,Comp>::lower_bound(const K& k) const
 {
   BOOST_ASSERT_MSG(is_open(), "lower_bound() on unopen btree");
 
@@ -1773,9 +1777,10 @@ btree_base<Key,Base,Traits,Comp>::lower_bound(const key_type& k) const
 
 //------------------------------ m_special_upper_bound() -------------------------------//
 
-template <class Key, class Base, class Traits, class Comp>   
+template <class Key, class Base, class Traits, class Comp>
+template <class K> 
 typename btree_base<Key,Base,Traits,Comp>::iterator
-btree_base<Key,Base,Traits,Comp>::m_special_upper_bound(const key_type& k) const
+btree_base<Key,Base,Traits,Comp>::m_special_upper_bound(const K& k) const
 {
   btree_node_ptr np = m_root;
 
@@ -1805,9 +1810,10 @@ btree_base<Key,Base,Traits,Comp>::m_special_upper_bound(const key_type& k) const
 
 //---------------------------------- upper_bound() -------------------------------------//
 
-template <class Key, class Base, class Traits, class Comp>   
+template <class Key, class Base, class Traits, class Comp>
+template <class K> 
 typename btree_base<Key,Base,Traits,Comp>::const_iterator
-btree_base<Key,Base,Traits,Comp>::upper_bound(const key_type& k) const
+btree_base<Key,Base,Traits,Comp>::upper_bound(const K& k) const
 {
   BOOST_ASSERT_MSG(is_open(), "upper_bound() on unopen btree");
 
@@ -1823,9 +1829,10 @@ btree_base<Key,Base,Traits,Comp>::upper_bound(const key_type& k) const
 
 //------------------------------------- find() -----------------------------------------//
 
-template <class Key, class Base, class Traits, class Comp>   
+template <class Key, class Base, class Traits, class Comp>
+template <class K>
 typename btree_base<Key,Base,Traits,Comp>::const_iterator
-btree_base<Key,Base,Traits,Comp>::find(const key_type& k) const
+btree_base<Key,Base,Traits,Comp>::find(const K& k) const
 {
   BOOST_ASSERT_MSG(is_open(), "find() on unopen btree");
   const_iterator low = lower_bound(k);
@@ -1836,9 +1843,10 @@ btree_base<Key,Base,Traits,Comp>::find(const key_type& k) const
 
 //------------------------------------ count() -----------------------------------------//
 
-template <class Key, class Base, class Traits, class Comp>   
+template <class Key, class Base, class Traits, class Comp>
+template <class K> 
 typename btree_base<Key,Base,Traits,Comp>::size_type
-btree_base<Key,Base,Traits,Comp>::count(const key_type& k) const
+btree_base<Key,Base,Traits,Comp>::count(const K& k) const
 {
   BOOST_ASSERT_MSG(is_open(), "lower_bound() on unopen btree");
   size_type count = 0;

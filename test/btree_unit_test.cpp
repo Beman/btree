@@ -46,7 +46,7 @@ namespace
     int x;
     char unused[28];
 
-    fat(int x_) : x(x_) {}
+    explicit fat(int x_) : x(x_) {}
     fat() : x(-1) {}
     fat(const fat& f) : x(f.x) {}
     fat& operator=(const fat& f) {x = f.x; return *this; }
@@ -594,11 +594,12 @@ void insert_tests(BTree& bt)
   BOOST_TEST(bt.node_size() == 128);
   BOOST_TEST(bt.begin() == bt.end());
 
-  typename BTree::const_iterator empty_iterator, begin, end, cur;
+  typename BTree::const_iterator empty_iterator, begin, end, cur, cur2;
   begin = bt.begin();
   end = bt.end();
   BOOST_TEST(begin == end);
   BOOST_TEST(bt.find(fat(0)) == bt.end());
+  BOOST_TEST(bt.find(0) == bt.end());
 
   typename BTree::key_type key(0x0C);
   typename BTree::mapped_type mapped_value(0xCCCCCCCC);
@@ -613,6 +614,8 @@ void insert_tests(BTree& bt)
   BOOST_TEST(!bt.empty());
   BOOST_TEST(bt.begin() != bt.end());
   cur = bt.find(key);
+  cur2 = bt.find(key.x);
+  BOOST_TEST(cur == cur2);
   BOOST_TEST(cur != bt.end());
   BOOST_TEST(cur->first == key);
   BOOST_TEST(cur->second == mapped_value);
@@ -816,8 +819,8 @@ void insert_tests(BTree& bt)
   cout << "    erase every other element" << endl;
   for (int i = 1; i <= 21; i += 2 )
   {
-    BOOST_TEST_EQ(bt.erase(i), 1U);
-    BOOST_TEST_EQ(bt.erase(i), 0U);
+    BOOST_TEST_EQ(bt.erase(fat(i)), 1U);
+    BOOST_TEST_EQ(bt.erase(fat(i)), 0U);
   }
   BOOST_TEST_EQ(bt.size(), 10U);
 
@@ -827,8 +830,8 @@ void insert_tests(BTree& bt)
   for (int i = 1; i <= 31; ++i )  // many of these won't exist
   {
     //cout << "\n  erase " << i << endl;
-    typename BTree::size_type count_result = bt.count(i);
-    typename BTree::size_type erase_result = bt.erase(i);
+    typename BTree::size_type count_result = bt.count(fat(i));
+    typename BTree::size_type erase_result = bt.erase(fat(i));
     BOOST_TEST_EQ(count_result, erase_result);
     //cout << "     erase count " << ct << ", size() " << bt.size() << endl;
     //btree::dump_dot(std::cout, bt);
@@ -944,14 +947,17 @@ void find_and_bounds_tests(BTree& bt)
     //  (bt.lower_bound(i) == bt.end() ? 99999 : bt.key(*bt.lower_bound(i))) << std::endl;
 
 
-    BOOST_TEST((bt.lower_bound(i) != bt.end() && bt.key(*bt.lower_bound(i)) == lwr[i])
-      || (bt.lower_bound(i) == bt.end() && lwr[i] == -1));
+    BOOST_TEST((bt.lower_bound(i) != bt.end()
+      && bt.key(*bt.lower_bound(i)) ==  typename BTree::key_type(lwr[i]))
+        || (bt.lower_bound(i) == bt.end() && lwr[i] == -1));
 
-    BOOST_TEST((bt.upper_bound(i) != bt.end() && bt.key(*bt.upper_bound(i)) == upr[i])
-      || (bt.upper_bound(i) == bt.end() && upr[i] == -1));
+    BOOST_TEST((bt.upper_bound(i) != bt.end()
+      && bt.key(*bt.upper_bound(i)) == typename BTree::key_type(upr[i]))
+        || (bt.upper_bound(i) == bt.end() && upr[i] == -1));
 
-    BOOST_TEST((bt.find(i) != bt.end() && bt.key(*bt.find(i)) == fnd[i])
-      || (bt.find(i) == bt.end() && fnd[i] == -1));
+    BOOST_TEST((bt.find(i) != bt.end()
+      && bt.key(*bt.find(i)) == typename BTree::key_type(fnd[i]))
+        || (bt.find(i) == bt.end() && fnd[i] == -1));
 
     BOOST_TEST(bt.lower_bound(i) == bt.end()
       || bt.inspect_leaf_to_root(cout, bt.lower_bound(i)));
