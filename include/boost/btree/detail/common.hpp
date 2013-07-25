@@ -106,6 +106,8 @@
     (That may require redoing sequence of inserts in btree_unit_test section that says
     "add enough elements to force branch node splits"
 
+  * Should mapped() be provided for set? 
+
 */
 
 namespace boost
@@ -164,7 +166,7 @@ public:
   const Key&  key(const value_type& v) const  // really handy, so expose
     {return v.first;}
   const T&    mapped(const value_type& v) const
-    {return v.first;}
+    {return v.second;}
 
   class value_compare
   {

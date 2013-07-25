@@ -287,6 +287,8 @@ void  single_insert()
     BOOST_TEST(result.second);
     BOOST_TEST_EQ(result.first->first, 123);
     BOOST_TEST_EQ(result.first->second, 456);
+    BOOST_TEST_EQ(x.key(*result.first), 123);
+    BOOST_TEST_EQ(x.mapped(*result.first), 456);
   }
  
   cout << "    single_insert complete" << endl;
@@ -391,6 +393,7 @@ void small_variable_set()
   BOOST_TEST_EQ(bt.size(), 1U);
   BOOST_TEST(result.second);
   BOOST_TEST(std::strcmp(result.first->c_str(), "now") == 0 );
+  BOOST_TEST(std::strcmp(bt.key(*result.first).c_str(), "now") == 0 );
   stuff = "is";
   bt.insert(stuff);
   stuff = "the";
