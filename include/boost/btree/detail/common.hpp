@@ -372,6 +372,8 @@ public:
   size_type          count(const key_type& k) const;
 
   const_iterator     lower_bound(const key_type& k) const;
+  template <class K> const_iterator lower_bound(const K& k) const;
+
   const_iterator     upper_bound(const key_type& k) const;
 
   const_iterator_range  equal_range(const key_type& k) const
