@@ -167,6 +167,8 @@ void  iterator_test()
   index_type::iterator itr = idx.begin();
   index_type::iterator end = idx.end();
 
+  //*end;
+
   BOOST_TEST(itr != end);
   stuff s = *itr;
   BOOST_TEST_EQ(s.x, 1);
@@ -232,16 +234,88 @@ void  find_test()
 {
   cout << "  find_test..." << endl;
 
+  typedef btree::btree_index<stuff> index_type;
+  index_type idx(file_path, 0, idx1_path);
+
+  index_type::iterator itr1 = idx.begin();
+  index_type::iterator itr2 = idx.begin(); ++itr2;
+  index_type::iterator itr3 = idx.begin(); ++itr3; ++itr3;
+
+  stuff s00 (0,0);
+  stuff s13 (1,3);
+  stuff s22 (2,2);
+  stuff s31 (3,1);
+  stuff s12 (1,2);
+  stuff s14 (1,4);
+  stuff s32 (3,2);
+
+  BOOST_TEST(idx.find(s00) == idx.end());
+  BOOST_TEST(idx.find(s13) == itr1);
+  BOOST_TEST(idx.find(s22) == itr2);
+  BOOST_TEST(idx.find(s31) == itr3);
+  BOOST_TEST(idx.find(s12) == idx.end());
+  BOOST_TEST(idx.find(s14) == idx.end());
+  BOOST_TEST(idx.find(s32) == idx.end());
+
   cout << "     find_test complete" << endl;
 }
 
-//-----------------------------------  insert_test  ------------------------------------//
+//---------------------------------  insert_test  --------------------------------------//
 
 //  dependencies have been tested, so test insert() now
 
 void  insert_test()
 {
   cout << "  insert_test..." << endl;
+
+  typedef btree::btree_index<stuff> index_type;
+  index_type idx(file_path, 0, idx1_path, btree::flags::read_write);
+
+  stuff s00 (0,0);
+  stuff s13 (1,3);
+  stuff s22 (2,2);
+  stuff s31 (3,1);
+  stuff s12 (1,2);
+  stuff s14 (1,4);
+  stuff s32 (3,2);
+
+  index_type::insert_result_pair result;
+
+  result = idx.insert(s00);
+  BOOST_TEST(result.second);
+  BOOST_TEST_EQ(*result.first, s00);
+  result = idx.insert(s13);
+  BOOST_TEST(!result.second);
+  result = idx.insert(s22);
+  BOOST_TEST(!result.second);
+  result = idx.insert(s31);
+  BOOST_TEST(!result.second);
+  result = idx.insert(s12);
+  BOOST_TEST(result.second);
+  BOOST_TEST_EQ(*result.first, s12);
+  result = idx.insert(s14);
+  BOOST_TEST(result.second);
+  BOOST_TEST_EQ(*result.first, s14);
+  result = idx.insert(s32);
+  BOOST_TEST(result.second);
+  BOOST_TEST_EQ(*result.first, s32);
+
+  BOOST_TEST(idx.index_size() == 7);
+
+  BOOST_TEST(idx.find(s00) != idx.end());
+  BOOST_TEST_EQ(*idx.find(s00), s00);
+  BOOST_TEST(idx.find(s13) != idx.end());
+  BOOST_TEST_EQ(*idx.find(s13), s13);
+  BOOST_TEST(idx.find(s22) != idx.end());
+  BOOST_TEST_EQ(*idx.find(s22), s22);
+  BOOST_TEST(idx.find(s31) != idx.end());
+  BOOST_TEST_EQ(*idx.find(s31), s31);
+  BOOST_TEST(idx.find(s12) != idx.end());
+  BOOST_TEST_EQ(*idx.find(s12), s12);
+  BOOST_TEST(idx.find(s14) != idx.end());
+  BOOST_TEST_EQ(*idx.find(s14), s14);
+  BOOST_TEST(idx.find(s32) != idx.end());
+  BOOST_TEST_EQ(*idx.find(s32), s32);
 
   cout << "     insert_test complete" << endl;
 }

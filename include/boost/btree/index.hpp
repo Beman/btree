@@ -100,6 +100,10 @@ public:
   typedef boost::shared_ptr<file_type>           file_ptr_type;
   typedef file_type::size_type                   file_size_type;
 
+  typedef index_size_type                        size_type;
+
+  typedef std::pair<const_iterator, bool>        insert_result_pair;
+
   btree_index() {}
 
   btree_index(const path_type& file_pth,
@@ -164,6 +168,7 @@ public:
   bool              is_open() const       {BOOST_ASSERT(!m_set.is_open()
                                              || m_file->is_open());
                                            return m_set.is_open();}
+  bool              read_only() const     {return m_set.read_only();}
   bool              index_empty() const   {return m_set.empty();}
   path_type         index_path() const    {return m_set.path();}
   index_size_type   index_size() const    {return m_set.size();}
@@ -183,48 +188,46 @@ public:
     return file()->push_back(value);
   }
 
-  std::pair<const_iterator, bool>
-    insert_position(btree::position_type pos)
+  insert_result_pair   insert_position(btree::position_type pos)
   {
+    BOOST_ASSERT(!read_only());
     std::pair<index_type::const_iterator, bool>
       result(m_set.insert(index_position_type(pos)));
     return std::pair<const_iterator, bool>(
       const_iterator(result.first, file()), result.second);
   }
 
-  std::pair<const_iterator, bool>
-    insert(const value_type& value)
+  insert_result_pair   insert(const value_type& value)
   //  Effects: if !find(k) then insert_position(push_back(value));
   {
+    BOOST_ASSERT(!read_only());
     if (find(value) == end())
     {
-      std::pair<index_type::const_iterator, bool> result;
-      result = insert_position(push_back(value));
+      insert_result_pair result(insert_position(push_back(value)));
       BOOST_ASSERT(result.second);
-      return std::pair<const_iterator, bool>(
-        const_iterator(result.first, file()), true);
+      return result;
     }
     return std::pair<const_iterator, bool>(const_iterator(), false);
   }
 
   // operations
 
-  btree::position_type  position(iterator itr) const;
+  btree::position_type
+                  position(iterator itr) const;
 
-  //const_iterator        find(const key_type& k) const;
-  //size_type             count(const key_type& k) const;
+  const_iterator  find(const key_type& k) const 
+                                           {return const_iterator(m_set.find(k), m_file);}
+ 
+  size_type       count(const key_type& k) const  {return m_set.count(k);}
 
-  const_iterator        lower_bound(const key_type& k) const
-  {
-    index_type::const_iterator low_it = m_set.lower_bound(k);
-    return const_iterator(low_it, m_file);
-  }
+  const_iterator  lower_bound(const key_type& k) const
+                                    {return const_iterator(m_set.lower_bound(k), m_file);}
 
-
-  //const_iterator        upper_bound(const key_type& k) const;
-
-  //const_iterator_range  equal_range(const key_type& k) const
-  //                        { return std::make_pair(lower_bound(k), upper_bound(k)); }
+  const_iterator  upper_bound(const key_type& k) const
+                                    {return const_iterator(m_set.upper_bound(k), m_file);}
+  const_iterator_range
+                  equal_range(const key_type& k) const
+                                  {return std::make_pair(lower_bound(k), upper_bound(k));}
 
 private:
   index_type      m_set;
@@ -252,10 +255,11 @@ private:
     friend class boost::iterator_core_access;
 
     index_iterator_type   m_index_iterator;
-    file_type*            m_file;
+    file_type*            m_file;  // 0 for end iterator
 
     T& dereference() const
     { 
+      BOOST_ASSERT_MSG(m_file, "btree index attempt to dereference end iterator");
       return *(reinterpret_cast<T*>(m_file->const_data<char>() + *m_index_iterator));
     }
  
