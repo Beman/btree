@@ -99,14 +99,17 @@
 
   * Bulk load: If file_size(source) <= max_memory: just load, sort, and insert:-)
 
-  * Something is whacky: there are three data members m_comp, m_value_comp, and
-    m_branch_comp, but they are all initiallized to the same value! Makes no sense.
-
   * If an erase causes the tree size to become 0, pack optimization should be reenabled.
     (That may require redoing sequence of inserts in btree_unit_test section that says
     "add enough elements to force branch node splits"
 
-  * Should mapped() be provided for set? 
+  * mapped() is provided for set. Is that desirable?
+
+  * N3657 identifies cases where support for heterogeneous comparisons can cause problems
+    with overagressive templates. Figure out some tests to see if this is a problem with
+    btree::, value_compare, or branch_compare, and add enable_if's per N3657 if needed.
+
+  * Should size_type erase(const key_type& k); be template <class K> ?
 
 */
 
@@ -371,6 +374,7 @@ public:
   value_compare      value_comp() const     { return m_value_comp; }
 
   // operations:
+  //   it is required that objects of types K and Key be key_comp() comparable
 
   template <class K> const_iterator  find(const K& k) const;
 
@@ -380,8 +384,11 @@ public:
 
   template <class K> const_iterator  upper_bound(const K& k) const;
 
-  template <class K> const_iterator_range  equal_range(const K& k) const
-                            { return std::make_pair(lower_bound(k), upper_bound(k)); }
+  template <class K>
+    const_iterator_range             equal_range(const K& k) const
+  {
+    return std::make_pair(lower_bound(k), upper_bound(k));
+  }
 
 //------------------------------  inspect leaf-to-root  --------------------------------//
 

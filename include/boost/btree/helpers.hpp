@@ -16,6 +16,7 @@
 #include <boost/cstdint.hpp>
 #include <boost/detail/bitmask.hpp>
 #include <boost/endian/types.hpp>
+#include <utility>   // for forward
 
 namespace boost
 {
@@ -115,19 +116,19 @@ namespace flags
 //                                 less function object                                 //
 //--------------------------------------------------------------------------------------//
 
-//  TODO: document rationale for not using std::less; is it just to allow easy debugging?
+//  Needed to support heterogeneous comparisons. See N3657, N3421.
 
-template <class T> struct less
+//  Note: Allowing less::operator() to accept arguments of two different types does not
+//  eliminate that objects of the two types be themselves < comparable. For example,
+//  type fat in test/btree_unit_test.cpp does require the two non-member operator<
+//  functions to allow a fat object to be < compared to an int.
+
+struct less
 {
-  typedef T first_argument_type;
-  typedef T second_argument_type;
-  typedef bool result_type;
-  bool operator()(const T& x, const T& y) const
-  {
-//    std::cout << "*** " << x << " < " << y << " is " << (x < y) << std::endl;
-    return x < y;
-  }
+  template <class T, class U> bool operator()(const T& t, const U& u) const
+    {return t < u;}
 };
+
 
 //--------------------------------------------------------------------------------------//
 

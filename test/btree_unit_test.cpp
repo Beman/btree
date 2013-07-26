@@ -57,6 +57,14 @@ namespace
     bool operator!=(const fat& rhs) const {return x != rhs.x;}
   };
 
+  bool operator<(const fat& lhs, const int& rhs) {return lhs.x < rhs;}
+  bool operator<(const int& lhs, const fat& rhs) {return lhs < rhs.x;}
+
+  bool operator==(const fat& lhs, int rhs) {return lhs.x == rhs;}
+  bool operator==(int lhs, const fat& rhs) {return lhs == rhs.x;}
+  bool operator!=(const fat& lhs, int rhs) {return lhs.x != rhs;}
+  bool operator!=(int lhs, const fat& rhs) {return lhs != rhs.x;}
+
   std::ostream& operator<<(std::ostream& os, const fat& f)
   {
     os << f.x;
@@ -943,21 +951,14 @@ void find_and_bounds_tests(BTree& bt)
 
   for (int i = 0; i <= 18; ++i)
   {
-    //std::cout << "lower_bound " << i << " is " <<
-    //  (bt.lower_bound(i) == bt.end() ? 99999 : bt.key(*bt.lower_bound(i))) << std::endl;
+    BOOST_TEST((bt.lower_bound(i) != bt.end() && bt.key(*bt.lower_bound(i)) == lwr[i])
+      || (bt.lower_bound(i) == bt.end() && lwr[i] == -1));
 
+    BOOST_TEST((bt.upper_bound(i) != bt.end() && bt.key(*bt.upper_bound(i)) == upr[i])
+      || (bt.upper_bound(i) == bt.end() && upr[i] == -1));
 
-    BOOST_TEST((bt.lower_bound(i) != bt.end()
-      && bt.key(*bt.lower_bound(i)) ==  typename BTree::key_type(lwr[i]))
-        || (bt.lower_bound(i) == bt.end() && lwr[i] == -1));
-
-    BOOST_TEST((bt.upper_bound(i) != bt.end()
-      && bt.key(*bt.upper_bound(i)) == typename BTree::key_type(upr[i]))
-        || (bt.upper_bound(i) == bt.end() && upr[i] == -1));
-
-    BOOST_TEST((bt.find(i) != bt.end()
-      && bt.key(*bt.find(i)) == typename BTree::key_type(fnd[i]))
-        || (bt.find(i) == bt.end() && fnd[i] == -1));
+    BOOST_TEST((bt.find(i) != bt.end() && bt.key(*bt.find(i)) == fnd[i])
+      || (bt.find(i) == bt.end() && fnd[i] == -1));
 
     BOOST_TEST(bt.lower_bound(i) == bt.end()
       || bt.inspect_leaf_to_root(cout, bt.lower_bound(i)));
