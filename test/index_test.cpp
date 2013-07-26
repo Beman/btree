@@ -203,7 +203,7 @@ void  lower_bound_test()
 
   index_type::iterator itr1 = idx.begin();
   index_type::iterator itr2 = idx.begin(); ++itr2;
-  index_type::iterator itr3 = idx.begin(); ++itr2; ++itr3;
+  index_type::iterator itr3 = idx.begin(); ++itr3; ++itr3;
 
   stuff s00 (0,0);
   stuff s13 (1,3);

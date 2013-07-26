@@ -71,7 +71,7 @@ namespace btree
 
 template <class T,          // shall be trivially copyable type; see std 3.9 [basic.types]
           class Traits = default_index_traits,
-          class Comp = btree::less<T> >
+          class Comp = btree::less>
 class btree_index
 {
   template <class VT>
@@ -211,14 +211,20 @@ public:
 
   btree::position_type  position(iterator itr) const;
 
-  const_iterator        find(const key_type& k) const;
-  size_type             count(const key_type& k) const;
+  //const_iterator        find(const key_type& k) const;
+  //size_type             count(const key_type& k) const;
 
-  const_iterator        lower_bound(const key_type& k) const;
-  const_iterator        upper_bound(const key_type& k) const;
+  const_iterator        lower_bound(const key_type& k) const
+  {
+    index_type::const_iterator low_it = m_set.lower_bound(k);
+    return const_iterator(low_it, m_file);
+  }
 
-  const_iterator_range  equal_range(const key_type& k) const
-                          { return std::make_pair(lower_bound(k), upper_bound(k)); }
+
+  //const_iterator        upper_bound(const key_type& k) const;
+
+  //const_iterator_range  equal_range(const key_type& k) const
+  //                        { return std::make_pair(lower_bound(k), upper_bound(k)); }
 
 private:
   index_type      m_set;
@@ -292,7 +298,7 @@ namespace detail
     }
     bool operator()(Pos lhs, const Key& rhs) const
     {
-      return m_comp(*reinterpret_cast<const Key*>(m_file->const_data<char>()+lhs, rhs));
+      return m_comp(*reinterpret_cast<const Key*>(m_file->const_data<char>()+lhs), rhs);
     }
     bool operator()(Pos lhs, Pos rhs) const
     {
