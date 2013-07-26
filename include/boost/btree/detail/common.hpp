@@ -175,9 +175,11 @@ public:
     value_compare(Comp comp) : m_comp(comp) {}
     bool operator()(const value_type& x, const value_type& y) const
       { return m_comp(x.first, y.first); }
-    bool operator()(const value_type& x, const Key& y) const
+    template <class K>
+    bool operator()(const value_type& x, const K& y) const
       { return m_comp(x.first, y); }
-    bool operator()(const Key& x, const value_type& y) const
+    template <class K>
+    bool operator()(const K& x, const value_type& y) const
       { return m_comp(x, y.first); }
   private:
     Comp    m_comp;
@@ -545,8 +547,8 @@ private:
     branch_value_type() {}
     branch_value_type(Key& k, node_id_type id) : node_id(id), key(k) {}
 
-    node_id_type  node_id;   // branch insert/erase depend on this data member
-    Key           key;       //  ordering
+    node_id_type  node_id;   // branch insert/erase depend on this
+    Key           key;       //  data member ordering
   };
 
   class branch_data : public btree_data
@@ -917,10 +919,12 @@ private:
     branch_compare(Comp comp) : m_comp(comp) {}
   public:
    bool operator()(const branch_value_type& x, const branch_value_type& y) const
-      {return m_comp(x.key(), y.key);}
-   bool operator()(const Key& x, const branch_value_type& y) const
+      {return m_comp(x.key, y.key);}
+   template <class K>
+   bool operator()(const K& x, const branch_value_type& y) const
       {return m_comp(x, y.key);}
-   bool operator()(const branch_value_type& x, const Key& y) const
+   template <class K>
+   bool operator()(const branch_value_type& x, const K& y) const
       {return m_comp(x.key, y);}
   };
 
@@ -1027,9 +1031,13 @@ btree_base<Key,Base,Traits,Comp>::m_open(const boost::filesystem::path& p,
   BOOST_ASSERT(!is_open());
   BOOST_ASSERT(node_sz >= sizeof(btree::header_page));
 
-  m_comp = comp;
-  m_value_comp = comp;
-  m_branch_comp = comp;
+  m_comp = comp;         // type key_compare, which is a typedef of Comp
+
+  m_value_comp = comp;   // type value_compare, which is a typedef of Comp for sets, and 
+                         // its own type for maps and has a constructor from type Comp
+
+  m_branch_comp = comp;  // type branch_compare, which is its own type and has a
+                         // constructor from Comp
 
   oflag::bitmask open_flags = oflag::in;
   if (flgs & flags::read_write)
