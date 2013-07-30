@@ -799,7 +799,7 @@ private:
 
   private:
     typename btree_base::btree_node_ptr  m_node; 
-    typename T*                          m_element;  // 0 for end iterator
+    T*                                   m_element;  // 0 for end iterator
 
   public:
     typedef typename btree_base::btree_node_ptr::use_count_type use_count_type;

@@ -36,7 +36,16 @@ namespace boost
       : public btree_base<Key, btree_map_base<Key,T,Traits> >
     {
     public:
-
+      typedef
+        typename btree_base<Key, btree_map_base<Key,T,Traits> >::value_type
+          value_type;
+      typedef
+        typename btree_base<Key, btree_map_base<Key,T,Traits> >::const_iterator
+          const_iterator;
+      typedef
+        typename btree_base<Key, btree_map_base<Key,T,Traits> >::iterator
+          iterator;
+  
       BOOST_STATIC_ASSERT_MSG( !boost::is_pointer<Key>::value,
         "Key must not be a pointer type");
       BOOST_STATIC_ASSERT_MSG( !boost::is_pointer<T>::value,
@@ -82,9 +91,7 @@ namespace boost
       }
 
       //  emplace(const Key&, const T&) special case not requiring c++0x support
-      std::pair<typename
-        btree_base<Key,btree_map_base<Key,T,Traits> >::const_iterator, bool>
-      emplace(const Key& key, const T& mapped_value)
+      std::pair<const_iterator, bool> emplace(const Key& key, const T& mapped_value)
       {
         std::pair<const_iterator, bool> result(
           btree_base<Key,btree_map_base<Key,T,Traits> >::m_insert_unique(
@@ -95,9 +102,7 @@ namespace boost
         return result;
       }
 
-      std::pair<typename 
-        btree_base<Key,btree_map_base<Key,T,Traits> >::const_iterator, bool>
-      insert(const value_type& value)
+      std::pair<const_iterator, bool> insert(const value_type& value)
       {
         std::pair<const_iterator, bool> result(
           btree_base<Key,btree_map_base<Key,T,Traits> >::m_insert_unique(
@@ -121,10 +126,7 @@ namespace boost
         }
       }
 
-      typename btree_base<Key,btree_map_base<Key,T,Traits> >::iterator
-      update(typename
-        btree_base<Key,btree_map_base<Key,T,Traits> >::iterator itr,
-          const T& mapped_value)
+      iterator update(iterator itr, const T& mapped_value)
       {
         std::memcpy(const_cast<T*>(&itr->second), &mapped_value, sizeof(T));
         return btree_base<Key,btree_map_base<Key,T,Traits> >::m_update(itr);
@@ -143,6 +145,15 @@ namespace boost
       : public btree_base<Key, btree_map_base<Key,T,Traits> >
     {
     public:
+      typedef
+        typename btree_base<Key, btree_map_base<Key,T,Traits> >::value_type
+          value_type;
+      typedef
+        typename btree_base<Key, btree_map_base<Key,T,Traits> >::const_iterator
+          const_iterator;
+      typedef
+        typename btree_base<Key, btree_map_base<Key,T,Traits> >::iterator
+          iterator;
 
       BOOST_STATIC_ASSERT_MSG( !boost::is_pointer<Key>::value,
         "Key must not be a pointer type");
@@ -189,8 +200,7 @@ namespace boost
       }
 
       //  emplace(const Key&, const T&) special case not requiring c++0x support
-      typename btree_base<Key,btree_map_base<Key,T,Traits> >::const_iterator
-      emplace(const Key& key, const T& mapped_value)
+      const_iterator emplace(const Key& key, const T& mapped_value)
       {
         const_iterator result(
           btree_base<Key,btree_map_base<Key,T,Traits> >::m_insert_non_unique(
@@ -199,8 +209,7 @@ namespace boost
         return result;          
       }
 
-      typename btree_base<Key,btree_map_base<Key,T,Traits> >::const_iterator
-      insert(const value_type& value)
+      const_iterator insert(const value_type& value)
       {
         const_iterator result(
           btree_base<Key,btree_map_base<Key,T,Traits> >::m_insert_non_unique(
@@ -221,10 +230,7 @@ namespace boost
         }
       }
 
-      typename btree_base<Key,btree_map_base<Key,T,Traits> >::iterator
-      update(typename
-        btree_base<Key,btree_map_base<Key,T,Traits> >::iterator itr,
-          const T& mapped_value)
+      iterator update(iterator itr, const T& mapped_value)
       {
         std::memcpy(const_cast<T*>(&itr->second), &mapped_value, sizeof(T));
         return btree_base<Key,btree_map_base<Key,T,Traits> >::m_update(itr);

@@ -51,7 +51,7 @@ namespace btree
     explicit btree_traits(const Comp& comp = Comp()) : m_comp(comp) {}
 
     BOOST_SCOPED_ENUM(endian::order) header_endianness() const
-      {return typename NodeTraits::header_endianness;}
+      {return NodeTraits::hdr_endianness;}
 
     compare_type compare() const {return m_comp;}
   private:
@@ -86,7 +86,7 @@ struct big_endian_traits
   typedef endian::big_uint32un_t  node_id_type;     // node ids are page numbers
   typedef uint8_t                 node_level_type;  // level of node; 0 for leaf node.
   typedef endian::big_uint24un_t  node_size_type;   // permits large node sizes
-  static const BOOST_SCOPED_ENUM(endian::order) header_endianness
+  static const BOOST_SCOPED_ENUM(endian::order) hdr_endianness
     = endian::order::big;
 };
 
@@ -95,7 +95,7 @@ struct little_endian_traits
   typedef endian::little_uint32un_t  node_id_type;     // node ids are page numbers
   typedef uint8_t                    node_level_type;  // level of node; 0 for leaf node.
   typedef endian::little_uint24un_t  node_size_type;   // permits large node sizes
-  static const BOOST_SCOPED_ENUM(endian::order) header_endianness
+  static const BOOST_SCOPED_ENUM(endian::order) hdr_endianness
     = endian::order::little;
 };
   
@@ -104,7 +104,7 @@ struct native_endian_traits
   typedef endian::native_uint32un_t  node_id_type;     // node ids are page numbers
   typedef uint8_t                    node_level_type;  // level of node; 0 for leaf node.
   typedef endian::native_uint24un_t  node_size_type;   // permits large node sizes
-  static const BOOST_SCOPED_ENUM(endian::order) header_endianness
+  static const BOOST_SCOPED_ENUM(endian::order) hdr_endianness
 #   ifdef BOOST_BIG_ENDIAN
     = endian::order::big;
 #   else
