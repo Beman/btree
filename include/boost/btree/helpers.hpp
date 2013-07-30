@@ -119,9 +119,10 @@ namespace flags
 //  Needed to support heterogeneous comparisons. See N3657, N3421.
 
 //  Note: Allowing less::operator() to accept arguments of two different types does not
-//  eliminate that objects of the two types be themselves < comparable. For example,
-//  type fat in test/btree_unit_test.cpp does require the two non-member operator<
-//  functions to allow a fat object to be < compared to an int.
+//  eliminate the requirement that objects of the two types be themselves < comparable.
+//  For example, type fat in test/btree_unit_test.cpp supplies, as required, two
+//  non-member operator< functions so that a fat object to be < compared to an int and
+//  an int can be compared to a fat object.
 
 struct less
 {
