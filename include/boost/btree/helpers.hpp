@@ -27,6 +27,42 @@ namespace btree
 //                                                                                      //
 //                                     Traits                                           //
 //                                                                                      //
+//  Btrees benefit from having more customization points than simply the Comp function  //
+//  provided by STL associative containers.                                             //
+//                                                                                      //
+//--------------------------------------------------------------------------------------//
+
+  struct big_endian_traits;
+  struct little_endian_traits;
+  struct native_endian_traits;
+  typedef big_endian_traits  default_node_traits;  // see rationale below
+  struct less;  // hetrogeneous compare
+
+  template <class NodeTraits = default_node_traits, class Comp = btree::less>
+  class btree_traits
+    : public NodeTraits, public Comp
+  {
+  public:
+    typedef typename NodeTraits::node_id_type     node_id_type;
+    typedef typename NodeTraits::node_size_type   node_size_type;
+    typedef typename NodeTraits::node_level_type  node_level_type;
+    typedef Comp                                  compare_type;
+
+    explicit btree_traits(const Comp& comp = Comp()) : m_comp(comp) {}
+
+    BOOST_SCOPED_ENUM(endian::order) header_endianness() const
+      {return typename NodeTraits::header_endianness;}
+
+    compare_type compare() const {return m_comp;}
+  private:
+    compare_type m_comp;
+  };
+
+
+//--------------------------------------------------------------------------------------//
+//                                                                                      //
+//                                   Node Traits                                        //
+//                                                                                      //
 //  Traits provide the types for management objects on btree disk nodes. Nodes are      //
 //  typically 4096 bytes in length, and every byte wasted in overhead causes a          //
 //  measurable reduction in speed if the tree adds levels. That may favor unaligned     //
@@ -75,8 +111,6 @@ struct native_endian_traits
     = endian::order::little;
 #   endif
 };
-
-typedef big_endian_traits  default_traits;  // see rationale above
 
 //--------------------------------------------------------------------------------------//
 //                                       flags                                          //

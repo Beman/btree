@@ -29,28 +29,27 @@ namespace boost
 //--------------------------------------------------------------------------------------//
 
     template <class Key,    // shall be trivially copyable type; see std 3.9 [basic.types]
-              class Traits = default_traits,
-              class Comp = btree::less >
+              class Traits = btree_traits<btree::default_node_traits, btree::less> >
     class btree_set
-      : public btree_base<Key, btree_set_base<Key,Comp>, Traits, Comp>
+      : public btree_base<Key, btree_set_base<Key,Traits> >
     {
     public:
 
       BOOST_STATIC_ASSERT_MSG( !boost::is_pointer<Key>::value,
         "Key must not be a pointer type");
 
-      // <Key,Comp> is required by GCC but not by VC++
+      // <Key,Traits> is required by GCC but not by VC++
       explicit btree_set()
-        : btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>() {}
+        : btree_base<Key,btree_set_base<Key,Traits> >() {}
 
       explicit btree_set(const boost::filesystem::path& p,
         flags::bitmask flgs = flags::read_only,
         uint64_t sig = -1,  // for existing files, must match signature from creation
         std::size_t node_sz = default_node_size,  // ignored if existing file
-        const Comp& comp = Comp())
-        : btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>(p,
+        const Traits& traits = Traits())
+        : btree_base<Key,btree_set_base<Key,Traits> >(p,
             flags::open_flags(flgs) | flags::key_only | flags::unique,
-            sig, node_sz, comp) {}
+            sig, node_sz, traits) {}
 
       template <class InputIterator>
       btree_set(InputIterator begin, InputIterator end,
@@ -58,14 +57,14 @@ namespace boost
         flags::bitmask flgs = flags::read_only,
         uint64_t sig = -1,  // for existing files, must match signature from creation
         std::size_t node_sz = default_node_size,  // ignored if existing file
-        const Comp& comp = Comp())
-      : btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>(p,
+        const Traits& traits = Traits())
+      : btree_base<Key,btree_set_base<Key,Traits> >(p,
           flags::open_flags(flgs) | flags::key_only | flags::unique,
-          sig, node_sz, comp)
+          sig, node_sz, traits)
       {
         for (; begin != end; ++begin)
         {
-          btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::m_insert_unique(
+          btree_base<Key,btree_set_base<Key,Traits> >::m_insert_unique(
             *begin, *begin);
         }
       }
@@ -74,29 +73,29 @@ namespace boost
         flags::bitmask flgs = flags::read_only,
         uint64_t sig = -1,  // for existing files, must match signature from creation
         std::size_t node_sz = default_node_size, // node_sz ignored if existing file
-        const Comp& comp = Comp())
+        const Traits& traits = Traits())
       {
-        btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::m_open(p,
+        btree_base<Key,btree_set_base<Key,Traits> >::m_open(p,
           flags::open_flags(flgs) | flags::key_only | flags::unique, sig,
-          node_sz, comp);
+          node_sz, traits);
       }
 
       //  emplace() special case not requiring c++0x support
       std::pair<typename
-        btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::const_iterator, bool>
+        btree_base<Key,btree_set_base<Key,Traits> >::const_iterator, bool>
       emplace(const typename
-        btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::value_type& value)
+        btree_base<Key,btree_set_base<Key,Traits> >::value_type& value)
       {
-        return btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::m_insert_unique(
+        return btree_base<Key,btree_set_base<Key,Traits> >::m_insert_unique(
           value);
       }
 
       std::pair<typename
-        btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::const_iterator, bool>
+        btree_base<Key,btree_set_base<Key,Traits> >::const_iterator, bool>
       insert(const typename
-        btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::value_type& value)
+        btree_base<Key,btree_set_base<Key,Traits> >::value_type& value)
       {
-        return btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::m_insert_unique(
+        return btree_base<Key,btree_set_base<Key,Traits> >::m_insert_unique(
           value);
       }
 
@@ -105,7 +104,7 @@ namespace boost
       {
         for (; begin != end; ++begin)
         {
-          btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::m_insert_unique(
+          btree_base<Key,btree_set_base<Key,Traits> >::m_insert_unique(
             *begin);
         }
       }
@@ -116,27 +115,26 @@ namespace boost
 //--------------------------------------------------------------------------------------//
 
     template <class Key,    // shall be trivially copyable type; see std 3.9 [basic.types]
-              class Traits = default_traits,
-              class Comp = btree::less >              
+              class Traits = btree_traits<btree::default_node_traits, btree::less> >              
     class btree_multiset
-      : public btree_base<Key, btree_set_base<Key,Comp>, Traits, Comp>
+      : public btree_base<Key, btree_set_base<Key,Traits> >
     {
     public:
 
       BOOST_STATIC_ASSERT_MSG( !boost::is_pointer<Key>::value,
         "Key must not be a pointer type");
 
-      // <Key,Comp> is required by GCC but not by VC++
+      // <Key,Traits> is required by GCC but not by VC++
       explicit btree_multiset()
-        : btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>() {}
+        : btree_base<Key,btree_set_base<Key,Traits> >() {}
 
       explicit btree_multiset(const boost::filesystem::path& p,
         flags::bitmask flgs = flags::read_only,
         uint64_t sig = -1,  // for existing files, must match signature from creation
         std::size_t node_sz = default_node_size,  // ignored if existing file
-        const Comp& comp = Comp())
-        : btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>(p,
-            flags::open_flags(flgs) | flags::key_only, sig, node_sz, comp) {}
+        const Traits& traits = Traits())
+        : btree_base<Key,btree_set_base<Key,Traits> >(p,
+            flags::open_flags(flgs) | flags::key_only, sig, node_sz, traits) {}
 
       template <class InputIterator>
       btree_multiset(InputIterator begin, InputIterator end,
@@ -144,13 +142,13 @@ namespace boost
         flags::bitmask flgs = flags::read_only,
         uint64_t sig = -1,  // for existing files, must match signature from creation
         std::size_t node_sz = default_node_size,  // ignored if existing file
-        const Comp& comp = Comp())
-      : btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>(p,
-          flags::open_flags(flgs) | flags::key_only, sig, node_sz, comp)
+        const Traits& traits = Traits())
+      : btree_base<Key,btree_set_base<Key,Traits> >(p,
+          flags::open_flags(flgs) | flags::key_only, sig, node_sz, traits)
       {
         for (; begin != end; ++begin)
         {
-          btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::m_insert_non_unique(
+          btree_base<Key,btree_set_base<Key,Traits> >::m_insert_non_unique(
             *begin, *begin);
         }
       }
@@ -160,27 +158,27 @@ namespace boost
         uint64_t sig = -1,  // for existing files, must match signature from creation
         std::size_t node_sz = default_node_size) // node_sz ignored if existing file
       {
-         btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::m_open(p,
+         btree_base<Key,btree_set_base<Key,Traits> >::m_open(p,
           flags::open_flags(flgs) | flags::key_only, sig, node_sz);
       }
 
       //  emplace(const Key&) special case not requiring c++0x support
       std::pair<typename
-        btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::const_iterator, bool>
+        btree_base<Key,btree_set_base<Key,Traits> >::const_iterator, bool>
       emplace(const typename
-        btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::value_type& value)
+        btree_base<Key,btree_set_base<Key,Traits> >::value_type& value)
       {
         return
-          btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::m_insert_non_unique(
+          btree_base<Key,btree_set_base<Key,Traits> >::m_insert_non_unique(
             value);
       }
 
-      typename btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::const_iterator
+      typename btree_base<Key,btree_set_base<Key,Traits> >::const_iterator
       insert(const typename
-        btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::value_type& value)
+        btree_base<Key,btree_set_base<Key,Traits> >::value_type& value)
       {
         return 
-          btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::m_insert_non_unique(
+          btree_base<Key,btree_set_base<Key,Traits> >::m_insert_non_unique(
             value);
       }
 
@@ -189,7 +187,7 @@ namespace boost
       {
         for (; begin != end; ++begin) 
         {
-          btree_base<Key,btree_set_base<Key,Comp>,Traits,Comp>::m_insert_non_unique(
+          btree_base<Key,btree_set_base<Key,Traits> >::m_insert_non_unique(
             *begin);
         }
       }

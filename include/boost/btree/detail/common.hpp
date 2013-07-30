@@ -141,13 +141,18 @@ void append(const Btree& from, const Btree& to)
 //                                class btree_set_base                                  //
 //--------------------------------------------------------------------------------------//
 
-template <class Key, class Comp>
+template <class Key, class Traits>
 class btree_set_base
 {
 public:
-  typedef Key   value_type;
-  typedef Key   mapped_type;
-  typedef Comp  value_compare;
+  typedef typename Traits::node_id_type     node_id_type;
+  typedef typename Traits::node_size_type   node_size_type;
+  typedef typename Traits::node_level_type  node_level_type;
+  typedef Key                               value_type;
+  typedef Key                               mapped_type;
+  typedef Traits                            traits_type;
+  typedef typename Traits::compare_type     compare_type;
+  typedef compare_type                      value_compare;
 
   const Key&          key(const value_type& v) const   // really handy, so expose
     {return v;}
@@ -159,12 +164,17 @@ public:
 //                               class btree_map_base                                   //
 //--------------------------------------------------------------------------------------//
 
-template <class Key, class T, class Comp>
+template <class Key, class T, class Traits>
 class btree_map_base
 {
 public:
-  typedef std::pair<const Key, T>  value_type;
-  typedef T                        mapped_type;
+  typedef typename Traits::node_id_type     node_id_type;
+  typedef typename Traits::node_size_type   node_size_type;
+  typedef typename Traits::node_level_type  node_level_type;
+  typedef std::pair<const Key, T>           value_type;
+  typedef T                                 mapped_type;
+  typedef Traits                            traits_type;
+  typedef typename Traits::compare_type     compare_type;
 
   const Key&  key(const value_type& v) const  // really handy, so expose
     {return v.first;}
@@ -175,7 +185,7 @@ public:
   {
   public:
     value_compare() {}
-    value_compare(Comp comp) : m_comp(comp) {}
+    value_compare(compare_type comp) : m_comp(comp) {}
     bool operator()(const value_type& x, const value_type& y) const
       { return m_comp(x.first, y.first); }
     template <class K>
@@ -185,7 +195,7 @@ public:
     bool operator()(const K& x, const value_type& y) const
       { return m_comp(x, y.first); }
   private:
-    Comp    m_comp;
+    compare_type    m_comp;
   };
 
 };
@@ -222,9 +232,7 @@ public:
 */
 
 template  <class Key,   // shall be trivially copyable type; see std 3.9 [basic.types]
-           class Base,  // btree_map_base or btree_set_base
-           class Traits,
-           class Comp>
+           class Base>  // btree_map_base or btree_set_base
 
 class btree_base : public Base, private noncopyable
 {
@@ -248,7 +256,8 @@ public:
   typedef Key                                   key_type;
   typedef typename Base::value_type             value_type;
   typedef typename Base::mapped_type            mapped_type;
-  typedef Comp                                  key_compare;
+  typedef typename Base::compare_type           compare_type;
+  typedef typename Base::compare_type           key_compare;
   typedef typename Base::value_compare          value_compare; 
   typedef value_type&                           reference;
   typedef const value_type&                     const_reference;
@@ -264,16 +273,17 @@ public:
   typedef std::pair<const_iterator, const_iterator>
                                                 const_iterator_range;
 
-  typedef typename Traits::node_id_type         node_id_type;
-  typedef typename Traits::node_size_type       node_size_type;
-  typedef typename Traits::node_level_type      node_level_type;
+  typedef typename Base::traits_type            traits_type;
+  typedef typename Base::node_id_type           node_id_type;
+  typedef typename Base::node_size_type         node_size_type;
+  typedef typename Base::node_level_type        node_level_type;
 
   // construct/destroy:
 
   // TODO: why aren't these protected?
   btree_base();
   btree_base(const boost::filesystem::path& p, flags::bitmask flgs, uint64_t signature,
-   std::size_t node_sz, const Comp& comp);
+   std::size_t node_sz, const traits_type& traits);
   ~btree_base();
 
   //  file operations:
@@ -843,7 +853,7 @@ protected:
   iterator m_update(iterator itr);
 
   void m_open(const boost::filesystem::path& p, flags::bitmask flgs, uint64_t signature,
-              std::size_t node_sz, const Comp& comp);
+              std::size_t node_sz, const traits_type& traits);
 
 //--------------------------------------------------------------------------------------//
 //                              private member functions                                //
@@ -921,9 +931,9 @@ private:
   {
     friend class btree_base;
   protected:
-    Comp    m_comp;
+    compare_type    m_comp;
     branch_compare() {}
-    branch_compare(Comp comp) : m_comp(comp) {}
+    branch_compare(compare_type comp) : m_comp(comp) {}
   public:
    bool operator()(const branch_value_type& x, const branch_value_type& y) const
       {return m_comp(x.key, y.key);}
@@ -949,9 +959,9 @@ private:
 //                              non-member operator <<                                  //
 //--------------------------------------------------------------------------------------//
 
-template <class Key, class Base, class Traits, class Comp>   
+template <class Key, class Base>   
 std::ostream& operator<<(std::ostream& os,
-  const btree_base<Key,Base,Traits,Comp>& bt)
+  const btree_base<Key,Base>& bt)
 {
   BOOST_ASSERT(bt.is_open());
   os << "  element count ------------: " << bt.header().element_count() << "\n" 
@@ -976,8 +986,8 @@ std::ostream& operator<<(std::ostream& os,
 
 //------------------------------ construct without open --------------------------------//
 
-template <class Key, class Base, class Traits, class Comp>
-btree_base<Key,Base,Traits,Comp>::btree_base()
+template <class Key, class Base>
+btree_base<Key,Base>::btree_base()
   // initialize in the correct order to avoid voluminous gcc warnings:
   : m_mgr(m_node_alloc),  m_cache_branches(false)
 { 
@@ -990,9 +1000,9 @@ btree_base<Key,Base,Traits,Comp>::btree_base()
 
 //------------------------------- construct with open ----------------------------------//
 
-template <class Key, class Base, class Traits, class Comp>
-btree_base<Key,Base,Traits,Comp>::btree_base(const boost::filesystem::path& p,
-  flags::bitmask flgs, uint64_t signature, std::size_t node_sz, const Comp& comp)
+template <class Key, class Base>
+btree_base<Key,Base>::btree_base(const boost::filesystem::path& p,
+  flags::bitmask flgs, uint64_t signature, std::size_t node_sz, const traits_type& traits)
   // initialize in the correct order to avoid voluminous gcc warnings:
   : m_mgr(m_node_alloc), m_cache_branches(false)
 { 
@@ -1004,13 +1014,13 @@ btree_base<Key,Base,Traits,Comp>::btree_base(const boost::filesystem::path& p,
   BOOST_ASSERT(manager().buffers_in_memory() == 0);  // verify m_end_iterator not cached
 
   // open the file and set up data members
-  m_open(p, flgs, signature, node_sz, comp);
+  m_open(p, flgs, signature, node_sz, traits);
 }
 
 //----------------------------------- destructor ---------------------------------------//
 
-template <class Key, class Base, class Traits, class Comp>
-btree_base<Key,Base,Traits,Comp>::~btree_base()
+template <class Key, class Base>
+btree_base<Key,Base>::~btree_base()
 {
   try { close(); }
   catch (...) {}
@@ -1018,8 +1028,8 @@ btree_base<Key,Base,Traits,Comp>::~btree_base()
 
 //------------------------------------- close ------------------------------------------//
 
-template <class Key, class Base, class Traits, class Comp>
-void btree_base<Key,Base,Traits,Comp>::close()
+template <class Key, class Base>
+void btree_base<Key,Base>::close()
 {
   if (is_open())
   {
@@ -1030,21 +1040,21 @@ void btree_base<Key,Base,Traits,Comp>::close()
 
 //-------------------------------------- open ------------------------------------------//
 
-template <class Key, class Base, class Traits, class Comp>
+template <class Key, class Base>
 void
-btree_base<Key,Base,Traits,Comp>::m_open(const boost::filesystem::path& p,
-  flags::bitmask flgs, uint64_t signature, std::size_t node_sz, const Comp& comp) 
+btree_base<Key,Base>::m_open(const boost::filesystem::path& p,
+  flags::bitmask flgs, uint64_t signature, std::size_t node_sz, const traits_type& traits) 
 {
   BOOST_ASSERT(!is_open());
   BOOST_ASSERT(node_sz >= sizeof(btree::header_page));
 
-  m_comp = comp;         // type key_compare, which is a typedef of Comp
+  m_comp = traits.compare();         // type key_compare, which is a typedef of compare_type
 
-  m_value_comp = comp;   // type value_compare, which is a typedef of Comp for sets, and 
-                         // its own type for maps and has a constructor from type Comp
+  m_value_comp = traits.compare();   // type value_compare, which is a typedef of compare_type for sets, and 
+                         // its own type for maps and has a constructor from type compare_type
 
-  m_branch_comp = comp;  // type branch_compare, which is its own type and has a
-                         // constructor from Comp
+  m_branch_comp = traits.compare();  // type branch_compare, which is its own type and has a
+                         // constructor from compare_type
 
   oflag::bitmask open_flags = oflag::in;
   if (flgs & flags::read_write)
@@ -1071,7 +1081,7 @@ btree_base<Key,Base,Traits,Comp>::m_open(const boost::filesystem::path& p,
       m_close_and_throw("isn't a btree");
     if (m_hdr.signature() != signature)
       m_close_and_throw("signature differs");
-    if (m_hdr.big_endian() != (Traits::header_endianness == endian::order::big))
+    if (m_hdr.big_endian() != (traits.header_endianness() == endian::order::big))
       m_close_and_throw("endianness differs");
     if ((m_hdr.flags() & flags::key_only) != (flgs & flags::key_only))
       m_close_and_throw("map/set differs");
@@ -1088,7 +1098,7 @@ btree_base<Key,Base,Traits,Comp>::m_open(const boost::filesystem::path& p,
   else
   { // new or truncated file
     m_hdr.clear();
-    m_hdr.big_endian(Traits::header_endianness == endian::order::big);
+    m_hdr.big_endian(traits.header_endianness() == endian::order::big);
     m_hdr.signature(signature);
     m_hdr.flags(flags::permanent_flags(flgs));
     m_hdr.splash_c_str("boost.org btree");
@@ -1118,9 +1128,9 @@ btree_base<Key,Base,Traits,Comp>::m_open(const boost::filesystem::path& p,
 
 //------------------------------------- clear() ----------------------------------------//
 
-template <class Key, class Base, class Traits, class Comp>
+template <class Key, class Base>
 void
-btree_base<Key,Base,Traits,Comp>::clear()
+btree_base<Key,Base>::clear()
 {
   BOOST_ASSERT_MSG(is_open(), "attempt to clear() unopen btree");
 
@@ -1137,9 +1147,9 @@ btree_base<Key,Base,Traits,Comp>::clear()
 
 //------------------------------------- begin() ----------------------------------------//
 
-template <class Key, class Base, class Traits, class Comp>
-typename btree_base<Key,Base,Traits,Comp>::const_iterator
-btree_base<Key,Base,Traits,Comp>::begin() const
+template <class Key, class Base>
+typename btree_base<Key,Base>::const_iterator
+btree_base<Key,Base>::begin() const
 {
   BOOST_ASSERT_MSG(is_open(), "begin() on unopen btree");
   if (empty())
@@ -1168,9 +1178,9 @@ btree_base<Key,Base,Traits,Comp>::begin() const
 
 //-------------------------------------- last() ---------------------------------------//
 
-template <class Key, class Base, class Traits, class Comp>
-typename btree_base<Key,Base,Traits,Comp>::const_iterator
-btree_base<Key,Base,Traits,Comp>::last() const
+template <class Key, class Base>
+typename btree_base<Key,Base>::const_iterator
+btree_base<Key,Base>::last() const
 {
   BOOST_ASSERT_MSG(is_open(), "last() on unopen btree");
   if (empty())
@@ -1199,9 +1209,9 @@ btree_base<Key,Base,Traits,Comp>::last() const
 
 //---------------------------------- m_new_node() --------------------------------------//
 
-template <class Key, class Base, class Traits, class Comp>   
-typename btree_base<Key,Base,Traits,Comp>::btree_node_ptr 
-btree_base<Key,Base,Traits,Comp>::m_new_node(node_level_type lv)
+template <class Key, class Base>   
+typename btree_base<Key,Base>::btree_node_ptr 
+btree_base<Key,Base>::m_new_node(node_level_type lv)
 {
   btree_node_ptr np;
   if (m_hdr.free_node_list_head_id())
@@ -1235,9 +1245,9 @@ btree_base<Key,Base,Traits,Comp>::m_new_node(node_level_type lv)
 
 //----------------------------------- m_new_root() -------------------------------------//
 
-template <class Key, class Base, class Traits, class Comp>   
+template <class Key, class Base>   
 void
-btree_base<Key,Base,Traits,Comp>::m_new_root()
+btree_base<Key,Base>::m_new_root()
 { 
   // create a new root containing only the P0 pseudo-element
   btree_node_ptr old_root = m_root;
@@ -1268,9 +1278,9 @@ btree_base<Key,Base,Traits,Comp>::m_new_root()
 //  is required, but for maps the map class must emplace the mapped type into the element.
 //  See include/boost/btree/map.hpp for the code that handles this.
 
-template <class Key, class Base, class Traits, class Comp>   
-typename btree_base<Key,Base,Traits,Comp>::const_iterator
-btree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter, const key_type& k)
+template <class Key, class Base>   
+typename btree_base<Key,Base>::const_iterator
+btree_base<Key,Base>::m_leaf_insert(iterator insert_iter, const key_type& k)
 {
   //std::cout << "m_leaf_insert: " << k << std::endl;
   btree_node_ptr       np = insert_iter.node();
@@ -1377,9 +1387,9 @@ btree_base<Key,Base,Traits,Comp>::m_leaf_insert(iterator insert_iter, const key_
 //  subject to those same ills. The two function approach has been much less troublesome
 //  right from the start.
 
-template <class Key, class Base, class Traits, class Comp>   
+template <class Key, class Base>   
 void
-btree_base<Key,Base,Traits,Comp>::m_branch_insert(btree_node_ptr np,
+btree_base<Key,Base>::m_branch_insert(btree_node_ptr np,
   branch_value_type* element, const key_type& k, btree_node_ptr child) 
 {
   //std::cout << "m_branch_insert into node " << np->node_id() << ", level " << np->level()
@@ -1493,9 +1503,9 @@ btree_base<Key,Base,Traits,Comp>::m_branch_insert(btree_node_ptr np,
 //------------------------------------- erase() ----------------------------------------//
 
 //  erases leaf only; see m_erase_branch_value() for branches
-template <class Key, class Base, class Traits, class Comp>   
-typename btree_base<Key,Base,Traits,Comp>::const_iterator
-btree_base<Key,Base,Traits,Comp>::erase(const_iterator pos)
+template <class Key, class Base>   
+typename btree_base<Key,Base>::const_iterator
+btree_base<Key,Base>::erase(const_iterator pos)
 {
   BOOST_ASSERT_MSG(is_open(), "erase() on unopen btree");
   BOOST_ASSERT_MSG(!read_only(), "erase() on read only btree");
@@ -1556,8 +1566,8 @@ btree_base<Key,Base,Traits,Comp>::erase(const_iterator pos)
 
 //------------------------------ m_erase_branch_value() --------------------------------//
 
-template <class Key, class Base, class Traits, class Comp>
-void btree_base<Key,Base,Traits,Comp>::m_erase_branch_value(
+template <class Key, class Base>
+void btree_base<Key,Base>::m_erase_branch_value(
   btree_node* np, branch_value_type* element)
 {
   BOOST_ASSERT(np->is_branch());
@@ -1624,9 +1634,9 @@ void btree_base<Key,Base,Traits,Comp>::m_erase_branch_value(
   }
 }
 
-template <class Key, class Base, class Traits, class Comp>   
-typename btree_base<Key,Base,Traits,Comp>::size_type
-btree_base<Key,Base,Traits,Comp>::erase(const key_type& k)
+template <class Key, class Base>   
+typename btree_base<Key,Base>::size_type
+btree_base<Key,Base>::erase(const key_type& k)
 {
   BOOST_ASSERT_MSG(is_open(), "erase() on unopen btree");
   BOOST_ASSERT_MSG(!read_only(), "erase() on read only btree");
@@ -1641,9 +1651,9 @@ btree_base<Key,Base,Traits,Comp>::erase(const key_type& k)
   return count;
 }
 
-template <class Key, class Base, class Traits, class Comp>   
-typename btree_base<Key,Base,Traits,Comp>::const_iterator 
-btree_base<Key,Base,Traits,Comp>::erase(const_iterator first, const_iterator last)
+template <class Key, class Base>   
+typename btree_base<Key,Base>::const_iterator 
+btree_base<Key,Base>::erase(const_iterator first, const_iterator last)
 {
   BOOST_ASSERT_MSG(is_open(), "erase() on unopen btree");
   BOOST_ASSERT_MSG(!read_only(), "erase() on read only btree");
@@ -1662,9 +1672,9 @@ btree_base<Key,Base,Traits,Comp>::erase(const_iterator first, const_iterator las
 
 //--------------------------------- m_insert_unique() ----------------------------------//
 
-template <class Key, class Base, class Traits, class Comp>   
-std::pair<typename btree_base<Key,Base,Traits,Comp>::const_iterator, bool>
-btree_base<Key,Base,Traits,Comp>::m_insert_unique(const key_type& k)
+template <class Key, class Base>   
+std::pair<typename btree_base<Key,Base>::const_iterator, bool>
+btree_base<Key,Base>::m_insert_unique(const key_type& k)
 {
   BOOST_ASSERT_MSG(is_open(), "insert() on unopen btree");
   BOOST_ASSERT_MSG(!read_only(), "insert() on read only btree");
@@ -1683,9 +1693,9 @@ btree_base<Key,Base,Traits,Comp>::m_insert_unique(const key_type& k)
 
 //------------------------------- m_insert_non_unique() --------------------------------//
 
-template <class Key, class Base, class Traits, class Comp>   
-inline typename btree_base<Key,Base,Traits,Comp>::const_iterator
-btree_base<Key,Base,Traits,Comp>::m_insert_non_unique(const key_type& k)
+template <class Key, class Base>   
+inline typename btree_base<Key,Base>::const_iterator
+btree_base<Key,Base>::m_insert_non_unique(const key_type& k)
 {
   BOOST_ASSERT_MSG(is_open(), "insert() on unopen btree");
   BOOST_ASSERT_MSG(!read_only(), "insert() on read only btree");
@@ -1695,9 +1705,9 @@ btree_base<Key,Base,Traits,Comp>::m_insert_non_unique(const key_type& k)
 
 //----------------------------------- m_update() ---------------------------------------//
 
-template <class Key, class Base, class Traits, class Comp>   
-typename btree_base<Key,Base,Traits,Comp>::iterator
-btree_base<Key,Base,Traits,Comp>::m_update(iterator itr)
+template <class Key, class Base>   
+typename btree_base<Key,Base>::iterator
+btree_base<Key,Base>::m_update(iterator itr)
 {
   BOOST_ASSERT_MSG(is_open(), "update() on unopen btree");
   BOOST_ASSERT_MSG(!read_only(), "update() on read only btree");
@@ -1707,10 +1717,10 @@ btree_base<Key,Base,Traits,Comp>::m_update(iterator itr)
 
 //----------------------------- m_special_lower_bound() --------------------------------//
 
-template <class Key, class Base, class Traits, class Comp>
+template <class Key, class Base>
 template <class K>
-typename btree_base<Key,Base,Traits,Comp>::iterator
-btree_base<Key,Base,Traits,Comp>::m_special_lower_bound(const K& k) const
+typename btree_base<Key,Base>::iterator
+btree_base<Key,Base>::m_special_lower_bound(const K& k) const
 //  m_special_lower_bound() differs from lower_bound() in that if the search key is not
 //  present and the first key greater than the search key is the first key on a leaf
 //  other than the first leaf, the returned iterator points to the end element of
@@ -1767,10 +1777,10 @@ btree_base<Key,Base,Traits,Comp>::m_special_lower_bound(const K& k) const
 
 //---------------------------------- lower_bound() -------------------------------------//
 
-template <class Key, class Base, class Traits, class Comp>
+template <class Key, class Base>
 template <class K>
-typename btree_base<Key,Base,Traits,Comp>::const_iterator
-btree_base<Key,Base,Traits,Comp>::lower_bound(const K& k) const
+typename btree_base<Key,Base>::const_iterator
+btree_base<Key,Base>::lower_bound(const K& k) const
 {
   BOOST_ASSERT_MSG(is_open(), "lower_bound() on unopen btree");
 
@@ -1792,10 +1802,10 @@ btree_base<Key,Base,Traits,Comp>::lower_bound(const K& k) const
 
 //------------------------------ m_special_upper_bound() -------------------------------//
 
-template <class Key, class Base, class Traits, class Comp>
+template <class Key, class Base>
 template <class K> 
-typename btree_base<Key,Base,Traits,Comp>::iterator
-btree_base<Key,Base,Traits,Comp>::m_special_upper_bound(const K& k) const
+typename btree_base<Key,Base>::iterator
+btree_base<Key,Base>::m_special_upper_bound(const K& k) const
 {
   btree_node_ptr np = m_root;
 
@@ -1825,10 +1835,10 @@ btree_base<Key,Base,Traits,Comp>::m_special_upper_bound(const K& k) const
 
 //---------------------------------- upper_bound() -------------------------------------//
 
-template <class Key, class Base, class Traits, class Comp>
+template <class Key, class Base>
 template <class K> 
-typename btree_base<Key,Base,Traits,Comp>::const_iterator
-btree_base<Key,Base,Traits,Comp>::upper_bound(const K& k) const
+typename btree_base<Key,Base>::const_iterator
+btree_base<Key,Base>::upper_bound(const K& k) const
 {
   BOOST_ASSERT_MSG(is_open(), "upper_bound() on unopen btree");
 
@@ -1844,10 +1854,10 @@ btree_base<Key,Base,Traits,Comp>::upper_bound(const K& k) const
 
 //------------------------------------- find() -----------------------------------------//
 
-template <class Key, class Base, class Traits, class Comp>
+template <class Key, class Base>
 template <class K>
-typename btree_base<Key,Base,Traits,Comp>::const_iterator
-btree_base<Key,Base,Traits,Comp>::find(const K& k) const
+typename btree_base<Key,Base>::const_iterator
+btree_base<Key,Base>::find(const K& k) const
 {
   BOOST_ASSERT_MSG(is_open(), "find() on unopen btree");
   const_iterator low = lower_bound(k);
@@ -1858,10 +1868,10 @@ btree_base<Key,Base,Traits,Comp>::find(const K& k) const
 
 //------------------------------------ count() -----------------------------------------//
 
-template <class Key, class Base, class Traits, class Comp>
+template <class Key, class Base>
 template <class K> 
-typename btree_base<Key,Base,Traits,Comp>::size_type
-btree_base<Key,Base,Traits,Comp>::count(const K& k) const
+typename btree_base<Key,Base>::size_type
+btree_base<Key,Base>::count(const K& k) const
 {
   BOOST_ASSERT_MSG(is_open(), "lower_bound() on unopen btree");
   size_type count = 0;
@@ -1883,32 +1893,32 @@ void   dump_dot(std::ostream& os, const Btree& bt);
 ///  TODO: non-member functions not implemented yet
 /*
 template <typename Key, typename T, typename Comp>
-bool operator==(const common_base<Key,T,Comp,GetKey>& x,
-              const common_base<Key,T,Comp,GetKey>& y);
+bool operator==(const common_base<Key,T,GetKey>& x,
+              const common_base<Key,T,GetKey>& y);
 
 template <typename Key, typename T, typename Comp>
-bool operator< (const common_base<Key,T,Comp,GetKey>& x,
-              const common_base<Key,T,Comp,GetKey>& y);
+bool operator< (const common_base<Key,T,GetKey>& x,
+              const common_base<Key,T,GetKey>& y);
 
 template <typename Key, typename T, typename Comp>
-bool operator!=(const common_base<Key,T,Comp,GetKey>& x,
-              const common_base<Key,T,Comp,GetKey>& y);
+bool operator!=(const common_base<Key,T,GetKey>& x,
+              const common_base<Key,T,GetKey>& y);
 
 template <typename Key, typename T, typename Comp>
-bool operator> (const common_base<Key,T,Comp,GetKey>& x,
-              const common_base<Key,T,Comp,GetKey>& y);
+bool operator> (const common_base<Key,T,GetKey>& x,
+              const common_base<Key,T,GetKey>& y);
 
 template <typename Key, typename T, typename Comp>
-bool operator>=(const common_base<Key,T,Comp,GetKey>& x,
-              const common_base<Key,T,Comp,GetKey>& y);
+bool operator>=(const common_base<Key,T,GetKey>& x,
+              const common_base<Key,T,GetKey>& y);
 
 template <typename Key, typename T, typename Comp>
-bool operator<=(const common_base<Key,T,Comp,GetKey>& x,
-              const common_base<Key,T,Comp,GetKey>& y);
+bool operator<=(const common_base<Key,T,GetKey>& x,
+              const common_base<Key,T,GetKey>& y);
 
 template <typename Key, typename T, typename Comp>
-void swap(common_base<Key,T,Comp,GetKey>& x,
-        common_base<Key,T,Comp,GetKey>& y);
+void swap(common_base<Key,T,GetKey>& x,
+        common_base<Key,T,GetKey>& y);
 */
 
 //----------------------------------- dump_dot -----------------------------------------//
@@ -1968,10 +1978,10 @@ void dump_dot(std::ostream& os, const Btree& bt)
 
 //--------------------------------------------------------------------------------------//
 
-template <class Key, class Base, class Traits, class Comp>
+template <class Key, class Base>
 template <class T>
 void
-btree_base<Key,Base,Traits,Comp>::iterator_type<T>::increment()
+btree_base<Key,Base>::iterator_type<T>::increment()
 {
   BOOST_ASSERT_MSG(m_element != 0, "increment of end iterator"); 
   BOOST_ASSERT(m_node);
@@ -1991,19 +2001,19 @@ btree_base<Key,Base,Traits,Comp>::iterator_type<T>::increment()
   }
   else // end() reached
   {
-    *this = reinterpret_cast<const btree_base<Key,Base,Traits,Comp>*>
+    *this = reinterpret_cast<const btree_base<Key,Base>*>
         (np->manager()->owner())->m_end_iterator;
   }
 }
 
-template <class Key, class Base, class Traits, class Comp>
+template <class Key, class Base>
 template <class T>
 void
-btree_base<Key,Base,Traits,Comp>::iterator_type<T>::decrement()
+btree_base<Key,Base>::iterator_type<T>::decrement()
 {
-  if (*this == reinterpret_cast<const btree_base<Key,Base,Traits,Comp>*>
+  if (*this == reinterpret_cast<const btree_base<Key,Base>*>
         (m_node->manager()->owner())->end())
-    *this = reinterpret_cast<btree_base<Key,Base,Traits,Comp>*>
+    *this = reinterpret_cast<btree_base<Key,Base>*>
         (m_node->manager()->owner())->last();
   else if (m_element != m_node->leaf().begin())
     --m_element;
@@ -2020,7 +2030,7 @@ btree_base<Key,Base,Traits,Comp>::iterator_type<T>::decrement()
     }
     else // end() reached
     {
-      *this = reinterpret_cast<const btree_base<Key,Base,Traits,Comp>*>
+      *this = reinterpret_cast<const btree_base<Key,Base>*>
           (np->manager()->owner())->m_end_iterator;
     }
   }
