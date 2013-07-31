@@ -10,6 +10,7 @@
 #ifndef BOOST_BTREE_INDEX_SET_HPP
 #define BOOST_BTREE_INDEX_SET_HPP
 
+#include <boost/filesystem.hpp>
 #include <boost/btree/set.hpp>
 #include <boost/btree/detail/index_bases.hpp>
 #include <boost/assert.hpp>
@@ -22,21 +23,23 @@ namespace btree
 {
 
 //--------------------------------------------------------------------------------------//
-//                                class index_set                                       //
+//                                 class index_set                                      //
 //--------------------------------------------------------------------------------------//
 
 template <class Key,    // shall be trivially copyable type; see std 3.9 [basic.types]
-          class Traits = index_traits<btree::default_node_traits, btree::less> >
+          class Traits = btree::default_traits>
 class index_set
   : public index_base<Key, index_set_base<Key,Traits> >
 {
 public:
   typedef typename
-    index_base<Key, index_set_base<Key,Traits> >::value_type      value_type;
+    index_base<Key, index_set_base<Key,Traits> >::value_type          value_type;
+  typedef typename                                                    
+    index_base<Key, index_set_base<Key,Traits> >::const_iterator      const_iterator;
+  typedef typename                                                    
+    index_base<Key, index_set_base<Key,Traits> >::iterator            iterator;
   typedef typename
-    index_base<Key, index_set_base<Key,Traits> >::const_iterator  const_iterator;
-  typedef typename
-    index_base<Key, index_set_base<Key,Traits> >::iterator        iterator;
+    index_base<Key, index_set_base<Key,Traits> >::file_position_type  file_position_type;
 
   index_set()
     : index_base<Key,index_set_base<Key,Traits> >() {}
@@ -89,14 +92,14 @@ public:
 
   //  modifiers
 
-  btree::position_type push_back(const value_type& value)
+  file_position_type push_back(const value_type& value)
   // Effects: unconditional push_back into file(); index unaffected
   {
     return file()->push_back(value);
   }
 
   std::pair<const_iterator, bool>
-    insert_position(btree::position_type pos)
+    insert_file_position(file_position_type pos)
   {
     BOOST_ASSERT(!read_only());
     std::pair<index_type::const_iterator, bool>

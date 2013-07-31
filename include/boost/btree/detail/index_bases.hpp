@@ -10,20 +10,12 @@
 #ifndef BOOST_BTREE_INDEX_BASES_HPP
 #define BOOST_BTREE_INDEX_BASES_HPP
 
+#include <boost/btree/helpers.hpp>
+#include <boost/shared_ptr.hpp>
+#include <boost/btree/mmff.hpp>
+#include <boost/btree/set.hpp>
 #include <boost/iterator/iterator_facade.hpp>
-#include <boost/noncopyable.hpp>
-#include <boost/btree/detail/buffer_manager.hpp>
 #include <boost/assert.hpp>
-#include <boost/static_assert.hpp>
-#include <cstddef>     // for size_t
-#include <cstring>
-#include <cassert>
-#include <utility>
-#include <iterator>
-#include <functional>  // for less, binary_function
-#include <algorithm>
-#include <ostream>
-#include <stdexcept>
 
 /*
 
@@ -151,19 +143,19 @@ public:
   typedef typename Base::node_size_type         node_size_type;
   typedef typename Base::node_level_type        node_level_type;
 
-  typedef typename Traits::index_position_type  index_position_type;
   typedef boost::filesystem::path               path_type;
-
-  typedef detail::indirect_compare<key_type,
-    index_position_type, traits_type>           index_compare_type;
-  typedef typename
-    btree_set<index_position_type, Traits,
-      index_compare_type>                       index_type;
-  typedef typename index_type::size_type        index_size_type;
 
   typedef boost::btree::extendible_mapped_file  file_type;
   typedef boost::shared_ptr<file_type>          file_ptr_type;
   typedef file_type::size_type                  file_size_type;
+  typedef typename traits_type::position_type   file_position_type;
+
+  typedef detail::indirect_compare<key_type,
+    file_position_type, traits_type>            index_compare_type;
+  typedef typename
+    btree_set<file_position_type, traits_type>  index_type;
+  typedef typename index_type::size_type        index_size_type;
+
 
 private:
   index_type      m_set;
@@ -188,7 +180,7 @@ public:
     BOOST_ASSERT(!m_file.get());
     m_file.reset(new file_type);
     m_file->open(file_pth, flgs, reserv);
-    open(m_file, index_pth, flgs, sig, node_sz, comp);
+    open(m_file, index_pth, flgs, sig, node_sz, traits);
   }
 
   void open(file_ptr_type flat_file,            
@@ -227,38 +219,38 @@ public:
                                            return m_file->path();}
   file_size_type    file_size() const     {BOOST_ASSERT(m_file);
                                            return m_file->file_size();}
-  file_size_type    file_reserve() const  {BOOST_ASSERT(m_file);
+  file_size_type    file_reserve() const  {BOOST_ASSERT(m_file);}
 
   // operations
 
-  btree::position_type
-                  position(iterator itr) const;
+  file_position_type position(iterator itr) const;
 
-  const_iterator  find(const key_type& k) const 
+  const_iterator    find(const key_type& k) const 
                                            {return const_iterator(m_set.find(k), m_file);}
  
-  size_type       count(const key_type& k) const  {return m_set.count(k);}
+  size_type         count(const key_type& k) const  {return m_set.count(k);}
 
-  const_iterator  lower_bound(const key_type& k) const
+  const_iterator    lower_bound(const key_type& k) const
                                     {return const_iterator(m_set.lower_bound(k), m_file);}
 
-  const_iterator  upper_bound(const key_type& k) const
+  const_iterator    upper_bound(const key_type& k) const
                                     {return const_iterator(m_set.upper_bound(k), m_file);}
   const_iterator_range
-                  equal_range(const key_type& k) const
+                    equal_range(const key_type& k) const
                                   {return std::make_pair(lower_bound(k), upper_bound(k));}
 
   //------------------------------------------------------------------------------------//
   //                                  iterator_type                                     //
   //------------------------------------------------------------------------------------//
  
+private:
   template <class T>
   class iterator_type
     : public boost::iterator_facade<iterator_type<T>, T, bidirectional_traversal_tag>
   {
   public:
     typedef typename index_type::iterator    index_iterator_type;
-    typedef typename btree_index::file_type  file_type;
+    typedef typename index_base::file_type  file_type;
 
     iterator_type() {}  // constructs the end iterator
 

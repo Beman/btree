@@ -37,8 +37,11 @@ namespace btree
   struct native_endian_traits;
   typedef big_endian_traits  default_node_traits;  // see rationale below
   struct less;  // hetrogeneous compare
+  struct default_index_traits;
 
-  template <class NodeTraits = default_node_traits, class Comp = btree::less>
+  template <class NodeTraits = default_node_traits,
+            class Comp = btree::less,
+            class IndexTraits = default_index_traits>
   class btree_traits
     : public NodeTraits, public Comp
   {
@@ -47,6 +50,8 @@ namespace btree
     typedef typename NodeTraits::node_size_type   node_size_type;
     typedef typename NodeTraits::node_level_type  node_level_type;
     typedef Comp                                  compare_type;
+    typedef typename IndexTraits::index_file_position_type
+                                                  position_type;
 
     explicit btree_traits(const Comp& comp = Comp()) : m_comp(comp) {}
 
@@ -57,6 +62,8 @@ namespace btree
   private:
     compare_type m_comp;
   };
+
+  typedef btree_traits<default_node_traits> default_traits;
 
 
 //--------------------------------------------------------------------------------------//
@@ -110,6 +117,15 @@ struct native_endian_traits
 #   else
     = endian::order::little;
 #   endif
+};
+
+//--------------------------------------------------------------------------------------//
+//                                   Index Traits                                       //
+//--------------------------------------------------------------------------------------//
+
+struct default_index_traits
+{
+  typedef endian::big_uint48un_t   index_file_position_type;
 };
 
 //--------------------------------------------------------------------------------------//

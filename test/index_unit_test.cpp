@@ -76,7 +76,7 @@ void instantiate_test()
 
   // set
   {
-    btree::btree_index<int> x;
+    btree::index_set<int> x;
     BOOST_TEST(!x.is_open());
     BOOST_TEST(x.index_size() == 0U);
     BOOST_TEST(x.index_empty());
@@ -94,7 +94,7 @@ void  open_all_new_test()
 
   {
     cout << "      default construct, then open..." << endl;
-    btree::btree_index<int> idx;
+    btree::index_set<int> idx;
     idx.open(file_path, 1000000u, idx1_path, btree::flags::truncate, -1, 128);
     BOOST_TEST(idx.is_open());
     BOOST_TEST_EQ(idx.file_path(), file_path);
@@ -106,7 +106,7 @@ void  open_all_new_test()
 
   {
     cout << "      open via constructor..." << endl;
-    btree::btree_index<int> idx(file_path, 1000000,
+    btree::index_set<int> idx(file_path, 1000000,
       idx1_path, btree::flags::truncate, -1, 128);
     BOOST_TEST(idx.is_open());
     BOOST_TEST_EQ(idx.file_path(), file_path);
@@ -126,27 +126,27 @@ void  push_back_insert_pos_test()
   cout << "  push_back_insert_pos_test..." << endl;
 
   {
-    btree::btree_index<stuff> idx(file_path, 1000000, idx1_path,
+    btree::index_set<stuff> idx(file_path, 1000000, idx1_path,
                                 btree::flags::truncate, -1, 128);
     stuff x(2,2);
-    btree::position_type pos = idx.push_back(x);
+    btree::index_set<stuff>::file_position_type pos = idx.push_back(x);
     BOOST_TEST_EQ(pos, 0u);
     BOOST_TEST_EQ(idx.file_size(), sizeof(stuff));
-    idx.insert_position(pos);
+    idx.insert_file_position(pos);
     BOOST_TEST_EQ(idx.index_size(), 1u);
 
     x.assign(3,1);
     pos = idx.push_back(x);
     BOOST_TEST_EQ(pos, sizeof(stuff));
     BOOST_TEST_EQ(idx.file_size(), 2*sizeof(stuff));
-    idx.insert_position(pos);
+    idx.insert_file_position(pos);
     BOOST_TEST_EQ(idx.index_size(), 2u);
 
     x.assign(1,3);
     pos = idx.push_back(x);
     BOOST_TEST_EQ(pos, 2*sizeof(stuff));
     BOOST_TEST_EQ(idx.file_size(), 3*sizeof(stuff));
-    idx.insert_position(pos);
+    idx.insert_file_position(pos);
     BOOST_TEST_EQ(idx.index_size(), 3u);
   }
   BOOST_TEST_EQ(boost::filesystem::file_size(file_path), 3*sizeof(stuff));
@@ -161,7 +161,7 @@ void  iterator_test()
 {
   cout << "  iterator_test..." << endl;
 
-  typedef btree::btree_index<stuff> index_type;
+  typedef btree::index_set<stuff> index_type;
   index_type idx(file_path, 0, idx1_path);
 
   index_type::iterator itr = idx.begin();
@@ -200,7 +200,7 @@ void  lower_bound_test()
 {
   cout << "  lower_bound_test..." << endl;
 
-  typedef btree::btree_index<stuff> index_type;
+  typedef btree::index_set<stuff> index_type;
   index_type idx(file_path, 0, idx1_path);
 
   index_type::iterator itr1 = idx.begin();
@@ -234,7 +234,7 @@ void  find_test()
 {
   cout << "  find_test..." << endl;
 
-  typedef btree::btree_index<stuff> index_type;
+  typedef btree::index_set<stuff> index_type;
   index_type idx(file_path, 0, idx1_path);
 
   index_type::iterator itr1 = idx.begin();
@@ -268,7 +268,7 @@ void  insert_test()
 {
   cout << "  insert_test..." << endl;
 
-  typedef btree::btree_index<stuff> index_type;
+  typedef btree::index_set<stuff> index_type;
   index_type idx(file_path, 0, idx1_path, btree::flags::read_write);
 
   stuff s00 (0,0);
@@ -279,7 +279,7 @@ void  insert_test()
   stuff s14 (1,4);
   stuff s32 (3,2);
 
-  index_type::insert_result_pair result;
+  std::pair<index_type::const_iterator, bool> result;
 
   result = idx.insert(s00);
   BOOST_TEST(result.second);
@@ -336,9 +336,9 @@ void  two_index_test()
   cout << "  two_index_test..." << endl;
 
   {
-    btree::btree_index<stuff> idx1(file_path, 1000000,
+    btree::index_set<stuff> idx1(file_path, 1000000,
       idx1_path, btree::flags::truncate, -1, 128);
-    btree::btree_index<stuff, btree::default_index_traits, stuff_reverse_order>
+    btree::index_set<stuff, btree::default_index_traits, stuff_reverse_order>
       idx2(idx1.file(), idx2_path, btree::flags::truncate, -1, 128);
 
     stuff x(2,2);
@@ -373,7 +373,7 @@ void  two_index_iterator_test()
   {
     cout << "       idx1..." << endl;
 
-    typedef btree::btree_index<stuff> index_type;
+    typedef btree::index_set<stuff> index_type;
     index_type idx(file_path, 0, idx1_path);
 
     index_type::iterator itr = idx.begin();
@@ -405,7 +405,7 @@ void  two_index_iterator_test()
   {
     cout << "       idx2..." << endl;
 
-    typedef btree::btree_index<stuff,
+    typedef btree::index_set<stuff,
       btree::default_index_traits, stuff_reverse_order> index_type;
     index_type idx(file_path, 0, idx2_path);
 
