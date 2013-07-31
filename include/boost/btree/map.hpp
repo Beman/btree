@@ -14,7 +14,7 @@
 #include <boost/cstdint.hpp>
 #include <boost/btree/header.hpp>
 #include <boost/filesystem/path.hpp>
-#include <boost/btree/detail/common.hpp>  // common to all 4 btree_* containers
+#include <boost/btree/detail/btree_bases.hpp>  // common to all 4 btree_* containers
 #include <boost/assert.hpp>
 #include <boost/static_assert.hpp>
 #include <boost/type_traits/is_pointer.hpp>
