@@ -7,8 +7,8 @@
 
 //  See http://www.boost.org/libs/btree for documentation.
 
-#ifndef BOOST_BTREE_COMMON_HPP
-#define BOOST_BTREE_COMMON_HPP
+#ifndef BOOST_BTREE_BASES_HPP
+#define BOOST_BTREE_BASES_HPP
 
 #include <boost/iterator/iterator_facade.hpp>
 #include <boost/noncopyable.hpp>
@@ -2039,5 +2039,5 @@ btree_base<Key,Base>::iterator_type<T>::decrement()
 }  // namespace btree
 }  // namespace boost
 
-#endif // BOOST_BTREE_COMMON_HPP
+#endif // BOOST_BTREE_BASES_HPP
 

@@ -1,4 +1,4 @@
-//  index_test.cpp  --------------------------------------------------------------------//
+//  index_unit_test.cpp  ---------------------------------------------------------------//
 
 //  Copyright Beman Dawes 2013
 
@@ -12,7 +12,7 @@
 //                                                                                      //
 //--------------------------------------------------------------------------------------//
 
-#include <boost/btree/index.hpp>
+#include <boost/btree/index_set.hpp>
 #include <boost/detail/lightweight_main.hpp>
 #include <boost/detail/lightweight_test.hpp>
 
