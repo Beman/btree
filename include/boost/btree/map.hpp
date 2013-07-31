@@ -36,15 +36,12 @@ namespace boost
       : public btree_base<Key, btree_map_base<Key,T,Traits> >
     {
     public:
-      typedef
-        typename btree_base<Key, btree_map_base<Key,T,Traits> >::value_type
-          value_type;
-      typedef
-        typename btree_base<Key, btree_map_base<Key,T,Traits> >::const_iterator
-          const_iterator;
-      typedef
-        typename btree_base<Key, btree_map_base<Key,T,Traits> >::iterator
-          iterator;
+      typedef typename
+        btree_base<Key, btree_map_base<Key,T,Traits> >::value_type      value_type;
+      typedef typename
+        btree_base<Key, btree_map_base<Key,T,Traits> >::const_iterator  const_iterator;
+      typedef typename
+        btree_base<Key, btree_map_base<Key,T,Traits> >::iterator        iterator;
   
       BOOST_STATIC_ASSERT_MSG( !boost::is_pointer<Key>::value,
         "Key must not be a pointer type");
@@ -145,15 +142,12 @@ namespace boost
       : public btree_base<Key, btree_map_base<Key,T,Traits> >
     {
     public:
-      typedef
-        typename btree_base<Key, btree_map_base<Key,T,Traits> >::value_type
-          value_type;
-      typedef
-        typename btree_base<Key, btree_map_base<Key,T,Traits> >::const_iterator
-          const_iterator;
-      typedef
-        typename btree_base<Key, btree_map_base<Key,T,Traits> >::iterator
-          iterator;
+      typedef typename
+        btree_base<Key, btree_map_base<Key,T,Traits> >::value_type      value_type;
+      typedef typename
+        btree_base<Key, btree_map_base<Key,T,Traits> >::const_iterator  const_iterator;
+      typedef typename
+        btree_base<Key, btree_map_base<Key,T,Traits> >::iterator        iterator;
 
       BOOST_STATIC_ASSERT_MSG( !boost::is_pointer<Key>::value,
         "Key must not be a pointer type");

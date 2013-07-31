@@ -34,6 +34,12 @@ namespace boost
       : public btree_base<Key, btree_set_base<Key,Traits> >
     {
     public:
+      typedef typename
+        btree_base<Key, btree_set_base<Key,Traits> >::value_type      value_type;
+      typedef typename
+        btree_base<Key, btree_set_base<Key,Traits> >::const_iterator  const_iterator;
+      typedef typename
+        btree_base<Key, btree_set_base<Key,Traits> >::iterator        iterator;
 
       BOOST_STATIC_ASSERT_MSG( !boost::is_pointer<Key>::value,
         "Key must not be a pointer type");
@@ -81,19 +87,15 @@ namespace boost
       }
 
       //  emplace() special case not requiring c++0x support
-      std::pair<typename
-        btree_base<Key,btree_set_base<Key,Traits> >::const_iterator, bool>
-      emplace(const typename
-        btree_base<Key,btree_set_base<Key,Traits> >::value_type& value)
+      std::pair<const_iterator, bool>
+      emplace(const value_type& value)
       {
         return btree_base<Key,btree_set_base<Key,Traits> >::m_insert_unique(
           value);
       }
 
-      std::pair<typename
-        btree_base<Key,btree_set_base<Key,Traits> >::const_iterator, bool>
-      insert(const typename
-        btree_base<Key,btree_set_base<Key,Traits> >::value_type& value)
+      std::pair<const_iterator, bool>
+      insert(const value_type& value)
       {
         return btree_base<Key,btree_set_base<Key,Traits> >::m_insert_unique(
           value);
@@ -120,6 +122,12 @@ namespace boost
       : public btree_base<Key, btree_set_base<Key,Traits> >
     {
     public:
+      typedef typename
+        btree_base<Key, btree_set_base<Key,Traits> >::value_type      value_type;
+      typedef typename
+        btree_base<Key, btree_set_base<Key,Traits> >::const_iterator  const_iterator;
+      typedef typename
+        btree_base<Key, btree_set_base<Key,Traits> >::iterator        iterator;
 
       BOOST_STATIC_ASSERT_MSG( !boost::is_pointer<Key>::value,
         "Key must not be a pointer type");
@@ -163,19 +171,14 @@ namespace boost
       }
 
       //  emplace(const Key&) special case not requiring c++0x support
-      std::pair<typename
-        btree_base<Key,btree_set_base<Key,Traits> >::const_iterator, bool>
-      emplace(const typename
-        btree_base<Key,btree_set_base<Key,Traits> >::value_type& value)
+      const_iterator emplace(const value_type& value)
       {
         return
           btree_base<Key,btree_set_base<Key,Traits> >::m_insert_non_unique(
             value);
       }
 
-      typename btree_base<Key,btree_set_base<Key,Traits> >::const_iterator
-      insert(const typename
-        btree_base<Key,btree_set_base<Key,Traits> >::value_type& value)
+      const_iterator insert(const value_type& value)
       {
         return 
           btree_base<Key,btree_set_base<Key,Traits> >::m_insert_non_unique(
