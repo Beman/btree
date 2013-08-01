@@ -95,15 +95,15 @@ void instantiate()
     instantiate_test(x);
   }
   {
-    btree::btree_map<fat, int, btree::btree_traits<btree::big_endian_traits> > x;
+    btree::btree_map<fat, int, btree::big_endian_traits> x;
     instantiate_test(x);
   }
   {
-    btree::btree_map<fat, int, btree::btree_traits<btree::little_endian_traits> > x;
+    btree::btree_map<fat, int, btree::little_endian_traits> x;
     instantiate_test(x);
   }
   {
-    btree::btree_map<fat, int, btree::btree_traits<btree::native_endian_traits> > x;
+    btree::btree_map<fat, int, btree::native_endian_traits> x;
     instantiate_test(x);
   }
 
@@ -113,15 +113,15 @@ void instantiate()
     instantiate_test(x);
   }
   {
-    btree::btree_multimap<fat, int, btree::btree_traits<btree::big_endian_traits> > x;
+    btree::btree_multimap<fat, int, btree::big_endian_traits> x;
     instantiate_test(x);
   }
   {
-    btree::btree_multimap<fat, int, btree::btree_traits<btree::little_endian_traits> > x;
+    btree::btree_multimap<fat, int, btree::little_endian_traits> x;
     instantiate_test(x);
   }
   {
-    btree::btree_multimap<fat, int, btree::btree_traits<btree::native_endian_traits> > x;
+    btree::btree_multimap<fat, int, btree::native_endian_traits> x;
     instantiate_test(x);
   }
 
@@ -131,15 +131,15 @@ void instantiate()
     instantiate_test(x);
   }
   {
-    btree::btree_set<int, btree::btree_traits<btree::big_endian_traits> > x;
+    btree::btree_set<int, btree::big_endian_traits> x;
     instantiate_test(x);
   }
   {
-    btree::btree_set<int, btree::btree_traits<btree::little_endian_traits> > x;
+    btree::btree_set<int, btree::little_endian_traits> x;
     instantiate_test(x);
   }
   {
-    btree::btree_set<int, btree::btree_traits<btree::native_endian_traits> > x;
+    btree::btree_set<int, btree::native_endian_traits> x;
     instantiate_test(x);
   }
 
@@ -149,15 +149,15 @@ void instantiate()
     instantiate_test(x);
   }
   {
-    btree::btree_multiset<int, btree::btree_traits<btree::big_endian_traits> > x;
+    btree::btree_multiset<int, btree::big_endian_traits> x;
     instantiate_test(x);
   }
   {
-    btree::btree_multiset<int, btree::btree_traits<btree::little_endian_traits> > x;
+    btree::btree_multiset<int, btree::little_endian_traits> x;
     instantiate_test(x);
   }
   {
-    btree::btree_multiset<int, btree::btree_traits<btree::native_endian_traits> > x;
+    btree::btree_multiset<int, btree::native_endian_traits> x;
     instantiate_test(x);
   }
 
@@ -297,6 +297,7 @@ void  single_insert()
     BOOST_TEST_EQ(result.first->second, 456);
     BOOST_TEST_EQ(x.key(*result.first), 123);
     BOOST_TEST_EQ(x.mapped(*result.first), 456);
+    x.close();
   }
  
   cout << "    single_insert complete" << endl;

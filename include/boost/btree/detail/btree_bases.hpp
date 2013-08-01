@@ -141,7 +141,7 @@ void append(const Btree& from, const Btree& to)
 //                                class btree_set_base                                  //
 //--------------------------------------------------------------------------------------//
 
-template <class Key, class Traits>
+template <class Key, class Traits, class Comp>
 class btree_set_base
 {
 public:
@@ -151,7 +151,7 @@ public:
   typedef Key                               value_type;
   typedef Key                               mapped_type;
   typedef Traits                            traits_type;
-  typedef typename Traits::compare_type     compare_type;
+  typedef Comp                              compare_type;
   typedef compare_type                      value_compare;
 
   const Key&          key(const value_type& v) const   // really handy, so expose
@@ -164,7 +164,7 @@ public:
 //                               class btree_map_base                                   //
 //--------------------------------------------------------------------------------------//
 
-template <class Key, class T, class Traits>
+template <class Key, class T, class Traits, class Comp>
 class btree_map_base
 {
 public:
@@ -174,7 +174,7 @@ public:
   typedef std::pair<const Key, T>           value_type;
   typedef T                                 mapped_type;
   typedef Traits                            traits_type;
-  typedef typename Traits::compare_type     compare_type;
+  typedef Comp                              compare_type;
 
   const Key&  key(const value_type& v) const  // really handy, so expose
     {return v.first;}
@@ -283,7 +283,7 @@ public:
   // TODO: why aren't these protected?
   btree_base();
   btree_base(const boost::filesystem::path& p, flags::bitmask flgs, uint64_t signature,
-   std::size_t node_sz, const traits_type& traits);
+   std::size_t node_sz, const compare_type& comp);
   ~btree_base();
 
   //  file operations:
@@ -853,7 +853,7 @@ protected:
   iterator m_update(iterator itr);
 
   void m_open(const boost::filesystem::path& p, flags::bitmask flgs, uint64_t signature,
-              std::size_t node_sz, const traits_type& traits);
+              std::size_t node_sz, const compare_type& comp);
 
 //--------------------------------------------------------------------------------------//
 //                              private member functions                                //
@@ -1002,7 +1002,7 @@ btree_base<Key,Base>::btree_base()
 
 template <class Key, class Base>
 btree_base<Key,Base>::btree_base(const boost::filesystem::path& p,
-  flags::bitmask flgs, uint64_t signature, std::size_t node_sz, const traits_type& traits)
+  flags::bitmask flgs, uint64_t signature, std::size_t node_sz, const compare_type& comp)
   // initialize in the correct order to avoid voluminous gcc warnings:
   : m_mgr(m_node_alloc), m_cache_branches(false)
 { 
@@ -1014,7 +1014,7 @@ btree_base<Key,Base>::btree_base(const boost::filesystem::path& p,
   BOOST_ASSERT(manager().buffers_in_memory() == 0);  // verify m_end_iterator not cached
 
   // open the file and set up data members
-  m_open(p, flgs, signature, node_sz, traits);
+  m_open(p, flgs, signature, node_sz, comp);
 }
 
 //----------------------------------- destructor ---------------------------------------//
@@ -1043,17 +1043,17 @@ void btree_base<Key,Base>::close()
 template <class Key, class Base>
 void
 btree_base<Key,Base>::m_open(const boost::filesystem::path& p,
-  flags::bitmask flgs, uint64_t signature, std::size_t node_sz, const traits_type& traits) 
+  flags::bitmask flgs, uint64_t signature, std::size_t node_sz, const compare_type& comp) 
 {
   BOOST_ASSERT(!is_open());
   BOOST_ASSERT(node_sz >= sizeof(btree::header_page));
 
-  m_comp = traits.compare();         // type key_compare, which is a typedef of compare_type
+  m_comp = comp;         // type key_compare, which is a typedef of compare_type
 
-  m_value_comp = traits.compare();   // type value_compare, which is a typedef of compare_type for sets, and 
+  m_value_comp = comp;   // type value_compare, which is a typedef of compare_type for sets, and 
                          // its own type for maps and has a constructor from type compare_type
 
-  m_branch_comp = traits.compare();  // type branch_compare, which is its own type and has a
+  m_branch_comp = comp;  // type branch_compare, which is its own type and has a
                          // constructor from compare_type
 
   oflag::bitmask open_flags = oflag::in;
@@ -1081,7 +1081,7 @@ btree_base<Key,Base>::m_open(const boost::filesystem::path& p,
       m_close_and_throw("isn't a btree");
     if (m_hdr.signature() != signature)
       m_close_and_throw("signature differs");
-    if (m_hdr.big_endian() != (traits.header_endianness() == endian::order::big))
+    if (m_hdr.big_endian() != (traits_type::header_endianness == endian::order::big))
       m_close_and_throw("endianness differs");
     if ((m_hdr.flags() & flags::key_only) != (flgs & flags::key_only))
       m_close_and_throw("map/set differs");
@@ -1098,7 +1098,7 @@ btree_base<Key,Base>::m_open(const boost::filesystem::path& p,
   else
   { // new or truncated file
     m_hdr.clear();
-    m_hdr.big_endian(traits.header_endianness() == endian::order::big);
+    m_hdr.big_endian(traits_type::header_endianness == endian::order::big);
     m_hdr.signature(signature);
     m_hdr.flags(flags::permanent_flags(flgs));
     m_hdr.splash_c_str("boost.org btree");

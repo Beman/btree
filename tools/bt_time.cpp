@@ -109,7 +109,7 @@ namespace
 
       if (do_insert)
       {
-        cout << "\ninserting " << n << " btree elemdts..." << endl;
+        cout << "\ninserting " << n << " btree elements..." << endl;
         rng.seed(seed);
         t.start();
         timer::cpu_times then = t.elapsed();
@@ -569,15 +569,15 @@ int cpp_main(int argc, char * argv[])
   {
   case endian::order::big:
     cout << "and big endian traits\n";
-    test< btree::btree_map<int64_t, int64_t, btree::btree_traits<btree::big_endian_traits> > >();
+    test< btree::btree_map<int64_t, int64_t, btree::big_endian_traits> >();
     break;
   case endian::order::little:
     cout << "and little endian traits\n";
-    test< btree::btree_map<int64_t, int64_t, btree::btree_traits<btree::little_endian_traits> > >();
+    test< btree::btree_map<int64_t, int64_t, btree::little_endian_traits> >();
     break;
   case endian::order::native:
     cout << "and native endian traits\n";
-    test< btree::btree_map<int64_t, int64_t, btree::btree_traits<btree::native_endian_traits> > >();
+    test< btree::btree_map<int64_t, int64_t, btree::native_endian_traits> >();
     break;
   }
 
