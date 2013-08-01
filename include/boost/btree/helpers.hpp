@@ -16,12 +16,24 @@
 #include <boost/cstdint.hpp>
 #include <boost/detail/bitmask.hpp>
 #include <boost/endian/types.hpp>
-#include <utility>   // for forward
+#include <boost/assert.hpp>
+#include <cstring>
+#include <cstdlib>
 
 namespace boost
 {
 namespace btree
 {
+
+//--------------------------------------------------------------------------------------//
+//                      version numbers and default constants                           //
+//--------------------------------------------------------------------------------------//
+
+    static const uint16_t major_version = 0;  // version identification
+    static const uint16_t minor_version = 1;
+
+    static const std::size_t default_node_size = 4096;
+    static const std::size_t default_max_cache_nodes = 32;
 
 //--------------------------------------------------------------------------------------//
 //                                                                                      //
@@ -113,7 +125,7 @@ namespace flags
 }
 
 //--------------------------------------------------------------------------------------//
-//                                 less function object                                 //
+//                               less function object                                   //
 //--------------------------------------------------------------------------------------//
 
 //  Needed to support heterogeneous comparisons. See N3657, N3421.
@@ -130,16 +142,51 @@ struct less
     {return t < u;}
 };
 
-
+//--------------------------------------------------------------------------------------//
+//                                 flat file adapters                                   //
 //--------------------------------------------------------------------------------------//
 
-    static const uint16_t major_version = 0;  // version identification
-    static const uint16_t minor_version = 1;
+//--------------  primary template; handles all fixed length data types  ---------------//
 
-    static const std::size_t default_node_size = 4096;
-    static const std::size_t default_max_cache_nodes = 32;
+  template <class T>
+  class flat_adapter
+  {
+  public:
+    typedef const T&  type;
 
-  }  // namespace btree
+    static std::size_t flat_size(type x)             {return sizeof(T);}
+
+    static void copy_to_flat(type src, char* dest)   {BOOST_ASSERT(dest);
+                                                      std::memcpy(dest, &src, sizeof(T));}
+
+    static type make_from_flat(const char* src)
+    {
+      BOOST_ASSERT(src);
+      T tmp;
+      std::memcpy(&T, src, sizeof(T));
+      return tmp;}
+  };
+
+  //----------  const char* specialization; null-terminated C-style strings  -----------//
+
+  template <>
+  class flat_adapter<const char*>
+  {
+  public:
+    typedef const char*  type;
+
+    static std::size_t flat_size(const char* s)              {BOOST_ASSERT(s);
+                                                              return std::strlen(s)+1;}
+
+    static void copy_to_flat(const char* src, char* dest)    {BOOST_ASSERT(src);
+                                                              BOOST_ASSERT(dest);
+                                                              std::strcpy(dest, src);}
+
+    static type make_from_flat(const char* src)              {BOOST_ASSERT(src);
+                                                              return src;}
+  };
+
+}  // namespace btree
 }  // namespace boost
 
 #endif // BOOST_BTREE_HELPERS_HPP
