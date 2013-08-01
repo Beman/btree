@@ -297,7 +297,6 @@ void  single_insert()
     BOOST_TEST_EQ(result.first->second, 456);
     BOOST_TEST_EQ(x.key(*result.first), 123);
     BOOST_TEST_EQ(x.mapped(*result.first), 456);
-    x.close();
   }
  
   cout << "    single_insert complete" << endl;

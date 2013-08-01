@@ -75,6 +75,13 @@ namespace boost
             *begin, *begin);
         }
       }
+
+     ~btree_set()
+      {
+        try {close();}
+        catch (...) {}
+      }
+
  
       void open(const boost::filesystem::path& p,
         flags::bitmask flgs = flags::read_only,
@@ -161,6 +168,12 @@ namespace boost
           btree_base<Key,btree_set_base<Key,Traits,Comp> >::m_insert_non_unique(
             *begin, *begin);
         }
+      }
+
+     ~btree_multiset()
+      {
+        try {close();}
+        catch (...) {}
       }
 
       void open(const boost::filesystem::path& p,

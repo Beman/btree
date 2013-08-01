@@ -76,6 +76,12 @@ namespace boost
             begin->key(), begin->mapped_value());
         }
       }
+
+     ~btree_map()
+      {
+        try {close();}
+        catch (...) {}
+      }
  
       void open(const boost::filesystem::path& p,
         flags::bitmask flgs = flags::read_only,
@@ -182,6 +188,12 @@ namespace boost
           btree_base<Key,btree_map_base<Key,T,Traits,Comp> >::m_insert_non_unique(
             begin->key(), begin->mapped_value());
         }
+      }
+
+     ~btree_multimap()
+      {
+        try {close();}
+        catch (...) {}
       }
 
       void open(const boost::filesystem::path& p,
