@@ -5,12 +5,11 @@
 //  Distributed under the Boost Software License, Version 1.0.
 //  http://www.boost.org/LICENSE_1_0.txt
 
-//  See http://www.boost.org/libs/btree for documentation.
-
 #ifndef BOOST_BTREE_INDEX_SET_HPP
 #define BOOST_BTREE_INDEX_SET_HPP
 
 #include <boost/filesystem.hpp>
+#include <boost/btree/index_helpers.hpp>
 #include <boost/btree/set.hpp>
 #include <boost/btree/detail/index_bases.hpp>
 #include <boost/assert.hpp>
@@ -27,22 +26,23 @@ namespace btree
 //--------------------------------------------------------------------------------------//
 
 template <class Key,    // shall be trivially copyable type; see std 3.9 [basic.types]
-          class Traits = btree::default_traits>
+          class Traits = btree::default_traits,
+          class Comp = btree::less>
 class index_set
-  : public index_base<Key, index_set_base<Key,Traits> >
+  : public index_base<index_set_base<Key,Traits,Comp> >
 {
+private:
+  typedef typename
+    index_base<index_set_base<Key,Traits,Comp> >  base_type;
 public:
-  typedef typename
-    index_base<Key, index_set_base<Key,Traits> >::value_type          value_type;
-  typedef typename                                                    
-    index_base<Key, index_set_base<Key,Traits> >::const_iterator      const_iterator;
-  typedef typename                                                    
-    index_base<Key, index_set_base<Key,Traits> >::iterator            iterator;
-  typedef typename
-    index_base<Key, index_set_base<Key,Traits> >::file_position_type  file_position_type;
+  typedef typename base_type::key_type            key_type;
+  typedef typename base_type::value_type          value_type;
+  typedef typename base_type::const_iterator      const_iterator;
+  typedef typename base_type::iterator            iterator;
+  typedef typename base_type::file_position_type  file_position_type;
 
   index_set()
-    : index_base<Key,index_set_base<Key,Traits> >() {}
+    : index_base<index_set_base<Key,Traits,Comp> >() {}
 
   index_set(const path_type& file_pth,
             file_size_type reserv,
@@ -50,10 +50,10 @@ public:
             flags::bitmask flgs = flags::read_only,
             uint64_t sig = -1,  // for existing files, must match creation signature
             std::size_t node_sz = default_node_size,  // ignored if existing file
-            const traits_type& traits = traits_type())
+            const Comp& comp = Comp())
   {
-    index_base<Key,index_set_base<Key,Traits> >::
-    open(file_pth, reserv, index_pth, flgs, sig, node_sz, traits);
+    index_base<index_set_base<Key,Traits,Comp> >::
+    open(file_pth, reserv, index_pth, flgs, sig, node_sz, comp);
   }
 
   index_set(file_ptr_type flat_file,            
@@ -61,10 +61,10 @@ public:
             flags::bitmask flgs = flags::read_only,
             uint64_t sig = -1,  // for existing files, must match creation signature
             std::size_t node_sz = default_node_size,  // ignored if existing file
-            const traits_type& traits = traits_type())
+            const Comp& comp = Comp())
   {
-    index_base<Key,index_set_base<Key,Traits> >::
-    open(flat_file, index_pth, flgs, sig, node_sz, traits);
+    index_base<index_set_base<Key,Traits,Comp> >::
+    open(flat_file, index_pth, flgs, sig, node_sz, comp);
   }
 
   void open(const path_type& file_pth,
@@ -73,10 +73,10 @@ public:
             flags::bitmask flgs = flags::read_only,
             uint64_t sig = -1,  // for existing files, must match creation signature
             std::size_t node_sz = default_node_size,  // ignored if existing file
-            const traits_type& traits = traits_type())
+            const Comp& comp = Comp())
   {
-    index_base<Key,index_set_base<Key,Traits> >::
-    open(file_pth, reserv, index_pth, flgs, sig, node_sz, traits);
+    index_base<index_set_base<Key,Traits,Comp> >::
+    open(file_pth, reserv, index_pth, flgs, sig, node_sz, comp);
   }
 
   void open(file_ptr_type flat_file,            
@@ -84,10 +84,10 @@ public:
             flags::bitmask flgs = flags::read_only,
             uint64_t sig = -1,  // for existing files, must match creation signature
             std::size_t node_sz = default_node_size,  // ignored if existing file
-            const traits_type& traits = traits_type())
+            const Comp& comp = Comp())
   {
-    index_base<Key,index_set_base<Key,Traits> >::
-    open(flat_file, index_pth, flgs, sig, node_sz, traits);
+    index_base<index_set_base<Key,Traits,Comp> >::
+    open(flat_file, index_pth, flgs, sig, node_sz, comp);
   }
 
   //  modifiers

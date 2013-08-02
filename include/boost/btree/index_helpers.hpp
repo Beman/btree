@@ -12,18 +12,23 @@
 
 #include <boost/btree/detail/config.hpp>
 #include <boost/btree/helpers.hpp>
-#include <boost/cstdint.hpp>
-#include <boost/detail/bitmask.hpp>
-#include <boost/endian/types.hpp>
+#include <boost/utility/string_ref.hpp>
 #include <boost/assert.hpp>
 #include <cstring>
-#include <cstdlib>
 
 namespace boost
 {
+
+//--------------------------------------------------------------------------------------//
+//                                 string_view_support                                  //
+//--------------------------------------------------------------------------------------//
+
+  //  Boost has an early version of string_view, named string_ref. So typedef the name.
+
+  typedef string_ref string_view;
+
 namespace btree
 {
-
 //--------------------------------------------------------------------------------------//
 //                                 flat file adapters                                   //
 //--------------------------------------------------------------------------------------//
@@ -58,10 +63,27 @@ namespace btree
     typedef const char*  type;
 
     static std::size_t flat_size(const char* s)              {BOOST_ASSERT(s);
-                                                              return std::strlen(s)+1;}
+                                                              return std::strlen(s) + 1;}
 
     static void copy_to_flat(const char* src, char* dest)    {BOOST_ASSERT(src);
                                                               BOOST_ASSERT(dest);
+                                                              std::strcpy(dest, src);}
+
+    static type make_from_flat(const char* src)              {BOOST_ASSERT(src);
+                                                              return src;}
+  };
+
+  //-----------------  string_view specialization; C++ style strings  ------------------//
+
+  template <>
+  class flat_adapter<boost::string_view>
+  {
+  public:
+    typedef const boost::string_view&  type;
+
+    static std::size_t flat_size(type s)                     {return s.size() + 1;}
+
+    static void copy_to_flat(type src, char* dest)           {BOOST_ASSERT(dest);
                                                               std::strcpy(dest, src);}
 
     static type make_from_flat(const char* src)              {BOOST_ASSERT(src);

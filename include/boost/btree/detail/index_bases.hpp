@@ -25,6 +25,13 @@
 
   *  verify dereferencing the end iterator assert fires correctly.
 
+  *  The flat_adapter<string_view> specialization is space efficient, but does not support
+     embedded nulls and is time inefficient for very long strings. Users might want
+     trade-offs, so alternate flavors should be available. This might serve as a poster
+     child for use cases where the type alone isn't sufficient to determine which
+     flat_adapter to use. Consider adding a template parameter (two for maps)
+     at the end that defaults to (renamed) default_flat_adapter<Key>.
+
 */
 
 namespace boost
@@ -36,18 +43,20 @@ namespace btree
 //                                class index_set_base                                  //
 //--------------------------------------------------------------------------------------//
 
-template <class Key, class Traits>
+template <class Key, class Traits, class Comp>
 class index_set_base
 {
 public:
+  typedef typename 
+    btree::flat_adapter<Key>::type          key_type;
+  typedef key_type                          value_type;
+  typedef key_type                          mapped_type;
+  typedef Traits                            traits_type;
+  typedef Comp                              compare_type;
+  typedef compare_type                      value_compare;
   typedef typename Traits::node_id_type     node_id_type;
   typedef typename Traits::node_size_type   node_size_type;
   typedef typename Traits::node_level_type  node_level_type;
-  typedef Key                               value_type;
-  typedef Key                               mapped_type;
-  typedef Traits                            traits_type;
-  typedef typename Traits::compare_type     compare_type;
-  typedef compare_type                      value_compare;
 };
 
 ////--------------------------------------------------------------------------------------//
@@ -103,9 +112,7 @@ public:
 //--------------------------------------------------------------------------------------//
 
 
-template  <class Key,   // shall be trivially copyable type; see std 3.9 [basic.types]
-           class Base>  // index_map_base or index_set_base
-
+template <class Base>  // index_map_base or index_set_base
 class index_base : public Base, private noncopyable
 {
 private:
@@ -118,7 +125,7 @@ private:
 
 public:
   // types:
-  typedef Key                                   key_type;
+  typedef typename Base::key_type               key_type;
   typedef typename Base::value_type             value_type;
   typedef typename Base::mapped_type            mapped_type;
   typedef typename Base::compare_type           compare_type;

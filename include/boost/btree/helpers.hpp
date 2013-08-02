@@ -17,7 +17,7 @@
 #include <boost/detail/bitmask.hpp>
 #include <boost/endian/types.hpp>
 #include <boost/assert.hpp>
-#include <cstring>
+//#include <cstring>
 #include <cstdlib>
 
 namespace boost
