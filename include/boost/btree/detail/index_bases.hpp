@@ -32,6 +32,8 @@
      flat_adapter to use. Consider adding a template parameter (two for maps)
      at the end that defaults to (renamed) default_flat_adapter<Key>.
 
+  *  Rename in index_helpers.hpp to index_traits.hpp?
+
 */
 
 namespace boost
@@ -43,17 +45,17 @@ namespace btree
 //                                class index_set_base                                  //
 //--------------------------------------------------------------------------------------//
 
-template <class Key, class Traits, class Comp>
+template <class Key, class Traits, class Comp, class NdxTraits>
 class index_set_base
 {
 public:
-  typedef typename 
-    btree::flat_adapter<Key>::type          key_type;
+  typedef Key                               key_type;
   typedef key_type                          value_type;
   typedef key_type                          mapped_type;
-  typedef Traits                            traits_type;
+  typedef Traits                            btree_traits;
   typedef Comp                              compare_type;
   typedef compare_type                      value_compare;
+  typedef NdxTraits                         index_traits;
   typedef typename Traits::node_id_type     node_id_type;
   typedef typename Traits::node_size_type   node_size_type;
   typedef typename Traits::node_level_type  node_level_type;
@@ -72,7 +74,7 @@ public:
 //  typedef typename Traits::node_level_type  node_level_type;
 //  typedef std::pair<const Key, T>           value_type;
 //  typedef T                                 mapped_type;
-//  typedef Traits                            traits_type;
+//  typedef Traits                            btree_traits;
 //  typedef typename Traits::compare_type     compare_type;
 //
 //  const Key&  key(const value_type& v) const  // really handy, so expose
@@ -145,33 +147,38 @@ public:
   typedef std::pair<const_iterator, const_iterator>
                                                 const_iterator_range;
 
-  typedef typename Base::traits_type            traits_type;
+  typedef typename Base::btree_traits           btree_traits;
   typedef typename Base::node_id_type           node_id_type;
   typedef typename Base::node_size_type         node_size_type;
   typedef typename Base::node_level_type        node_level_type;
+
+  typedef typename Base::index_traits           index_traits;
+
 
   typedef boost::filesystem::path               path_type;
 
   typedef boost::btree::extendible_mapped_file  file_type;
   typedef boost::shared_ptr<file_type>          file_ptr_type;
   typedef file_type::size_type                  file_size_type;
-  typedef typename traits_type::position_type   file_position_type;
+  typedef file_type::position_type              file_position;
+
+  typedef typename index_traits::index_key      index_key;
 
   typedef detail::indirect_compare<key_type,
-    file_position_type, traits_type>            index_compare_type;
+    index_key, compare_type>                    index_compare_type;
   typedef typename
-    btree_set<file_position_type, traits_type>  index_type;
+    btree_set<index_key, btree_traits,
+      index_compare_type>                       index_type;
   typedef typename index_type::size_type        index_size_type;
 
 
-private:
+protected:
   index_type      m_set;
   file_ptr_type   m_file;   // shared_ptr to flat file shared with other indexes
-  traits_type     m_traits;
-
-  index_base() {} 
+  compare_type    m_comp;
 
 public:
+  index_base() {} 
 
   //  opens
 
@@ -181,13 +188,13 @@ public:
             flags::bitmask flgs = flags::read_only,
             uint64_t sig = -1,  // for existing files, must match creation signature
             std::size_t node_sz = default_node_size,  // ignored if existing file
-            const traits_type& traits = traits_type())
+            const compare_type& comp = compare_type())
   {
     BOOST_ASSERT(!m_set.is_open());
     BOOST_ASSERT(!m_file.get());
     m_file.reset(new file_type);
     m_file->open(file_pth, flgs, reserv);
-    open(m_file, index_pth, flgs, sig, node_sz, traits);
+    open(m_file, index_pth, flgs, sig, node_sz, comp);
   }
 
   void open(file_ptr_type flat_file,            
@@ -195,7 +202,7 @@ public:
             flags::bitmask flgs = flags::read_only,
             uint64_t sig = -1,  // for existing files, must match creation signature
             std::size_t node_sz = default_node_size,  // ignored if existing file
-            const traits_type& traits = traits_type())
+            const compare_type& comp = compare_type())
   {
     BOOST_ASSERT(!m_set.is_open());
     BOOST_ASSERT(flat_file->is_open());
@@ -230,7 +237,8 @@ public:
 
   // operations
 
-  file_position_type position(iterator itr) const;
+  file_position     position(iterator itr) const;
+  //  Returns: The offset in the flat file of the element pointed to by itr
 
   const_iterator    find(const key_type& k) const 
                                            {return const_iterator(m_set.find(k), m_file);}
@@ -288,7 +296,41 @@ private:
 
 };  // class index_base
 
+namespace detail
+{
+  // TODO: Pos needs to be a distinct type so no ambiguity arises if Key and
+  // file_position happen to be the same type
 
+  template <class Key, class Pos, class Comp>
+  class indirect_compare
+  {
+    Comp                           m_comp;
+    extendible_mapped_file*        m_file;
+
+  public:
+
+    indirect_compare(){}
+    indirect_compare(Comp comp, extendible_mapped_file* flat_file)
+      : m_comp(comp), m_file(flat_file) {}
+
+    bool operator()(const Key& lhs, Pos rhs) const
+    {
+      return m_comp(lhs,
+        *reinterpret_cast<const Key*>(m_file->const_data<char>()+rhs));
+    }
+    bool operator()(Pos lhs, const Key& rhs) const
+    {
+      return m_comp(*reinterpret_cast<const Key*>(m_file->const_data<char>()+lhs), rhs);
+    }
+    bool operator()(Pos lhs, Pos rhs) const
+    {
+      return m_comp(*reinterpret_cast<const Key*>(m_file->const_data<char>()+lhs),
+        *reinterpret_cast<const Key*>(m_file->const_data<char>()+rhs));
+    }
+
+  };
+
+}  // namespace detail
 }  // namespace btree
 }  // namespace boost
 

@@ -27,22 +27,24 @@ namespace btree
 
 template <class Key,    // shall be trivially copyable type; see std 3.9 [basic.types]
           class Traits = btree::default_traits,
-          class Comp = btree::less>
+          class Comp = btree::less,
+          class NdxTraits = btree::default_index_traits<Key> >
 class index_set
-  : public index_base<index_set_base<Key,Traits,Comp> >
+  : public index_base<index_set_base<Key,Traits,Comp,NdxTraits> >
 {
 private:
   typedef typename
-    index_base<index_set_base<Key,Traits,Comp> >  base_type;
+    index_base<index_set_base<Key,Traits,Comp,NdxTraits> >  base_type;
 public:
   typedef typename base_type::key_type            key_type;
   typedef typename base_type::value_type          value_type;
   typedef typename base_type::const_iterator      const_iterator;
   typedef typename base_type::iterator            iterator;
-  typedef typename base_type::file_position_type  file_position_type;
+  typedef typename base_type::file_position       file_position;
+  typedef typename base_type::index_key           index_key;
 
   index_set()
-    : index_base<index_set_base<Key,Traits,Comp> >() {}
+    : index_base<index_set_base<Key,Traits,Comp,NdxTraits> >() {}
 
   index_set(const path_type& file_pth,
             file_size_type reserv,
@@ -52,7 +54,7 @@ public:
             std::size_t node_sz = default_node_size,  // ignored if existing file
             const Comp& comp = Comp())
   {
-    index_base<index_set_base<Key,Traits,Comp> >::
+    index_base<index_set_base<Key,Traits,Comp,NdxTraits> >::
     open(file_pth, reserv, index_pth, flgs, sig, node_sz, comp);
   }
 
@@ -63,7 +65,7 @@ public:
             std::size_t node_sz = default_node_size,  // ignored if existing file
             const Comp& comp = Comp())
   {
-    index_base<index_set_base<Key,Traits,Comp> >::
+    index_base<index_set_base<Key,Traits,Comp,NdxTraits> >::
     open(flat_file, index_pth, flgs, sig, node_sz, comp);
   }
 
@@ -75,7 +77,7 @@ public:
             std::size_t node_sz = default_node_size,  // ignored if existing file
             const Comp& comp = Comp())
   {
-    index_base<index_set_base<Key,Traits,Comp> >::
+    index_base<index_set_base<Key,Traits,Comp,NdxTraits> >::
     open(file_pth, reserv, index_pth, flgs, sig, node_sz, comp);
   }
 
@@ -86,36 +88,36 @@ public:
             std::size_t node_sz = default_node_size,  // ignored if existing file
             const Comp& comp = Comp())
   {
-    index_base<index_set_base<Key,Traits,Comp> >::
+    index_base<index_set_base<Key,Traits,Comp,NdxTraits> >::
     open(flat_file, index_pth, flgs, sig, node_sz, comp);
   }
 
   //  modifiers
 
-  file_position_type push_back(const value_type& value)
+  file_position push_back(const value_type& value)
   // Effects: unconditional push_back into file(); index unaffected
   {
     return file()->push_back(value);
   }
 
   std::pair<const_iterator, bool>
-    insert_file_position(file_position_type pos)
+    insert_file_position(file_position pos)
   {
     BOOST_ASSERT(!read_only());
     std::pair<index_type::const_iterator, bool>
-      result(m_set.insert(index_position_type(pos)));
+      result(m_set.insert(index_key(pos)));
     return std::pair<const_iterator, bool>(
       const_iterator(result.first, file()), result.second);
   }
 
   std::pair<const_iterator, bool>
     insert(const value_type& value)
-  //  Effects: if !find(k) then insert_position(push_back(value));
+  //  Effects: if !find(k) then insert_file_position(push_back(value));
   {
     BOOST_ASSERT(!read_only());
     if (find(value) == end())
     {
-      insert_result_pair result(insert_position(push_back(value)));
+      std::pair<const_iterator, bool> result(insert_file_position(push_back(value)));
       BOOST_ASSERT(result.second);
       return result;
     }

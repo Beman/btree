@@ -20,7 +20,7 @@ namespace boost
 {
 
 //--------------------------------------------------------------------------------------//
-//                                 string_view_support                                  //
+//                                string_view_support                                   //
 //--------------------------------------------------------------------------------------//
 
   //  Boost has an early version of string_view, named string_ref. So typedef the name.
@@ -30,37 +30,36 @@ namespace boost
 namespace btree
 {
 //--------------------------------------------------------------------------------------//
-//                                 flat file adapters                                   //
+//                                   index traits                                       //
 //--------------------------------------------------------------------------------------//
 
 //--------------  primary template; handles all fixed length data types  ---------------//
 
   template <class T>
-  class flat_adapter
+  class default_index_traits
   {
   public:
-    typedef const T&  type;
+    typedef const T&                type;
+    typedef endian::big_uint48un_t  index_key;  // position in the flat file
 
-    static std::size_t flat_size(type x)             {return sizeof(T);}
+    static std::size_t flat_size(type x)            {return sizeof(T);}
 
-    static void copy_to_flat(type src, char* dest)   {BOOST_ASSERT(dest);
-                                                      std::memcpy(dest, &src, sizeof(T));}
+    static void copy_to_flat(type src, char* dest)  {BOOST_ASSERT(dest);
+                                                     std::memcpy(dest, &src, sizeof(T));}
 
-    static type make_from_flat(const char* src)
-    {
-      BOOST_ASSERT(src);
-      T tmp;
-      std::memcpy(&T, src, sizeof(T));
-      return tmp;}
+    static type make_from_flat(const char* src) {BOOST_ASSERT(src);
+                                                 return *reinterpret_cast<const T*>(src);}
+    
   };
 
   //----------  const char* specialization; null-terminated C-style strings  -----------//
 
   template <>
-  class flat_adapter<const char*>
+  class default_index_traits<const char*>
   {
   public:
-    typedef const char*  type;
+    typedef const char*             type;
+    typedef endian::big_uint48un_t  index_key;  // position in the flat file
 
     static std::size_t flat_size(const char* s)              {BOOST_ASSERT(s);
                                                               return std::strlen(s) + 1;}
@@ -76,18 +75,26 @@ namespace btree
   //-----------------  string_view specialization; C++ style strings  ------------------//
 
   template <>
-  class flat_adapter<boost::string_view>
+  class default_index_traits<boost::string_view>
   {
   public:
     typedef const boost::string_view&  type;
+    typedef endian::big_uint48un_t     index_key;  // position in the flat file
 
-    static std::size_t flat_size(type s)                     {return s.size() + 1;}
+    static std::size_t flat_size(type s)  {return s.size() + 1;}
 
-    static void copy_to_flat(type src, char* dest)           {BOOST_ASSERT(dest);
-                                                              std::strcpy(dest, src);}
+    static void copy_to_flat(type src, char* dest)
+    {
+      BOOST_ASSERT(dest);
+      std::memcpy(dest, src.data(), src.size());
+      *(dest + src.size()) = '\0';
+    }
 
-    static type make_from_flat(const char* src)              {BOOST_ASSERT(src);
-                                                              return src;}
+    static boost::string_view make_from_flat(const char* src )
+    {
+      BOOST_ASSERT(src);
+      return boost::string_view(src);
+    }
   };
 
 }  // namespace btree

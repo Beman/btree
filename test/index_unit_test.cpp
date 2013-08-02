@@ -129,7 +129,7 @@ void  push_back_insert_pos_test()
     btree::index_set<stuff> idx(file_path, 1000000, idx1_path,
                                 btree::flags::truncate, -1, 128);
     stuff x(2,2);
-    btree::index_set<stuff>::file_position_type pos = idx.push_back(x);
+    btree::index_set<stuff>::file_position pos = idx.push_back(x);
     BOOST_TEST_EQ(pos, 0u);
     BOOST_TEST_EQ(idx.file_size(), sizeof(stuff));
     idx.insert_file_position(pos);
@@ -338,23 +338,23 @@ void  two_index_test()
   {
     btree::index_set<stuff> idx1(file_path, 1000000,
       idx1_path, btree::flags::truncate, -1, 128);
-    btree::index_set<stuff, btree::default_index_traits, stuff_reverse_order>
+    btree::index_set<stuff, btree::default_traits, stuff_reverse_order>
       idx2(idx1.file(), idx2_path, btree::flags::truncate, -1, 128);
 
     stuff x(2,2);
-    btree::position_type pos = idx1.push_back(x);
-    idx1.insert_position(pos);
-    idx2.insert_position(pos);
+    btree::index_set<stuff>::file_position pos = idx1.push_back(x);
+    idx1.insert_file_position(pos);
+    idx2.insert_file_position(pos);
 
     x.assign(1,3);
     pos = idx1.push_back(x);
-    idx1.insert_position(pos);
-    idx2.insert_position(pos);
+    idx1.insert_file_position(pos);
+    idx2.insert_file_position(pos);
 
     x.assign(3,1);
     pos = idx1.push_back(x);
-    idx1.insert_position(pos);
-    idx2.insert_position(pos);
+    idx1.insert_file_position(pos);
+    idx2.insert_file_position(pos);
 
     BOOST_TEST_EQ(idx1.index_size(), 3u);
     BOOST_TEST_EQ(idx2.index_size(), 3u);
@@ -406,7 +406,7 @@ void  two_index_iterator_test()
     cout << "       idx2..." << endl;
 
     typedef btree::index_set<stuff,
-      btree::default_index_traits, stuff_reverse_order> index_type;
+      btree::default_traits, stuff_reverse_order> index_type;
     index_type idx(file_path, 0, idx2_path);
 
     index_type::iterator itr = idx.begin();
