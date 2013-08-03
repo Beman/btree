@@ -262,12 +262,14 @@ Global
 		{804710C2-4C7C-42F2-9524-3E90BA975917}.Debug|Mixed Platforms.Build.0 = Debug|Win32
 		{804710C2-4C7C-42F2-9524-3E90BA975917}.Debug|Win32.ActiveCfg = Debug|Win32
 		{804710C2-4C7C-42F2-9524-3E90BA975917}.Debug|Win32.Build.0 = Debug|Win32
-		{804710C2-4C7C-42F2-9524-3E90BA975917}.Debug|x64.ActiveCfg = Debug|Win32
+		{804710C2-4C7C-42F2-9524-3E90BA975917}.Debug|x64.ActiveCfg = Debug|x64
+		{804710C2-4C7C-42F2-9524-3E90BA975917}.Debug|x64.Build.0 = Debug|x64
 		{804710C2-4C7C-42F2-9524-3E90BA975917}.Release|Mixed Platforms.ActiveCfg = Release|Win32
 		{804710C2-4C7C-42F2-9524-3E90BA975917}.Release|Mixed Platforms.Build.0 = Release|Win32
 		{804710C2-4C7C-42F2-9524-3E90BA975917}.Release|Win32.ActiveCfg = Release|Win32
 		{804710C2-4C7C-42F2-9524-3E90BA975917}.Release|Win32.Build.0 = Release|Win32
-		{804710C2-4C7C-42F2-9524-3E90BA975917}.Release|x64.ActiveCfg = Release|Win32
+		{804710C2-4C7C-42F2-9524-3E90BA975917}.Release|x64.ActiveCfg = Release|x64
+		{804710C2-4C7C-42F2-9524-3E90BA975917}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
