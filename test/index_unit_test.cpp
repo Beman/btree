@@ -12,6 +12,8 @@
 //                                                                                      //
 //--------------------------------------------------------------------------------------//
 
+#include <boost/config/warning_disable.hpp>
+
 #include <boost/btree/index_set.hpp>
 #include <boost/detail/lightweight_main.hpp>
 #include <boost/detail/lightweight_test.hpp>
@@ -150,7 +152,6 @@ void  push_back_insert_pos_test()
     BOOST_TEST_EQ(idx.index_size(), 3u);
   }
   BOOST_TEST_EQ(boost::filesystem::file_size(file_path), 3*sizeof(stuff));
-
 
   cout << "     push_back_insert_pos_test complete" << endl;
 }
@@ -320,14 +321,14 @@ void  insert_test()
   cout << "     insert_test complete" << endl;
 }
 
-//-------------------------------  open_new_index_test  --------------------------------//
-
-void  open_new_index_test()
-{
-  cout << "  open_new_index_test with existing flat file..." << endl;
-
-  cout << "    open_new_index_test with existing flat file complete" << endl;
-}
+////-------------------------------  open_new_index_test  --------------------------------//
+//
+//void  open_new_index_test()
+//{
+//  cout << "  open_new_index_test with existing flat file..." << endl;
+//
+//  cout << "    open_new_index_test with existing flat file complete" << endl;
+//}
 
 //---------------------------------  two_index_test  -----------------------------------//
 
