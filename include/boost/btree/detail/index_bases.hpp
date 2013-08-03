@@ -233,7 +233,8 @@ public:
                                            return m_file->path();}
   file_size_type    file_size() const     {BOOST_ASSERT(m_file);
                                            return m_file->file_size();}
-  file_size_type    file_reserve() const  {BOOST_ASSERT(m_file);}
+  file_size_type    file_reserve() const  {BOOST_ASSERT(m_file);
+                                           return m_file->reserve();}
 
   // operations
 
