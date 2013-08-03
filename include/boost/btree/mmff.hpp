@@ -33,8 +33,18 @@
 #ifndef BOOST_BTREE_MMFF_HPP
 #define BOOST_BTREE_MMFF_HPP
 
-#include <boost/filesystem.hpp>
+#if defined(_MSC_VER)  
+#  pragma warning(push)
+#  pragma warning(disable: 4251)
+#endif
+
 #include <boost/iostreams/device/mapped_file.hpp>
+
+#if defined(_MSC_VER)  
+#  pragma warning(pop)
+#endif
+
+#include <boost/filesystem.hpp>
 #include <boost/btree/helpers.hpp>
 #include <boost/btree/detail/binary_file.hpp>
 
