@@ -45,7 +45,7 @@ namespace btree
 //                                class index_set_base                                  //
 //--------------------------------------------------------------------------------------//
 
-template <class Key, class Traits, class Comp, class NdxTraits>
+template <class Key, class Traits, class Comp, class IndexTraits>
 class index_set_base
 {
 public:
@@ -55,7 +55,7 @@ public:
   typedef Traits                            btree_traits;
   typedef Comp                              compare_type;
   typedef compare_type                      value_compare;
-  typedef NdxTraits                         index_traits;
+  typedef IndexTraits                       index_traits;
   typedef typename Traits::node_id_type     node_id_type;
   typedef typename Traits::node_size_type   node_size_type;
   typedef typename Traits::node_level_type  node_level_type;
@@ -265,7 +265,7 @@ private:
     : public boost::iterator_facade<iterator_type<T>, T, bidirectional_traversal_tag>
   {
   public:
-    typedef typename index_type::iterator    index_iterator_type;
+    typedef typename index_type::iterator   index_iterator_type;
     typedef typename index_base::file_type  file_type;
 
     iterator_type() {}  // constructs the end iterator

@@ -28,23 +28,31 @@ namespace btree
 template <class Key,    // shall be trivially copyable type; see std 3.9 [basic.types]
           class Traits = btree::default_traits,
           class Comp = btree::less,
-          class NdxTraits = btree::default_index_traits<Key> >
+          class IndexTraits = btree::default_index_traits<Key> >
 class index_set
-  : public index_base<index_set_base<Key,Traits,Comp,NdxTraits> >
+  : public index_base<index_set_base<Key,Traits,Comp,IndexTraits> >
 {
 private:
   typedef typename
-    index_base<index_set_base<Key,Traits,Comp,NdxTraits> >  base_type;
+    index_base<index_set_base<Key,Traits,Comp,IndexTraits> >  base_type;
 public:
-  typedef typename base_type::key_type            key_type;
-  typedef typename base_type::value_type          value_type;
-  typedef typename base_type::const_iterator      const_iterator;
-  typedef typename base_type::iterator            iterator;
-  typedef typename base_type::file_position       file_position;
-  typedef typename base_type::index_key           index_key;
+  typedef typename Key                        key_type; 
+  typedef typename Key                        value_type;
+
+  // key_reference and value_reference are not necessarily the same type. For example,
+  // if Key is string_view, key_reference will be const string_view& while value_reference
+  // will be string_view. The value_reference type is determined by IndexTraits depending
+  // on whether or not a proxy needs to be returned when dereferencing an iterator.
+  typedef typename base_type::key_reference   key_reference;  // const Key& or Key
+  typedef typename base_type::value_reference value_reference;  // const Key& or Key
+
+  typedef typename base_type::const_iterator  const_iterator;
+  typedef typename base_type::iterator        iterator;
+  typedef typename base_type::file_position   file_position;
+  typedef typename base_type::index_key       index_key;
 
   index_set()
-    : index_base<index_set_base<Key,Traits,Comp,NdxTraits> >() {}
+    : index_base<index_set_base<Key,Traits,Comp,IndexTraits> >() {}
 
   index_set(const path_type& file_pth,
             file_size_type reserv,
@@ -54,7 +62,7 @@ public:
             std::size_t node_sz = default_node_size,  // ignored if existing file
             const Comp& comp = Comp())
   {
-    index_base<index_set_base<Key,Traits,Comp,NdxTraits> >::
+    index_base<index_set_base<Key,Traits,Comp,IndexTraits> >::
     open(file_pth, reserv, index_pth, flgs, sig, node_sz, comp);
   }
 
@@ -65,7 +73,7 @@ public:
             std::size_t node_sz = default_node_size,  // ignored if existing file
             const Comp& comp = Comp())
   {
-    index_base<index_set_base<Key,Traits,Comp,NdxTraits> >::
+    index_base<index_set_base<Key,Traits,Comp,IndexTraits> >::
     open(flat_file, index_pth, flgs, sig, node_sz, comp);
   }
 
@@ -77,7 +85,7 @@ public:
             std::size_t node_sz = default_node_size,  // ignored if existing file
             const Comp& comp = Comp())
   {
-    index_base<index_set_base<Key,Traits,Comp,NdxTraits> >::
+    index_base<index_set_base<Key,Traits,Comp,IndexTraits> >::
     open(file_pth, reserv, index_pth, flgs, sig, node_sz, comp);
   }
 
@@ -88,16 +96,17 @@ public:
             std::size_t node_sz = default_node_size,  // ignored if existing file
             const Comp& comp = Comp())
   {
-    index_base<index_set_base<Key,Traits,Comp,NdxTraits> >::
+    index_base<index_set_base<Key,Traits,Comp,IndexTraits> >::
     open(flat_file, index_pth, flgs, sig, node_sz, comp);
   }
 
   //  modifiers
 
-  file_position push_back(const value_type& value)
+  file_position push_back(interface_type x)
   // Effects: unconditional push_back into file(); index unaffected
   {
-    return file()->push_back(value);
+    return file()->push_back(index_traits::flat_cast(x),
+                             index_traits::flat_size(x));
   }
 
   std::pair<const_iterator, bool>

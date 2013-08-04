@@ -39,16 +39,23 @@ namespace btree
   class default_index_traits
   {
   public:
-    typedef const T&                type;
+    typedef const T&  source_reference;
+    typedef const T&  value_reference;
+
     typedef endian::big_uint48un_t  index_key;  // position in the flat file
 
-    static std::size_t flat_size(type x)            {return sizeof(T);}
+    static std::size_t flat_size(source_reference)    {return sizeof(T);}
 
-    static void copy_to_flat(type src, char* dest)  {BOOST_ASSERT(dest);
-                                                     std::memcpy(dest, &src, sizeof(T));}
+    static const char* flat_cast(source_reference x)
+    { 
+      return reinterpret_cast<const char*>(&x);
+    }
 
-    static type make_from_flat(const char* src) {BOOST_ASSERT(src);
-                                                 return *reinterpret_cast<const T*>(src);}
+    static value_reference  make_value_reference(const char* x)
+    {
+      BOOST_ASSERT(x);
+      return *reinterpret_cast<const T*>(x);
+    }
     
   };
 
@@ -58,18 +65,19 @@ namespace btree
   class default_index_traits<const char*>
   {
   public:
-    typedef const char*             type;
+    typedef const char*  source_reference;
+    typedef const char*  value_reference;
+
     typedef endian::big_uint48un_t  index_key;  // position in the flat file
 
-    static std::size_t flat_size(const char* s)              {BOOST_ASSERT(s);
-                                                              return std::strlen(s) + 1;}
+    static std::size_t flat_size(source_reference x)          {BOOST_ASSERT(x);
+                                                               return std::strlen(x) + 1;}
 
-    static void copy_to_flat(const char* src, char* dest)    {BOOST_ASSERT(src);
-                                                              BOOST_ASSERT(dest);
-                                                              std::strcpy(dest, src);}
+    static const char* flat_cast(source_reference x)          {BOOST_ASSERT(x);
+                                                               return x;}
 
-    static type make_from_flat(const char* src)              {BOOST_ASSERT(src);
-                                                              return src;}
+    static value_reference make_value_reference(const char* x){BOOST_ASSERT(x);
+                                                               return x;}
   };
 
   //-----------------  string_view specialization; C++ style strings  ------------------//
@@ -78,23 +86,18 @@ namespace btree
   class default_index_traits<boost::string_view>
   {
   public:
-    typedef const boost::string_view&  type;
+    typedef const boost::string_view&  source_reference;
+    typedef boost::string_view         value_reference;
+
     typedef endian::big_uint48un_t     index_key;  // position in the flat file
 
-    static std::size_t flat_size(type s)  {return s.size() + 1;}
+    static std::size_t flat_size(source_reference x)  {return x.size() + 1;}
 
-    static void copy_to_flat(type src, char* dest)
-    {
-      BOOST_ASSERT(dest);
-      std::memcpy(dest, src.data(), src.size());
-      *(dest + src.size()) = '\0';
-    }
+    static const char* flat_cast(source_reference x)
+      {return reinterpret_cast<const char*>(&x);}
 
-    static boost::string_view make_from_flat(const char* src )
-    {
-      BOOST_ASSERT(src);
-      return boost::string_view(src);
-    }
+    static value_reference make_value_reference(const char* x)
+      {return boost::string_view(x);}
   };
 
 }  // namespace btree

@@ -149,6 +149,17 @@ namespace btree
     // TODO: may wish to add overload for const char*, etc, std basic_string
     // or remove_ptr and/or decay
 
+    position_type push_back(const char* x, size_type sz = 1)
+    {
+      BOOST_ASSERT(m_file.is_open());
+      BOOST_ASSERT(sz);
+      BOOST_ASSERT_MSG(m_file.data(), "Error: attempt to push_back read_only file");
+      size_type position = file_size();
+      increment_file_size(sz);
+      std::memcpy(m_file.data()+position, &x, sz);
+      return position;
+    }
+
     template <class T>
     position_type push_back(const T& value, size_type n = 1)
     {
