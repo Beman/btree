@@ -78,7 +78,7 @@ namespace boost
 
      ~btree_set()
       {
-        try {close();}
+        try {btree_base<Key, btree_set_base<Key,Traits,Comp> >::close();}
         catch (...) {}
       }
 

@@ -19,6 +19,7 @@ project
        [ run ../tools/bt_time.cpp : 100 -stl -p :  :  : ]                  
        [ run ../tools/bt_str_time.cpp : 100 -stl -p :  :  : ]                  
        [ run btree_unit_test.cpp :  :  :  : ]                  
+       [ run index_unit_test.cpp :  :  :  : ]                  
        [ run buffer_manager_test.cpp :  :  :  : ]                  
        [ run stl_test.cpp :  :  :  : ]                  
        ;

@@ -200,4 +200,4 @@ namespace btree
 }  // namespace btree
 }  // namespace boost
 
-#endif  BOOST_BTREE_MMFF_HPP
+#endif  // BOOST_BTREE_MMFF_HPP

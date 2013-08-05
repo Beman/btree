@@ -23,6 +23,7 @@
 #include <utility>
 #include <set>
 #include <algorithm>
+#include <cstring>
 
 using namespace boost;
 namespace fs = boost::filesystem;
@@ -210,7 +211,7 @@ void  lower_bound_test()
 
   stuff s00 (0,0);
   stuff s13 (1,3);
-  stuff s22 (2,2);
+  stuff s3 (2,2);
   stuff s31 (3,1);
   stuff s12 (1,2);
   stuff s14 (1,4);
@@ -218,7 +219,7 @@ void  lower_bound_test()
 
   BOOST_TEST(idx.lower_bound(s00) == itr1);
   BOOST_TEST(idx.lower_bound(s13) == itr1);
-  BOOST_TEST(idx.lower_bound(s22) == itr2);
+  BOOST_TEST(idx.lower_bound(s3) == itr2);
   BOOST_TEST(idx.lower_bound(s31) == itr3);
   BOOST_TEST(idx.lower_bound(s12) == itr1);
   BOOST_TEST(idx.lower_bound(s14) == itr2);
@@ -244,7 +245,7 @@ void  find_test()
 
   stuff s00 (0,0);
   stuff s13 (1,3);
-  stuff s22 (2,2);
+  stuff s3 (2,2);
   stuff s31 (3,1);
   stuff s12 (1,2);
   stuff s14 (1,4);
@@ -252,7 +253,7 @@ void  find_test()
 
   BOOST_TEST(idx.find(s00) == idx.end());
   BOOST_TEST(idx.find(s13) == itr1);
-  BOOST_TEST(idx.find(s22) == itr2);
+  BOOST_TEST(idx.find(s3) == itr2);
   BOOST_TEST(idx.find(s31) == itr3);
   BOOST_TEST(idx.find(s12) == idx.end());
   BOOST_TEST(idx.find(s14) == idx.end());
@@ -274,7 +275,7 @@ void  insert_test()
 
   stuff s00 (0,0);
   stuff s13 (1,3);
-  stuff s22 (2,2);
+  stuff s3 (2,2);
   stuff s31 (3,1);
   stuff s12 (1,2);
   stuff s14 (1,4);
@@ -287,7 +288,7 @@ void  insert_test()
   BOOST_TEST_EQ(*result.first, s00);
   result = idx.insert(s13);
   BOOST_TEST(!result.second);
-  result = idx.insert(s22);
+  result = idx.insert(s3);
   BOOST_TEST(!result.second);
   result = idx.insert(s31);
   BOOST_TEST(!result.second);
@@ -307,8 +308,8 @@ void  insert_test()
   BOOST_TEST_EQ(*idx.find(s00), s00);
   BOOST_TEST(idx.find(s13) != idx.end());
   BOOST_TEST_EQ(*idx.find(s13), s13);
-  BOOST_TEST(idx.find(s22) != idx.end());
-  BOOST_TEST_EQ(*idx.find(s22), s22);
+  BOOST_TEST(idx.find(s3) != idx.end());
+  BOOST_TEST_EQ(*idx.find(s3), s3);
   BOOST_TEST(idx.find(s31) != idx.end());
   BOOST_TEST_EQ(*idx.find(s31), s31);
   BOOST_TEST(idx.find(s12) != idx.end());
@@ -439,6 +440,85 @@ void  two_index_iterator_test()
   cout << "     two_index_iterator_test complete" << endl;
 }
 
+//-------------------------------------  c_string_test  ----------------------------------------//
+
+void  c_string_test()
+{
+  cout << "  c_string_test..." << endl;
+
+  typedef btree::index_set<const char*> index;
+  index idx(file_path.string() + ".c_string", 0, idx1_path, btree::flags::truncate);
+
+  const char* s1 = "b";
+  const char* s2 = "aa";
+  const char* s3 = "ccc";
+  const char* s4 = "";
+
+  std::pair<index::const_iterator, bool> result;
+
+  result = idx.insert(s1);
+  BOOST_TEST(result.second);
+  BOOST_TEST(std::strcmp(*result.first, s1) == 0);
+  cout << '"' << *result.first << '"' << endl;
+  result = idx.insert(s2);
+  BOOST_TEST(result.second);
+  BOOST_TEST(std::strcmp(*result.first, s2) == 0);
+  cout << '"' << *result.first << '"' << endl;
+  result = idx.insert(s3);
+  BOOST_TEST(result.second);
+  BOOST_TEST(std::strcmp(*result.first, s3) == 0);
+  cout << '"' << *result.first << '"' << endl;
+  result = idx.insert(s4);
+  BOOST_TEST(result.second);
+  BOOST_TEST(std::strcmp(*result.first, s4) == 0);
+  cout << '"' << *result.first << '"' << endl;
+ 
+  BOOST_TEST(idx.index_size() == 4);
+
+  index::iterator itr = idx.begin();
+  index::iterator end = idx.end();
+
+  BOOST_TEST(itr != end);
+  const char* s = *itr;
+  BOOST_TEST(std::strcmp(s, s2) == 0);
+  cout << '"' << s << '"' << endl;
+
+  //++itr;
+  //BOOST_TEST(itr != end);
+  //s = *itr;
+  //BOOST_TEST_EQ(s.x, 2);
+  //BOOST_TEST_EQ(s.y, 2);
+
+  //++itr;
+  //BOOST_TEST(itr != end);
+  //s = *itr;
+  //BOOST_TEST_EQ(s.x, 3);
+  //BOOST_TEST_EQ(s.y, 1);
+
+  //++itr;
+  //BOOST_TEST(itr == end);
+
+  //BOOST_TEST(idx.find(s1) != idx.end());
+  //BOOST_TEST_EQ(*idx.find(s1), s1);
+  //BOOST_TEST(idx.find(s2) != idx.end());
+  //BOOST_TEST_EQ(*idx.find(s2), s2);
+  //BOOST_TEST(idx.find(s3) != idx.end());
+  //BOOST_TEST_EQ(*idx.find(s3), s3);
+
+  //result = idx.insert(s1);
+  //BOOST_TEST(!result.second);
+  //result = idx.insert(s2);
+  //BOOST_TEST(!result.second);
+  //result = idx.insert(s3);
+  //BOOST_TEST(!result.second);
+  //result = idx.insert(s4);
+  //BOOST_TEST(!result.second);
+ 
+  //BOOST_TEST(idx.index_size() == 4);
+
+  cout << "     c_string_test complete" << endl;
+}
+
 //-------------------------------------  _test  ----------------------------------------//
 
 void  _test()
@@ -498,6 +578,7 @@ int cpp_main(int argc, char* argv[])
   insert_test();
   two_index_test();
   two_index_iterator_test();
+  c_string_test();
   cout << "all tests complete" << endl;
 
   return boost::report_errors();

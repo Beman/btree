@@ -26,33 +26,34 @@ namespace btree
 //--------------------------------------------------------------------------------------//
 
 template <class Key,    // shall be trivially copyable type; see std 3.9 [basic.types]
-          class Traits = btree::default_traits,
-          class Comp = btree::less,
+          class BtreeTraits = btree::default_traits,
+          class Compare = btree::less,
           class IndexTraits = btree::default_index_traits<Key> >
 class index_set
-  : public index_base<index_set_base<Key,Traits,Comp,IndexTraits> >
+  : public index_base<index_set_base<Key,BtreeTraits,Compare,IndexTraits> >
 {
 private:
   typedef typename
-    index_base<index_set_base<Key,Traits,Comp,IndexTraits> >  base_type;
+    index_base<index_set_base<Key,BtreeTraits,Compare,IndexTraits> >  base;
 public:
-  typedef typename Key                        key_type; 
-  typedef typename Key                        value_type;
+  typedef Key                            key_type;
+  typedef Key                            value_type;
 
-  // key_reference and value_reference are not necessarily the same type. For example,
-  // if Key is string_view, key_reference will be const string_view& while value_reference
-  // will be string_view. The value_reference type is determined by IndexTraits depending
-  // on whether or not a proxy needs to be returned when dereferencing an iterator.
-  typedef typename base_type::key_reference   key_reference;  // const Key& or Key
-  typedef typename base_type::value_reference value_reference;  // const Key& or Key
+  typedef BtreeTraits                    btree_traits;
+  typedef IndexTraits                    index_traits;
 
-  typedef typename base_type::const_iterator  const_iterator;
-  typedef typename base_type::iterator        iterator;
-  typedef typename base_type::file_position   file_position;
-  typedef typename base_type::index_key       index_key;
+  typedef Compare                        key_compare;
+  typedef Compare                        value_compare;
+
+  typedef typename base::size_type       size_type;
+  typedef typename base::reference       reference;
+  typedef typename base::iterator        iterator;
+  typedef typename base::const_iterator  const_iterator;
+  typedef typename base::file_position   file_position;
+  typedef typename base::index_key       index_key;
 
   index_set()
-    : index_base<index_set_base<Key,Traits,Comp,IndexTraits> >() {}
+    : index_base<index_set_base<Key,BtreeTraits,Compare,IndexTraits> >() {}
 
   index_set(const path_type& file_pth,
             file_size_type reserv,
@@ -60,9 +61,9 @@ public:
             flags::bitmask flgs = flags::read_only,
             uint64_t sig = -1,  // for existing files, must match creation signature
             std::size_t node_sz = default_node_size,  // ignored if existing file
-            const Comp& comp = Comp())
+            const Compare& comp = Compare())
   {
-    index_base<index_set_base<Key,Traits,Comp,IndexTraits> >::
+    index_base<index_set_base<Key,BtreeTraits,Compare,IndexTraits> >::
     open(file_pth, reserv, index_pth, flgs, sig, node_sz, comp);
   }
 
@@ -71,9 +72,9 @@ public:
             flags::bitmask flgs = flags::read_only,
             uint64_t sig = -1,  // for existing files, must match creation signature
             std::size_t node_sz = default_node_size,  // ignored if existing file
-            const Comp& comp = Comp())
+            const Compare& comp = Compare())
   {
-    index_base<index_set_base<Key,Traits,Comp,IndexTraits> >::
+    index_base<index_set_base<Key,BtreeTraits,Compare,IndexTraits> >::
     open(flat_file, index_pth, flgs, sig, node_sz, comp);
   }
 
@@ -83,9 +84,9 @@ public:
             flags::bitmask flgs = flags::read_only,
             uint64_t sig = -1,  // for existing files, must match creation signature
             std::size_t node_sz = default_node_size,  // ignored if existing file
-            const Comp& comp = Comp())
+            const Compare& comp = Compare())
   {
-    index_base<index_set_base<Key,Traits,Comp,IndexTraits> >::
+    index_base<index_set_base<Key,BtreeTraits,Compare,IndexTraits> >::
     open(file_pth, reserv, index_pth, flgs, sig, node_sz, comp);
   }
 
@@ -94,19 +95,22 @@ public:
             flags::bitmask flgs = flags::read_only,
             uint64_t sig = -1,  // for existing files, must match creation signature
             std::size_t node_sz = default_node_size,  // ignored if existing file
-            const Comp& comp = Comp())
+            const Compare& comp = Compare())
   {
-    index_base<index_set_base<Key,Traits,Comp,IndexTraits> >::
+    index_base<index_set_base<Key,BtreeTraits,Compare,IndexTraits> >::
     open(flat_file, index_pth, flgs, sig, node_sz, comp);
   }
 
   //  modifiers
 
-  file_position push_back(interface_type x)
+  file_position push_back(const key_type& x)
   // Effects: unconditional push_back into file(); index unaffected
   {
-    return file()->push_back(index_traits::flat_cast(x),
-                             index_traits::flat_size(x));
+    file_position pos = file()->file_size();
+    std::size_t element_sz = index_traits::flat_size(x);
+    file()->increment_file_size(element_sz);
+    index_traits::build_flat_element(x, file()->data<char>()+pos, element_sz);
+    return pos;
   }
 
   std::pair<const_iterator, bool>
@@ -139,31 +143,31 @@ public:
 ////--------------------------------------------------------------------------------------//
 //
 //    template <class Key,    // shall be trivially copyable type; see std 3.9 [basic.types]
-//              class Traits = index_traits<btree::default_node_traits, btree::less> >              
+//              class BtreeTraits = index_traits<btree::default_node_traits, btree::less> >              
 //    class index_multiset
-//      : public index_base<Key, index_set_base<Key,Traits> >
+//      : public index_base<Key, index_set_base<Key,BtreeTraits> >
 //    {
 //    public:
 //      typedef typename
-//        index_base<Key, index_set_base<Key,Traits> >::value_type      value_type;
+//        index_base<Key, index_set_base<Key,BtreeTraits> >::value_type      value_type;
 //      typedef typename
-//        index_base<Key, index_set_base<Key,Traits> >::const_iterator  const_iterator;
+//        index_base<Key, index_set_base<Key,BtreeTraits> >::const_iterator  const_iterator;
 //      typedef typename
-//        index_base<Key, index_set_base<Key,Traits> >::iterator        iterator;
+//        index_base<Key, index_set_base<Key,BtreeTraits> >::iterator        iterator;
 //
 //      BOOST_STATIC_ASSERT_MSG( !boost::is_pointer<Key>::value,
 //        "Key must not be a pointer type");
 //
-//      // <Key,Traits> is required by GCC but not by VC++
+//      // <Key,BtreeTraits> is required by GCC but not by VC++
 //      explicit index_multiset()
-//        : index_base<Key,index_set_base<Key,Traits> >() {}
+//        : index_base<Key,index_set_base<Key,BtreeTraits> >() {}
 //
 //      explicit index_multiset(const boost::filesystem::path& p,
 //        flags::bitmask flgs = flags::read_only,
 //        uint64_t sig = -1,  // for existing files, must match signature from creation
 //        std::size_t node_sz = default_node_size,  // ignored if existing file
-//        const Traits& traits = Traits())
-//        : index_base<Key,index_set_base<Key,Traits> >(p,
+//        const BtreeTraits& traits = BtreeTraits())
+//        : index_base<Key,index_set_base<Key,BtreeTraits> >(p,
 //            flags::open_flags(flgs) | flags::key_only, sig, node_sz, traits) {}
 //
 //      template <class InputIterator>
@@ -172,13 +176,13 @@ public:
 //        flags::bitmask flgs = flags::read_only,
 //        uint64_t sig = -1,  // for existing files, must match signature from creation
 //        std::size_t node_sz = default_node_size,  // ignored if existing file
-//        const Traits& traits = Traits())
-//      : index_base<Key,index_set_base<Key,Traits> >(p,
+//        const BtreeTraits& traits = BtreeTraits())
+//      : index_base<Key,index_set_base<Key,BtreeTraits> >(p,
 //          flags::open_flags(flgs) | flags::key_only, sig, node_sz, traits)
 //      {
 //        for (; begin != end; ++begin)
 //        {
-//          index_base<Key,index_set_base<Key,Traits> >::m_insert_non_unique(
+//          index_base<Key,index_set_base<Key,BtreeTraits> >::m_insert_non_unique(
 //            *begin, *begin);
 //        }
 //      }
@@ -188,7 +192,7 @@ public:
 //        uint64_t sig = -1,  // for existing files, must match signature from creation
 //        std::size_t node_sz = default_node_size) // node_sz ignored if existing file
 //      {
-//         index_base<Key,index_set_base<Key,Traits> >::m_open(p,
+//         index_base<Key,index_set_base<Key,BtreeTraits> >::m_open(p,
 //          flags::open_flags(flgs) | flags::key_only, sig, node_sz);
 //      }
 //
@@ -196,14 +200,14 @@ public:
 //      const_iterator emplace(const value_type& value)
 //      {
 //        return
-//          index_base<Key,index_set_base<Key,Traits> >::m_insert_non_unique(
+//          index_base<Key,index_set_base<Key,BtreeTraits> >::m_insert_non_unique(
 //            value);
 //      }
 //
 //      const_iterator insert(const value_type& value)
 //      {
 //        return 
-//          index_base<Key,index_set_base<Key,Traits> >::m_insert_non_unique(
+//          index_base<Key,index_set_base<Key,BtreeTraits> >::m_insert_non_unique(
 //            value);
 //      }
 //
@@ -212,7 +216,7 @@ public:
 //      {
 //        for (; begin != end; ++begin) 
 //        {
-//          index_base<Key,index_set_base<Key,Traits> >::m_insert_non_unique(
+//          index_base<Key,index_set_base<Key,BtreeTraits> >::m_insert_non_unique(
 //            *begin);
 //        }
 //      }

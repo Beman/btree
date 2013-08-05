@@ -39,19 +39,21 @@ namespace btree
   class default_index_traits
   {
   public:
-    typedef const T&  source_reference;
-    typedef const T&  value_reference;
+    typedef const T&  reference;
 
     typedef endian::big_uint48un_t  index_key;  // position in the flat file
 
-    static std::size_t flat_size(source_reference)    {return sizeof(T);}
+    static std::size_t flat_size(const T&)    {return sizeof(T);}
 
-    static const char* flat_cast(source_reference x)
+    static void build_flat_element(const T& x, char* dest, std::size_t sz)
     { 
-      return reinterpret_cast<const char*>(&x);
+      BOOST_ASSERT(dest);
+      BOOST_ASSERT_MSG(sz == sizeof(T),
+        "btree index: size error; did you mean to uses a varaible-size type?");
+      std::memcpy(dest, reinterpret_cast<const char*>(&x), sz);
     }
 
-    static value_reference  make_value_reference(const char* x)
+    static reference  make_reference(const char* x)
     {
       BOOST_ASSERT(x);
       return *reinterpret_cast<const T*>(x);
@@ -65,19 +67,22 @@ namespace btree
   class default_index_traits<const char*>
   {
   public:
-    typedef const char*  source_reference;
-    typedef const char*  value_reference;
+    typedef const char*  reference;
 
     typedef endian::big_uint48un_t  index_key;  // position in the flat file
 
-    static std::size_t flat_size(source_reference x)          {BOOST_ASSERT(x);
-                                                               return std::strlen(x) + 1;}
+    static std::size_t flat_size(const char* x)          {BOOST_ASSERT(x);
+                                                          return std::strlen(x) + 1;}
 
-    static const char* flat_cast(source_reference x)          {BOOST_ASSERT(x);
-                                                               return x;}
+    static void build_flat_element(const char* x, char* dest, std::size_t)
+    {
+      BOOST_ASSERT(x);
+      BOOST_ASSERT(dest);
+      std::strcpy(dest, x);
+    }
 
-    static value_reference make_value_reference(const char* x){BOOST_ASSERT(x);
-                                                               return x;}
+    static reference make_reference(const char* x)       {BOOST_ASSERT(x);
+                                                          return x;}
   };
 
   //-----------------  string_view specialization; C++ style strings  ------------------//
@@ -86,17 +91,22 @@ namespace btree
   class default_index_traits<boost::string_view>
   {
   public:
-    typedef const boost::string_view&  source_reference;
-    typedef boost::string_view         value_reference;
+    typedef boost::string_view         reference;
 
     typedef endian::big_uint48un_t     index_key;  // position in the flat file
 
-    static std::size_t flat_size(source_reference x)  {return x.size() + 1;}
+    static std::size_t flat_size(const boost::string_view& x)  {return x.size() + 1;}
 
-    static const char* flat_cast(source_reference x)
-      {return reinterpret_cast<const char*>(&x);}
+    static void build_flat_element(const boost::string_view& x, char* dest,
+      std::size_t sz)
+    {
+      BOOST_ASSERT(dest);
+      BOOST_ASSERT(sz == x.size() + 1);
+      std::memcpy(dest, x.data(), x.size());
+      *(dest+x.size()) = '\0';
+    }
 
-    static value_reference make_value_reference(const char* x)
+    static reference make_reference(const char* x)
       {return boost::string_view(x);}
   };
 

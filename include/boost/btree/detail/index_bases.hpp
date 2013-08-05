@@ -45,37 +45,38 @@ namespace btree
 //                                class index_set_base                                  //
 //--------------------------------------------------------------------------------------//
 
-template <class Key, class Traits, class Comp, class IndexTraits>
+template <class Key, class BtreeTraits, class Compare, class IndexTraits>
 class index_set_base
 {
 public:
-  typedef Key                               key_type;
-  typedef key_type                          value_type;
-  typedef key_type                          mapped_type;
-  typedef Traits                            btree_traits;
-  typedef Comp                              compare_type;
-  typedef compare_type                      value_compare;
-  typedef IndexTraits                       index_traits;
-  typedef typename Traits::node_id_type     node_id_type;
-  typedef typename Traits::node_size_type   node_size_type;
-  typedef typename Traits::node_level_type  node_level_type;
+  typedef Key                                    key_type;
+  typedef Key                                    value_type;
+  typedef Key                                    mapped_type;
+  typedef BtreeTraits                            btree_traits;
+  typedef Compare                                compare_type;
+  typedef compare_type                           value_compare;
+  typedef typename BtreeTraits::node_id_type     node_id_type;
+  typedef typename BtreeTraits::node_size_type   node_size_type;
+  typedef typename BtreeTraits::node_level_type  node_level_type;
+  typedef IndexTraits                            index_traits;
+  typedef typename IndexTraits::reference        reference;                
 };
 
 ////--------------------------------------------------------------------------------------//
 ////                               class index_map_base                                   //
 ////--------------------------------------------------------------------------------------//
 //
-//template <class Key, class T, class Traits>
+//template <class Key, class T, class BtreeTraits>
 //class index_map_base
 //{
 //public:
-//  typedef typename Traits::node_id_type     node_id_type;
-//  typedef typename Traits::node_size_type   node_size_type;
-//  typedef typename Traits::node_level_type  node_level_type;
+//  typedef typename BtreeTraits::node_id_type     node_id_type;
+//  typedef typename BtreeTraits::node_size_type   node_size_type;
+//  typedef typename BtreeTraits::node_level_type  node_level_type;
 //  typedef std::pair<const Key, T>           value_type;
 //  typedef T                                 mapped_type;
-//  typedef Traits                            btree_traits;
-//  typedef typename Traits::compare_type     compare_type;
+//  typedef BtreeTraits                            btree_traits;
+//  typedef typename BtreeTraits::compare_type     compare_type;
 //
 //  const Key&  key(const value_type& v) const  // really handy, so expose
 //    {return v.first;}
@@ -103,7 +104,7 @@ public:
 
   namespace detail
   {
-    template <class T, class Pos, class Comp>
+    template <class T, class Pos, class Compare>
       class indirect_compare;
   }
 
@@ -118,7 +119,7 @@ template <class Base>  // index_map_base or index_set_base
 class index_base : public Base, private noncopyable
 {
 private:
-  template <class T>
+  template <class T, class Reference>
     class iterator_type;
 
 //--------------------------------------------------------------------------------------//
@@ -133,13 +134,10 @@ public:
   typedef typename Base::compare_type           compare_type;
   typedef typename Base::compare_type           key_compare;
   typedef typename Base::value_compare          value_compare; 
-  typedef value_type&                           reference;
-  typedef const value_type&                     const_reference;
   typedef boost::uint64_t                       size_type;
-  typedef value_type*                           pointer;
-  typedef const value_type*                     const_pointer;
 
-  typedef iterator_type<const value_type>       iterator;
+  typedef typename Base::reference              reference;
+  typedef iterator_type<value_type, reference>  iterator;
   typedef iterator                              const_iterator;
 
   typedef std::reverse_iterator<iterator>       reverse_iterator;
@@ -152,9 +150,6 @@ public:
   typedef typename Base::node_size_type         node_size_type;
   typedef typename Base::node_level_type        node_level_type;
 
-  typedef typename Base::index_traits           index_traits;
-
-
   typedef boost::filesystem::path               path_type;
 
   typedef boost::btree::extendible_mapped_file  file_type;
@@ -162,13 +157,16 @@ public:
   typedef file_type::size_type                  file_size_type;
   typedef file_type::position_type              file_position;
 
+  typedef typename Base::index_traits           index_traits;
   typedef typename index_traits::index_key      index_key;
 
   typedef detail::indirect_compare<key_type,
     index_key, compare_type>                    index_compare_type;
+
   typedef typename
     btree_set<index_key, btree_traits,
       index_compare_type>                       index_type;
+
   typedef typename index_type::size_type        index_size_type;
 
 
@@ -260,9 +258,10 @@ public:
   //------------------------------------------------------------------------------------//
  
 private:
-  template <class T>
+  template <class T, class Reference>
   class iterator_type
-    : public boost::iterator_facade<iterator_type<T>, T, bidirectional_traversal_tag>
+    : public boost::iterator_facade<iterator_type<T, Reference>, T,
+        bidirectional_traversal_tag, Reference>
   {
   public:
     typedef typename index_type::iterator   index_iterator_type;
@@ -279,10 +278,10 @@ private:
     index_iterator_type   m_index_iterator;
     file_type*            m_file;  // 0 for end iterator
 
-    T& dereference() const
+    Reference dereference() const
     { 
       BOOST_ASSERT_MSG(m_file, "btree index attempt to dereference end iterator");
-      return *(reinterpret_cast<T*>(m_file->const_data<char>() + *m_index_iterator));
+      return index_traits::make_reference(m_file->const_data<char>() + *m_index_iterator);
     }
  
     bool equal(const iterator_type& rhs) const
@@ -302,16 +301,16 @@ namespace detail
   // TODO: Pos needs to be a distinct type so no ambiguity arises if Key and
   // file_position happen to be the same type
 
-  template <class Key, class Pos, class Comp>
+  template <class Key, class Pos, class Compare>
   class indirect_compare
   {
-    Comp                           m_comp;
+    Compare                           m_comp;
     extendible_mapped_file*        m_file;
 
   public:
 
     indirect_compare(){}
-    indirect_compare(Comp comp, extendible_mapped_file* flat_file)
+    indirect_compare(Compare comp, extendible_mapped_file* flat_file)
       : m_comp(comp), m_file(flat_file) {}
 
     bool operator()(const Key& lhs, Pos rhs) const
