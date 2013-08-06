@@ -11,6 +11,7 @@ project
       <library>/boost/system//boost_system
       <library>/boost/timer//boost_timer
       <library>/boost/chrono//boost_chrono
+      <library>/boost/iostreams//boost_iostreams
       <toolset>msvc:<asynch-exceptions>on
     ;
     

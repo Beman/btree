@@ -165,7 +165,7 @@ public:
     index_key, compare_type, index_traits>      index_compare_type;
 
   typedef typename
-    btree_set<index_key, btree_traits,
+    btree::btree_set<index_key, btree_traits,
       index_compare_type>                       index_type;
 
   typedef typename index_type::size_type        index_size_type;

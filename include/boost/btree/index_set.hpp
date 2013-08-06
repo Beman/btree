@@ -34,7 +34,7 @@ class index_set
 {
 private:
   typedef typename
-    index_base<index_set_base<Key,BtreeTraits,Compare,IndexTraits> >  base;
+    btree::index_base<index_set_base<Key,BtreeTraits,Compare,IndexTraits> >  base;
 public:
   typedef Key                            key_type;
   typedef Key                            value_type;
@@ -49,15 +49,21 @@ public:
   typedef typename base::reference       reference;
   typedef typename base::iterator        iterator;
   typedef typename base::const_iterator  const_iterator;
-  typedef typename base::file_position   file_position;
   typedef typename base::index_key       index_key;
+
+  typedef boost::filesystem::path        path;
+  typedef typename base::file_type       file_type;
+  typedef typename base::file_ptr_type   file_ptr_type;
+  typedef typename base::file_size_type  file_size_type;
+  typedef typename base::file_position   file_position;
+
 
   index_set()
     : index_base<index_set_base<Key,BtreeTraits,Compare,IndexTraits> >() {}
 
-  index_set(const path_type& file_pth,
+  index_set(const path& file_pth,
             file_size_type reserv,
-            const path_type& index_pth,
+            const path& index_pth,
             flags::bitmask flgs = flags::read_only,
             uint64_t sig = -1,  // for existing files, must match creation signature
             std::size_t node_sz = default_node_size,  // ignored if existing file
@@ -68,7 +74,7 @@ public:
   }
 
   index_set(file_ptr_type flat_file,            
-            const path_type& index_pth,
+            const path& index_pth,
             flags::bitmask flgs = flags::read_only,
             uint64_t sig = -1,  // for existing files, must match creation signature
             std::size_t node_sz = default_node_size,  // ignored if existing file
@@ -78,9 +84,9 @@ public:
     open(flat_file, index_pth, flgs, sig, node_sz, comp);
   }
 
-  void open(const path_type& file_pth,
+  void open(const path& file_pth,
             file_size_type reserv,
-            const path_type& index_pth,
+            const path& index_pth,
             flags::bitmask flgs = flags::read_only,
             uint64_t sig = -1,  // for existing files, must match creation signature
             std::size_t node_sz = default_node_size,  // ignored if existing file
@@ -91,7 +97,7 @@ public:
   }
 
   void open(file_ptr_type flat_file,            
-            const path_type& index_pth,
+            const path& index_pth,
             flags::bitmask flgs = flags::read_only,
             uint64_t sig = -1,  // for existing files, must match creation signature
             std::size_t node_sz = default_node_size,  // ignored if existing file
@@ -106,29 +112,30 @@ public:
   file_position push_back(const key_type& x)
   // Effects: unconditional push_back into file(); index unaffected
   {
-    file_position pos = file()->file_size();
+    file_position pos = base::file()->file_size();
     std::size_t element_sz = index_traits::flat_size(x);
-    file()->increment_file_size(element_sz);
-    index_traits::build_flat_element(x, file()->data<char>()+pos, element_sz);
+    base::file()->increment_file_size(element_sz);
+    char* dest = base::file()->template data<char>() + pos;
+    index_traits::build_flat_element(x, dest, element_sz);
     return pos;
   }
 
   std::pair<const_iterator, bool>
     insert_file_position(file_position pos)
   {
-    BOOST_ASSERT(!read_only());
-    std::pair<index_type::const_iterator, bool>
-      result(m_set.insert(index_key(pos)));
+    BOOST_ASSERT(!base::read_only());
+    std::pair<typename base::index_type::const_iterator, bool>
+      result(base::m_set.insert(index_key(pos)));
     return std::pair<const_iterator, bool>(
-      const_iterator(result.first, file()), result.second);
+      const_iterator(result.first, base::file()), result.second);
   }
 
   std::pair<const_iterator, bool>
     insert(const value_type& value)
   //  Effects: if !find(k) then insert_file_position(push_back(value));
   {
-    BOOST_ASSERT(!read_only());
-    if (find(value) == end())
+    BOOST_ASSERT(!base::read_only());
+    if (base::find(value) == base::end())
     {
       std::pair<const_iterator, bool> result(insert_file_position(push_back(value)));
       BOOST_ASSERT(result.second);
