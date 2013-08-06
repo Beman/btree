@@ -25,7 +25,8 @@
 
   *  verify dereferencing the end iterator assert fires correctly.
 
-  *  The flat_adapter<string_view> specialization is space efficient, but does not support
+  *  The default_index_traits<string_view> specialization is space efficient,
+     but does not support
      embedded nulls and is time inefficient for very long strings. Users might want
      trade-offs, so alternate flavors should be available. This might serve as a poster
      child for use cases where the type alone isn't sufficient to determine which
@@ -104,7 +105,7 @@ public:
 
   namespace detail
   {
-    template <class T, class Pos, class Compare>
+    template <class T, class Pos, class Compare, class IndexTraits>
       class indirect_compare;
   }
 
@@ -161,7 +162,7 @@ public:
   typedef typename index_traits::index_key      index_key;
 
   typedef detail::indirect_compare<key_type,
-    index_key, compare_type>                    index_compare_type;
+    index_key, compare_type, index_traits>      index_compare_type;
 
   typedef typename
     btree_set<index_key, btree_traits,
@@ -281,7 +282,7 @@ private:
     Reference dereference() const
     { 
       BOOST_ASSERT_MSG(m_file, "btree index attempt to dereference end iterator");
-      std::cout << "**** " << *m_index_iterator << std::endl;
+//      std::cout << "**** " << *m_index_iterator << std::endl;
       return index_traits::make_reference(m_file->const_data<char>() + *m_index_iterator);
     }
  
@@ -303,7 +304,7 @@ namespace detail
   // file_position happen to be the same type. Or else use the heterogenous type
   // approach now used in the std library
 
-  template <class Key, class Pos, class Compare>
+  template <class Key, class Pos, class Compare, class IndexTraits>
   class indirect_compare
   {
     Compare                        m_comp;
@@ -318,16 +319,16 @@ namespace detail
     bool operator()(const Key& lhs, Pos rhs) const
     {
       return m_comp(lhs,
-        *reinterpret_cast<const Key*>(m_file->const_data<char>()+rhs));
+        IndexTraits::make_reference(m_file->const_data<char>()+rhs));
     }
     bool operator()(Pos lhs, const Key& rhs) const
     {
-      return m_comp(*reinterpret_cast<const Key*>(m_file->const_data<char>()+lhs), rhs);
+      return m_comp(IndexTraits::make_reference(m_file->const_data<char>()+lhs), rhs);
     }
     bool operator()(Pos lhs, Pos rhs) const
     {
-      return m_comp(*reinterpret_cast<const Key*>(m_file->const_data<char>()+lhs),
-        *reinterpret_cast<const Key*>(m_file->const_data<char>()+rhs));
+      return m_comp(IndexTraits::make_reference(m_file->const_data<char>()+lhs),
+        IndexTraits::make_reference(m_file->const_data<char>()+rhs));
     }
 
   };

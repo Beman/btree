@@ -440,100 +440,96 @@ void  two_index_iterator_test()
   cout << "     two_index_iterator_test complete" << endl;
 }
 
-////-------------------------------------  c_string_test  ----------------------------------------//
-//
-//struct c_str_less
-//{
-//  bool operator()(const char* x, const char* y) const
-//  {
-//    return std::strcmp(x, y) < 0;
-//  }
-//};
-//
-//
-//void  c_string_test()
-//{
-//  cout << "  c_string_test..." << endl;
-//
-//  typedef btree::index_set<const char*, btree::default_traits, c_str_less> index;
-//  index idx(file_path.string() + ".c_string", 0, idx1_path, btree::flags::truncate);
-//
-//  const char* s1 = "aa";
-//  const char* s2 = "ccc";
-//  const char* s3 = "b";
-//  const char* s4 = "";
-//
-//  std::pair<index::const_iterator, bool> result;
-//
-//  result = idx.insert(s1);
-//  BOOST_TEST(result.second);
-//  BOOST_TEST(std::strcmp(*result.first, s1) == 0);
-//  cout << '"' << *result.first << '"' << endl;
-//  result = idx.insert(s2);
-//  BOOST_TEST(result.second);
-//  BOOST_TEST(std::strcmp(*result.first, s2) == 0);
-//  cout << '"' << *result.first << '"' << endl;
-//  result = idx.insert(s3);
-//  BOOST_TEST(result.second);
-//  BOOST_TEST(std::strcmp(*result.first, s3) == 0);
-//  cout << '"' << *result.first << '"' << endl;
-//  result = idx.insert(s4);
-//  BOOST_TEST(result.second);
-//  BOOST_TEST(std::strcmp(*result.first, s4) == 0);
-//  cout << '"' << *result.first << '"' << endl;
-// 
-//  BOOST_TEST(idx.index_size() == 4);
-// cout << "*********************" << endl;
-//
-//  index::iterator itr = idx.begin();
-//  index::iterator end = idx.end();
-//
-//  BOOST_TEST(itr != end);
-//  const char* s = *itr;
-//  BOOST_TEST(std::strcmp(s, s4) == 0);
-//  cout << '"' << s << '"' << endl;
-//
-//  ++itr;
-//  BOOST_TEST(itr != end);
-//  s = *itr;
-//  BOOST_TEST(std::strcmp(s, s1) == 0);
-//  cout << '"' << s << '"' << endl;
-//
-//  ++itr;
-//  BOOST_TEST(itr != end);
-//  s = *itr;
-//  BOOST_TEST(std::strcmp(s, s3) == 0);
-//  cout << '"' << s << '"' << endl;
-//
-//  ++itr;
-//  BOOST_TEST(itr != end);
-//  s = *itr;
-//  BOOST_TEST(std::strcmp(s, s2) == 0);
-//  cout << '"' << s << '"' << endl;
-// 
-//  ++itr;
-//  BOOST_TEST(itr == end);
-//
-//  //BOOST_TEST(idx.find(s1) != idx.end());
-//  //BOOST_TEST_EQ(*idx.find(s1), s1);
-//  //BOOST_TEST(idx.find(s2) != idx.end());
-//  //BOOST_TEST_EQ(*idx.find(s2), s2);
-//  //BOOST_TEST(idx.find(s3) != idx.end());
-//  //BOOST_TEST_EQ(*idx.find(s3), s3);
-//
-//  //result = idx.insert(s1);
-//  //BOOST_TEST(!result.second);
-//  //result = idx.insert(s2);
-//  //BOOST_TEST(!result.second);
-//  //result = idx.insert(s3);
-//  //BOOST_TEST(!result.second);
-//  //result = idx.insert(s4);
-//  //BOOST_TEST(!result.second);
-// 
-//  //BOOST_TEST(idx.index_size() == 4);
-//
-//  cout << "     c_string_test complete" << endl;
-//}
+//-------------------------------------  c_string_test  ----------------------------------------//
+
+struct c_str_less
+{
+  bool operator()(const char* x, const char* y) const
+  {
+    return std::strcmp(x, y) < 0;
+  }
+};
+
+
+void  c_string_test()
+{
+  cout << "  c_string_test..." << endl;
+
+  typedef btree::index_set<const char*, btree::default_traits, c_str_less> index;
+  index idx(file_path.string() + ".c_string", 0, idx1_path, btree::flags::truncate);
+
+  const char* s1 = "aa";
+  const char* s2 = "ccc";
+  const char* s3 = "b";
+  const char* s4 = "";
+
+  std::pair<index::const_iterator, bool> result;
+
+  result = idx.insert(s1);
+  BOOST_TEST(result.second);
+  BOOST_TEST(std::strcmp(*result.first, s1) == 0);
+  result = idx.insert(s2);
+  BOOST_TEST(result.second);
+  BOOST_TEST(std::strcmp(*result.first, s2) == 0);
+  result = idx.insert(s3);
+  BOOST_TEST(result.second);
+  BOOST_TEST(std::strcmp(*result.first, s3) == 0);
+  result = idx.insert(s4);
+  BOOST_TEST(result.second);
+  BOOST_TEST(std::strcmp(*result.first, s4) == 0);
+ 
+  BOOST_TEST(idx.index_size() == 4);
+
+  index::iterator itr = idx.begin();
+  index::iterator end = idx.end();
+
+  BOOST_TEST(itr != end);
+  const char* s = *itr;
+  BOOST_TEST(std::strcmp(s, s4) == 0);
+
+  ++itr;
+  BOOST_TEST(itr != end);
+  s = *itr;
+  BOOST_TEST(std::strcmp(s, s1) == 0);
+
+  ++itr;
+  BOOST_TEST(itr != end);
+  s = *itr;
+  BOOST_TEST(std::strcmp(s, s3) == 0);
+
+  ++itr;
+  BOOST_TEST(itr != end);
+  s = *itr;
+  BOOST_TEST(std::strcmp(s, s2) == 0);
+ 
+  ++itr;
+  BOOST_TEST(itr == end);
+
+  BOOST_TEST(idx.find(s1) != idx.end());
+  BOOST_TEST(std::strcmp(*idx.find(s1), s1) == 0);
+  BOOST_TEST(idx.find(s2) != idx.end());
+  BOOST_TEST(std::strcmp(*idx.find(s2), s2) == 0);
+  BOOST_TEST(idx.find(s3) != idx.end());
+  BOOST_TEST(std::strcmp(*idx.find(s3), s3) == 0);
+  BOOST_TEST(idx.find(s4) != idx.end());
+  BOOST_TEST(std::strcmp(*idx.find(s4), s4) == 0);
+
+  BOOST_TEST(idx.find("ccc") != idx.end());
+  BOOST_TEST(std::strcmp(*idx.find("ccc"), s2) == 0);
+
+  result = idx.insert(s1);
+  BOOST_TEST(!result.second);
+  result = idx.insert(s2);
+  BOOST_TEST(!result.second);
+  result = idx.insert(s3);
+  BOOST_TEST(!result.second);
+  result = idx.insert(s4);
+  BOOST_TEST(!result.second);
+ 
+  BOOST_TEST(idx.index_size() == 4);
+
+  cout << "     c_string_test complete" << endl;
+}
 
 //--------------------------------- string_view_test  ----------------------------------//
 
@@ -560,25 +556,25 @@ void  string_view_test()
   result = idx.insert(sv1);
   BOOST_TEST(result.second);
   BOOST_TEST(*result.first == sv1);
-  cout << '"' << *result.first << '"' << endl;
+  //cout << '"' << *result.first << '"' << endl;
 
   result = idx.insert(sv2);
   BOOST_TEST(result.second);
   BOOST_TEST(*result.first == sv2);
-  cout << '"' << *result.first << '"' << endl;
+  //cout << '"' << *result.first << '"' << endl;
 
   result = idx.insert(sv3);
   BOOST_TEST(result.second);
   BOOST_TEST(*result.first == sv3);
-  cout << '"' << *result.first << '"' << endl;
+  //cout << '"' << *result.first << '"' << endl;
 
   result = idx.insert(sv4);
   BOOST_TEST(result.second);
   BOOST_TEST(*result.first == sv4);
-  cout << '"' << *result.first << '"' << endl;
+  //cout << '"' << *result.first << '"' << endl;
  
   BOOST_TEST(idx.index_size() == 4);
- cout << "*********************" << endl;
+ //cout << "*********************" << endl;
 
   index::iterator itr = idx.begin();
   index::iterator end = idx.end();
@@ -586,46 +582,46 @@ void  string_view_test()
   BOOST_TEST(itr != end);
   string_view sv = *itr;
   BOOST_TEST(sv == sv4);
-  cout << '"' << sv << '"' << endl;
+  //cout << '"' << sv << '"' << endl;
 
   ++itr;
   BOOST_TEST(itr != end);
   sv = *itr;
   BOOST_TEST(sv == sv1);
-  cout << '"' << sv << '"' << endl;
+  //cout << '"' << sv << '"' << endl;
 
   ++itr;
   BOOST_TEST(itr != end);
   sv = *itr;
   BOOST_TEST(sv == sv3);
-  cout << '"' << sv << '"' << endl;
+  //cout << '"' << sv << '"' << endl;
 
   ++itr;
   BOOST_TEST(itr != end);
   sv = *itr;
   BOOST_TEST(sv == sv2);
-  cout << '"' << sv << '"' << endl;
+  //cout << '"' << sv << '"' << endl;
  
   ++itr;
   BOOST_TEST(itr == end);
 
-  //BOOST_TEST(idx.find(s1) != idx.end());
-  //BOOST_TEST_EQ(*idx.find(s1), s1);
-  //BOOST_TEST(idx.find(s2) != idx.end());
-  //BOOST_TEST_EQ(*idx.find(s2), s2);
-  //BOOST_TEST(idx.find(s3) != idx.end());
-  //BOOST_TEST_EQ(*idx.find(s3), s3);
+  BOOST_TEST(idx.find(s1) != idx.end());
+  BOOST_TEST_EQ(*idx.find(s1), s1);
+  BOOST_TEST(idx.find(s2) != idx.end());
+  BOOST_TEST_EQ(*idx.find(s2), s2);
+  BOOST_TEST(idx.find(s3) != idx.end());
+  BOOST_TEST_EQ(*idx.find(s3), s3);
 
-  //result = idx.insert(s1);
-  //BOOST_TEST(!result.second);
-  //result = idx.insert(s2);
-  //BOOST_TEST(!result.second);
-  //result = idx.insert(s3);
-  //BOOST_TEST(!result.second);
-  //result = idx.insert(s4);
-  //BOOST_TEST(!result.second);
+  result = idx.insert(s1);
+  BOOST_TEST(!result.second);
+  result = idx.insert(s2);
+  BOOST_TEST(!result.second);
+  result = idx.insert(s3);
+  BOOST_TEST(!result.second);
+  result = idx.insert(s4);
+  BOOST_TEST(!result.second);
  
-  //BOOST_TEST(idx.index_size() == 4);
+  BOOST_TEST(idx.index_size() == 4);
 
   cout << "     string_view_test complete" << endl;
 }
@@ -689,7 +685,7 @@ int cpp_main(int argc, char* argv[])
   insert_test();
   two_index_test();
   two_index_iterator_test();
-  //c_string_test();
+  c_string_test();
   string_view_test();
   cout << "all tests complete" << endl;
 
