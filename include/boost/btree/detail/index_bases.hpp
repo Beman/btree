@@ -41,6 +41,11 @@ namespace boost
 {
 namespace btree
 {
+namespace detail
+{
+  template <class T, class Pos, class Compare, class IndexTraits>
+    class indirect_compare;
+}
 
 //--------------------------------------------------------------------------------------//
 //                                class index_set_base                                  //
@@ -59,8 +64,47 @@ public:
   typedef typename BtreeTraits::node_id_type     node_id_type;
   typedef typename BtreeTraits::node_size_type   node_size_type;
   typedef typename BtreeTraits::node_level_type  node_level_type;
-  typedef IndexTraits                            index_traits;
   typedef typename IndexTraits::reference        reference;                
+
+  typedef IndexTraits                            index_traits;
+  typedef typename index_traits::index_key       index_key;
+  typedef detail::indirect_compare<key_type,
+    index_key, compare_type, index_traits>       index_compare_type;
+
+  //  the following is the only difference between index_set_base and index_multiset_base
+  typedef typename
+    btree::btree_set<index_key, btree_traits,
+      index_compare_type>                        index_type;
+};
+
+//--------------------------------------------------------------------------------------//
+//                             class index_multiset_base                                //
+//--------------------------------------------------------------------------------------//
+
+template <class Key, class BtreeTraits, class Compare, class IndexTraits>
+class index_multiset_base
+{
+public:
+  typedef Key                                    key_type;
+  typedef Key                                    value_type;
+  typedef Key                                    mapped_type;
+  typedef BtreeTraits                            btree_traits;
+  typedef Compare                                compare_type;
+  typedef compare_type                           value_compare;
+  typedef typename BtreeTraits::node_id_type     node_id_type;
+  typedef typename BtreeTraits::node_size_type   node_size_type;
+  typedef typename BtreeTraits::node_level_type  node_level_type;
+  typedef typename IndexTraits::reference        reference;                
+
+  typedef IndexTraits                            index_traits;
+  typedef typename index_traits::index_key       index_key;
+  typedef detail::indirect_compare<key_type,
+    index_key, compare_type, index_traits>       index_compare_type;
+
+  //  the following is the only difference between index_set_base and index_multiset_base
+  typedef typename
+    btree::btree_multiset<index_key, btree_traits,
+      index_compare_type>                        index_type;
 };
 
 ////--------------------------------------------------------------------------------------//
@@ -102,12 +146,6 @@ public:
 //  };
 //
 //};
-
-  namespace detail
-  {
-    template <class T, class Pos, class Compare, class IndexTraits>
-      class indirect_compare;
-  }
 
 //--------------------------------------------------------------------------------------//
 //                                                                                      //
@@ -161,19 +199,16 @@ public:
   typedef typename Base::index_traits           index_traits;
   typedef typename index_traits::index_key      index_key;
 
-  typedef detail::indirect_compare<key_type,
-    index_key, compare_type, index_traits>      index_compare_type;
+  typedef typename Base::index_compare_type     index_compare_type;
 
-  typedef typename
-    btree::btree_set<index_key, btree_traits,
-      index_compare_type>                       index_type;
+  typedef typename Base::index_type             index_type;
 
   typedef typename index_type::size_type        index_size_type;
 
 
 protected:
-  index_type      m_set;
-  file_ptr_type   m_file;   // shared_ptr to flat file shared with other indexes
+  index_type      m_index_btree;
+  file_ptr_type   m_file;          // shared_ptr to flat file shared with other indexes
   compare_type    m_comp;
 
 public:
@@ -189,7 +224,7 @@ public:
             std::size_t node_sz = default_node_size,  // ignored if existing file
             const compare_type& comp = compare_type())
   {
-    BOOST_ASSERT(!m_set.is_open());
+    BOOST_ASSERT(!m_index_btree.is_open());
     BOOST_ASSERT(!m_file.get());
     m_file.reset(new file_type);
     m_file->open(file_pth, flgs, reserv);
@@ -203,29 +238,29 @@ public:
             std::size_t node_sz = default_node_size,  // ignored if existing file
             const compare_type& comp = compare_type())
   {
-    BOOST_ASSERT(!m_set.is_open());
+    BOOST_ASSERT(!m_index_btree.is_open());
     BOOST_ASSERT(flat_file->is_open());
     m_file = flat_file;
     m_comp = comp;
-    m_set.open(index_pth, flgs, sig, node_sz,
+    m_index_btree.open(index_pth, flgs, sig, node_sz,
       index_compare_type(m_comp, m_file.get()));
   }
 
   //  iterators
 
-  iterator begin()              {return iterator(m_set.begin(), file());}
-  const_iterator begin() const  {return const_iterator(m_set.begin(), file());}
-  iterator end()                {return iterator(m_set.end(), file());}
-  const_iterator end() const    {return const_iterator(m_set.end(), file());}
+  iterator begin()              {return iterator(m_index_btree.begin(), file());}
+  const_iterator begin() const  {return const_iterator(m_index_btree.begin(), file());}
+  iterator end()                {return iterator(m_index_btree.end(), file());}
+  const_iterator end() const    {return const_iterator(m_index_btree.end(), file());}
 
   //  observers
-  bool              is_open() const       {BOOST_ASSERT(!m_set.is_open()
+  bool              is_open() const       {BOOST_ASSERT(!m_index_btree.is_open()
                                              || m_file->is_open());
-                                           return m_set.is_open();}
-  bool              read_only() const     {return m_set.read_only();}
-  bool              index_empty() const   {return m_set.empty();}
-  path_type         index_path() const    {return m_set.path();}
-  index_size_type   index_size() const    {return m_set.size();}
+                                           return m_index_btree.is_open();}
+  bool              read_only() const     {return m_index_btree.read_only();}
+  bool              index_empty() const   {return m_index_btree.empty();}
+  path_type         index_path() const    {return m_index_btree.path();}
+  index_size_type   index_size() const    {return m_index_btree.size();}
 
   file_ptr_type     file() const          {return m_file;}
   path_type         file_path() const     {BOOST_ASSERT(m_file);
@@ -241,15 +276,15 @@ public:
   //  Returns: The offset in the flat file of the element pointed to by itr
 
   const_iterator    find(const key_type& k) const 
-                                           {return const_iterator(m_set.find(k), m_file);}
+                                           {return const_iterator(m_index_btree.find(k), m_file);}
  
-  size_type         count(const key_type& k) const  {return m_set.count(k);}
+  size_type         count(const key_type& k) const  {return m_index_btree.count(k);}
 
   const_iterator    lower_bound(const key_type& k) const
-                                    {return const_iterator(m_set.lower_bound(k), m_file);}
+                                    {return const_iterator(m_index_btree.lower_bound(k), m_file);}
 
   const_iterator    upper_bound(const key_type& k) const
-                                    {return const_iterator(m_set.upper_bound(k), m_file);}
+                                    {return const_iterator(m_index_btree.upper_bound(k), m_file);}
   const_iterator_range
                     equal_range(const key_type& k) const
                                   {return std::make_pair(lower_bound(k), upper_bound(k));}

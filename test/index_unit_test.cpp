@@ -655,6 +655,121 @@ void  string_view_test()
   cout << "     string_view_test complete" << endl;
 }
 
+//---------------------------- string_view_multiset_test  ------------------------------//
+
+void  string_view_multiset_test()
+{
+  cout << "  string_view_multiset_test..." << endl;
+
+  typedef btree::index_multiset<string_view> index;
+  index idx(file_path.string() + ".string_view", 0, idx1_path, btree::flags::truncate);
+
+  const char* s1 = "aa";
+  const char* s2 = "ccc";
+  const char* s3 = "b";
+  const char* s4 = "";
+
+  string_view sv1(s1);
+  string_view sv2(s2);
+  string_view sv3(s3);
+  string_view sv4(s4);
+
+  index::const_iterator result;
+
+  result = idx.insert(sv1);
+  BOOST_TEST(*result == sv1);
+  //cout << '"' << *result << '"' << endl;
+
+  result = idx.insert(sv2);
+  BOOST_TEST(*result == sv2);
+  //cout << '"' << *result << '"' << endl;
+
+  result = idx.insert(sv3);
+  BOOST_TEST(*result == sv3);
+  //cout << '"' << *result << '"' << endl;
+
+  result = idx.insert(sv4);
+  BOOST_TEST(*result == sv4);
+  //cout << '"' << *result << '"' << endl;
+ 
+  BOOST_TEST(idx.index_size() == 4);
+ //cout << "*********************" << endl;
+
+  index::iterator itr = idx.begin();
+  index::iterator end = idx.end();
+
+  BOOST_TEST(itr != end);
+  string_view sv = *itr;
+  BOOST_TEST(sv == sv4);
+  //cout << '"' << sv << '"' << endl;
+
+  ++itr;
+  BOOST_TEST(itr != end);
+  sv = *itr;
+  BOOST_TEST(sv == sv1);
+  //cout << '"' << sv << '"' << endl;
+
+  ++itr;
+  BOOST_TEST(itr != end);
+  sv = *itr;
+  BOOST_TEST(sv == sv3);
+  //cout << '"' << sv << '"' << endl;
+
+  ++itr;
+  BOOST_TEST(itr != end);
+  sv = *itr;
+  BOOST_TEST(sv == sv2);
+  //cout << '"' << sv << '"' << endl;
+ 
+  ++itr;
+  BOOST_TEST(itr == end);
+
+  BOOST_TEST(idx.find(s1) != idx.end());
+  BOOST_TEST_EQ(*idx.find(s1), s1);
+  BOOST_TEST(idx.find(sv1) != idx.end());
+  BOOST_TEST_EQ(*idx.find(sv1), sv1);
+  BOOST_TEST(idx.find("aa") != idx.end());
+  BOOST_TEST_EQ(*idx.find(sv1), "aa");
+
+  BOOST_TEST(idx.find(s2) != idx.end());
+  BOOST_TEST_EQ(*idx.find(s2), s2);
+  BOOST_TEST(idx.find(s3) != idx.end());
+  BOOST_TEST_EQ(*idx.find(s3), s3);
+  BOOST_TEST(idx.find(s4) != idx.end());
+  BOOST_TEST_EQ(*idx.find(s4), s4);
+
+  idx.insert(s4);
+  idx.insert(s3);
+  idx.insert(s2);
+  idx.insert(s1);
+ 
+  BOOST_TEST(idx.index_size() == 8);
+
+  BOOST_TEST(idx.find("a") == idx.end());
+  BOOST_TEST(idx.find("ccca") == idx.end());
+
+  BOOST_TEST(idx.lower_bound("b") != idx.end());
+  BOOST_TEST_EQ(*idx.lower_bound("b"), "b");
+  BOOST_TEST(idx.lower_bound("ba") != idx.end());
+  BOOST_TEST_EQ(*idx.lower_bound("ba"), "ccc");
+  BOOST_TEST(idx.lower_bound("ccca") == idx.end());
+
+  BOOST_TEST(idx.upper_bound("b") != idx.end());
+  BOOST_TEST_EQ(*idx.upper_bound("b"), "ccc");
+  BOOST_TEST(idx.upper_bound("ba") != idx.end());
+  BOOST_TEST_EQ(*idx.upper_bound("ba"), "ccc");
+  BOOST_TEST(idx.upper_bound("ccc") == idx.end());
+  BOOST_TEST(idx.upper_bound("ccca") == idx.end());
+
+  BOOST_TEST_EQ(idx.count("a"), 0);
+  BOOST_TEST_EQ(idx.count("b"), 2);
+  BOOST_TEST_EQ(idx.count("ba"), 0);
+  BOOST_TEST_EQ(idx.count("ccc"), 2);
+  BOOST_TEST_EQ(idx.count("ccca"), 0);
+
+  cout << "     string_view_multiset_test complete" << endl;
+}
+
 //-------------------------------------  _test  ----------------------------------------//
 
 void  _test()
@@ -716,6 +831,7 @@ int cpp_main(int argc, char* argv[])
   two_index_iterator_test();
   c_string_test();
   string_view_test();
+  string_view_multiset_test();
   cout << "all tests complete" << endl;
 
   return boost::report_errors();

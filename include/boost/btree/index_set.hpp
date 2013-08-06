@@ -120,7 +120,7 @@ public:
   {
     BOOST_ASSERT(!base::read_only());
     std::pair<typename base::index_type::const_iterator, bool>
-      result(base::m_set.insert(index_key(pos)));
+      result(base::m_index_btree.insert(index_key(pos)));
     return std::pair<const_iterator, bool>(
       const_iterator(result.first, base::file()), result.second);
   }
@@ -140,89 +140,114 @@ public:
   }
 };
 
-////--------------------------------------------------------------------------------------//
-////                              class index_multiset                                    //
-////--------------------------------------------------------------------------------------//
-//
-//    template <class Key,    // shall be trivially copyable type; see std 3.9 [basic.types]
-//              class BtreeTraits = index_traits<btree::default_node_traits, btree::less> >              
-//    class index_multiset
-//      : public index_base<Key, index_set_base<Key,BtreeTraits> >
-//    {
-//    public:
-//      typedef typename
-//        index_base<Key, index_set_base<Key,BtreeTraits> >::value_type      value_type;
-//      typedef typename
-//        index_base<Key, index_set_base<Key,BtreeTraits> >::const_iterator  const_iterator;
-//      typedef typename
-//        index_base<Key, index_set_base<Key,BtreeTraits> >::iterator        iterator;
-//
-//      BOOST_STATIC_ASSERT_MSG( !boost::is_pointer<Key>::value,
-//        "Key must not be a pointer type");
-//
-//      // <Key,BtreeTraits> is required by GCC but not by VC++
-//      explicit index_multiset()
-//        : index_base<Key,index_set_base<Key,BtreeTraits> >() {}
-//
-//      explicit index_multiset(const boost::filesystem::path& p,
-//        flags::bitmask flgs = flags::read_only,
-//        uint64_t sig = -1,  // for existing files, must match signature from creation
-//        std::size_t node_sz = default_node_size,  // ignored if existing file
-//        const BtreeTraits& traits = BtreeTraits())
-//        : index_base<Key,index_set_base<Key,BtreeTraits> >(p,
-//            flags::open_flags(flgs) | flags::key_only, sig, node_sz, traits) {}
-//
-//      template <class InputIterator>
-//      index_multiset(InputIterator begin, InputIterator end,
-//        const boost::filesystem::path& p,
-//        flags::bitmask flgs = flags::read_only,
-//        uint64_t sig = -1,  // for existing files, must match signature from creation
-//        std::size_t node_sz = default_node_size,  // ignored if existing file
-//        const BtreeTraits& traits = BtreeTraits())
-//      : index_base<Key,index_set_base<Key,BtreeTraits> >(p,
-//          flags::open_flags(flgs) | flags::key_only, sig, node_sz, traits)
-//      {
-//        for (; begin != end; ++begin)
-//        {
-//          index_base<Key,index_set_base<Key,BtreeTraits> >::m_insert_non_unique(
-//            *begin, *begin);
-//        }
-//      }
-//
-//      void open(const boost::filesystem::path& p,
-//        flags::bitmask flgs = flags::read_only,
-//        uint64_t sig = -1,  // for existing files, must match signature from creation
-//        std::size_t node_sz = default_node_size) // node_sz ignored if existing file
-//      {
-//         index_base<Key,index_set_base<Key,BtreeTraits> >::m_open(p,
-//          flags::open_flags(flgs) | flags::key_only, sig, node_sz);
-//      }
-//
-//      //  emplace(const Key&) special case not requiring c++0x support
-//      const_iterator emplace(const value_type& value)
-//      {
-//        return
-//          index_base<Key,index_set_base<Key,BtreeTraits> >::m_insert_non_unique(
-//            value);
-//      }
-//
-//      const_iterator insert(const value_type& value)
-//      {
-//        return 
-//          index_base<Key,index_set_base<Key,BtreeTraits> >::m_insert_non_unique(
-//            value);
-//      }
-//
-//      template <class InputIterator>
-//      void insert(InputIterator begin, InputIterator end)
-//      {
-//        for (; begin != end; ++begin) 
-//        {
-//          index_base<Key,index_set_base<Key,BtreeTraits> >::m_insert_non_unique(
-//            *begin);
-//        }
-//      }
-//    };
+//--------------------------------------------------------------------------------------//
+//                               class index_multiset                                   //
+//--------------------------------------------------------------------------------------//
+
+template <class Key,    // shall be trivially copyable type; see std 3.9 [basic.types]
+          class BtreeTraits = btree::default_traits,
+          class Compare = btree::less,
+          class IndexTraits = btree::default_index_traits<Key> >
+class index_multiset
+  : public index_base<index_multiset_base<Key,BtreeTraits,Compare,IndexTraits> >
+{
+private:
+  typedef typename
+    btree::index_base<index_multiset_base<Key,BtreeTraits,Compare,IndexTraits> >  base;
+public:
+  typedef Key                            key_type;
+  typedef Key                            value_type;
+
+  typedef BtreeTraits                    btree_traits;
+  typedef IndexTraits                    index_traits;
+
+  typedef Compare                        key_compare;
+  typedef Compare                        value_compare;
+
+  typedef typename base::size_type       size_type;
+  typedef typename base::reference       reference;
+  typedef typename base::iterator        iterator;
+  typedef typename base::const_iterator  const_iterator;
+  typedef typename base::index_key       index_key;
+
+  typedef boost::filesystem::path        path;
+  typedef typename base::file_type       file_type;
+  typedef typename base::file_ptr_type   file_ptr_type;
+  typedef typename base::file_size_type  file_size_type;
+  typedef typename base::file_position   file_position;
+
+
+  index_multiset() : base() {}
+
+  index_multiset(const path& file_pth,
+            file_size_type reserv,
+            const path& index_pth,
+            flags::bitmask flgs = flags::read_only,
+            uint64_t sig = -1,  // for existing files, must match creation signature
+            std::size_t node_sz = default_node_size,  // ignored if existing file
+            const Compare& comp = Compare())
+  {
+    base::open(file_pth, reserv, index_pth, flgs, sig, node_sz, comp);
+  }
+
+  index_multiset(file_ptr_type flat_file,            
+            const path& index_pth,
+            flags::bitmask flgs = flags::read_only,
+            uint64_t sig = -1,  // for existing files, must match creation signature
+            std::size_t node_sz = default_node_size,  // ignored if existing file
+            const Compare& comp = Compare())
+  {
+    base::open(flat_file, index_pth, flgs, sig, node_sz, comp);
+  }
+
+  void open(const path& file_pth,
+            file_size_type reserv,
+            const path& index_pth,
+            flags::bitmask flgs = flags::read_only,
+            uint64_t sig = -1,  // for existing files, must match creation signature
+            std::size_t node_sz = default_node_size,  // ignored if existing file
+            const Compare& comp = Compare())
+  {
+    base::open(file_pth, reserv, index_pth, flgs, sig, node_sz, comp);
+  }
+
+  void open(file_ptr_type flat_file,            
+            const path& index_pth,
+            flags::bitmask flgs = flags::read_only,
+            uint64_t sig = -1,  // for existing files, must match creation signature
+            std::size_t node_sz = default_node_size,  // ignored if existing file
+            const Compare& comp = Compare())
+  {
+    base::open(flat_file, index_pth, flgs, sig, node_sz, comp);
+  }
+
+  //  modifiers
+
+  file_position push_back(const key_type& x)
+  // Effects: unconditional push_back into file(); index unaffected
+  {
+    file_position pos = base::file()->file_size();
+    std::size_t element_sz = index_traits::flat_size(x);
+    base::file()->increment_file_size(element_sz);
+    index_traits::build_flat_element(x, base::file()->template data<char>() + pos,
+      element_sz);
+    return pos;
+  }
+
+  const_iterator insert_file_position(file_position pos)
+  {
+    BOOST_ASSERT(!base::read_only());
+    base::index_type::const_iterator
+      result(base::m_index_btree.insert(index_key(pos)));
+    return const_iterator(result, base::file());
+  }
+
+  const_iterator insert(const value_type& value)
+  {
+    BOOST_ASSERT(!base::read_only());
+    return insert_file_position(push_back(value));
+  }
+};
 
   } // namespace btree
 } // namespace boost
