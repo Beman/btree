@@ -607,10 +607,17 @@ void  string_view_test()
 
   BOOST_TEST(idx.find(s1) != idx.end());
   BOOST_TEST_EQ(*idx.find(s1), s1);
+  BOOST_TEST(idx.find(sv1) != idx.end());
+  BOOST_TEST_EQ(*idx.find(sv1), sv1);
+  BOOST_TEST(idx.find("aa") != idx.end());
+  BOOST_TEST_EQ(*idx.find(sv1), "aa");
+
   BOOST_TEST(idx.find(s2) != idx.end());
   BOOST_TEST_EQ(*idx.find(s2), s2);
   BOOST_TEST(idx.find(s3) != idx.end());
   BOOST_TEST_EQ(*idx.find(s3), s3);
+  BOOST_TEST(idx.find(s4) != idx.end());
+  BOOST_TEST_EQ(*idx.find(s4), s4);
 
   result = idx.insert(s1);
   BOOST_TEST(!result.second);
@@ -622,6 +629,28 @@ void  string_view_test()
   BOOST_TEST(!result.second);
  
   BOOST_TEST(idx.index_size() == 4);
+
+  BOOST_TEST(idx.find("a") == idx.end());
+  BOOST_TEST(idx.find("ccca") == idx.end());
+
+  BOOST_TEST(idx.lower_bound("b") != idx.end());
+  BOOST_TEST_EQ(*idx.lower_bound("b"), "b");
+  BOOST_TEST(idx.lower_bound("ba") != idx.end());
+  BOOST_TEST_EQ(*idx.lower_bound("ba"), "ccc");
+  BOOST_TEST(idx.lower_bound("ccca") == idx.end());
+
+  BOOST_TEST(idx.upper_bound("b") != idx.end());
+  BOOST_TEST_EQ(*idx.upper_bound("b"), "ccc");
+  BOOST_TEST(idx.upper_bound("ba") != idx.end());
+  BOOST_TEST_EQ(*idx.upper_bound("ba"), "ccc");
+  BOOST_TEST(idx.upper_bound("ccc") == idx.end());
+  BOOST_TEST(idx.upper_bound("ccca") == idx.end());
+
+  BOOST_TEST_EQ(idx.count("a"), 0);
+  BOOST_TEST_EQ(idx.count("b"), 1);
+  BOOST_TEST_EQ(idx.count("ba"), 0);
+  BOOST_TEST_EQ(idx.count("ccc"), 1);
+  BOOST_TEST_EQ(idx.count("ccca"), 0);
 
   cout << "     string_view_test complete" << endl;
 }

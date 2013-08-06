@@ -58,8 +58,7 @@ public:
   typedef typename base::file_position   file_position;
 
 
-  index_set()
-    : index_base<index_set_base<Key,BtreeTraits,Compare,IndexTraits> >() {}
+  index_set() : base() {}
 
   index_set(const path& file_pth,
             file_size_type reserv,
@@ -69,8 +68,7 @@ public:
             std::size_t node_sz = default_node_size,  // ignored if existing file
             const Compare& comp = Compare())
   {
-    index_base<index_set_base<Key,BtreeTraits,Compare,IndexTraits> >::
-    open(file_pth, reserv, index_pth, flgs, sig, node_sz, comp);
+    base::open(file_pth, reserv, index_pth, flgs, sig, node_sz, comp);
   }
 
   index_set(file_ptr_type flat_file,            
@@ -80,8 +78,7 @@ public:
             std::size_t node_sz = default_node_size,  // ignored if existing file
             const Compare& comp = Compare())
   {
-    index_base<index_set_base<Key,BtreeTraits,Compare,IndexTraits> >::
-    open(flat_file, index_pth, flgs, sig, node_sz, comp);
+    base::open(flat_file, index_pth, flgs, sig, node_sz, comp);
   }
 
   void open(const path& file_pth,
@@ -92,8 +89,7 @@ public:
             std::size_t node_sz = default_node_size,  // ignored if existing file
             const Compare& comp = Compare())
   {
-    index_base<index_set_base<Key,BtreeTraits,Compare,IndexTraits> >::
-    open(file_pth, reserv, index_pth, flgs, sig, node_sz, comp);
+    base::open(file_pth, reserv, index_pth, flgs, sig, node_sz, comp);
   }
 
   void open(file_ptr_type flat_file,            
@@ -103,8 +99,7 @@ public:
             std::size_t node_sz = default_node_size,  // ignored if existing file
             const Compare& comp = Compare())
   {
-    index_base<index_set_base<Key,BtreeTraits,Compare,IndexTraits> >::
-    open(flat_file, index_pth, flgs, sig, node_sz, comp);
+    base::open(flat_file, index_pth, flgs, sig, node_sz, comp);
   }
 
   //  modifiers
@@ -115,8 +110,8 @@ public:
     file_position pos = base::file()->file_size();
     std::size_t element_sz = index_traits::flat_size(x);
     base::file()->increment_file_size(element_sz);
-    char* dest = base::file()->template data<char>() + pos;
-    index_traits::build_flat_element(x, dest, element_sz);
+    index_traits::build_flat_element(x, base::file()->template data<char>() + pos,
+      element_sz);
     return pos;
   }
 
