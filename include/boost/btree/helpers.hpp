@@ -139,7 +139,9 @@ namespace flags
 struct less
 {
   template <class T, class U> bool operator()(const T& t, const U& u) const
-    {return t < u;}
+  {
+    return t < u;
+  }
 };
 
 }  // namespace btree

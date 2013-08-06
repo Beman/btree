@@ -281,6 +281,7 @@ private:
     Reference dereference() const
     { 
       BOOST_ASSERT_MSG(m_file, "btree index attempt to dereference end iterator");
+      std::cout << "**** " << *m_index_iterator << std::endl;
       return index_traits::make_reference(m_file->const_data<char>() + *m_index_iterator);
     }
  
@@ -299,12 +300,13 @@ private:
 namespace detail
 {
   // TODO: Pos needs to be a distinct type so no ambiguity arises if Key and
-  // file_position happen to be the same type
+  // file_position happen to be the same type. Or else use the heterogenous type
+  // approach now used in the std library
 
   template <class Key, class Pos, class Compare>
   class indirect_compare
   {
-    Compare                           m_comp;
+    Compare                        m_comp;
     extendible_mapped_file*        m_file;
 
   public:
