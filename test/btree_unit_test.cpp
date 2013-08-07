@@ -977,6 +977,15 @@ void find_and_bounds_tests(BTree& bt)
 //    cout << "      i = " << i << ", bt.count(i) = " << bt.count(i) <<endl;
   }
 
+  //  non-unique container erase by key test
+  if (!(bt.header().flags() & btree::flags::unique))
+  {
+    cout << "     testing multi-count erase" << endl;
+    BOOST_TEST_EQ(bt.erase(BTree::key_type(3)), 2);
+    BOOST_TEST_EQ(bt.erase(BTree::key_type(7)), 3);
+  }
+
+
   cout << "    testing \"" << bt.path().string() << "\" complete" << endl;
 }
 

@@ -745,7 +745,11 @@ void  string_view_multiset_test()
  
   BOOST_TEST(idx.index_size() == 8);
 
+  BOOST_TEST_EQ(idx.erase(string_view("aa")), 2);
+  BOOST_TEST(idx.index_size() == 6);
+
   BOOST_TEST(idx.find("a") == idx.end());
+  BOOST_TEST(idx.find("aa") == idx.end());
   BOOST_TEST(idx.find("ccca") == idx.end());
 
   BOOST_TEST(idx.lower_bound("b") != idx.end());

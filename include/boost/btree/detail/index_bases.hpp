@@ -67,7 +67,7 @@ public:
   typedef typename IndexTraits::reference        reference;                
 
   typedef IndexTraits                            index_traits;
-  typedef typename index_traits::index_key       index_key;
+  typedef typename index_traits::index_key       index_key;  // i.e. position in flat file
   typedef detail::indirect_compare<key_type,
     index_key, compare_type, index_traits>       index_compare_type;
 
@@ -97,7 +97,7 @@ public:
   typedef typename IndexTraits::reference        reference;                
 
   typedef IndexTraits                            index_traits;
-  typedef typename index_traits::index_key       index_key;
+  typedef typename index_traits::index_key       index_key;  // i.e. position in flat file
   typedef detail::indirect_compare<key_type,
     index_key, compare_type, index_traits>       index_compare_type;
 
@@ -197,7 +197,7 @@ public:
   typedef file_type::position_type              file_position;
 
   typedef typename Base::index_traits           index_traits;
-  typedef typename index_traits::index_key      index_key;
+  typedef typename index_traits::index_key      index_key;  // i.e. position in flat file
 
   typedef typename Base::index_compare_type     index_compare_type;
 
@@ -246,6 +246,28 @@ public:
       index_compare_type(m_comp, m_file.get()));
   }
 
+  //  modifiers
+  iterator erase(const_iterator itr)
+  {
+    index_type::const_iterator result(m_index_btree.erase(itr.m_index_iterator));
+    return result == m_index_btree.cend()
+      ? end()
+      : iterator(result, file());
+  }
+  size_type erase(const key_type& k)
+  {
+    size_type count = 0;
+    const_iterator itr = lower_bound(k);
+    
+    while (itr != end() && !m_index_btree.key_comp()(k, *itr.m_index_iterator))
+    {
+      ++count;
+      itr = erase(itr);
+    }
+    return count;
+  }
+  iterator erase(const_iterator first, const_iterator last);
+
   //  iterators
 
   iterator begin()              {return iterator(m_index_btree.begin(), file());}
@@ -276,15 +298,18 @@ public:
   //  Returns: The offset in the flat file of the element pointed to by itr
 
   const_iterator    find(const key_type& k) const 
-                                           {return const_iterator(m_index_btree.find(k), m_file);}
+                                           {return const_iterator(m_index_btree.find(k),
+                                              m_file);}
  
   size_type         count(const key_type& k) const  {return m_index_btree.count(k);}
 
   const_iterator    lower_bound(const key_type& k) const
-                                    {return const_iterator(m_index_btree.lower_bound(k), m_file);}
+                                    {return const_iterator(m_index_btree.lower_bound(k),
+                                      m_file);}
 
   const_iterator    upper_bound(const key_type& k) const
-                                    {return const_iterator(m_index_btree.upper_bound(k), m_file);}
+                                    {return const_iterator(m_index_btree.upper_bound(k),
+                                      m_file);}
   const_iterator_range
                     equal_range(const key_type& k) const
                                   {return std::make_pair(lower_bound(k), upper_bound(k));}
@@ -293,7 +318,6 @@ public:
   //                                  iterator_type                                     //
   //------------------------------------------------------------------------------------//
  
-private:
   template <class T, class Reference>
   class iterator_type
     : public boost::iterator_facade<iterator_type<T, Reference>, T,
@@ -310,6 +334,7 @@ private:
 
   private:
     friend class boost::iterator_core_access;
+    friend class index_base;
 
     index_iterator_type   m_index_iterator;
     file_type*            m_file;  // 0 for end iterator
