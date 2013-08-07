@@ -208,7 +208,7 @@ public:
 
 protected:
   index_type      m_index_btree;
-  file_ptr_type   m_file;          // shared_ptr to flat file shared with other indexes
+  file_ptr_type   m_file;          // shared_ptr to flat file; shared with other indexes
   compare_type    m_comp;
 
 public:
@@ -252,7 +252,7 @@ public:
     index_type::const_iterator result(m_index_btree.erase(itr.m_index_iterator));
     return result == m_index_btree.cend()
       ? end()
-      : iterator(result, file());
+      : iterator(result, m_file);
   }
   size_type erase(const key_type& k)
   {
@@ -266,7 +266,11 @@ public:
     }
     return count;
   }
-  iterator erase(const_iterator first, const_iterator last);
+  iterator erase(const_iterator first, const_iterator last)
+  {
+    return iterator(m_index_btree.erase(first.m_index_iterator, last.m_index_iterator),
+      m_file);
+  }
 
   //  iterators
 

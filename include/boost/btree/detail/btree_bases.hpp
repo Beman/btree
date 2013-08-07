@@ -35,7 +35,12 @@
   * flags for key_varies and mapped_varies added, but not being set or used yet.
     key and mapped size no longer set to -1 to indicate variable length. 
   
-  * btree_unit_test.cpp: move erase tests out of insert test.
+  * btree_unit_test.cpp: move erase tests out of insert test. Or better yet create a
+    separate erase test. SERIOUS CONCERN: Do the erase overloads that return an iterator
+    always return iterators with valid leaf-to-head chains? Besides an easy-to-find
+    test for this, the code for erase needs to have an easy to find comment as to how
+    the leaf-to-head chain is maintained if the leaf page is freed, and thus branches
+    are modified, thus invalidating the chain for the next element.
   
   * btree_unit_test.cpp: review tests that are commented out.
 
@@ -1602,10 +1607,6 @@ void btree_base<Key,Base>::m_erase_branch_value(
       move_sz = ((np->size() - 1 ) * sizeof(branch_value_type)) + sizeof(node_id_type);
     }
 
- //std::cout << "move_sz " << move_sz
- //          << " move target " << std::size_t(erase_ptr) 
- //          << " move source " << std::size_t(erase_ptr + sizeof(branch_value_type)) 
- //          << std::endl;
     std::memmove(erase_ptr, erase_ptr + sizeof(branch_value_type), move_sz);
 
     np->size(np->size() - 1);
@@ -1619,7 +1620,6 @@ void btree_base<Key,Base>::m_erase_branch_value(
       && np->branch().begin() == np->branch().end()  // node empty except for P0
       && np->level() == header().root_level())   // node is the root
     {
-      //std::cout << "old root " << header().root_node_id() << std::endl;
       // make the end pseudo-element the new root and then free this node
       np->needs_write(true);
       m_hdr.root_node_id(np->branch().end()->node_id);

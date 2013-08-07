@@ -678,22 +678,17 @@ void  string_view_multiset_test()
 
   result = idx.insert(sv1);
   BOOST_TEST(*result == sv1);
-  //cout << '"' << *result << '"' << endl;
 
   result = idx.insert(sv2);
   BOOST_TEST(*result == sv2);
-  //cout << '"' << *result << '"' << endl;
 
   result = idx.insert(sv3);
   BOOST_TEST(*result == sv3);
-  //cout << '"' << *result << '"' << endl;
 
   result = idx.insert(sv4);
   BOOST_TEST(*result == sv4);
-  //cout << '"' << *result << '"' << endl;
  
   BOOST_TEST(idx.index_size() == 4);
- //cout << "*********************" << endl;
 
   index::iterator itr = idx.begin();
   index::iterator end = idx.end();
@@ -701,25 +696,21 @@ void  string_view_multiset_test()
   BOOST_TEST(itr != end);
   string_view sv = *itr;
   BOOST_TEST(sv == sv4);
-  //cout << '"' << sv << '"' << endl;
 
   ++itr;
   BOOST_TEST(itr != end);
   sv = *itr;
   BOOST_TEST(sv == sv1);
-  //cout << '"' << sv << '"' << endl;
 
   ++itr;
   BOOST_TEST(itr != end);
   sv = *itr;
   BOOST_TEST(sv == sv3);
-  //cout << '"' << sv << '"' << endl;
 
   ++itr;
   BOOST_TEST(itr != end);
   sv = *itr;
   BOOST_TEST(sv == sv2);
-  //cout << '"' << sv << '"' << endl;
  
   ++itr;
   BOOST_TEST(itr == end);
@@ -765,11 +756,19 @@ void  string_view_multiset_test()
   BOOST_TEST(idx.upper_bound("ccc") == idx.end());
   BOOST_TEST(idx.upper_bound("ccca") == idx.end());
 
+  BOOST_TEST_EQ(idx.count(""), 2);
   BOOST_TEST_EQ(idx.count("a"), 0);
   BOOST_TEST_EQ(idx.count("b"), 2);
   BOOST_TEST_EQ(idx.count("ba"), 0);
   BOOST_TEST_EQ(idx.count("ccc"), 2);
   BOOST_TEST_EQ(idx.count("ccca"), 0);
+
+  itr = idx.erase(idx.begin(), idx.find("b"));
+  index::iterator itr2 = idx.find("b");
+  BOOST_TEST(itr == itr2);
+  BOOST_TEST_EQ(idx.index_size(), 4);
+  BOOST_TEST_EQ(idx.count("b"), 2);
+  BOOST_TEST_EQ(idx.count("ccc"), 2);
 
   cout << "     string_view_multiset_test complete" << endl;
 }
