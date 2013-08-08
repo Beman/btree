@@ -35,12 +35,7 @@
   * flags for key_varies and mapped_varies added, but not being set or used yet.
     key and mapped size no longer set to -1 to indicate variable length. 
   
-  * btree_unit_test.cpp: move erase tests out of insert test. Or better yet create a
-    separate erase test. SERIOUS CONCERN: Do the erase overloads that return an iterator
-    always return iterators with valid leaf-to-head chains? Besides an easy-to-find
-    test for this, the code for erase needs to have an easy to find comment as to how
-    the leaf-to-head chain is maintained if the leaf page is freed, and thus branches
-    are modified, thus invalidating the chain for the next element.
+  * btree_unit_test.cpp: need test of erase(itr1, itr2).
   
   * btree_unit_test.cpp: review tests that are commented out.
 
@@ -233,6 +228,10 @@ public:
   sizeof(key_type) is less than sizeof(value_type) (i.e. it is a map rather than a set)
   leave a space of the mapped_type. The map calling functions are responsible for
   actually emplacing/inserting the mapped_type contents.
+
+  erase() invalidate iterators pointing to element beyond the erased element, but does
+  not invalidate iterators pointing to elements prior to the erased element. This is a
+  property of B-trees in general, not something specific to this implementation.
 
 */
 
@@ -1534,19 +1533,32 @@ btree_base<Key,Base>::erase(const_iterator pos)
     BOOST_ASSERT(pos.m_node->parent()->node_id() \
       == pos.m_node->parent_node_id()); // cache logic OK?
 
-    btree_node_ptr next_node(pos.m_node->next_node());
+    // Save the prior node to use below to obtain the return iterator. The prior node
+    // is saved rather than the next node, because the next node pointer will be
+    // invalidated by m_branch_erase_value(), while the prior node pointer will not be
+    // invalidated by m_branch_erase_value().
+    btree_node_ptr prior_node(pos.m_node->prior_node());  // may be null
 
     if (pos.m_node->node_id() == header().last_node_id())
     {
-      btree_node_ptr prr_node(pos.m_node->prior_node());
-      BOOST_ASSERT(prr_node);
-      m_hdr.last_node_id(prr_node->node_id());
+      BOOST_ASSERT(prior_node);  // logic error; assert will only fire if this leaf is
+                                 // the root, but this control path should not be
+                                 // taken if this leaf is the root
+      m_hdr.last_node_id(prior_node->node_id());
     }
 
     m_erase_branch_value(pos.m_node->parent().get(), pos.m_node->parent_element());
 
     m_free_node(pos.m_node.get());  // add node to free node list
-    return !next_node ? cend() : const_iterator(next_node, next_node->leaf().begin());
+
+    if (prior_node)
+    {
+      btree_node_ptr next_node(prior_node->next_node());
+      return next_node
+        ? const_iterator(next_node, next_node->leaf().begin())
+        : cend();
+    }
+    return cbegin();
   }
   else
   {

@@ -1371,16 +1371,17 @@ void  cache_size_test()
 
 //----------------------- erase_return_iterator_validity_test  -------------------------//
 
-void  erase_return_iterator_validity_test()
+void  erase_return_iterator_validity_test(int start)
 {
-  cout << "  erase_return_iterator_validity_test..." << endl;
+  cout << "  erase_return_iterator_validity_test, starting at element " << start
+    << "..." << endl;
 
   fs::path path("btree_map.erase.btree");
   typedef btree::btree_set<fat> btree_type;
   btree_type bt(path, btree::flags::truncate, -1, 128);
   bt.max_cache_size(0);  // maximum stress
 
-  const int levels = 2;
+  const int levels = 4;
 
   cout << "    insert elements until levels reaches " << levels << endl;
   for (int i = 1; bt.header().levels() <= levels; ++i)
@@ -1388,19 +1389,21 @@ void  erase_return_iterator_validity_test()
     bt.insert(fat(i));
   }
  
-  cout << "    erase all " << bt.size() << " elements" << endl;
+  cout << "    erase " << bt.size() - start << " elements" << endl;
   btree_type::const_iterator itr = bt.cbegin();
+  for (int i = 1; i <= start ; ++i)
+    ++itr;
   bt.inspect_leaf_to_root(cout, itr);
-  for (int i = 1; !bt.empty(); ++i)
+  for (int i = 1 + start; itr != bt.end(); ++i)
   {
-    if (i == 3)
-       btree::dump_dot(cout, bt);
+    //if (i == 3)
+    //   btree::dump_dot(cout, bt);
 
     BOOST_TEST_EQ(i, itr->x);
-    cout << "      erasing " << *itr << endl;
+    //cout << "      erasing " << *itr << endl;
     itr = bt.erase(itr);
-    if (i == 3)
-       btree::dump_dot(cout, bt);
+    //if (i == 3)
+    //   btree::dump_dot(cout, bt);
     if (itr != bt.end())
       bt.inspect_leaf_to_root(cout, itr);
   }
@@ -1470,7 +1473,12 @@ int cpp_main(int argc, char* argv[])
   insert_and_erase_test();
   insert_non_unique();
   find_and_bounds();
-  erase_return_iterator_validity_test();
+  erase_return_iterator_validity_test(0);    // starting at begin is special case, so
+                                             // test explicitly. 
+  erase_return_iterator_validity_test(1);    // start near begin
+  erase_return_iterator_validity_test(190);  // start near end
+  erase_return_iterator_validity_test(192);  // start at last element
+
   update_test();
   //iteration();
   //multi();
