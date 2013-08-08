@@ -646,11 +646,11 @@ void  string_view_test()
   BOOST_TEST(idx.upper_bound("ccc") == idx.end());
   BOOST_TEST(idx.upper_bound("ccca") == idx.end());
 
-  BOOST_TEST_EQ(idx.count("a"), 0);
-  BOOST_TEST_EQ(idx.count("b"), 1);
-  BOOST_TEST_EQ(idx.count("ba"), 0);
-  BOOST_TEST_EQ(idx.count("ccc"), 1);
-  BOOST_TEST_EQ(idx.count("ccca"), 0);
+  BOOST_TEST_EQ(idx.count("a"), 0u);
+  BOOST_TEST_EQ(idx.count("b"), 1u);
+  BOOST_TEST_EQ(idx.count("ba"), 0u);
+  BOOST_TEST_EQ(idx.count("ccc"), 1u);
+  BOOST_TEST_EQ(idx.count("ccca"), 0u);
 
   cout << "     string_view_test complete" << endl;
 }

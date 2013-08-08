@@ -237,7 +237,7 @@ public:
   const_iterator insert_file_position(file_position pos)
   {
     BOOST_ASSERT(!base::read_only());
-    base::index_type::const_iterator
+    typename base::index_type::const_iterator
       result(base::m_index_btree.insert(index_key(pos)));
     return const_iterator(result, base::file());
   }

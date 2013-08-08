@@ -981,8 +981,8 @@ void find_and_bounds_tests(BTree& bt)
   if (!(bt.header().flags() & btree::flags::unique))
   {
     cout << "     testing multi-count erase" << endl;
-    BOOST_TEST_EQ(bt.erase(BTree::key_type(3)), 2);
-    BOOST_TEST_EQ(bt.erase(BTree::key_type(7)), 3);
+    BOOST_TEST_EQ(bt.erase(typename BTree::key_type(3)), 2);
+    BOOST_TEST_EQ(bt.erase(typename BTree::key_type(7)), 3);
   }
 
 
@@ -1381,7 +1381,7 @@ void  erase_return_iterator_validity_test(int start)
   btree_type bt(path, btree::flags::truncate, -1, 128);
   bt.max_cache_size(0);  // maximum stress
 
-  const int levels = 4;
+  const unsigned int levels = 4;
 
   cout << "    insert elements until levels reaches " << levels << endl;
   for (int i = 1; bt.header().levels() <= levels; ++i)

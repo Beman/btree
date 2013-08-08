@@ -157,7 +157,7 @@ public:
 template <class Base>  // index_map_base or index_set_base
 class index_base : public Base, private noncopyable
 {
-private:
+public:
   template <class T, class Reference>
     class iterator_type;
 
@@ -249,7 +249,7 @@ public:
   //  modifiers
   iterator erase(const_iterator itr)
   {
-    index_type::const_iterator result(m_index_btree.erase(itr.m_index_iterator));
+    typename index_type::const_iterator result(m_index_btree.erase(itr.m_index_iterator));
     return result == m_index_btree.cend()
       ? end()
       : iterator(result, m_file);

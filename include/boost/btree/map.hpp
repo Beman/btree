@@ -79,7 +79,7 @@ namespace boost
 
      ~btree_map()
       {
-        try {close();}
+        try {btree_base<Key, btree_map_base<Key,T,Traits,Comp> >::close();}
         catch (...) {}
       }
  
@@ -192,7 +192,7 @@ namespace boost
 
      ~btree_multimap()
       {
-        try {close();}
+        try {btree_base<Key, btree_map_base<Key,T,Traits,Comp> >::close();}
         catch (...) {}
       }
 
@@ -203,7 +203,7 @@ namespace boost
         const Comp& comp = Comp())
       {
         btree_base<Key,btree_map_base<Key,T,Traits,Comp> >::m_open(p,
-          flags::open_flags(flgs), sig, node_sz, traits);
+          flags::open_flags(flgs), sig, node_sz, comp);
       }
 
       //  emplace(const Key&, const T&) special case not requiring c++0x support
