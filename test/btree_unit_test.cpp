@@ -1127,14 +1127,6 @@ void update_test()
 
   cout << "     update_test complete" << endl;
 }
-
-////-------------------------------------- erase -----------------------------------------//
-//
-//void erase()
-//{
-//  cout << "  erase..." << endl;
-//  cout << "    erase complete" << endl;
-//}
 //
 ////------------------------------------ iteration ---------------------------------------//
 //
@@ -1377,6 +1369,45 @@ void  cache_size_test()
   cout << "    cache_size_test complete" << endl;
 }
 
+//----------------------- erase_return_iterator_validity_test  -------------------------//
+
+void  erase_return_iterator_validity_test()
+{
+  cout << "  erase_return_iterator_validity_test..." << endl;
+
+  fs::path path("btree_map.erase.btree");
+  typedef btree::btree_set<fat> btree_type;
+  btree_type bt(path, btree::flags::truncate, -1, 128);
+  bt.max_cache_size(0);  // maximum stress
+
+  const int levels = 2;
+
+  cout << "    insert elements until levels reaches " << levels << endl;
+  for (int i = 1; bt.header().levels() <= levels; ++i)
+  {
+    bt.insert(fat(i));
+  }
+ 
+  cout << "    erase all " << bt.size() << " elements" << endl;
+  btree_type::const_iterator itr = bt.cbegin();
+  bt.inspect_leaf_to_root(cout, itr);
+  for (int i = 1; !bt.empty(); ++i)
+  {
+    if (i == 3)
+       btree::dump_dot(cout, bt);
+
+    BOOST_TEST_EQ(i, itr->x);
+    cout << "      erasing " << *itr << endl;
+    itr = bt.erase(itr);
+    if (i == 3)
+       btree::dump_dot(cout, bt);
+    if (itr != bt.end())
+      bt.inspect_leaf_to_root(cout, itr);
+  }
+
+  cout << "    erase_return_iterator_validity_test complete" << endl;
+}
+
 //-------------------------------------  _test  ----------------------------------------//
 
 void  _test()
@@ -1439,7 +1470,7 @@ int cpp_main(int argc, char* argv[])
   insert_and_erase_test();
   insert_non_unique();
   find_and_bounds();
-  //erase();
+  erase_return_iterator_validity_test();
   update_test();
   //iteration();
   //multi();
