@@ -13,6 +13,7 @@
 #include <boost/btree/detail/config.hpp>
 #include <boost/btree/helpers.hpp>
 #include <boost/utility/string_ref.hpp>
+#include <boost/btree/support/size_t_codec.hpp>
 #include <boost/assert.hpp>
 #include <cstring>
 

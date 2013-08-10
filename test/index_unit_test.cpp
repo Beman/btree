@@ -15,6 +15,7 @@
 #include <boost/config/warning_disable.hpp>
 
 #include <iostream>
+#include <iomanip>
 #include <boost/btree/index_set.hpp>
 #include <boost/detail/lightweight_main.hpp>
 #include <boost/detail/lightweight_test.hpp>
@@ -773,6 +774,69 @@ void  string_view_multiset_test()
   cout << "     string_view_multiset_test complete" << endl;
 }
 
+//-------------------------------  size_t_codec_test  ----------------------------------//
+
+void  size_t_codec_test()
+{
+  cout << "  size_t_codec_test..." << endl;
+
+  typedef btree::support::size_t_codec codec;
+
+  cout << "    max_size() is " << codec::max_size() << endl;
+
+  char buf[10];
+
+  BOOST_TEST_EQ(codec::max_size(), sizeof(std::size_t) == 8 ? 10 : 5);
+
+  std::pair<char*, std::size_t> r_encode;
+  std::pair<std::size_t, std::size_t> r_decode;  // value encoded, size of encoded value
+
+  r_encode = codec::encode(0, buf);
+  BOOST_TEST(r_encode.first == &buf[9]);
+  BOOST_TEST_EQ(r_encode.second, 1u);
+  r_decode = codec::decode(r_encode.first);
+  BOOST_TEST_EQ(r_decode.first, 0u);
+  BOOST_TEST_EQ(r_decode.second, 1u);
+
+  r_encode = codec::encode(1, buf);
+  BOOST_TEST(r_encode.first == &buf[9]);
+  BOOST_TEST_EQ(r_encode.second, 1u);
+  r_decode = codec::decode(r_encode.first);
+  BOOST_TEST_EQ(r_decode.first, 1u);
+  BOOST_TEST_EQ(r_decode.second, 1u);
+
+  r_encode = codec::encode(127, buf);
+  BOOST_TEST(r_encode.first == &buf[9]);
+  BOOST_TEST_EQ(r_encode.second, 1u);
+  r_decode = codec::decode(r_encode.first);
+  BOOST_TEST_EQ(r_decode.first, 127u);
+  BOOST_TEST_EQ(r_decode.second, 1u);
+
+  r_encode = codec::encode(128, buf);
+  BOOST_TEST(r_encode.first == &buf[8]);
+  BOOST_TEST_EQ(r_encode.second, 2u);
+  r_decode = codec::decode(r_encode.first);
+  BOOST_TEST_EQ(r_decode.first, 128u);
+  BOOST_TEST_EQ(r_decode.second, 2u);
+
+  r_encode = codec::encode(16384u, buf);
+  BOOST_TEST(r_encode.first == &buf[7]);
+  BOOST_TEST_EQ(r_encode.second, 3u);
+  r_decode = codec::decode(r_encode.first);
+  BOOST_TEST_EQ(r_decode.first, 16384u);
+  BOOST_TEST_EQ(r_decode.second, 3u);
+
+  for (std::size_t x = 0; x < 1000000; ++x)
+  {
+    r_encode = codec::encode(x, buf);
+    r_decode = codec::decode(r_encode.first);
+    BOOST_TEST_EQ(r_decode.first, x);
+    BOOST_TEST_EQ(r_encode.second, r_decode.second);
+  }
+
+  cout << "     size_t_codec_test complete" << endl;
+}
+
 //-------------------------------------  _test  ----------------------------------------//
 
 void  _test()
@@ -833,6 +897,7 @@ int cpp_main(int argc, char* argv[])
   two_index_test();
   two_index_iterator_test();
   c_string_test();
+  size_t_codec_test();
   string_view_test();
   string_view_multiset_test();
   cout << "all tests complete" << endl;
