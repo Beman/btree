@@ -47,13 +47,14 @@ namespace support
   
   struct size_t_codec
   {
-    static std::size_t max_size();
-    //  Returns: The maximum number of bytes required to hold an encoded size_t value.
+    static const std::size_t max_size = (sizeof(std::size_t)*8)/7+1;
 
-    static std::pair<char*, std::size_t>  encode(std::size_t x, char* dest);
-    //  Requires: dest points to a character array of at least max_size() bytes.
-    //  Returns: A pair containing the address within dest and the size of the encoded
-    //  value of x.
+    static std::size_t encoded_size(std::size_t x);
+    //  Returns: The encoded size of x.
+
+    static void  encode(std::size_t x, char* dest, std::size_t encoded_sz);
+    //  Requires: encoded_sz == encoded_size(x)
+    //  Effects: The encoded value of x is placed in the array beginning at dest.
 
     static std::pair<std::size_t, std::size_t> decode(const char* x);
     //  Requires: x is encoded using the encode function.
@@ -61,16 +62,24 @@ namespace support
     //  and the size of that byte string.
   };
 
-  inline std::size_t size_t_codec::max_size()
+  inline std::size_t size_t_codec::encoded_size(std::size_t x)
   {
-    static const std::size_t max = (sizeof(std::size_t)*8) / 7 + 1;
-    return max;
+    // hopefully this code is very fast for the common use cases of smallish values
+    if (x <= 0x7fu) return 1;
+    if (x <= 0x3fffu) return 2;
+    if (x <= 0x1fffffu) return 3;
+
+    // this code will work for either 32 or 64-bit size_t
+    x >>= 21;
+    std::size_t r = 3;
+    for (; x; ++r, x >>= 7) {}
+    return r;
   }
 
-  inline std::pair<char*, std::size_t>
-    size_t_codec::encode(std::size_t x, char* dest)
+  inline void size_t_codec::encode(std::size_t x, char* dest, std::size_t encoded_sz)
   {
-    char* p = dest + (max_size()-1);
+    BOOST_ASSERT(encoded_sz == encoded_size(x));
+    char* p = dest + encoded_sz - 1;
     *p = static_cast<unsigned char>(x & 0x7f);
     x >>= 7;
     while (x)
@@ -78,7 +87,6 @@ namespace support
       *--p = static_cast<unsigned char>((x & 0x7f) | 0x80);
       x >>= 7;
     };
-    return std::make_pair(p, (dest + max_size()) - p);  
   }
 
   inline std::pair<std::size_t, std::size_t>
@@ -89,7 +97,7 @@ namespace support
     tmp.second = 0;
     while (*x & 0x80)
     {
-      BOOST_ASSERT(tmp.second < max_size());
+      BOOST_ASSERT(tmp.second < max_size);
       tmp.first |= static_cast<std::size_t>(*x & 0x7f);
       tmp.first <<= 7;
       ++x;
@@ -104,4 +112,4 @@ namespace support
 }  // namespace btree
 }  // namespace boost
 
-#endif  BOOST_BTREE_SIZE_T_CODEC_HPP
+#endif  //BOOST_BTREE_SIZE_T_CODEC_HPP

@@ -653,6 +653,15 @@ void  string_view_test()
   BOOST_TEST_EQ(idx.count("ccc"), 1u);
   BOOST_TEST_EQ(idx.count("ccca"), 0u);
 
+  std::string big(1000000, '*');
+
+  idx.insert(big);
+
+  idx.file()->close();
+
+  BOOST_TEST_EQ(fs::file_size(file_path.string() + ".string_view"), 4 + 6 + 1000003); 
+
+
   cout << "     string_view_test complete" << endl;
 }
 
@@ -737,7 +746,7 @@ void  string_view_multiset_test()
  
   BOOST_TEST(idx.index_size() == 8);
 
-  BOOST_TEST_EQ(idx.erase(string_view("aa")), 2);
+  BOOST_TEST_EQ(idx.erase(string_view("aa")), 2u);
   BOOST_TEST(idx.index_size() == 6);
 
   BOOST_TEST(idx.find("a") == idx.end());
@@ -782,56 +791,57 @@ void  size_t_codec_test()
 
   typedef btree::support::size_t_codec codec;
 
-  cout << "    max_size() is " << codec::max_size() << endl;
+  cout << "    max_size is " << codec::max_size << endl;
 
-  char buf[10];
+  char buf[codec::max_size];
 
-  BOOST_TEST_EQ(codec::max_size(), sizeof(std::size_t) == 8 ? 10 : 5);
+  cout << "    sizeof(buf) is " << sizeof(buf) << endl;
 
-  std::pair<char*, std::size_t> r_encode;
-  std::pair<std::size_t, std::size_t> r_decode;  // value encoded, size of encoded value
+  std::pair<std::size_t, std::size_t> r_decode;  // value decoded, size of decoded value
+  std::size_t encoded_sz;
 
-  r_encode = codec::encode(0, buf);
-  BOOST_TEST(r_encode.first == &buf[9]);
-  BOOST_TEST_EQ(r_encode.second, 1u);
-  r_decode = codec::decode(r_encode.first);
+  encoded_sz = codec::encoded_size(0);
+  BOOST_TEST_EQ(encoded_sz, 1);
+  codec::encode(0, buf, encoded_sz);
+  r_decode = codec::decode(buf);
   BOOST_TEST_EQ(r_decode.first, 0u);
-  BOOST_TEST_EQ(r_decode.second, 1u);
+  BOOST_TEST_EQ(r_decode.second, encoded_sz);
 
-  r_encode = codec::encode(1, buf);
-  BOOST_TEST(r_encode.first == &buf[9]);
-  BOOST_TEST_EQ(r_encode.second, 1u);
-  r_decode = codec::decode(r_encode.first);
+  encoded_sz = codec::encoded_size(1);
+  BOOST_TEST_EQ(encoded_sz, 1);
+  codec::encode(1, buf, encoded_sz);
+  r_decode = codec::decode(buf);
   BOOST_TEST_EQ(r_decode.first, 1u);
-  BOOST_TEST_EQ(r_decode.second, 1u);
+  BOOST_TEST_EQ(r_decode.second, encoded_sz);
 
-  r_encode = codec::encode(127, buf);
-  BOOST_TEST(r_encode.first == &buf[9]);
-  BOOST_TEST_EQ(r_encode.second, 1u);
-  r_decode = codec::decode(r_encode.first);
+  encoded_sz = codec::encoded_size(127);
+  BOOST_TEST_EQ(encoded_sz, 1);
+  codec::encode(127, buf, encoded_sz);
+  r_decode = codec::decode(buf);
   BOOST_TEST_EQ(r_decode.first, 127u);
-  BOOST_TEST_EQ(r_decode.second, 1u);
+  BOOST_TEST_EQ(r_decode.second, encoded_sz);
 
-  r_encode = codec::encode(128, buf);
-  BOOST_TEST(r_encode.first == &buf[8]);
-  BOOST_TEST_EQ(r_encode.second, 2u);
-  r_decode = codec::decode(r_encode.first);
+  encoded_sz = codec::encoded_size(128);
+  BOOST_TEST_EQ(encoded_sz, 2);
+  codec::encode(128u, buf, encoded_sz);
+  r_decode = codec::decode(buf);
   BOOST_TEST_EQ(r_decode.first, 128u);
-  BOOST_TEST_EQ(r_decode.second, 2u);
+  BOOST_TEST_EQ(r_decode.second, encoded_sz);
 
-  r_encode = codec::encode(16384u, buf);
-  BOOST_TEST(r_encode.first == &buf[7]);
-  BOOST_TEST_EQ(r_encode.second, 3u);
-  r_decode = codec::decode(r_encode.first);
+  encoded_sz = codec::encoded_size(16384u);
+  BOOST_TEST_EQ(encoded_sz, 3);
+  codec::encode(16384u, buf, encoded_sz);
+  r_decode = codec::decode(buf);
   BOOST_TEST_EQ(r_decode.first, 16384u);
-  BOOST_TEST_EQ(r_decode.second, 3u);
+  BOOST_TEST_EQ(r_decode.second, encoded_sz);
 
-  for (std::size_t x = 0; x < 1000000; ++x)
+  for (std::size_t x = 0; x < 25000000; ++x)
   {
-    r_encode = codec::encode(x, buf);
-    r_decode = codec::decode(r_encode.first);
+    encoded_sz = codec::encoded_size(x);
+    codec::encode(x, buf, encoded_sz);
+    r_decode = codec::decode(buf);
     BOOST_TEST_EQ(r_decode.first, x);
-    BOOST_TEST_EQ(r_encode.second, r_decode.second);
+    BOOST_TEST_EQ(r_decode.second, encoded_sz);
   }
 
   cout << "     size_t_codec_test complete" << endl;
@@ -897,7 +907,7 @@ int cpp_main(int argc, char* argv[])
   two_index_test();
   two_index_iterator_test();
   c_string_test();
-  size_t_codec_test();
+  size_t_codec_test();  // do this before string_view, as string_view depends on it
   string_view_test();
   string_view_multiset_test();
   cout << "all tests complete" << endl;

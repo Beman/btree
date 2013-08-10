@@ -92,24 +92,33 @@ namespace btree
   template <>
   class default_index_traits<boost::string_view>
   {
+    typedef btree::support::size_t_codec codec;
   public:
     typedef boost::string_view         reference;
 
     typedef endian::big_uint48un_t     index_key;  // position in the flat file
 
-    static std::size_t flat_size(const boost::string_view& x)  {return x.size() + 1;}
+    static std::size_t flat_size(const boost::string_view& x)
+    {
+      return x.size() + codec::encoded_size(x.size());
+    }
 
     static void build_flat_element(const boost::string_view& x, char* dest,
       std::size_t sz)
     {
       BOOST_ASSERT(dest);
-      BOOST_ASSERT(sz == x.size() + 1);
-      std::memcpy(dest, x.data(), x.size());
-      *(dest+x.size()) = '\0';
+      BOOST_ASSERT(sz > x.size()); // even a null string needs a byte to store size
+
+      std::size_t size_size = sz - x.size();
+      codec::encode(x.size(), dest, size_size); 
+      std::memcpy(dest + size_size, x.data(), x.size());
     }
 
     static reference make_reference(const char* x)
-      {return boost::string_view(x);}
+    {
+      std::pair<std::size_t, std::size_t> dec = codec::decode(x);
+      return boost::string_view(x + dec.second, dec.first);
+    }
   };
 
 }  // namespace btree

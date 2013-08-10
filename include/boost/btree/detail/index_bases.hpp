@@ -25,13 +25,8 @@
 
   *  verify dereferencing the end iterator assert fires correctly.
 
-  *  The default_index_traits<string_view> specialization is space efficient,
-     but does not support
-     embedded nulls and is time inefficient for very long strings. Users might want
-     trade-offs, so alternate flavors should be available. This might serve as a poster
-     child for use cases where the type alone isn't sufficient to determine which
-     flat_adapter to use. Consider adding a template parameter (two for maps)
-     at the end that defaults to (renamed) default_flat_adapter<Key>.
+  *  sets, maps, missing close(). Might need an argument that says what to close. The index?
+     the flat file? Both?
 
   *  Rename in index_helpers.hpp to index_traits.hpp?
 
