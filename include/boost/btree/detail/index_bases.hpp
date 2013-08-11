@@ -21,6 +21,12 @@
 
   TODO:
 
+  *  Implement maps.
+
+  *  Get map_example2 working. Depends on index_map.
+
+  *  Add emplace()
+
   *  template <class K> operations fuctions per C++14.
 
   *  verify dereferencing the end iterator assert fires correctly.
