@@ -527,7 +527,7 @@ private:
     friend class btree_base;
   public:
     value_type*  begin()      {return m_value;}
-    value_type*  end()        {return &m_value[size()];}
+    value_type*  end()        {return &m_value[btree_data::size()];}
 
     //  offsetof() macro won't work for all value types, so compute by hand
     static std::size_t value_offset()
@@ -580,7 +580,7 @@ private:
     // HEADS UP: end() branch_value_type* is dereferenceable, although only the node_id
     // is present. This because a B-Tree branch page has one more child id than the
     // number of keys. See the branch invariants above.
-    branch_value_type*  end()      {return &m_value[size()];}
+    branch_value_type*  end()      {return &m_value[btree_data::size()];}
 
     //  offsetof() macro won't work for all branch_value_type's, so compute by hand
     static std::size_t value_offset()
