@@ -7,21 +7,19 @@
 
 
 #include <map>
-#include <utility>
 #include <boost/btree/map.hpp>
 #include <iostream>
 using std::cout;
-using std::make_pair;
 
 template <class Map>
 void example(Map& map)
 {
-  map.insert(make_pair<int, long>(2, -2));
-  map.insert(make_pair<int, long>(3, -3));
-  map.insert(make_pair<int, long>(1, -1));
+  map.emplace(2, -2);
+  map.emplace(3, -3);
+  map.emplace(1, -1);
 
-  for (typename Map::iterator it = map.begin(); it != map.end(); ++it)
-    cout << "  " << it->first << " --> " << it->second << '\n';
+  for (auto value : map)
+    cout << "  " << value.first << " --> " << value.second << '\n';
 }
 
 int main()
