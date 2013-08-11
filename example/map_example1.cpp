@@ -1,6 +1,6 @@
 //  map_example1.cpp  ------------------------------------------------------------------//
 
-//  Copyright Beman Dawes 2011
+//  Copyright Beman Dawes 2011, 2013
 
 //  Distributed under the Boost Software License, Version 1.0.
 //  See http://www.boost.org/LICENSE_1_0.txt
@@ -8,34 +8,45 @@
 
 #include <map>
 #include <utility>
-#include <string>
 #include <boost/btree/map.hpp>
 #include <iostream>
 using std::cout;
+using std::make_pair;
+
+template <class Map>
+void example(Map& map)
+{
+  map.insert(make_pair<int, long>(2, -2));
+  map.insert(make_pair<int, long>(3, -3));
+  map.insert(make_pair<int, long>(1, -1));
+
+  for (typename Map::iterator it = map.begin(); it != map.end(); ++it)
+    cout << "  " << it->first << " --> " << it->second << '\n';
+}
 
 int main()
 {
-  typedef std::map<int, long> std_map_type;
-  std_map_type std_map;
+  //  std::map example
+  cout << "std::map:\n";
+  std::map<int, long> std_map;
+  example(std_map);
 
-  std_map.insert(std::make_pair<int, long>(2, -2));
-  std_map.insert(std::make_pair<int, long>(3, -3));
-  std_map.insert(std::make_pair<int, long>(1, -1));
+  //  same example, except use btree_map
+  cout << "boost::btree::btree_map:\n";
+  boost::btree::btree_map<int, long>
+    btree_map("map.btr", boost::btree::flags::truncate);
+  example(btree_map);
 
-  cout << "std_map:\n";
-  for (std_map_type::iterator it = std_map.begin(); it != std_map.end(); ++it)
-    cout << "  " << it->first << " --> " << it->second << '\n';
-
-  typedef boost::btree::btree_map<int, long> btree_map_type;
-  btree_map_type bt_map("bt_map.btr", boost::btree::flags::truncate);
-
-  bt_map.emplace(2, -2);
-  bt_map.emplace(3, -3);
-  bt_map.emplace(1, -1);
-
-  cout << "bt_map:\n";
-  for (btree_map_type::iterator it = bt_map.begin(); it != bt_map.end(); ++it)
-    cout << "  " << bt_map.key(*it) << " --> " << bt_map.mapped(*it) << '\n';
+  // Output:
+  //
+  //   std::map:
+  //     1 --> -1
+  //     2 --> -2
+  //     3 --> -3
+  //   boost::btree::btree_map:
+  //     1 --> -1
+  //     2 --> -2
+  //     3 --> -3
 
   return 0;
 }
