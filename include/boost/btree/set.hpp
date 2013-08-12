@@ -19,6 +19,16 @@
 #include <boost/static_assert.hpp>
 #include <boost/type_traits/is_pointer.hpp>
 
+/*  Rationale for order of constructor and open arguments:
+      * path is required, and is a natural first argument.
+      * flags is the most commonly needed of the remaining arguments.
+      * signature is encouraged as it eliminates a common source of errors, so is next.
+      * a custom compares is more common than a cusom node size, so is next.
+      * custom node sizes are discouraged as a real need is rare and they are often
+        an indication that a btree map or set is being used when an index map or set
+        would be more appropriate.
+*/
+
 namespace boost
 {
   namespace btree
@@ -52,22 +62,22 @@ namespace boost
       explicit btree_set(const boost::filesystem::path& p,
         flags::bitmask flgs = flags::read_only,
         uint64_t sig = -1,  // for existing files, must match signature from creation
-        std::size_t node_sz = default_node_size,  // ignored if existing file
-        const Comp& comp = Comp())
+        const Comp& comp = Comp(),
+        std::size_t node_sz = default_node_size)  // node_sz ignored if existing file
         : btree_base<Key,btree_set_base<Key,Traits,Comp> >(p,
             flags::open_flags(flgs) | flags::key_only | flags::unique,
-            sig, node_sz, comp) {}
+            sig, comp, node_sz) {}
 
       template <class InputIterator>
       btree_set(InputIterator begin, InputIterator end,
         const boost::filesystem::path& p,
         flags::bitmask flgs = flags::read_only,
         uint64_t sig = -1,  // for existing files, must match signature from creation
-        std::size_t node_sz = default_node_size,  // ignored if existing file
-        const Comp& comp = Comp())
+        const Comp& comp = Comp(),
+        std::size_t node_sz = default_node_size)  // node_sz ignored if existing file
       : btree_base<Key,btree_set_base<Key,Traits,Comp> >(p,
           flags::open_flags(flgs) | flags::key_only | flags::unique,
-          sig, node_sz, comp)
+          sig, comp, node_sz)
       {
         for (; begin != end; ++begin)
         {
@@ -86,12 +96,12 @@ namespace boost
       void open(const boost::filesystem::path& p,
         flags::bitmask flgs = flags::read_only,
         uint64_t sig = -1,  // for existing files, must match signature from creation
-        std::size_t node_sz = default_node_size, // node_sz ignored if existing file
-        const Comp& comp = Comp())
+        const Comp& comp = Comp(),
+        std::size_t node_sz = default_node_size)  // node_sz ignored if existing file
       {
         btree_base<Key,btree_set_base<Key,Traits,Comp> >::m_open(p,
           flags::open_flags(flgs) | flags::key_only | flags::unique, sig,
-          node_sz, comp);
+          comp, node_sz);
       }
 
       //  emplace() special case not requiring c++0x support
@@ -148,20 +158,20 @@ namespace boost
       explicit btree_multiset(const boost::filesystem::path& p,
         flags::bitmask flgs = flags::read_only,
         uint64_t sig = -1,  // for existing files, must match signature from creation
-        std::size_t node_sz = default_node_size,  // ignored if existing file
-        const Comp& comp = Comp())
+        const Comp& comp = Comp(),
+        std::size_t node_sz = default_node_size)  // ignored if existing file
         : btree_base<Key,btree_set_base<Key,Traits,Comp> >(p,
-            flags::open_flags(flgs) | flags::key_only, sig, node_sz, comp) {}
+            flags::open_flags(flgs) | flags::key_only, sig, comp, node_sz) {}
 
       template <class InputIterator>
       btree_multiset(InputIterator begin, InputIterator end,
         const boost::filesystem::path& p,
         flags::bitmask flgs = flags::read_only,
         uint64_t sig = -1,  // for existing files, must match signature from creation
-        std::size_t node_sz = default_node_size,  // ignored if existing file
-        const Comp& comp = Comp())
+        const Comp& comp = Comp(),
+        std::size_t node_sz = default_node_size)  // ignored if existing file
       : btree_base<Key,btree_set_base<Key,Traits,Comp> >(p,
-          flags::open_flags(flgs) | flags::key_only, sig, node_sz, comp)
+          flags::open_flags(flgs) | flags::key_only, sig, comp, node_sz)
       {
         for (; begin != end; ++begin)
         {
@@ -179,11 +189,11 @@ namespace boost
       void open(const boost::filesystem::path& p,
         flags::bitmask flgs = flags::read_only,
         uint64_t sig = -1,  // for existing files, must match signature from creation
-        std::size_t node_sz = default_node_size, // node_sz ignored if existing file
-        const Comp& comp = Comp())
+        const Comp& comp = Comp(), 
+        std::size_t node_sz = default_node_size)  // node_sz ignored if existing file
       {
          btree_base<Key,btree_set_base<Key,Traits,Comp> >::m_open(p,
-          flags::open_flags(flgs) | flags::key_only, sig, node_sz, comp);
+          flags::open_flags(flgs) | flags::key_only, sig, comp, node_sz);
       }
 
       //  emplace(const Key&) special case not requiring c++0x support

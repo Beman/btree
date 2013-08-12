@@ -287,7 +287,7 @@ public:
   // TODO: why aren't these protected?
   btree_base();
   btree_base(const boost::filesystem::path& p, flags::bitmask flgs, uint64_t signature,
-   std::size_t node_sz, const compare_type& comp);
+    const compare_type& comp, std::size_t node_sz);
   ~btree_base();
 
   //  file operations:
@@ -857,7 +857,7 @@ protected:
   iterator m_update(iterator itr);
 
   void m_open(const boost::filesystem::path& p, flags::bitmask flgs, uint64_t signature,
-              std::size_t node_sz, const compare_type& comp);
+              const compare_type& comp, std::size_t node_sz);
 
 //--------------------------------------------------------------------------------------//
 //                              private member functions                                //
@@ -1006,7 +1006,7 @@ btree_base<Key,Base>::btree_base()
 
 template <class Key, class Base>
 btree_base<Key,Base>::btree_base(const boost::filesystem::path& p,
-  flags::bitmask flgs, uint64_t signature, std::size_t node_sz, const compare_type& comp)
+  flags::bitmask flgs, uint64_t signature, const compare_type& comp, std::size_t node_sz)
   // initialize in the correct order to avoid voluminous gcc warnings:
   : m_mgr(m_node_alloc), m_cache_branches(false)
 { 
@@ -1018,7 +1018,7 @@ btree_base<Key,Base>::btree_base(const boost::filesystem::path& p,
   BOOST_ASSERT(manager().buffers_in_memory() == 0);  // verify m_end_iterator not cached
 
   // open the file and set up data members
-  m_open(p, flgs, signature, node_sz, comp);
+  m_open(p, flgs, signature, comp, node_sz);
 }
 
 //----------------------------------- destructor ---------------------------------------//
@@ -1047,7 +1047,7 @@ void btree_base<Key,Base>::close()
 template <class Key, class Base>
 void
 btree_base<Key,Base>::m_open(const boost::filesystem::path& p,
-  flags::bitmask flgs, uint64_t signature, std::size_t node_sz, const compare_type& comp) 
+  flags::bitmask flgs, uint64_t signature, const compare_type& comp, std::size_t node_sz) 
 {
   BOOST_ASSERT(!is_open());
   BOOST_ASSERT(node_sz >= sizeof(btree::header_page));

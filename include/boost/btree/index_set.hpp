@@ -60,46 +60,44 @@ public:
 
   index_set() : base() {}
 
-  index_set(const path& file_pth,
-            file_size_type reserv,
-            const path& index_pth,
+  index_set(const path& index_pth,
+            const path& file_pth,
             flags::bitmask flgs = flags::read_only,
             uint64_t sig = -1,  // for existing files, must match creation signature
-            std::size_t node_sz = default_node_size,  // ignored if existing file
-            const Compare& comp = Compare())
+            const Compare& comp = Compare(),
+            std::size_t node_sz = default_node_size)  // node_sz ignored if existing file
   {
-    base::open(file_pth, reserv, index_pth, flgs, sig, node_sz, comp);
+    base::open(index_pth, file_pth, flgs, sig, comp, node_sz);
   }
 
-  index_set(file_ptr_type flat_file,            
-            const path& index_pth,
+  index_set(const path& index_pth,
+            file_ptr_type flat_file,            
             flags::bitmask flgs = flags::read_only,
             uint64_t sig = -1,  // for existing files, must match creation signature
-            std::size_t node_sz = default_node_size,  // ignored if existing file
-            const Compare& comp = Compare())
+            const Compare& comp = Compare(),
+            std::size_t node_sz = default_node_size)  // node_sz ignored if existing file
   {
-    base::open(flat_file, index_pth, flgs, sig, node_sz, comp);
+    base::open(index_pth, flat_file,flgs, sig, comp, node_sz);
   }
 
-  void open(const path& file_pth,
-            file_size_type reserv,
-            const path& index_pth,
+  void open(const path& index_pth,
+            const path& file_pth,
             flags::bitmask flgs = flags::read_only,
             uint64_t sig = -1,  // for existing files, must match creation signature
-            std::size_t node_sz = default_node_size,  // ignored if existing file
-            const Compare& comp = Compare())
+            const Compare& comp = Compare(),
+            std::size_t node_sz = default_node_size)  // node_sz ignored if existing file
   {
-    base::open(file_pth, reserv, index_pth, flgs, sig, node_sz, comp);
+    base::open(index_pth, file_pth, flgs, sig, comp, node_sz);
   }
 
-  void open(file_ptr_type flat_file,            
-            const path& index_pth,
+  void open(const path& index_pth,
+            file_ptr_type flat_file,            
             flags::bitmask flgs = flags::read_only,
             uint64_t sig = -1,  // for existing files, must match creation signature
-            std::size_t node_sz = default_node_size,  // ignored if existing file
-            const Compare& comp = Compare())
+            const Compare& comp = Compare(),
+            std::size_t node_sz = default_node_size)  // node_sz ignored if existing file
   {
-    base::open(flat_file, index_pth, flgs, sig, node_sz, comp);
+    base::open(index_pth, flat_file, flgs, sig, comp, node_sz);
   }
 
   //  modifiers
@@ -179,46 +177,44 @@ public:
 
   index_multiset() : base() {}
 
-  index_multiset(const path& file_pth,
-            file_size_type reserv,
-            const path& index_pth,
+  index_multiset(const path& index_pth,
+            const path& file_pth,
             flags::bitmask flgs = flags::read_only,
             uint64_t sig = -1,  // for existing files, must match creation signature
-            std::size_t node_sz = default_node_size,  // ignored if existing file
-            const Compare& comp = Compare())
+            const Compare& comp = Compare(),
+            std::size_t node_sz = default_node_size)  // node_sz ignored if existing file
   {
-    base::open(file_pth, reserv, index_pth, flgs, sig, node_sz, comp);
+    base::open(index_pth, file_pth, flgs, sig, comp, node_sz);
   }
 
-  index_multiset(file_ptr_type flat_file,            
-            const path& index_pth,
+  index_multiset(const path& index_pth,
+            file_ptr_type flat_file,            
             flags::bitmask flgs = flags::read_only,
             uint64_t sig = -1,  // for existing files, must match creation signature
-            std::size_t node_sz = default_node_size,  // ignored if existing file
-            const Compare& comp = Compare())
+            const Compare& comp = Compare(),
+            std::size_t node_sz = default_node_size)  // node_sz ignored if existing file
   {
-    base::open(flat_file, index_pth, flgs, sig, node_sz, comp);
+    base::open(index_pth, flat_file,flgs, sig, comp, node_sz);
   }
 
-  void open(const path& file_pth,
-            file_size_type reserv,
-            const path& index_pth,
+  void open(const path& index_pth,
+            const path& file_pth,
             flags::bitmask flgs = flags::read_only,
             uint64_t sig = -1,  // for existing files, must match creation signature
-            std::size_t node_sz = default_node_size,  // ignored if existing file
-            const Compare& comp = Compare())
+            const Compare& comp = Compare(),
+            std::size_t node_sz = default_node_size)  // node_sz ignored if existing file
   {
-    base::open(file_pth, reserv, index_pth, flgs, sig, node_sz, comp);
+    base::open(index_pth, file_pth, flgs, sig, comp, node_sz);
   }
 
-  void open(file_ptr_type flat_file,            
-            const path& index_pth,
+  void open(const path& index_pth,
+            file_ptr_type flat_file,            
             flags::bitmask flgs = flags::read_only,
             uint64_t sig = -1,  // for existing files, must match creation signature
-            std::size_t node_sz = default_node_size,  // ignored if existing file
-            const Compare& comp = Compare())
+            const Compare& comp = Compare(),
+            std::size_t node_sz = default_node_size)  // node_sz ignored if existing file
   {
-    base::open(flat_file, index_pth, flgs, sig, node_sz, comp);
+    base::open(index_pth, flat_file, flgs, sig, comp, node_sz);
   }
 
   //  modifiers

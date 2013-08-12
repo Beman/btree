@@ -15,7 +15,7 @@ int main()
 {
   typedef boost::btree::btree_set<boost::string_view> set_type;
 
-  set_type ndx_set("set_example2.ndx", 1000, boost::btree::flags::truncate);
+  set_type ndx_set("set_example2.ndx", "set_example2.dat, boost::btree::flags::truncate);
 
   ndx_set.insert("eat");
   ndx_set.insert("drink");

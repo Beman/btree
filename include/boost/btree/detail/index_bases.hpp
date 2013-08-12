@@ -217,34 +217,33 @@ public:
 
   //  opens
 
-  void open(const path_type& file_pth,
-            file_size_type reserv,
-            const path_type& index_pth,
+  void open(const path_type& index_pth,
+            const path_type& file_pth,
             flags::bitmask flgs = flags::read_only,
             uint64_t sig = -1,  // for existing files, must match creation signature
-            std::size_t node_sz = default_node_size,  // ignored if existing file
-            const compare_type& comp = compare_type())
+            const compare_type& comp = compare_type(),
+            std::size_t node_sz = default_node_size)  // node_sz ignored if existing file
   {
     BOOST_ASSERT(!m_index_btree.is_open());
     BOOST_ASSERT(!m_file.get());
     m_file.reset(new file_type);
-    m_file->open(file_pth, flgs, reserv);
-    open(m_file, index_pth, flgs, sig, node_sz, comp);
+    m_file->open(file_pth, flgs, 100000);
+    open(index_pth, m_file, flgs, sig, comp, node_sz);
   }
 
-  void open(file_ptr_type flat_file,            
-            const path_type& index_pth,
+  void open(const path_type& index_pth,
+            file_ptr_type flat_file,            
             flags::bitmask flgs = flags::read_only,
             uint64_t sig = -1,  // for existing files, must match creation signature
-            std::size_t node_sz = default_node_size,  // ignored if existing file
-            const compare_type& comp = compare_type())
+            const compare_type& comp = compare_type(),
+            std::size_t node_sz = default_node_size)  // node_sz ignored if existing file
   {
     BOOST_ASSERT(!m_index_btree.is_open());
     BOOST_ASSERT(flat_file->is_open());
     m_file = flat_file;
     m_comp = comp;
-    m_index_btree.open(index_pth, flgs, sig, node_sz,
-      index_compare_type(m_comp, m_file.get()));
+    m_index_btree.open(index_pth, flgs, sig,
+      index_compare_type(m_comp, m_file.get()), node_sz);
   }
 
   //  modifiers
