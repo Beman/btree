@@ -3,10 +3,9 @@
 <head>
 <meta name="GENERATOR" content="Microsoft FrontPage 5.0">
 <meta name="ProgId" content="FrontPage.Editor.Document">
-<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
   <title>B-Tree Reference</title>
-  <link rel="stylesheet" type="text/css" href=
-  "../../../doc/src/minimal.css">
+  <link rel="stylesheet" type="text/css" href="minimal.css">
 </head>
 
 <body>
@@ -33,6 +32,78 @@
       "portability_guide.htm">Portability</a></td>
     </tr>
   </table>
+
+  <h2>Header &lt;boost/btree/helpers.hpp&gt;</h2>
+
+  <p>The components in this header are included by the other boost/btree 
+  headers.</p>
+
+  <h3>Synopsis</h3>
+
+  <pre>namespace boost
+{
+namespace btree
+{
+  struct big_endian_traits;
+  struct little_endian_traits;
+  struct native_endian_traits;
+  
+  typedef big_endian_traits  default_traits;  // see rationale below
+  
+  namespace flags
+  {
+    enum bitmask
+    {
+      none          = 0,
+  
+      // bitmasks set by implemenation, ignored if passed in by user:
+      unique        = 1,    // set or map
+      key_only      = 2,    // set or multiset
+   
+      // open values (choose one):
+      read_only   = 0x100,   // file must exist
+      read_write  = 0x200,   // open existing file, otherwise create new file
+      truncate    = 0x400,   // same as read_write except existing file truncated
+  
+      // bitmask options set by user; not present in header:
+      preload        = 0x1000, // existing file read to preload O/S file cache
+      cache_branches = 0x2000, // enable permanent cache of all branch pages touched;
+                               // otherwise make branch pages available when use count
+                               // becomes 0, just like leaf pages.
+  
+       // optimization hints; choose one. not present in header
+       least_memory  = 0x10000,
+       low_memory    = 0x20000,
+       balanced      = 0,
+       fast          = 0x30000,
+       fastest       = 0x40000,
+    };
+  
+    BOOST_BITMASK(bitmask);
+  
+    inline bitmask user_flags(bitmask m)             {return m & ~(unique|key_only); }
+    inline bitmask permanent_flags(bitmask m)    {return m & (unique|key_only); }
+  }  // namespace flags
+}  // namespace btree
+}  // namespace boost</pre>
+  <h3>Traits</h3>
+  <p>Traits provide the types for management objects on B-tree disk nodes. Nodes 
+  are usually 4096 bytes in length for current hard disk hardware, and every 
+  byte wasted in overhead causes a measurable reduction in speed as the tree 
+  adds levels. That may favor unaligned traits, particularly if the user&#39;s key 
+  and mapped types are also unaligned.</p>
+  <p>On the other hand, aligned types are in theory more efficient and generate 
+  less code.</p>
+  <p>Actual timing tests on typical 2012 desktop hardware and operating systems, 
+  show virtually no real-world speed differences between aligned and unaligned 
+  traits, or native and non-native endian traits. Other factors, such as maximum 
+  cache size, size of mapped data, portability, and so on, determine B-tree 
+  performance.</p>
+  <p>The <code>big_endian_traits</code> are chosen as the default because file 
+  dumps are easier to read, files are portable, and none of the other traits 
+  show any measurable effect on performance. </p>
+
+  <p>&nbsp;</p>
 
   <h2>Header &lt;boost/btree/map.hpp&gt; synopsis</h2>
     <pre>namespace boost { namespace btree {
@@ -243,24 +314,17 @@ btree_map(InputIterator begin, InputIterator end,
       </ul>
     </blockquote>
   </blockquote>
-  <h2>Class btree_value</h2>
-  <p>...</p>
-  <pre>template &lt;class T1, class T2&gt;
-class btree_value
-{
-public:
-  const T1&amp; key() const;
-  const T2&amp; mapped_value() const;
-  std::size_t size() const;
-};
+  
+  <hr>
 
-template &lt;class T1, class T2&gt;
-std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const btree_value&lt;T1, T2&gt;&amp; x);
+  <p>Revised 
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->13 August 2013<!--webbot bot="Timestamp" endspan i-checksum="31355" --></p>
 
-template &lt;class T1, class T2&gt;
-std::size_t dynamic_size(const btree_value&lt;T1, T2&gt;&amp; x);
-</pre>
+  <p>© Copyright Beman Dawes, 2013</p>
 
+  <p>Distributed under the Boost Software License, Version 1.0. See
+  <a href=
+  "http://www.boost.org/LICENSE_1_0.txt">www.boost.org/LICENSE_1_0.txt</a></p>
 </body>
 
 </html>

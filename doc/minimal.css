@@ -9,13 +9,14 @@
 
 body  {
         font-family: sans-serif;
-        width : 800px;
+        width : 52em;
         margin: auto;
       }
+      
 
-pre   { background-color:#D7EEFF }
+pre   { padding: 1em; background-color: #D7EEFF }
 
-ins   { background-color:#E8FFE8 }
-del   { background-color:#FFD7D7 }
+ins   { background-color: #E8FFE8 }
+del   { background-color: #FFD7D7 }
 
 /*** end ***/

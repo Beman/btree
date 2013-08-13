@@ -50,9 +50,9 @@ namespace btree
 //  Other factors, such as maximum cache size, size of mapped data, portability, and    //
 //  so on, determine btree performance.                                                 //
 //                                                                                      //
-//  The big_endian_traits are choosen as the default because file dumps are easier to   //
-//  read, files are portable, and no other factors have any measurable effect on        //
-//  performance.                                                                        //
+//  The big_endian_traits are chosen as the default because file dumps are easier to    //
+//  read, files are portable, and none of the other traits show any measurable effect   //
+//  on performance.                                                                     //
 //                                                                                      //
 //--------------------------------------------------------------------------------------//
 
@@ -100,7 +100,7 @@ namespace flags
     none          = 0,
 
     // bitmasks set by implemenation, ignored if passed in by user:
-    unique        = 1,    // not multi; uniqueness required
+    unique        = 1,    // set or map
     key_only      = 2,    // set or multiset
  
     // open values (choose one):
