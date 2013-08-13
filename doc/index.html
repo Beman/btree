@@ -45,8 +45,9 @@
       <td>
       <p align="center">
       <img border="0" src="../../../doc/html/images/warning.png" width="24" height="24"> 
-      Warning: The implementation code is still immature and has not been 
-      thoroughly tested. <b>The library is not yet ready for production use.</b></td>
+      Warning: The implementation is at an early beta stage.<p align="center">
+      <b>The library should only be used by those willing to assume the many 
+      risks of early beta software.</b></td>
     </tr>
   </table>
 
@@ -56,10 +57,9 @@
   <h2>Introduction</h2>
 
   <p>The Boost B-tree library provides <b>disk-based</b> associative
-  containers that scale all the way from really, really, small to
-  really, really, large. B-trees perform well on hardware ranging
-  from ancient floppy disk drives up to humongous disk arrays. B-trees are the technology behind most high-performance disk file
-  systems and databases.</p>
+  containers. B-trees perform well on hardware ranging
+  from ancient floppy disk drives up to humongous hard-drive arrays. B-trees are the technology behind most high-performance disk file-systems and 
+  disk-resident databases.</p>
 
   <table border="1" cellpadding="10" cellspacing="0" style=
   "border-collapse: collapse" bordercolor="#111111" width="100%">
@@ -73,7 +73,7 @@
         "http://en.wikipedia.org/wiki/Rudolf_Bayer" title=
         "Rudolf Bayer">Rudolf Bayer</a> and Edward McCreight]. As
         we shall see, "balanced," "broad," or "bushy" might apply.
-        Others suggest that the "B" stands for Boeing. Because of
+        Others suggest that the "B" stands for Boeing [their employer]. Because of
         his contributions, however, it seems appropriate to think
         of B-trees as "Bayer"-trees.</p>
 
@@ -86,66 +86,98 @@
   <h2>Library Characteristics</h2>
 
   <ul>
-    <li>Public interface similar but not identical to the C++
+    <li>The interface and behavior is similar, but not identical, to the C++
     Standard Library's <code>map</code>, <code>multimap</code>, <code>set</code>, 
     and <code>multiset</code>. Differences include:<br>
 &nbsp;<ul>
-      <li>All iterator returning functions return
-        <code>const_iterator</code>. The <code>writeable()</code>
-        function turns <code>const_iterator</code> into
-        <code>iterator</code>.</li>
-      <li><code>insert()</code> and <code>erase()</code>
-        invalidate iterators.</li>
       <li>Types supplied by the <code>Key</code> and
-        <code>T</code> template parameters must be trivially copyable; i.e. via
-      <code>std::memcpy</code>.</li>
+        <code>T</code> template parameters must be copyable via
+      <code>std::memcpy</code> and must not contain pointers or references.</li>
+      <li>All iterators are constant iterators; <code>iterator</code> and <code>
+      const_iterator</code> are the same type. An <code>update()</code> function 
+      is used to update <code>mapped_type</code> values in maps.</li>
+      <li><code>insert()</code>,&nbsp; <code>emplace()</code>, and <code>erase()</code>
+        invalidate iterators.</li>
       <li>No <code>operator[]</code> or <code>at</code> functions supplied. 
-      Returning references to data that can be swapped out, even by const 
-      functions, is far too dangerous.<br>
+      Returning references to data that can be swapped out even by const 
+      functions is far too dangerous.<br>
 &nbsp;</li>
     </ul>
     </li>
-    <li>B<sup>+</sup>-tree disk structure. Modifications to the classic B<sup>+</sup>-tree
-    include: <br>
+    <li>Additional classes provide indexes into a flat file. Available now:
+    <code>index_set</code> and <code>index_multiset</code>.<br>
 &nbsp;<ul>
-      <li>New-page-on-full (i.e. lazy) rather than split-on-full for ordered inserts.</li>
-      <li>Free-at-empty (i.e. lazy) rather than merge-at-half for
-        erases.<br>
+    <li>Variable length data can be accommodated. Strings are supported via the 
+    new standard library TS <code>string_view</code> class which provides the 
+    familiar <code>std::string</code> interface. A version of the TS <code>
+    string_view</code> class is provided, so things like <code>
+    my_map.emplace(&quot;FWIW&quot;, &quot;For what its worth&quot;);</code> work out of the box.</li>
+    <li>Very large data elements are not a problem. Because B-trees are most 
+    efficient when value types are very small relative to the hardware's natural 
+    page size (4096 for most current hard disks), a pure B-tree slows 
+    dramatically if given value types even a few hundred bytes in length, let 
+    alone much larger sizes. Using a B-tree as an index into a flat file that 
+    actually contains the data has long been the preferred solution.</li>
+    <li>A single flat file can be indexed by as many indexes as desired. Thus a 
+    customer record can be indexed by account-number, name, and so forth.&nbsp;&nbsp; <br>
 &nbsp;</li>
-    </ul>
+  </ul>
+
     </li>
-    <li>Disk file format includes header information about the
-      tree. The header format includes space for user supplied information.<br>
-&nbsp;</li>
     <li>Runtime options allow performance tuning:<br>
 &nbsp;<ul>
     <li>Page size allows hardware specific tuning at file creation time.</li>
     <li>Cache size allows control over speed versus program memory tradeoff.</li>
     <li>Preload option allows control over speed versus operating system disk cache 
-    memory tradeoff.<br>
+    memory tradeoff.</li>
+    <li>Hints ease task of performance tuning.<br>
 &nbsp;</li>
   </ul>
 
     </li>
-    <li>Traits allow user to specify implementation types:<br>
+    <li>Traits allow users to specify internal types:<br>
 &nbsp;<ul>
-      <li>Default is to native types, for maximum efficiency.</li>
-      <li>Endian types can be used to ensure data file portable. Prepackaged big 
-      and little endian traits supplied.</li>
-      <li>Larger or smaller types can be used for
-          very large or very small trees. Prepackaged compact tree traits 
-      supplied.<br>
+      <li>Endian types are used by default to ensure portable files. Prepackaged big, little, 
+      and native endian traits are supplied.</li>
+      <li>User defined traits can be supplied to support specific needs.<br>
 &nbsp;</li>
     </ul>
     </li>
-    <li>Command line utilities <code>btpack</code>,
-    <code>btinfo</code>, and <code>btrecover</code> meet
-    administrative needs.</li>
+    <li>The specific B-tree form used is the B<sup>+</sup> tree. Modifications to the classic B<sup>+</sup> tree
+    include: <br>
+&nbsp;<ul>
+      <li>New-node-on-full (i.e. lazy) rather than split-on-full for ordered inserts. 
+      Benefits include ability to pack a B-Tree for 100% disk and memory space 
+      utilization and, as a result, faster operation. </li>
+      <li>Free-at-empty (i.e. lazy) rather than rebalancing
+        erases. See the Sen/Tarjan
+      <a href="http://www.cs.princeton.edu/~sssix/papers/b-trees.pdf">paper</a> 
+      for discussion of rationale.<br>
+&nbsp;</li>
+    </ul>
+    </li>
+    <li>The disk file includes meta information about the
+      tree, including user supplied information.</li>
+  </ul>
+
+  <h2>Coming Soon</h2>
+
+  <ul>
+    <li><code>index_map</code> and <code>index_multimap</code>; all data lives 
+    in a flat file. <code>key_index_map</code> and <code>key_index_multimap</code>; 
+    keys live in the B-tree while the <code>mapped_type</code> data lives in a 
+    flat file.</li>
+    <li>A bulk load option that generates packed trees. Fastest way to load 
+    large datasets.</li>
   </ul>
 
   <h2>Wish List</h2>
 
   <ul>
+    <li>Utility functionality such as <code>btpack</code>,
+    <code>btinfo</code>, and <code>btrecover</code> to meet
+    administrative needs.<br>
+&nbsp;</li>
     <li>Efficient variable length data, such as strings. A simple string type that always uses its maximum length is 
     provided as a workaround. Efficient variable length data is a very high priority 
     for the future.<br>
@@ -160,12 +192,11 @@
     additional constructor and open() overload taking a ref to the parent index 
     and the desired name.<br>
 &nbsp;</li>
-    <li>Memory mapped I/O. Requested by Cory Nelson &quot;for small B-trees or large 
-    address spaces&quot;. Beman comments that the interface might differ, since 
-    functions specified by the standard to return <code>iterator</code> could do 
-    so, rather than returning <code>const_iterator</code>.<br>
+    <li>Memory mapped file based B-tree. Requested by Cory Nelson &quot;for small 
+    B-trees or large address spaces&quot;. The flat files indexed by the index 
+    classes already use memory mapped files.<br>
 &nbsp;</li>
-    <li>Add C++11 features.</li>
+    <li>C++11 features.</li>
   </ul>
 
   <h2>History</h2>
@@ -200,11 +231,11 @@
     respectively, it is sufficient to store &quot;B&quot; as the branch key rather than 
     &quot;BETA&quot;. Although the C predecessor library still uses computed branch keys 
     if keys are variable length, it has been a source of hard to track down 
-    bugs, and doesn't support deletion properly to this day in that library.<br>
+    bugs, and doesn't support deletion properly to this day.<br>
 &nbsp;</li>
     <li><b>Bidirectional page sequence list.</b> Adds page space overhead and 
-    insert/erase program complexity. Doing an inverted tree walk to the next 
-    page during traversal is simple and trouble free.</li>
+    insert/erase program complexity. Doing an inverted tree walk to the prior or next 
+    page during traversal is simple and effective.</li>
   </ul>
 
   <h2>Bibliography</h2>
@@ -227,20 +258,22 @@
   Without Rebalancing in Multiway Search Trees</a></i>, Proc. 20th
   International Symposium on Algorithms and Computation (ISAAC),
   December 2009<i>.</i> Explanation of why free-at-empty is better than 
-  merge-at-half.</p>
+  rebalancing.</p>
 
   <h2 dir="ltr">Acknowledgements</h2>
 
   <p dir="ltr">Zach Laine provided several enhancements and bug fixes.</p>
   <hr>
 
-  <p>&#169; Copyright Beman Dawes, 2010</p>
+  <p>Revised 
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->13 August 2013<!--webbot bot="Timestamp" endspan i-checksum="31355" --></p>
+
+  <p>&#169; Copyright Beman Dawes, 2010, 2013</p>
 
   <p>Distributed under the Boost Software License, Version 1.0. See
   <a href=
   "http://www.boost.org/LICENSE_1_0.txt">www.boost.org/LICENSE_1_0.txt</a></p>
 
-  <p>Revised 
-  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->06 July 2013<!--webbot bot="Timestamp" endspan i-checksum="18794" --></p>
+  <p>&nbsp;</p>
 </body>
 </html>
