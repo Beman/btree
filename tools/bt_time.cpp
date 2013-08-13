@@ -31,6 +31,8 @@ namespace fs = boost::filesystem;
 using std::cout;
 using std::cerr;
 using std::endl;
+using std::strcmp;
+using std::memcmp;
 
 namespace
 {
@@ -38,7 +40,7 @@ namespace
   int64_t n;        // number of test cases
   int64_t seed = 1; // random number generator seed
   int64_t lg = 0;   // if != 0, log every lg iterations
-  std::size_t cache_sz = btree::default_max_cache_nodes;
+  std::size_t cache_sz = -2;
   std::size_t node_sz = btree::default_node_size;
   char thou_separator = ',';
   bool do_create (true);
@@ -477,49 +479,61 @@ int cpp_main(int argc, char * argv[])
       path = argv[2];
     else
     {
-      if ( std::strcmp( argv[2]+1, "xe" )==0 )
+      if ( strcmp( argv[2]+1, "noerase" )==0 )
         do_erase = false;
-      else if ( std::strcmp( argv[2]+1, "xf" )==0 )
+      else if ( strcmp( argv[2]+1, "nofind" )==0 )
         do_find = false;
-      else if ( std::strcmp( argv[2]+1, "xc" )==0 )
+      else if ( strcmp( argv[2]+1, "nocreate" )==0 )
         do_create = false;
-      else if ( std::strcmp( argv[2]+1, "xi" )==0 )
+      else if ( strcmp( argv[2]+1, "noiterate" )==0 )
+        do_iterate = false;
+      else if ( strcmp( argv[2]+1, "noinsert" )==0 )
       {
         do_create = false;
         do_insert = false;
       }
-      else if ( std::strcmp( argv[2]+1, "stl" )==0 )
+      else if ( strcmp( argv[2]+1, "stl" )==0 )
         stl_tests = true;
-      else if ( std::strcmp( argv[2]+1, "html" )==0 )
+      else if ( strcmp( argv[2]+1, "html" )==0 )
         html = true;
-      else if ( std::strcmp( argv[2]+1, "big" )==0 )
+      else if ( strcmp( argv[2]+1, "big" )==0 )
         whichaway = endian::order::big;
-      else if ( std::strcmp( argv[2]+1, "little" )==0 )
+      else if ( strcmp( argv[2]+1, "little" )==0 )
         whichaway = endian::order::little;
-      else if ( std::strcmp( argv[2]+1, "native" )==0 )
+      else if ( strcmp( argv[2]+1, "native" )==0 )
         whichaway = endian::order::native;
-      else if ( std::strcmp( argv[2]+1, "xbstats" )==0 )
+      else if ( strcmp( argv[2]+1, "nostats" )==0 )
         buffer_stats = false;
-      else if ( std::strcmp( argv[2]+1, "b" )==0 )
+      else if ( strcmp( argv[2]+1, "cache-branches" )==0 )
         common_flags |= btree::flags::cache_branches;
-      else if ( *(argv[2]+1) == 's' && std::isdigit(*(argv[2]+2)) )
-        seed = BOOST_BTREE_ATOLL( argv[2]+2 );
-      else if ( *(argv[2]+1) == 'n' && std::isdigit(*(argv[2]+2)) )
-        node_sz = atoi( argv[2]+2 );
-      else if ( *(argv[2]+1) == 'c'
-          && (std::isdigit(*(argv[2]+2)) || *(argv[2]+2) == '-') )
-        cache_sz = atoi( argv[2]+2 );
-      else if ( *(argv[2]+1) == 'l' && std::isdigit(*(argv[2]+2)) )
-        lg = BOOST_BTREE_ATOLL( argv[2]+2 );
-      else if ( std::strcmp( argv[2]+1, "p" )==0 )
+      else if ( memcmp( argv[2]+1, "seed=", 5 )==0 && std::isdigit(*(argv[2]+6)) )
+        seed = BOOST_BTREE_ATOLL( argv[2]+6 );
+      else if ( memcmp( argv[2]+1, "node-sz=", 8 )==0 && std::isdigit(*(argv[2]+9)) )
+        node_sz = atoi( argv[2]+9 );
+      else if ( memcmp( argv[2]+1, "cache-sz=", 9 )==0
+          && (std::isdigit(*(argv[2]+10)) || *(argv[2]+10) == '-') )
+        cache_sz = atoi( argv[2]+10 );
+      else if ( memcmp( argv[2]+1, "log=", 4 )==0 && std::isdigit(*(argv[2]+5)) )
+        lg = BOOST_BTREE_ATOLL( argv[2]+5 );
+      else if ( strcmp( argv[2]+1, "pack" )==0 )
         do_pack = true;
-      else if ( std::strncmp( argv[2]+1, "sep", 3 )==0
-          && (std::ispunct(*(argv[2]+4)) || *(argv[2]+4)== '\0') )
-        thou_separator = *(argv[2]+4) ? *(argv[2]+4) : ' ';
-      else if ( std::strcmp( argv[2]+1, "r" )==0 )
+      else if ( memcmp( argv[2]+1, "sep=", 4 )==0
+          && (std::ispunct(*(argv[2]+5)) || *(argv[2]+5)== '\0') )
+        thou_separator = *(argv[2]+5) ? *(argv[2]+5) : ' ';
+      else if ( strcmp( argv[2]+1, "preload" )==0 )
         do_preload = true;
-      else if ( std::strcmp( argv[2]+1, "v" )==0 )
+      else if ( strcmp( argv[2]+1, "v" )==0 )
         verbose = true;
+      else if ( strcmp( argv[2]+1, "hint=least-memory" )==0 )
+        common_flags |= btree::flags::least_memory;
+      else if ( strcmp( argv[2]+1, "hint=low-memory" )==0 )
+        common_flags |= btree::flags::low_memory;
+      else if ( strcmp( argv[2]+1, "hint=balanced" )==0 )
+        common_flags |= btree::flags::balanced;
+      else if ( strcmp( argv[2]+1, "hint=fast" )==0 )
+        common_flags |= btree::flags::fast;
+      else if ( strcmp( argv[2]+1, "hint=fastest" )==0 )
+        common_flags |= btree::flags::fastest;
       else
       {
         cout << "Error - unknown option: " << argv[2] << "\n\n";
@@ -534,32 +548,41 @@ int cpp_main(int argc, char * argv[])
     cout << "Usage: bt_time n [Options]\n"
       " The argument n specifies the number of test cases to run\n"
       " Options:\n"
-      "   path     Specifies the test file path; default test.btree\n"
-      "   -s#      Seed for random number generator; default 1\n"
-      "   -n#      Node size (>=128); default " << btree::default_node_size << "\n"
-      "              Small node sizes are useful for stress testing\n"
-      "   -c#      Cache size; default " << btree::default_max_cache_nodes << " nodes\n"
-      "   -l#      log progress every # actions; default is to not log\n"
-      "   -sep[punct] cout thousands separator; space if punct omitted, default -sep,\n"
-      "   -xc      No create; use file from prior -xe run\n"
-      "   -xi      No insert test; forces -xc and doesn't do inserts\n"
-      "   -xf      No find test\n"
-      "   -xi      No iterate test\n"
-      "   -xe      No erase test; use to save file intact\n"
-      "   -b       Enable permanent cache of branch pages touched; default is\n"
-      "              to make available for flush when use count reaches 0\n"
-      "   -p       Pack tree after insert test\n"
-      "   -v       Verbose output statistics\n"
-      "   -stl     Also run the tests against std::map\n"
-      "   -r       Read entire file to preload operating system disk cache;\n"
-      "            only applicable if -xc option is active\n"
-      "   -big     Use btree::big_endian_traits; this is the default\n"
-      "   -little  Use btree::little_endian_traits\n"
-      "   -native  Use btree::native_traits\n"
-      "   -html    Output html table of results to cerr\n"
+      "   path         Specifies the test file path; default test.btree\n"
+      "   -seed=#      Seed for random number generator; default -seed1\n"
+      "   -node-size=# Node size (>=128); default -node-size"
+                          << btree::default_node_size << "\n"
+      "                   Small node sizes are useful for stress testing\n"
+      "   -cache-size=#  Maximum # nodes cached; default is to let -hint determine\n"
+      "                  cache size\n"
+      "   -log=#       Log progress every # actions; default is to not log\n"
+      "   -sep=[punct] cout thousands separator; space if punct omitted, default -sep,\n"
+      "   -nocreate    No create; use file from prior -xe run\n"
+      "   -noinsert    No insert test; forces -nocreate and doesn't do inserts\n"
+      "   -nofind      No find test\n"
+      "   -noiterate   No iterate test\n"
+      "   -noerase     No erase test; use to save file intact\n"
+      "   -nostats     No buffer statistics\n"
+      "   -cache-branches  Enable caching of all branch pages touched;\n"
+      "                      default is to let -hint determine branch caching\n"
+      "   -pack        Pack tree after insert test\n"
+      "   -v           Verbose output statistics\n"
+      "   -stl         Also run the tests against std::map\n"
+      "   -preload     Read entire file to preload operating system disk cache;\n"
+      "                  only applicable if -nocreate option present\n"
+      "   -hint=least-memory|low-memory|balanced|fast|fastest \n"
+      "                  default is -hint=balanced\n"
+      "   -big         Use btree::big_endian_traits; this is the default\n"
+      "   -little      Use btree::little_endian_traits\n"
+      "   -native      Use btree::native_traits\n"
+      "   -html        Output html table of results to cerr\n"
       ;
     return 1;
   }
+
+  if (cache_sz == (-2))
+    cache_sz = btree::max_cache_recommendation(common_flags, 0);
+
   cout.imbue(std::locale(std::locale(), new thousands_separator));
   cout << "sizeof(bree::header_page) is " << sizeof(btree::header_page) << '\n'
        << "starting tests with node size " << node_sz

@@ -65,7 +65,7 @@ namespace boost
         const Comp& comp = Comp(),
         std::size_t node_sz = default_node_size)  // node_sz ignored if existing file
         : btree_base<Key,btree_set_base<Key,Traits,Comp> >(p,
-            flags::open_flags(flgs) | flags::key_only | flags::unique,
+            flags::user_flags(flgs) | flags::key_only | flags::unique,
             sig, comp, node_sz) {}
 
       template <class InputIterator>
@@ -76,7 +76,7 @@ namespace boost
         const Comp& comp = Comp(),
         std::size_t node_sz = default_node_size)  // node_sz ignored if existing file
       : btree_base<Key,btree_set_base<Key,Traits,Comp> >(p,
-          flags::open_flags(flgs) | flags::key_only | flags::unique,
+          flags::user_flags(flgs) | flags::key_only | flags::unique,
           sig, comp, node_sz)
       {
         for (; begin != end; ++begin)
@@ -100,7 +100,7 @@ namespace boost
         std::size_t node_sz = default_node_size)  // node_sz ignored if existing file
       {
         btree_base<Key,btree_set_base<Key,Traits,Comp> >::m_open(p,
-          flags::open_flags(flgs) | flags::key_only | flags::unique, sig,
+          flags::user_flags(flgs) | flags::key_only | flags::unique, sig,
           comp, node_sz);
       }
 
@@ -161,7 +161,7 @@ namespace boost
         const Comp& comp = Comp(),
         std::size_t node_sz = default_node_size)  // ignored if existing file
         : btree_base<Key,btree_set_base<Key,Traits,Comp> >(p,
-            flags::open_flags(flgs) | flags::key_only, sig, comp, node_sz) {}
+            flags::user_flags(flgs) | flags::key_only, sig, comp, node_sz) {}
 
       template <class InputIterator>
       btree_multiset(InputIterator begin, InputIterator end,
@@ -171,7 +171,7 @@ namespace boost
         const Comp& comp = Comp(),
         std::size_t node_sz = default_node_size)  // ignored if existing file
       : btree_base<Key,btree_set_base<Key,Traits,Comp> >(p,
-          flags::open_flags(flgs) | flags::key_only, sig, comp, node_sz)
+          flags::user_flags(flgs) | flags::key_only, sig, comp, node_sz)
       {
         for (; begin != end; ++begin)
         {
@@ -193,7 +193,7 @@ namespace boost
         std::size_t node_sz = default_node_size)  // node_sz ignored if existing file
       {
          btree_base<Key,btree_set_base<Key,Traits,Comp> >::m_open(p,
-          flags::open_flags(flgs) | flags::key_only, sig, comp, node_sz);
+          flags::user_flags(flgs) | flags::key_only, sig, comp, node_sz);
       }
 
       //  emplace(const Key&) special case not requiring c++0x support

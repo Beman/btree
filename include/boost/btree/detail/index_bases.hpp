@@ -36,6 +36,8 @@
 
   *  Rename in index_helpers.hpp to index_traits.hpp?
 
+  *  Reserve should round up to memory map page size boundary.
+
 */
 
 namespace boost
@@ -227,7 +229,7 @@ public:
     BOOST_ASSERT(!m_index_btree.is_open());
     BOOST_ASSERT(!m_file.get());
     m_file.reset(new file_type);
-    m_file->open(file_pth, flgs, 100000);
+    m_file->open(file_pth, flgs, reserve_recommendation(flgs));
     open(index_pth, m_file, flgs, sig, comp, node_sz);
   }
 

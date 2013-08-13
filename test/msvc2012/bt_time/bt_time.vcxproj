@@ -114,7 +114,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PostBuildEvent>
-      <Command>"$(TargetDir)\$(TargetName).exe" 35000 -l10000 -c0 -n128 -p -html</Command>
+      <Command>"$(TargetDir)\$(TargetName).exe" 100 -seed=10 -node-sz=128 -cache-sz=64 -sep= -noiterate -cache-branches -stl -hint=low-memory -native -nostats</Command>
       <Message>Executing test $(TargetName).exe...</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -149,6 +149,9 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
+    <PostBuildEvent>
+      <Command>"$(TargetDir)\$(TargetName).exe" 100 -seed=10 -node-sz=128 -cache-sz=64 -sep= -noiterate -cache-branches -stl -hint=low-memory -native -nostats</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\tools\bt_time.cpp" />

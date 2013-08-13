@@ -68,7 +68,7 @@ namespace boost
         const Comp& comp = Comp(),
         std::size_t node_sz = default_node_size)  // node_sz ignored if existing file
         : btree_base<Key,btree_map_base<Key,T,Traits,Comp> >(p,
-            flags::open_flags(flgs) | flags::unique, sig, comp, node_sz) {}
+            flags::user_flags(flgs) | flags::unique, sig, comp, node_sz) {}
 
       template <class InputIterator>
       btree_map(InputIterator begin, InputIterator end,
@@ -78,7 +78,7 @@ namespace boost
         const Comp& comp = Comp(),
         std::size_t node_sz = default_node_size)  // node_sz ignored if existing file
         : btree_base<Key,btree_map_base<Key,T,Traits,Comp> >(p,
-            flags::open_flags(flgs) | flags::unique, sig, comp, node_sz)
+            flags::user_flags(flgs) | flags::unique, sig, comp, node_sz)
       {
         for (; begin != end; ++begin)
         {
@@ -100,7 +100,7 @@ namespace boost
         std::size_t node_sz = default_node_size)  // node_sz ignored if existing file
       {
         btree_base<Key,btree_map_base<Key,T,Traits,Comp> >::m_open(p,
-          flags::open_flags(flgs) | flags::unique, sig, comp, node_sz);
+          flags::user_flags(flgs) | flags::unique, sig, comp, node_sz);
       }
 
       //  emplace(const Key&, const T&) special case not requiring c++0x support
@@ -181,7 +181,7 @@ namespace boost
         const Comp& comp = Comp() ,
         std::size_t node_sz = default_node_size)  // node_sz ignored if existing file
         : btree_base<Key,btree_map_base<Key,T,Traits,Comp> >(p,
-            flags::open_flags(flgs), sig, comp, node_sz) {}
+            flags::user_flags(flgs), sig, comp, node_sz) {}
 
       template <class InputIterator>
       btree_multimap(InputIterator begin, InputIterator end,
@@ -191,7 +191,7 @@ namespace boost
         const Comp& comp = Comp(),
         std::size_t node_sz = default_node_size)  // node_sz ignored if existing file
         : btree_base<Key,btree_map_base<Key,T,Traits,Comp> >(p,
-            flags::open_flags(flgs), sig, comp, node_sz)
+            flags::user_flags(flgs), sig, comp, node_sz)
       {
         for (; begin != end; ++begin)
         {
@@ -213,7 +213,7 @@ namespace boost
         std::size_t node_sz = default_node_size)  // node_sz ignored if existing file
       {
         btree_base<Key,btree_map_base<Key,T,Traits,Comp> >::m_open(p,
-          flags::open_flags(flgs), sig, comp, node_sz);
+          flags::user_flags(flgs), sig, comp, node_sz);
       }
 
       //  emplace(const Key&, const T&) special case not requiring c++0x support

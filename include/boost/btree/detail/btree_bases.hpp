@@ -1067,7 +1067,7 @@ btree_base<Key,Base>::m_open(const boost::filesystem::path& p,
     open_flags |= oflag::out | oflag::truncate;
   if (flgs & flags::preload)
     open_flags |= oflag::preload;
-  if (flgs & flags::cache_branches)
+  if (flgs & flags::cache_branches || cache_branches_recommendation(flgs))
     m_cache_branches = true;
 
   m_read_only = (open_flags & oflag::out) == 0;
@@ -1078,7 +1078,7 @@ btree_base<Key,Base>::m_open(const boost::filesystem::path& p,
     = (node_sz - sizeof(node_id_type) - branch_data::value_offset())
       / sizeof(branch_value_type);
 
-  if (m_mgr.open(p, open_flags, btree::default_max_cache_nodes, node_sz))
+  if (m_mgr.open(p, open_flags, 0, node_sz))
   { // existing non-truncated file
     m_read_header();
     if (!m_hdr.marker_ok())
@@ -1098,6 +1098,7 @@ btree_base<Key,Base>::m_open(const boost::filesystem::path& p,
 
     m_mgr.data_size(m_hdr.node_size());
     m_root = m_mgr.read(m_hdr.root_node_id());
+    max_cache_size(max_cache_recommendation(flgs, boost::filesystem::file_size(p)));
   }
   else
   { // new or truncated file
@@ -1126,8 +1127,8 @@ btree_base<Key,Base>::m_open(const boost::filesystem::path& p,
     m_hdr.last_node_id(m_root->node_id());
     m_root->level(0);
     m_root->size(0);
+    max_cache_size(max_cache_recommendation(flgs, 0));
   }
-//  m_set_max_cache_nodes();
 }
 
 //------------------------------------- clear() ----------------------------------------//

@@ -242,7 +242,8 @@ void construct_new_test(BT& bt, const fs::path& p)
   BOOST_TEST(bt.empty());
   BOOST_TEST(!bt.read_only());
   BOOST_TEST(bt.node_size() == btree::default_node_size);  // the default
-  BOOST_TEST(bt.max_cache_size() ==  btree::default_max_cache_nodes);
+  BOOST_TEST(bt.max_cache_size() ==
+    btree::max_cache_recommendation(btree::flags::read_write, 0));
   bt.max_cache_size(-1);
   BOOST_TEST(bt.max_cache_size() == static_cast<std::size_t>(-1));
   bt.max_cache_megabytes(100);
@@ -1291,12 +1292,15 @@ void  cache_size_test()
   const unsigned n_levels = 5;  // enough to exercise both shallow and deep trees
   const std::size_t cache_max = 24;
 
-  btree::btree_multiset<fat> bt("cache_size_test.btr", btree::flags::truncate, -1,
-    btree::less(), node_sz);
+  btree::btree_multiset<fat> bt("cache_size_test.btr",
+    btree::flags::truncate | btree::flags::low_memory,   // suppress cache_branches
+    -1, btree::less(), node_sz);
   BOOST_TEST(bt.manager().buffers_in_memory() == 1);  // the root is cached
   BOOST_TEST(bt.manager().buffers_available() == 0);  // the root buffer is not available
-  
   bt.max_cache_size(cache_max);
+  BOOST_TEST_EQ(bt.max_cache_size(), cache_max);
+  BOOST_TEST(bt.manager().buffers_in_memory() == 1);  // the root is cached
+  BOOST_TEST(bt.manager().buffers_available() == 0);  // the root buffer is not available
   
   cout << "    inserting..." << endl;
   for (int i=2034875;
@@ -1304,13 +1308,17 @@ void  cache_size_test()
     i = (i*1234567891) + 11) // avoid ordered values
   {
     { 
-//      cout << "     inserting " << bt.size() + 1 << ", key " << i << endl;
+      // cout << "     insertion " << bt.size() + 1 << ", key " << i << endl;
       btree::btree_multiset<fat>::iterator itr = bt.insert(fat(i));
+
       BOOST_TEST(bt.inspect_leaf_to_root(cout, itr));
       // There is one iterator in existance, so one buffer per level should be in memory
       // in addition to any available buffers
-      BOOST_TEST(itr.use_count() == 1 || (bt.header().levels() == 1 && itr.use_count() == 2));
-      BOOST_TEST(bt.manager().buffers_in_use() == bt.header().levels());
+      BOOST_TEST(itr.use_count() == 1  // leaf is not the root,
+        || (bt.header().levels() == 1 && itr.use_count() == 2));  // leaf is the root
+
+      // note that this test is only correct if branch caching is off
+      BOOST_TEST_EQ(bt.manager().buffers_in_use(), bt.header().levels());
 
       if (bt.manager().buffers_in_use()
         != bt.header().levels())
