@@ -1067,7 +1067,7 @@ btree_base<Key,Base>::m_open(const boost::filesystem::path& p,
     open_flags |= oflag::out | oflag::truncate;
   if (flgs & flags::preload)
     open_flags |= oflag::preload;
-  if (flgs & flags::cache_branches || cache_branches_recommendation(flgs))
+  if (cache_branches_default(flgs) & flags::cache_branches)
     m_cache_branches = true;
 
   m_read_only = (open_flags & oflag::out) == 0;
@@ -1098,7 +1098,7 @@ btree_base<Key,Base>::m_open(const boost::filesystem::path& p,
 
     m_mgr.data_size(m_hdr.node_size());
     m_root = m_mgr.read(m_hdr.root_node_id());
-    max_cache_size(max_cache_recommendation(flgs, boost::filesystem::file_size(p)));
+    max_cache_size(max_cache_default(flgs, boost::filesystem::file_size(p)));
   }
   else
   { // new or truncated file
@@ -1127,7 +1127,7 @@ btree_base<Key,Base>::m_open(const boost::filesystem::path& p,
     m_hdr.last_node_id(m_root->node_id());
     m_root->level(0);
     m_root->size(0);
-    max_cache_size(max_cache_recommendation(flgs, 0));
+    max_cache_size(max_cache_default(flgs, 0));
   }
 }
 

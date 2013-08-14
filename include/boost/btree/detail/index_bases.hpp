@@ -229,7 +229,7 @@ public:
     BOOST_ASSERT(!m_index_btree.is_open());
     BOOST_ASSERT(!m_file.get());
     m_file.reset(new file_type);
-    m_file->open(file_pth, flgs, reserve_recommendation(flgs));
+    m_file->open(file_pth, flgs, reserve_default(flgs));
     open(index_pth, m_file, flgs, sig, comp, node_sz);
   }
 

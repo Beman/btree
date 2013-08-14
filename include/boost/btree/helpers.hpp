@@ -134,16 +134,16 @@ namespace flags
 //                                 handy constants                                      //
 //--------------------------------------------------------------------------------------//
 
-const unsigned KB = 1024;
+const uint32_t KB = 1024;
 const uint32_t MB = 1048576;  // 1024 * 1024
 const uint32_t GB = 1073741824;  // 1024 * 1024 * 1024
 
 //--------------------------------------------------------------------------------------//
-//                            hint based recommendations                                //
+//                               hint based defaults                                    //
 //--------------------------------------------------------------------------------------//
      
 inline std::size_t
-  max_cache_recommendation(flags::bitmask flgs, std::size_t file_size)
+  max_cache_default(flags::bitmask flgs, std::size_t file_size)
 {
   switch (flgs & 0x70000)
   {
@@ -163,18 +163,19 @@ inline std::size_t
     return -1;
     break;
   default:
-    return -2;
+    return -2;  // error indicator
   }
 }
      
-inline bool
-  cache_branches_recommendation(flags::bitmask flgs)
+inline flags::bitmask
+  cache_branches_default(flags::bitmask flgs)
 {
-  return (flgs & 0x70000) == 0 || (flgs & 0x70000) >= flags::fast;
+  return (flgs & 0x70000) == 0 || (flgs & 0x70000) >= flags::fast
+    ? (flgs | flags::cache_branches) : flgs;
 }
      
 inline std::size_t
-  reserve_recommendation(flags::bitmask flgs)
+  reserve_default(flags::bitmask flgs)
 {
   if (flgs & flags::read_only)
     return 0;

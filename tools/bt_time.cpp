@@ -581,7 +581,7 @@ int cpp_main(int argc, char * argv[])
   }
 
   if (cache_sz == (-2))
-    cache_sz = btree::max_cache_recommendation(common_flags, 0);
+    cache_sz = btree::max_cache_default(common_flags, 0);
 
   cout.imbue(std::locale(std::locale(), new thousands_separator));
   cout << "sizeof(bree::header_page) is " << sizeof(btree::header_page) << '\n'
