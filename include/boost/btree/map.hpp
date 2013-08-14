@@ -39,8 +39,8 @@ namespace boost
 //                                 class btree_map                                      //
 //--------------------------------------------------------------------------------------//
 
-    template <class Key,    // shall be trivially copyable type; see std 3.9 [basic.types]
-              class T,      // shall be trivially copyable type; see std 3.9 [basic.types]
+    template <class Key,    // requires memcpyable type without pointers or references
+              class T,      // requires memcpyable type without pointers or references
               class Traits = default_traits,
               class Comp = btree::less >
     class btree_map
@@ -151,8 +151,8 @@ namespace boost
 //                               class btree_multimap                                   //
 //--------------------------------------------------------------------------------------//
 
-    template <class Key,    // shall be trivially copyable type; see std 3.9 [basic.types]
-              class T,      // shall be trivially copyable type; see std 3.9 [basic.types]
+    template <class Key,    // requires memcpyable type without pointers or references
+              class T,      // requires memcpyable type without pointers or references
               class Traits = default_traits,
               class Comp = btree::less >
     class btree_multimap

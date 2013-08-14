@@ -111,6 +111,9 @@
 
   * Should size_type erase(const key_type& k); be template <class K> ?
 
+  * operator unspecified-bool-type, operator!
+
+
 */
 
 namespace boost
@@ -235,7 +238,7 @@ public:
 
 */
 
-template  <class Key,   // shall be trivially copyable type; see std 3.9 [basic.types]
+template  <class Key,   // requires memcpyable type without pointers or references
            class Base>  // btree_map_base or btree_set_base
 
 class btree_base : public Base, private noncopyable

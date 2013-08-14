@@ -38,7 +38,7 @@ namespace boost
 //                                class btree_set                                       //
 //--------------------------------------------------------------------------------------//
 
-    template <class Key,    // shall be trivially copyable type; see std 3.9 [basic.types]
+    template <class Key,    // requires memcpyable type without pointers or references
               class Traits = default_traits,
               class Comp = btree::less>
     class btree_set
@@ -134,7 +134,7 @@ namespace boost
 //                              class btree_multiset                                    //
 //--------------------------------------------------------------------------------------//
 
-    template <class Key,    // shall be trivially copyable type; see std 3.9 [basic.types]
+    template <class Key,    // requires memcpyable type without pointers or references
               class Traits = default_traits,
               class Comp = btree::less>              
     class btree_multiset
