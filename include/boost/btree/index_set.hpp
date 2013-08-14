@@ -25,7 +25,7 @@ namespace btree
 //                                 class index_set                                      //
 //--------------------------------------------------------------------------------------//
 
-template <class Key,    // shall be trivially copyable type; see std 3.9 [basic.types]
+template <class Key,    // requires memcpyable type without pointers or references
           class BtreeTraits = btree::default_traits,
           class Compare = btree::less,
           class IndexTraits = btree::default_index_traits<Key> >
@@ -142,7 +142,7 @@ public:
 //                               class index_multiset                                   //
 //--------------------------------------------------------------------------------------//
 
-template <class Key,    // shall be trivially copyable type; see std 3.9 [basic.types]
+template <class Key,    // requires memcpyable type without pointers or references
           class BtreeTraits = btree::default_traits,
           class Compare = btree::less,
           class IndexTraits = btree::default_index_traits<Key> >

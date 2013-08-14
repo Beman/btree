@@ -393,18 +393,30 @@ public:
   // operations:
   //   it is required that objects of types K and Key be key_comp() comparable
 
-  template <class K> const_iterator  find(const K& k) const;
-
-  template <class K> size_type       count(const K& k) const;
-
-  template <class K> const_iterator  lower_bound(const K& k) const;
-
-  template <class K> const_iterator  upper_bound(const K& k) const;
+  template <class K>
+  const_iterator     find(const K& k) const;
+  const_iterator     find(const Key& k) const          {return find<Key>(k);}
 
   template <class K>
-    const_iterator_range             equal_range(const K& k) const
+  size_type          count(const K& k) const;
+  size_type          count(const Key& k) const         {return count<Key>(k);}
+
+  template <class K>
+  const_iterator     lower_bound(const K& k) const;
+  const_iterator     lower_bound(const Key& k) const   {return lower_bound<Key>(k);}
+
+  template <class K>
+  const_iterator     upper_bound(const K& k) const;
+  const_iterator     upper_bound(const Key& k) const   {return upper_bound<Key>(k);}
+
+  template <class K>
+  const_iterator_range  equal_range(const K& k) const
   {
     return std::make_pair(lower_bound(k), upper_bound(k));
+  }
+  const_iterator_range  equal_range(const Key& k) const
+  {
+    return std::make_pair(lower_bound<Key>(k), upper_bound<Key>(k));
   }
 
 //------------------------------  inspect leaf-to-root  --------------------------------//
