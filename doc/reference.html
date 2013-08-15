@@ -281,7 +281,7 @@
     explicit btree_set(const boost::filesystem::path&amp; p,
       flags::bitmask flgs = flags::read_only,
       uint64_t sig = -1,  // for existing files, must match signature from creation
-      const Comp&amp; comp = Comp(),
+      const Compare&amp; comp = Compare(),
       std::size_t node_sz = default_node_size); // node_sz ignored if existing file
 
     template &lt;class InputIterator&gt;
@@ -289,7 +289,7 @@
       const boost::filesystem::path&amp; p,
       flags::bitmask flgs = flags::read_only,
       uint64_t sig = -1,  // for existing files, must match signature from creation
-      const Comp&amp; comp = Comp(),
+      const Compare&amp; comp = Compare(),
       std::size_t node_sz = default_node_size); // node_sz ignored if existing file
 
    ~btree_set();
@@ -299,7 +299,7 @@
     void open(const boost::filesystem::path&amp; p,
       flags::bitmask flgs = flags::read_only,
       uint64_t sig = -1,  // for existing files, must match signature from creation
-      const Comp&amp; comp = Comp(),
+      const Compare&amp; comp = Compare(),
       std::size_t node_sz = default_node_size); // node_sz ignored if existing file
     void                    flush();
     void                    close();
@@ -391,8 +391,289 @@
     const_iterator_range    equal_range(const K&amp; k) const;
     const_iterator_range    equal_range(const Key&amp; k) const;
   };
-}}  // namespaces
-</pre>
+}}  // namespaces</pre>
+
+<h3><a name="btree_set-constructors-and-destructor">btree_set constructors and 
+destructor</a> </h3>
+
+  <pre>explicit btree_set();</pre>
+  <blockquote>
+    <p><i>Postconditions:</i> !is_open().</p>
+  </blockquote>
+  <pre>explicit btree_set(const boost::filesystem::path&amp; p,
+  flags::bitmask flgs = flags::read_only,
+  uint64_t sig = -1,  
+  const Compare&amp; comp = Compare(),
+  std::size_t node_sz = default_node_size); </pre>
+  <blockquote>
+    <p><i>Effects:</i> <code>open(p, flgs, sig, comp, node_sz)</code></p>
+  </blockquote>
+  <pre>template &lt;class InputIterator&gt;
+btree_set(InputIterator begin, InputIterator end,
+  const boost::filesystem::path&amp; p,
+  flags::bitmask flgs = flags::read_only,
+  uint64_t sig = -1,  
+  const Compare&amp; comp = Compare(),
+  std::size_t node_sz = default_node_size); </pre>
+  <blockquote>
+    <p><i>Effects:</i> <code>open(p, flgs, sig, comp, node_sz)</code></p>
+    <p><i>Throws:</i> See open.</p>
+  </blockquote>
+  <pre>~btree_set();</pre>
+  <blockquote>
+  <p><i>Effects:</i></p>
+  <blockquote>
+    <pre>try { close(); }
+catch (...) {}</pre>
+  </blockquote>
+  </blockquote>
+  <pre>void open(const boost::filesystem::path&amp; p,
+  flags::bitmask flgs = flags::read_only,
+  uint64_t sig = -1,  
+  const Compare&amp; comp = Compare(),
+  std::size_t node_sz = default_node_size); </pre>
+  <blockquote>
+    <p><i>Postconditions:</i><blockquote>
+      <blockquote>
+        <blockquote>
+          <blockquote>
+    
+    <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111">
+      <tr>
+        <td align="center"><i><b>File <code>p</code> does not exist<br>
+        or flgs &amp; flags::truncate</b></i></td>
+        <td align="center"><i><b>File <code>p</code> exists</b></i></td>
+      </tr>
+      <tr>
+        <td><code>path() == p</code></td>
+        <td><code>path() == p</code></td>
+      </tr>
+      <tr>
+        <td><code>is_open() == true</code></td>
+        <td>
+        <p dir="ltr"><code>is_open() == true</code></td>
+      </tr>
+      <tr>
+        <td><code>key_comp() == comp</code></td>
+        <td>
+        <p dir="ltr"><code>key_comp(</code>) at file creation</td>
+      </tr>
+      <tr>
+        <td><code>value_comp() == comp</code></td>
+        <td>
+        <p dir="ltr"><code>value_comp()</code> at file creation</td>
+      </tr>
+      <tr>
+        <td><code>node_size() == node_sz</code></td>
+        <td>
+        <p dir="ltr"><code>node_size()</code> at file creation</td>
+      </tr>
+      <tr>
+        <td><code>empty() == true</code></td>
+        <td>&nbsp;</td>
+      </tr>
+      <tr>
+        <td><code>size() == 0</code></td>
+        <td>&nbsp;</td>
+      </tr>
+    </table>
+          </blockquote>
+        </blockquote>
+      </blockquote>
+    </blockquote>
+    
+    <p><i>Throws:</i> If the path <code>p</code> cannot be opened, or the type 
+    or signature differ from when the file was originally created.</p>
+  </blockquote>
+  <pre>void  flush();</pre>
+  <blockquote>
+    <p><i>Requires:</i> is_open()</p>
+    <p><i>Effects:</i> Any data that has been modified is written to the 
+    external file.</p>
+  </blockquote>
+  <pre>void  close();</pre>
+  <blockquote>
+    <p><i>Effects:</i> if <code>is_open()</code>, <code>flush()</code> and then 
+    close the external file. Otherwise, no effect.</p>
+    <p><i>Postconditions:</i> <code>is_open() == false</code></p>
+  </blockquote>
+  <pre>const_iterator  begin() const;</pre>
+  <blockquote>
+    <p><i>Returns:</i> </p>
+  </blockquote>
+  <pre>const_iterator  end() const;</pre>
+  <blockquote>
+    <p><i>Returns:</i> </p>
+  </blockquote>
+  <pre>const_iterator  last() const;</pre>
+  <blockquote>
+    <p><i>Returns:</i> </p>
+  </blockquote>
+  <pre>const_reverse_iterator  rbegin() const;  </pre>
+  <blockquote>
+    <p><i>Returns:</i> </p>
+  </blockquote>
+  <pre>const_reverse_iterator  rend() const;</pre>
+  <blockquote>
+    <p><i>Returns:</i> </p>
+  </blockquote>
+  <pre>const_iterator  cbegin() const;</pre>
+  <blockquote>
+    <p><i>Returns:</i> </p>
+  </blockquote>
+  <pre>const_iterator  cend() const;</pre>
+  <blockquote>
+    <p><i>Returns:</i> </p>
+  </blockquote>
+  <pre>const_reverse_iterator  crbegin() const;  </pre>
+  <blockquote>
+    <p><i>Returns:</i> </p>
+  </blockquote>
+  <pre>const_reverse_iterator  crend() const;</pre>
+  <blockquote>
+    <p><i>Returns:</i> </p>
+  </blockquote>
+  <pre>bool  is_open() const;</pre>
+  <blockquote>
+    <p><i>Returns:</i> </p>
+  </blockquote>
+  <pre>const filesystem::path&amp; path() const;</pre>
+  <blockquote>
+    <p><i>Returns:</i> </p>
+  </blockquote>
+  <pre>bool  read_only() const;</pre>
+  <blockquote>
+    <p><i>Returns:</i> </p>
+  </blockquote>
+  <pre>bool  cache_branches() const;</pre>
+  <blockquote>
+    <p><i>Returns:</i> </p>
+  </blockquote>
+  <pre>const buffer_manager&amp;  manager() const;</pre>
+  <blockquote>
+    <p><i>Returns:</i> </p>
+  </blockquote>
+  <pre>const header_page&amp;  header() const;</pre>
+  <blockquote>
+    <p><i>Returns:</i> </p>
+  </blockquote>
+  <pre>bool  empty() const;</pre>
+  <blockquote>
+    <p><i>Returns:</i> <code>!size()</code></p>
+  </blockquote>
+  <pre>size_type  size() const;</pre>
+  <blockquote>
+    <p><i>Returns:</i> The number of elements in the set.</p>
+  </blockquote>
+  <pre>size_type  max_size() const;</pre>
+  <blockquote>
+    <p><i>Returns:</i> </p>
+  </blockquote>
+  <pre>std::size_t  node_size() const;</pre>
+  <blockquote>
+    <p><i>Returns:</i> The value of the <code>node_sz</code> argument to the
+    <code>open</code> function at the time of original file creation.</p>
+  </blockquote>
+  <pre>std::size_t  max_cache_size() const;</pre>
+  <blockquote>
+    <p><i>Requires:</i> <code>is_open()</code></p>
+    <p><i>Returns:</i> The value of the <code>max</code> argument to the most 
+    recent call to the <code>max_cache_size</code> function.</p>
+  </blockquote>
+  <pre>void  max_cache_size(std::size_t max);  </pre>
+  <blockquote>
+    <p><i>Effects:</i>&nbsp; Informs the implementation of the maximum number of 
+    nodes that should be cached.</p>
+    <p>[<i>Note:</i> More nodes may be cached if required to maintain the 
+    validity of outstanding iterators. <i>-- end note</i>]</p>
+  </blockquote>
+  <pre>void  max_cache_megabytes(std::size_t mb);</pre>
+  <blockquote>
+    <p><i>Effects:</i></p>
+  </blockquote>
+  <pre>std::pair&lt;const_iterator, bool&gt;
+  emplace(const value_type&amp; value);</pre>
+  <blockquote>
+    <p><i>Returns:</i> </p>
+  </blockquote>
+  <pre>std::pair&lt;const_iterator, bool&gt;
+  insert(const value_type&amp; value);</pre>
+  <blockquote>
+    <p><i>Returns:</i> </p>
+  </blockquote>
+  <pre>template &lt;class InputIterator&gt;
+  void insert(InputIterator begin, InputIterator end);</pre>
+  <blockquote>
+    <p><i>Effects:</i> </p>
+  </blockquote>
+  <pre>const_iterator  erase(const_iterator position);</pre>
+  <blockquote>
+    <p><i>Returns:</i> </p>
+  </blockquote>
+  <pre>size_type  erase(const key_type&amp; k);</pre>
+  <blockquote>
+    <p><i>Returns:</i> </p>
+  </blockquote>
+  <pre>const_iterator  erase(const_iterator first, const_iterator last);</pre>
+  <blockquote>
+    <p><i>Returns:</i> </p>
+  </blockquote>
+  <pre>void  clear();</pre>
+  <blockquote>
+    <p><i>Effects:</i> </p>
+  </blockquote>
+  <pre>key_compare  key_comp() const;</pre>
+  <blockquote>
+    <p><i>Returns:</i> </p>
+  </blockquote>
+  <pre>value_compare  value_comp() const;</pre>
+  <blockquote>
+    <p><i>Returns:</i> </p>
+  </blockquote>
+  <pre>bool  ok_to_pack() const;</pre>
+  <blockquote>
+    <p><i>Returns:</i> </p>
+  </blockquote>
+  <pre>template &lt;class K&gt;
+const_iterator  find(const K&amp; k) const;</pre>
+  <blockquote>
+    <p><i>Returns:</i> </p>
+  </blockquote>
+  <pre>const_iterator  find(const Key&amp; k) const;</pre>
+  <blockquote>
+    <p><i>Returns:</i> </p>
+  </blockquote>
+  <pre>template &lt;class K&gt;
+size_type  count(const K&amp; k) const;</pre>
+  <blockquote>
+    <p><i>Returns:</i> </p>
+  </blockquote>
+  <pre>size_type  count(const Key&amp; k) const;</pre>
+  <blockquote>
+    <p><i>Returns:</i> </p>
+  </blockquote>
+  <pre>template &lt;class K&gt;
+const_iterator  lower_bound(const K&amp; k) const;
+const_iterator  lower_bound(const Key&amp; k) const;</pre>
+  <blockquote>
+    <p><i>Returns:</i> An iterator pointing to the first element with key not 
+    less than <code>k</code>, or <code>end()</code> if such an element is not 
+    found.</p>
+  </blockquote>
+  <pre>template &lt;class K&gt;
+const_iterator  upper_bound(const K&amp; k) const;
+const_iterator  upper_bound(const Key&amp; k) const;</pre>
+  <blockquote>
+    <p><i>Returns:</i> An iterator pointing to the first element with key 
+    greater than <code>k</code>, or <code>end()</code> if such an element is not 
+    found.</p>
+  </blockquote>
+  <pre>template &lt;class K&gt;
+const_iterator_range  equal_range(const K&amp; k) const;</pre>
+  <pre>const_iterator_range  equal_range(const Key&amp; k) const;</pre>
+  <blockquote>
+    <p><i>Returns:</i> </p>
+  </blockquote>
   <p>&nbsp;</p>
   <p>Header &lt;boost/btree/multiset.hpp&gt; synopsis</p>
 
@@ -611,7 +892,7 @@ btree_map(InputIterator begin, InputIterator end,
   <hr>
 
   <p>Revised 
-  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->14 August 2013<!--webbot bot="Timestamp" endspan i-checksum="31357" --></p>
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->15 August 2013<!--webbot bot="Timestamp" endspan i-checksum="31359" --></p>
 
   <p>© Copyright Beman Dawes, 2013</p>
 
