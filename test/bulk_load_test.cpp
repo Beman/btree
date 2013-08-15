@@ -29,6 +29,7 @@ TODO:
 
 * need to specify directory for temporary files
 
+* add tests for multimaps, sets, multisets
 
 */
 

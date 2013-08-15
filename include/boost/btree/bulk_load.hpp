@@ -1,4 +1,4 @@
-//  boost/btree/bulk_loader.hpp  -------------------------------------------------------//
+//  boost/btree/bulk_load.hpp  ---------------------------------------------------------//
 
 //  Copyright Beman Dawes 2013
 
@@ -35,6 +35,8 @@
   TODO:
 
   * If file_size(source) <= max_memory: just load, sort, and insert:-)
+
+  * Currently handles maps only.
 
 */
 
@@ -82,7 +84,7 @@ namespace btree
     uint64_t log_point);
 
   template <class Key, class T, class Traits = default_traits,
-    class Compare = btree::less<Key> >
+    class Compare = btree::less>
   class bulk_load_map
   {
   public:
@@ -96,8 +98,8 @@ namespace btree
       uint64_t log_point = 0,
       flags::bitmask flgs = boost::btree::flags::read_write,
       uint64_t signature = -1,  // for existing files, must match signature from creation
-      std::size_t node_sz = default_node_size,  // ignored if existing file
-      const Compare& comp = Compare()
+      const Compare& comp = Compare(),
+      std::size_t node_sz = default_node_size  // ignored if existing file
       );
   };
 
@@ -151,11 +153,11 @@ namespace btree
       uint64_t log_point,
       flags::bitmask flgs,
       uint64_t signature,
-      std::size_t node_sz,
-      const Compare& comp)
+      const Compare& comp,
+      std::size_t node_sz)
     {
       boost::btree::btree_map<Key, T, Traits, Compare>
-        bt(target, flgs, signature, node_sz, comp);
+        bt(target, flgs, signature, comp, node_sz);
       bulk_load(source, bt, temp_dir, msg_stream, max_memory, opts, log_point);
     }
 
@@ -366,24 +368,6 @@ namespace btree
     // TODO throw if inserts != n_elements
 
   }
-
-  //-------------------------------------  main  ---------------------------------------//
-
-  //int bulk_loader<T>::main(int argc, char * argv[], std::ostream& os)
-  //{
-
-
-  //  if (argc != 3) 
-  //  {
-  //    os << "Usage: " << argv[0] << " [Options] source-path btree_path\n"
-  //      " Options:\n"
-  //      "   -l#      log progress every # actions; default is to not log\n"
-  //      "   -sep[punct] cout thousands separator; space if punct omitted, default -sep,\n"
-  //// TODO:      "   -v       Verbose output statistics\n"
-  //      ;
-  //    return 1;
-  //  }
-  //}
 
 }  // namespace btree
 }  // namespace boost
