@@ -144,7 +144,7 @@ void append(const Btree& from, const Btree& to)
 //                                class btree_set_base                                  //
 //--------------------------------------------------------------------------------------//
 
-template <class Key, class Traits, class Comp>
+template <class Key, class Traits, class Compare>
 class btree_set_base
 {
 public:
@@ -154,7 +154,7 @@ public:
   typedef Key                               value_type;
   typedef Key                               mapped_type;
   typedef Traits                            traits_type;
-  typedef Comp                              compare_type;
+  typedef Compare                              compare_type;
   typedef compare_type                      value_compare;
 
   const Key&          key(const value_type& v) const   // really handy, so expose
@@ -167,7 +167,7 @@ public:
 //                               class btree_map_base                                   //
 //--------------------------------------------------------------------------------------//
 
-template <class Key, class T, class Traits, class Comp>
+template <class Key, class T, class Traits, class Compare>
 class btree_map_base
 {
 public:
@@ -177,7 +177,7 @@ public:
   typedef std::pair<const Key, T>           value_type;
   typedef T                                 mapped_type;
   typedef Traits                            traits_type;
-  typedef Comp                              compare_type;
+  typedef Compare                              compare_type;
 
   const Key&  key(const value_type& v) const  // really handy, so expose
     {return v.first;}
@@ -1920,31 +1920,31 @@ void   dump_dot(std::ostream& os, const Btree& bt);
 
 ///  TODO: non-member functions not implemented yet
 /*
-template <typename Key, typename T, typename Comp>
+template <typename Key, typename T, typename Compare>
 bool operator==(const common_base<Key,T,GetKey>& x,
               const common_base<Key,T,GetKey>& y);
 
-template <typename Key, typename T, typename Comp>
+template <typename Key, typename T, typename Compare>
 bool operator< (const common_base<Key,T,GetKey>& x,
               const common_base<Key,T,GetKey>& y);
 
-template <typename Key, typename T, typename Comp>
+template <typename Key, typename T, typename Compare>
 bool operator!=(const common_base<Key,T,GetKey>& x,
               const common_base<Key,T,GetKey>& y);
 
-template <typename Key, typename T, typename Comp>
+template <typename Key, typename T, typename Compare>
 bool operator> (const common_base<Key,T,GetKey>& x,
               const common_base<Key,T,GetKey>& y);
 
-template <typename Key, typename T, typename Comp>
+template <typename Key, typename T, typename Compare>
 bool operator>=(const common_base<Key,T,GetKey>& x,
               const common_base<Key,T,GetKey>& y);
 
-template <typename Key, typename T, typename Comp>
+template <typename Key, typename T, typename Compare>
 bool operator<=(const common_base<Key,T,GetKey>& x,
               const common_base<Key,T,GetKey>& y);
 
-template <typename Key, typename T, typename Comp>
+template <typename Key, typename T, typename Compare>
 void swap(common_base<Key,T,GetKey>& x,
         common_base<Key,T,GetKey>& y);
 */

@@ -82,7 +82,7 @@ namespace btree
     uint64_t log_point);
 
   template <class Key, class T, class Traits = default_traits,
-    class Comp = btree::less<Key> >
+    class Compare = btree::less<Key> >
   class bulk_load_map
   {
   public:
@@ -97,7 +97,7 @@ namespace btree
       flags::bitmask flgs = boost::btree::flags::read_write,
       uint64_t signature = -1,  // for existing files, must match signature from creation
       std::size_t node_sz = default_node_size,  // ignored if existing file
-      const Comp& comp = Comp()
+      const Compare& comp = Compare()
       );
   };
 
@@ -140,8 +140,8 @@ namespace btree
 
   //---------------------------------  bulk_load_map  ----------------------------------//
 
-  template <class Key, class T, class Traits, class Comp>
-  void bulk_load_map<Key, T, Traits, Comp>::operator()(
+  template <class Key, class T, class Traits, class Compare>
+  void bulk_load_map<Key, T, Traits, Compare>::operator()(
       const boost::filesystem::path& source,
       const boost::filesystem::path& target,
       const boost::filesystem::path& temp_dir,
@@ -152,9 +152,9 @@ namespace btree
       flags::bitmask flgs,
       uint64_t signature,
       std::size_t node_sz,
-      const Comp& comp)
+      const Compare& comp)
     {
-      boost::btree::btree_map<Key, T, Traits, Comp>
+      boost::btree::btree_map<Key, T, Traits, Compare>
         bt(target, flgs, signature, node_sz, comp);
       bulk_load(source, bt, temp_dir, msg_stream, max_memory, opts, log_point);
     }
