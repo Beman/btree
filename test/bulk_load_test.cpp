@@ -139,6 +139,9 @@ int cpp_main(int argc, char* argv[])
   //bulk_load_map<uint32_t, uint32_t> map;    // KISS
   bulk_load_map<volume::u128_t, uint64_t> loader;    
   loader(source_path, btree_path, temp_path, cout, max_memory, opts,
+    log_point, flags::truncate);
+  //bulk_load_set<volume::u128_t> loader;    
+  //loader(source_path, btree_path, temp_path, cout, max_memory, opts,
    log_point, flags::truncate);
 
   t.stop();

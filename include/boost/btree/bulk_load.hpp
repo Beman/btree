@@ -103,6 +103,64 @@ namespace btree
       );
   };
 
+  template <class Key, class T, class Traits = default_traits,
+    class Compare = btree::less>
+  class bulk_load_multimap
+  {
+  public:
+    void operator()(
+      const boost::filesystem::path& source,
+      const boost::filesystem::path& target,
+      const boost::filesystem::path& temp_dir,
+      std::ostream& msg_stream,
+      std::size_t max_memory,
+      bulk_opts::bitmask opts = boost::btree::bulk_opts::none,
+      uint64_t log_point = 0,
+      flags::bitmask flgs = boost::btree::flags::read_write,
+      uint64_t signature = -1,  // for existing files, must match signature from creation
+      const Compare& comp = Compare(),
+      std::size_t node_sz = default_node_size  // ignored if existing file
+      );
+  };
+
+  template <class Key, class Traits = default_traits, class Compare = btree::less>
+  class bulk_load_set
+  {
+  public:
+    void operator()(
+      const boost::filesystem::path& source,
+      const boost::filesystem::path& target,
+      const boost::filesystem::path& temp_dir,
+      std::ostream& msg_stream,
+      std::size_t max_memory,
+      bulk_opts::bitmask opts = boost::btree::bulk_opts::none,
+      uint64_t log_point = 0,
+      flags::bitmask flgs = boost::btree::flags::read_write,
+      uint64_t signature = -1,  // for existing files, must match signature from creation
+      const Compare& comp = Compare(),
+      std::size_t node_sz = default_node_size  // ignored if existing file
+      );
+  };
+
+  template <class Key, class Traits = default_traits, class Compare = btree::less>
+  class bulk_load_multiset
+  {
+  public:
+    void operator()(
+      const boost::filesystem::path& source,
+      const boost::filesystem::path& target,
+      const boost::filesystem::path& temp_dir,
+      std::ostream& msg_stream,
+      std::size_t max_memory,
+      bulk_opts::bitmask opts = boost::btree::bulk_opts::none,
+      uint64_t log_point = 0,
+      flags::bitmask flgs = boost::btree::flags::read_write,
+      uint64_t signature = -1,  // for existing files, must match signature from creation
+      const Compare& comp = Compare(),
+      std::size_t node_sz = default_node_size  // ignored if existing file
+      );
+  };
+
  
   //------------------------------------------------------------------------------------//
   //                                  implementation                                    //
@@ -157,6 +215,69 @@ namespace btree
       std::size_t node_sz)
     {
       boost::btree::btree_map<Key, T, Traits, Compare>
+        bt(target, flgs, signature, comp, node_sz);
+      bulk_load(source, bt, temp_dir, msg_stream, max_memory, opts, log_point);
+    }
+
+  //-------------------------------  bulk_load_multimap  -------------------------------//
+
+  template <class Key, class T, class Traits, class Compare>
+  void bulk_load_multimap<Key, T, Traits, Compare>::operator()(
+      const boost::filesystem::path& source,
+      const boost::filesystem::path& target,
+      const boost::filesystem::path& temp_dir,
+      std::ostream& msg_stream,
+      std::size_t max_memory,
+      bulk_opts::bitmask opts,
+      uint64_t log_point,
+      flags::bitmask flgs,
+      uint64_t signature,
+      const Compare& comp,
+      std::size_t node_sz)
+    {
+      boost::btree::btree_multimap<Key, T, Traits, Compare>
+        bt(target, flgs, signature, comp, node_sz);
+      bulk_load(source, bt, temp_dir, msg_stream, max_memory, opts, log_point);
+    }
+
+  //---------------------------------  bulk_load_set  ----------------------------------//
+
+  template <class Key, class Traits, class Compare>
+  void bulk_load_set<Key, Traits, Compare>::operator()(
+      const boost::filesystem::path& source,
+      const boost::filesystem::path& target,
+      const boost::filesystem::path& temp_dir,
+      std::ostream& msg_stream,
+      std::size_t max_memory,
+      bulk_opts::bitmask opts,
+      uint64_t log_point,
+      flags::bitmask flgs,
+      uint64_t signature,
+      const Compare& comp,
+      std::size_t node_sz)
+    {
+      boost::btree::btree_set<Key, Traits, Compare>
+        bt(target, flgs, signature, comp, node_sz);
+      bulk_load(source, bt, temp_dir, msg_stream, max_memory, opts, log_point);
+    }
+
+  //-------------------------------  bulk_load_multiset  -------------------------------//
+
+  template <class Key, class Traits, class Compare>
+  void bulk_load_multiset<Key, Traits, Compare>::operator()(
+      const boost::filesystem::path& source,
+      const boost::filesystem::path& target,
+      const boost::filesystem::path& temp_dir,
+      std::ostream& msg_stream,
+      std::size_t max_memory,
+      bulk_opts::bitmask opts,
+      uint64_t log_point,
+      flags::bitmask flgs,
+      uint64_t signature,
+      const Compare& comp,
+      std::size_t node_sz)
+    {
+      boost::btree::btree_multiset<Key, Traits, Compare>
         bt(target, flgs, signature, comp, node_sz);
       bulk_load(source, bt, temp_dir, msg_stream, max_memory, opts, log_point);
     }
