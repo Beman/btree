@@ -278,7 +278,7 @@
     // construct/destroy/open:
     explicit btree_set();
 
-    explicit btree_set(const boost::filesystem::path&amp; p,
+    explicit btree_set(const boost::filesystem::path&amp; pth,
       flags::bitmask flgs = flags::read_only,
       uint64_t sig = -1,  // for existing files, must match signature from creation
       const Compare&amp; comp = Compare(),
@@ -286,7 +286,7 @@
 
     template &lt;class InputIterator&gt;
     btree_set(InputIterator begin, InputIterator end,
-      const boost::filesystem::path&amp; p,
+      const boost::filesystem::path&amp; pth,
       flags::bitmask flgs = flags::read_only,
       uint64_t sig = -1,  // for existing files, must match signature from creation
       const Compare&amp; comp = Compare(),
@@ -296,7 +296,7 @@
 
     //  file operations:
  
-    void open(const boost::filesystem::path&amp; p,
+    void open(const boost::filesystem::path&amp; pth,
       flags::bitmask flgs = flags::read_only,
       uint64_t sig = -1,  // for existing files, must match signature from creation
       const Compare&amp; comp = Compare(),
@@ -320,8 +320,7 @@
 
     bool                    is_open() const;
     const filesystem::path&amp; path() const;
-    bool                    read_only() const;
-    bool                    cache_branches() const;
+    flags::bitmask          flags() const;
 
     // TODO: why are these two exposed? See main TODO list
     const buffer_manager&amp;   manager() const;
@@ -398,9 +397,9 @@ destructor</a> </h3>
 
   <pre>explicit btree_set();</pre>
   <blockquote>
-    <p><i>Postconditions:</i> !is_open().</p>
+    <p><i>Postconditions:</i> <code>is_open()</code> is <code>false</code>.</p>
   </blockquote>
-  <pre>explicit btree_set(const boost::filesystem::path&amp; p,
+  <pre>explicit btree_set(const boost::filesystem::path&amp; pth,
   flags::bitmask flgs = flags::read_only,
   uint64_t sig = -1,  
   const Compare&amp; comp = Compare(),
@@ -410,14 +409,13 @@ destructor</a> </h3>
   </blockquote>
   <pre>template &lt;class InputIterator&gt;
 btree_set(InputIterator begin, InputIterator end,
-  const boost::filesystem::path&amp; p,
+  const boost::filesystem::path&amp; pth,
   flags::bitmask flgs = flags::read_only,
   uint64_t sig = -1,  
   const Compare&amp; comp = Compare(),
   std::size_t node_sz = default_node_size); </pre>
   <blockquote>
     <p><i>Effects:</i> <code>open(p, flgs, sig, comp, node_sz)</code></p>
-    <p><i>Throws:</i> See open.</p>
   </blockquote>
   <pre>~btree_set();</pre>
   <blockquote>
@@ -427,13 +425,13 @@ btree_set(InputIterator begin, InputIterator end,
 catch (...) {}</pre>
   </blockquote>
   </blockquote>
-  <pre>void open(const boost::filesystem::path&amp; p,
+  <pre>void open(const boost::filesystem::path&amp; pth,
   flags::bitmask flgs = flags::read_only,
   uint64_t sig = -1,  
   const Compare&amp; comp = Compare(),
   std::size_t node_sz = default_node_size); </pre>
   <blockquote>
-    <p><i>Postconditions:</i><blockquote>
+    <p><i>Requires:</i> <code>is_open()</code> is <code>false</code>.<p><i>Postconditions:</i><blockquote>
       <blockquote>
         <blockquote>
           <blockquote>
@@ -487,7 +485,7 @@ catch (...) {}</pre>
   </blockquote>
   <pre>void  flush();</pre>
   <blockquote>
-    <p><i>Requires:</i> is_open()</p>
+    <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Effects:</i> Any data that has been modified is written to the 
     external file.</p>
   </blockquote>
@@ -497,64 +495,61 @@ catch (...) {}</pre>
     close the external file. Otherwise, no effect.</p>
     <p><i>Postconditions:</i> <code>is_open() == false</code></p>
   </blockquote>
-  <pre>const_iterator  begin() const;</pre>
+  <pre>const_iterator  begin() const;
+const_iterator  cbegin() const;</pre>
   <blockquote>
-    <p><i>Returns:</i> </p>
+    <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
+    <p><i>Returns:</i> An iterator pointing to the first element in the 
+    container.</p>
   </blockquote>
-  <pre>const_iterator  end() const;</pre>
+  <pre>const_iterator  end() const;
+const_iterator  cend() const;</pre>
   <blockquote>
-    <p><i>Returns:</i> </p>
+    <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
+    <p><i>Returns:</i> A past-the-end iterator that does not point to an element 
+    in the container.</p>
   </blockquote>
-  <pre>const_iterator  last() const;</pre>
+  <pre>const_reverse_iterator  rbegin() const;
+const_reverse_iterator  crbegin() const;  </pre>
   <blockquote>
-    <p><i>Returns:</i> </p>
+    <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
+    <p><i>Returns:</i> <code>std::reverse_iterator(end())</code>.</p>
   </blockquote>
-  <pre>const_reverse_iterator  rbegin() const;  </pre>
+  <pre>const_reverse_iterator  rend() const;
+const_reverse_iterator  crend() const;</pre>
   <blockquote>
-    <p><i>Returns:</i> </p>
-  </blockquote>
-  <pre>const_reverse_iterator  rend() const;</pre>
-  <blockquote>
-    <p><i>Returns:</i> </p>
-  </blockquote>
-  <pre>const_iterator  cbegin() const;</pre>
-  <blockquote>
-    <p><i>Returns:</i> </p>
-  </blockquote>
-  <pre>const_iterator  cend() const;</pre>
-  <blockquote>
-    <p><i>Returns:</i> </p>
-  </blockquote>
-  <pre>const_reverse_iterator  crbegin() const;  </pre>
-  <blockquote>
-    <p><i>Returns:</i> </p>
-  </blockquote>
-  <pre>const_reverse_iterator  crend() const;</pre>
-  <blockquote>
-    <p><i>Returns:</i> </p>
+    <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
+    <p><i>Returns:</i> <code>std::reverse_iterator(begin())</code>.</p>
   </blockquote>
   <pre>bool  is_open() const;</pre>
   <blockquote>
-    <p><i>Returns:</i> </p>
+    <p><i>Returns:</i> <code>true</code> if the <code>open</code> function has 
+    been called and did not throw and exception, and the <code>close</code> 
+    function has not been subsequently called. Otherwise, <code>false</code>.</p>
   </blockquote>
   <pre>const filesystem::path&amp; path() const;</pre>
   <blockquote>
-    <p><i>Returns:</i> </p>
+    <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
+    <p><i>Returns:</i> A copy of <code>pth</code> from the constructor or <code>
+    open</code> function that opened the file.</p>
   </blockquote>
-  <pre>bool  read_only() const;</pre>
+  <pre>flags::bitmask  flags() const;</pre>
   <blockquote>
-    <p><i>Returns:</i> </p>
-  </blockquote>
-  <pre>bool  cache_branches() const;</pre>
-  <blockquote>
-    <p><i>Returns:</i> </p>
+    <p dir="ltr"><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
+    <p dir="ltr"><i>Returns:</i> The effective value of <code>flgs</code> from 
+    the constructor or <code>open</code> function that opened the file.</p>
+    <p dir="ltr"><i>Remarks:</i> The effective value is the actual value 
+    adjusted to reflect possible presence of <code>unique</code> and <code>
+    key_only</code> flags, and application of hints.</p>
   </blockquote>
   <pre>const buffer_manager&amp;  manager() const;</pre>
   <blockquote>
+    <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Returns:</i> </p>
   </blockquote>
   <pre>const header_page&amp;  header() const;</pre>
   <blockquote>
+    <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Returns:</i> </p>
   </blockquote>
   <pre>bool  empty() const;</pre>
@@ -563,25 +558,30 @@ catch (...) {}</pre>
   </blockquote>
   <pre>size_type  size() const;</pre>
   <blockquote>
-    <p><i>Returns:</i> The number of elements in the set.</p>
+    <p><i>Returns:</i> The number of elements in the container.</p>
   </blockquote>
   <pre>size_type  max_size() const;</pre>
   <blockquote>
-    <p><i>Returns:</i> </p>
+    <p dir="ltr"><i>Returns:</i> <code>-1</code>.</p>
+    <p dir="ltr">[<i>Note:</i> This function is effectively useless, and is 
+    provided only because the standard library provides a similar useless 
+    function! <i>-- end note</i>]</p>
   </blockquote>
   <pre>std::size_t  node_size() const;</pre>
   <blockquote>
+    <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Returns:</i> The value of the <code>node_sz</code> argument to the
     <code>open</code> function at the time of original file creation.</p>
   </blockquote>
   <pre>std::size_t  max_cache_size() const;</pre>
   <blockquote>
-    <p><i>Requires:</i> <code>is_open()</code></p>
+    <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Returns:</i> The value of the <code>max</code> argument to the most 
     recent call to the <code>max_cache_size</code> function.</p>
   </blockquote>
   <pre>void  max_cache_size(std::size_t max);  </pre>
   <blockquote>
+    <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Effects:</i>&nbsp; Informs the implementation of the maximum number of 
     nodes that should be cached.</p>
     <p>[<i>Note:</i> More nodes may be cached if required to maintain the 
@@ -589,42 +589,51 @@ catch (...) {}</pre>
   </blockquote>
   <pre>void  max_cache_megabytes(std::size_t mb);</pre>
   <blockquote>
+    <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Effects:</i></p>
   </blockquote>
   <pre>std::pair&lt;const_iterator, bool&gt;
   emplace(const value_type&amp; value);</pre>
   <blockquote>
+    <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Returns:</i> </p>
   </blockquote>
   <pre>std::pair&lt;const_iterator, bool&gt;
   insert(const value_type&amp; value);</pre>
   <blockquote>
+    <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Returns:</i> </p>
   </blockquote>
   <pre>template &lt;class InputIterator&gt;
   void insert(InputIterator begin, InputIterator end);</pre>
   <blockquote>
+    <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Effects:</i> </p>
   </blockquote>
   <pre>const_iterator  erase(const_iterator position);</pre>
   <blockquote>
+    <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Returns:</i> </p>
   </blockquote>
   <pre>size_type  erase(const key_type&amp; k);</pre>
   <blockquote>
+    <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Returns:</i> </p>
   </blockquote>
   <pre>const_iterator  erase(const_iterator first, const_iterator last);</pre>
   <blockquote>
+    <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Returns:</i> </p>
   </blockquote>
   <pre>void  clear();</pre>
   <blockquote>
-    <p><i>Effects:</i> </p>
+    <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
+    <p><i>Postconditions:</i> <code>empty()</code> returns <code>true</code>.</p>
   </blockquote>
   <pre>key_compare  key_comp() const;</pre>
   <blockquote>
-    <p><i>Returns:</i> </p>
+    <p><i>Returns:</i> The comparison object from the constructor or <code>open</code> 
+    function.</p>
   </blockquote>
   <pre>value_compare  value_comp() const;</pre>
   <blockquote>
@@ -632,25 +641,23 @@ catch (...) {}</pre>
   </blockquote>
   <pre>bool  ok_to_pack() const;</pre>
   <blockquote>
-    <p><i>Returns:</i> </p>
+    <p><i>Returns:</i> <code>true</code> if all prior <code>insert</code> and
+    <code>emplace</code> calls have been applied at <code>end()</code>, and 
+    there have been no <code>erase</code> calls.</p>
   </blockquote>
   <pre>template &lt;class K&gt;
-const_iterator  find(const K&amp; k) const;</pre>
+const_iterator  find(const K&amp; k) const;
+const_iterator  find(const Key&amp; k) const;</pre>
   <blockquote>
-    <p><i>Returns:</i> </p>
-  </blockquote>
-  <pre>const_iterator  find(const Key&amp; k) const;</pre>
-  <blockquote>
-    <p><i>Returns:</i> </p>
+    <p><i>Returns:</i> An iterator pointing to the element with the key 
+    equivalent to <code>k</code>, or <code>end()</code> if such an element is 
+    not found.</p>
   </blockquote>
   <pre>template &lt;class K&gt;
-size_type  count(const K&amp; k) const;</pre>
+size_type  count(const K&amp; k) const;
+size_type  count(const Key&amp; k) const;</pre>
   <blockquote>
-    <p><i>Returns:</i> </p>
-  </blockquote>
-  <pre>size_type  count(const Key&amp; k) const;</pre>
-  <blockquote>
-    <p><i>Returns:</i> </p>
+    <p><i>Returns:</i> The number of elements with key equivalent to <code>k</code>.</p>
   </blockquote>
   <pre>template &lt;class K&gt;
 const_iterator  lower_bound(const K&amp; k) const;
@@ -669,13 +676,13 @@ const_iterator  upper_bound(const Key&amp; k) const;</pre>
     found.</p>
   </blockquote>
   <pre>template &lt;class K&gt;
-const_iterator_range  equal_range(const K&amp; k) const;</pre>
-  <pre>const_iterator_range  equal_range(const Key&amp; k) const;</pre>
+const_iterator_range  equal_range(const K&amp; k) const;
+const_iterator_range  equal_range(const Key&amp; k) const;</pre>
   <blockquote>
-    <p><i>Returns:</i> </p>
+    <p><i>Returns:</i> Equivalent to <code>std::make_pair(lower_bound(k), 
+    upper_bound(k)</code>).</p>
   </blockquote>
-  <p>&nbsp;</p>
-  <p>Header &lt;boost/btree/multiset.hpp&gt; synopsis</p>
+  <h3>Header &lt;boost/btree/multiset.hpp&gt; synopsis</h3>
 
   <h2>Maps</h2>
 
