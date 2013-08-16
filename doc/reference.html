@@ -275,36 +275,35 @@
                                     reverse_iterator;
     typedef std::reverse_iterator&lt;const_iterator&gt;
                                     const_reverse_iterator;
-    // construct/destroy/open:
+    // construct/destroy:
     explicit btree_set();
 
     explicit btree_set(const boost::filesystem::path&amp; pth,
       flags::bitmask flgs = flags::read_only,
-      uint64_t sig = -1,  // for existing files, must match signature from creation
+      uint64_t sig = -1,
       const Compare&amp; comp = Compare(),
-      std::size_t node_sz = default_node_size); // node_sz ignored if existing file
+      std::size_t node_sz = default_node_size); 
 
     template &lt;class InputIterator&gt;
     btree_set(InputIterator begin, InputIterator end,
       const boost::filesystem::path&amp; pth,
       flags::bitmask flgs = flags::read_only,
-      uint64_t sig = -1,  // for existing files, must match signature from creation
+      uint64_t sig = -1,
       const Compare&amp; comp = Compare(),
-      std::size_t node_sz = default_node_size); // node_sz ignored if existing file
+      std::size_t node_sz = default_node_size); 
 
    ~btree_set();
 
-    //  file operations:
- 
+    //  file operations
     void open(const boost::filesystem::path&amp; pth,
       flags::bitmask flgs = flags::read_only,
-      uint64_t sig = -1,  // for existing files, must match signature from creation
+      uint64_t sig = -1,
       const Compare&amp; comp = Compare(),
-      std::size_t node_sz = default_node_size); // node_sz ignored if existing file
+      std::size_t node_sz = default_node_size); 
     void                    flush();
     void                    close();
 
-    // iterators:
+    // iterators
     const_iterator          begin() const;
     const_iterator          end() const;
     const_iterator          last() const;
@@ -316,8 +315,7 @@
     const_reverse_iterator  crbegin() const;     
     const_reverse_iterator  crend() const;
 
-    // observers:
-
+    // observers
     bool                    is_open() const;
     const filesystem::path&amp; path() const;
     flags::bitmask          flags() const;
@@ -326,22 +324,20 @@
     const buffer_manager&amp;   manager() const;
     const header_page&amp;      header() const;
 
-    // capacity:
+    // capacity
     bool                    empty() const;
     size_type               size() const;
     size_type               max_size() const;
                            
-    // tuning:             
+    // tuning             
     std::size_t             node_size() const;
     std::size_t             max_cache_size() const;
     void                    max_cache_size(std::size_t m);  // -1 indicates unlimited
     void                    max_cache_megabytes(std::size_t mb);
 
-    // modifiers:
-
-    //  emplace() special case not requiring c++0x support
+    // modifiers    
     std::pair&lt;const_iterator, bool&gt;
-      emplace(const value_type&amp; value);
+      emplace(const value_type&amp; value);  // special case not requiring c++11x support
 
     std::pair&lt;const_iterator, bool&gt;
       insert(const value_type&amp; value);
@@ -349,26 +345,17 @@
     template &lt;class InputIterator&gt;
       void insert(InputIterator begin, InputIterator end);
 
-    //template &lt;class... Args&gt;
-    //  pair&lt;iterator, bool&gt; emplace(Args&amp;&amp;... args);
-    //template &lt;class... Args&gt;
-    //  iterator emplace_hint(const_iterator position, Args&amp;&amp;... args);
-
-    //template &lt;class P&gt;
-    //iterator insert(const_iterator position, P&amp;&amp;);
-    //void insert(initializer_list&lt;value_type&gt;);
-
     const_iterator          erase(const_iterator position);
     size_type               erase(const key_type&amp; k);
     const_iterator          erase(const_iterator first, const_iterator last);
     void                    clear();
                           
-    // observers:         
+    // observers         
     key_compare             key_comp() const;
     value_compare           value_comp() const;
     bool                    ok_to_pack() const;
 
-    // operations:
+    // operations
     //   objects of types K and Key are required to be key_comp() comparable
     template &lt;class K&gt;
     const_iterator          find(const K&amp; k) const;
@@ -392,8 +379,8 @@
   };
 }}  // namespaces</pre>
 
-<h3><a name="btree_set-constructors-and-destructor">btree_set constructors and 
-destructor</a> </h3>
+<h4><a name="btree_set-constructors-and-destructor"><code>btree_set</code> constructors and 
+destructor</a> </h4>
 
   <pre>explicit btree_set();</pre>
   <blockquote>
@@ -545,12 +532,14 @@ const_reverse_iterator  crend() const;</pre>
   <pre>const buffer_manager&amp;  manager() const;</pre>
   <blockquote>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
-    <p><i>Returns:</i> </p>
+    <p><i>Returns:</i> A reference to the <code>buffer_manager</code> object for 
+    the container.</p>
   </blockquote>
   <pre>const header_page&amp;  header() const;</pre>
   <blockquote>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
-    <p><i>Returns:</i> </p>
+    <p><i>Returns:</i> A reference to the <code>header_page</code> object for 
+    the container.</p>
   </blockquote>
   <pre>bool  empty() const;</pre>
   <blockquote>
@@ -583,61 +572,89 @@ const_reverse_iterator  crend() const;</pre>
   <blockquote>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Effects:</i>&nbsp; Informs the implementation of the maximum number of 
-    nodes that should be cached.</p>
+    nodes to be cached. <code>max</code> of <code>-1</code> indicates no limit.</p>
     <p>[<i>Note:</i> More nodes may be cached if required to maintain the 
     validity of outstanding iterators. <i>-- end note</i>]</p>
   </blockquote>
   <pre>void  max_cache_megabytes(std::size_t mb);</pre>
   <blockquote>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
-    <p><i>Effects:</i></p>
+    <p><i>Effects:</i> <code>max_cache_size((mb*1048576)/node_size())</code><i>.</i></p>
   </blockquote>
   <pre>std::pair&lt;const_iterator, bool&gt;
   emplace(const value_type&amp; value);</pre>
   <blockquote>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
+    <p><i>Effects:</i> Inserts a value_type object t constructed with 
+    std::forward&lt;Args&gt;(args)... if and only if there is no element in the 
+    container with key equivalent to the key of t. The bool component of the 
+    returned pair is true if and only if the insertion takes place, and the 
+    iterator component of the pair points to the element with key equivalent to 
+    the key of t.</p>
     <p><i>Returns:</i> </p>
   </blockquote>
   <pre>std::pair&lt;const_iterator, bool&gt;
   insert(const value_type&amp; value);</pre>
   <blockquote>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
-    <p><i>Returns:</i> </p>
+    <p><i>Effects:</i> Inserts <code>value</code> if and only if there is no 
+    element in the container with key equivalent to the key of <code>value</code>. 
+    The <code>bool</code> component of the returned pair is <code>true</code> if 
+    and only if the insertion takes place, and the iterator component of the 
+    pair points to the element with key equivalent to the key of <code>value</code>.</p>
+    <p><i>Returns:</i> The pair described in <i>Effects</i>.</p>
   </blockquote>
   <pre>template &lt;class InputIterator&gt;
   void insert(InputIterator begin, InputIterator end);</pre>
   <blockquote>
-    <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
-    <p><i>Effects:</i> </p>
+    <p><i>Requires:</i> <code>value_type</code> is constructible from <code>
+    *begin</code>. <code>begin</code> and <code>end</code> are not iterators 
+    into <code>*this</code>. <code>is_open()</code> is <code>true</code>. </p>
+    <p><i>Effects:</i> Inserts each element from the range <code>[begin,end)</code> 
+    if and only if there is no element with key equivalent to the key of that 
+    element.</p>
   </blockquote>
   <pre>const_iterator  erase(const_iterator position);</pre>
   <blockquote>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
-    <p><i>Returns:</i> </p>
+    <p><i>Returns:</i> Erases the element pointed to by <code>position</code>. 
+    Returns an iterator pointing to the element immediately following <code>
+    position</code> prior to the element being erased. If no such element 
+    exists, returns <code>end()</code>.</p>
   </blockquote>
   <pre>size_type  erase(const key_type&amp; k);</pre>
   <blockquote>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
-    <p><i>Returns:</i> </p>
+    <p><i>Effects:</i> If it exists, erases the element in the container with 
+    key equivalent to <code>k</code>.</p>
+    <p><i>Returns:</i>&nbsp; The number of elements erased.</p>
   </blockquote>
-  <pre>const_iterator  erase(const_iterator first, const_iterator last);</pre>
+  <pre>const_iterator  erase(const_iterator begin, const_iterator end);</pre>
   <blockquote>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
-    <p><i>Returns:</i> </p>
+    <p><i>Effects:</i> Erases all the elements in the range <code>[begin,end)</code>.</p>
+    <p><i>Returns:</i> An iterator pointing to the element following the last 
+    element erased, or <code>end()</code> if there is no element following the 
+    last erased element. [<i>Note:</i> this iterator is equivalent to end, but 
+    is a valid iterator whereas end has been invalidated by the erase. <i>--end 
+    note</i>]</p>
   </blockquote>
   <pre>void  clear();</pre>
   <blockquote>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
-    <p><i>Postconditions:</i> <code>empty()</code> returns <code>true</code>.</p>
+    <p><i>Postconditions:</i> <code>empty()</code> is <code>true</code>.</p>
   </blockquote>
   <pre>key_compare  key_comp() const;</pre>
   <blockquote>
+    <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Returns:</i> The comparison object from the constructor or <code>open</code> 
     function.</p>
   </blockquote>
   <pre>value_compare  value_comp() const;</pre>
   <blockquote>
-    <p><i>Returns:</i> </p>
+    <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
+    <p><i>Returns:</i> A <code>value_compare</code> object constructed from the 
+    comparison object from the constructor or <code>open</code> function.</p>
   </blockquote>
   <pre>bool  ok_to_pack() const;</pre>
   <blockquote>
@@ -649,6 +666,7 @@ const_reverse_iterator  crend() const;</pre>
 const_iterator  find(const K&amp; k) const;
 const_iterator  find(const Key&amp; k) const;</pre>
   <blockquote>
+    <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Returns:</i> An iterator pointing to the element with the key 
     equivalent to <code>k</code>, or <code>end()</code> if such an element is 
     not found.</p>
@@ -657,12 +675,14 @@ const_iterator  find(const Key&amp; k) const;</pre>
 size_type  count(const K&amp; k) const;
 size_type  count(const Key&amp; k) const;</pre>
   <blockquote>
+    <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Returns:</i> The number of elements with key equivalent to <code>k</code>.</p>
   </blockquote>
   <pre>template &lt;class K&gt;
 const_iterator  lower_bound(const K&amp; k) const;
 const_iterator  lower_bound(const Key&amp; k) const;</pre>
   <blockquote>
+    <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Returns:</i> An iterator pointing to the first element with key not 
     less than <code>k</code>, or <code>end()</code> if such an element is not 
     found.</p>
@@ -671,6 +691,7 @@ const_iterator  lower_bound(const Key&amp; k) const;</pre>
 const_iterator  upper_bound(const K&amp; k) const;
 const_iterator  upper_bound(const Key&amp; k) const;</pre>
   <blockquote>
+    <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Returns:</i> An iterator pointing to the first element with key 
     greater than <code>k</code>, or <code>end()</code> if such an element is not 
     found.</p>
@@ -679,6 +700,7 @@ const_iterator  upper_bound(const Key&amp; k) const;</pre>
 const_iterator_range  equal_range(const K&amp; k) const;
 const_iterator_range  equal_range(const Key&amp; k) const;</pre>
   <blockquote>
+    <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Returns:</i> Equivalent to <code>std::make_pair(lower_bound(k), 
     upper_bound(k)</code>).</p>
   </blockquote>
