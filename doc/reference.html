@@ -275,7 +275,7 @@
                                     reverse_iterator;
     typedef std::reverse_iterator&lt;const_iterator&gt;
                                     const_reverse_iterator;
-    // construct/destroy:
+    // <a href="#btree_set-constructors-and-destructor">construct/destroy</a>
     explicit btree_set();
 
     explicit btree_set(const boost::filesystem::path&amp; pth,
@@ -294,7 +294,7 @@
 
    ~btree_set();
 
-    //  file operations
+    // <a href="#btree_set-file-operations">file operations</a>
     void open(const boost::filesystem::path&amp; pth,
       flags::bitmask flgs = flags::read_only,
       uint64_t sig = -1,
@@ -303,7 +303,7 @@
     void                    flush();
     void                    close();
 
-    // iterators
+    // <a href="#btree_set-iterators">iterators</a>
     const_iterator          begin() const;
     const_iterator          end() const;
     const_iterator          last() const;
@@ -315,27 +315,30 @@
     const_reverse_iterator  crbegin() const;     
     const_reverse_iterator  crend() const;
 
-    // observers
+    // <a href="#btree_set-observers">observers</a>
     bool                    is_open() const;
     const filesystem::path&amp; path() const;
     flags::bitmask          flags() const;
 
-    // TODO: why are these two exposed? See main TODO list
     const buffer_manager&amp;   manager() const;
     const header_page&amp;      header() const;
 
-    // capacity
+    key_compare             key_comp() const;
+    value_compare           value_comp() const;
+    bool                    ok_to_pack() const;
+
+    // <a href="#btree_set-capacity">capacity</a>
     bool                    empty() const;
     size_type               size() const;
     size_type               max_size() const;
-                           
-    // tuning             
     std::size_t             node_size() const;
     std::size_t             max_cache_size() const;
+                           
+    // <a href="#btree_set-tuning">tuning</a>             
     void                    max_cache_size(std::size_t m);  // -1 indicates unlimited
     void                    max_cache_megabytes(std::size_t mb);
 
-    // modifiers    
+    // <a href="#btree_set-modifiers">modifiers</a>    
     std::pair&lt;const_iterator, bool&gt;
       emplace(const value_type&amp; value);  // special case not requiring c++11x support
 
@@ -350,12 +353,7 @@
     const_iterator          erase(const_iterator first, const_iterator last);
     void                    clear();
                           
-    // observers         
-    key_compare             key_comp() const;
-    value_compare           value_comp() const;
-    bool                    ok_to_pack() const;
-
-    // operations
+    // <a href="#btree_set-operations">operations</a>
     //   objects of types K and Key are required to be key_comp() comparable
     template &lt;class K&gt;
     const_iterator          find(const K&amp; k) const;
@@ -379,7 +377,7 @@
   };
 }}  // namespaces</pre>
 
-<h4><a name="btree_set-constructors-and-destructor"><code>btree_set</code> constructors and 
+<h4><a name="btree_set-constructors-and-destructor">btree_set constructors and 
 destructor</a> </h4>
 
   <pre>explicit btree_set();</pre>
@@ -412,6 +410,9 @@ btree_set(InputIterator begin, InputIterator end,
 catch (...) {}</pre>
   </blockquote>
   </blockquote>
+  
+  <h4><a name="btree_set-file-operations">btree_set file operations</a></h4>
+  
   <pre>void open(const boost::filesystem::path&amp; pth,
   flags::bitmask flgs = flags::read_only,
   uint64_t sig = -1,  
@@ -421,48 +422,46 @@ catch (...) {}</pre>
     <p><i>Requires:</i> <code>is_open()</code> is <code>false</code>.<p><i>Postconditions:</i><blockquote>
       <blockquote>
         <blockquote>
-          <blockquote>
     
-    <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111">
+    <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111" width="550">
       <tr>
-        <td align="center"><i><b>File <code>p</code> does not exist<br>
+        <td align="center" width="50%"><i><b>File <code>p</code> does not exist<br>
         or flgs &amp; flags::truncate</b></i></td>
-        <td align="center"><i><b>File <code>p</code> exists</b></i></td>
+        <td align="center" width="50%"><i><b>File <code>p</code> exists</b></i></td>
       </tr>
       <tr>
-        <td><code>path() == p</code></td>
-        <td><code>path() == p</code></td>
+        <td width="50%"><code>path() == p</code></td>
+        <td width="50%"><code>path() == p</code></td>
       </tr>
       <tr>
-        <td><code>is_open() == true</code></td>
-        <td>
+        <td width="50%"><code>is_open() == true</code></td>
+        <td width="50%">
         <p dir="ltr"><code>is_open() == true</code></td>
       </tr>
       <tr>
-        <td><code>key_comp() == comp</code></td>
-        <td>
-        <p dir="ltr"><code>key_comp(</code>) at file creation</td>
+        <td width="50%"><code>key_comp() == comp</code></td>
+        <td width="50%">
+        <p dir="ltr"><code>key_comp() == comp</code></td>
       </tr>
       <tr>
-        <td><code>value_comp() == comp</code></td>
-        <td>
-        <p dir="ltr"><code>value_comp()</code> at file creation</td>
+        <td width="50%"><code>value_comp() == comp</code></td>
+        <td width="50%">
+        <p dir="ltr"><code>value_comp() == comp</code></td>
       </tr>
       <tr>
-        <td><code>node_size() == node_sz</code></td>
-        <td>
-        <p dir="ltr"><code>node_size()</code> at file creation</td>
+        <td width="50%"><code>node_size() == node_sz</code></td>
+        <td width="50%">
+        <p dir="ltr"><code>node_size() == node_sz</code></td>
       </tr>
       <tr>
-        <td><code>empty() == true</code></td>
-        <td>&nbsp;</td>
+        <td width="50%"><code>empty() == true</code></td>
+        <td width="50%">&nbsp;</td>
       </tr>
       <tr>
-        <td><code>size() == 0</code></td>
-        <td>&nbsp;</td>
+        <td width="50%"><code>size() == 0</code></td>
+        <td width="50%">&nbsp;</td>
       </tr>
     </table>
-          </blockquote>
         </blockquote>
       </blockquote>
     </blockquote>
@@ -482,6 +481,7 @@ catch (...) {}</pre>
     close the external file. Otherwise, no effect.</p>
     <p><i>Postconditions:</i> <code>is_open() == false</code></p>
   </blockquote>
+  <h4><a name="btree_set-iterators">btree_set iterators</a></h4>
   <pre>const_iterator  begin() const;
 const_iterator  cbegin() const;</pre>
   <blockquote>
@@ -508,6 +508,7 @@ const_reverse_iterator  crend() const;</pre>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Returns:</i> <code>std::reverse_iterator(begin())</code>.</p>
   </blockquote>
+    <h4><a name="btree_set-observers">btree_set observers</a></h4>
   <pre>bool  is_open() const;</pre>
   <blockquote>
     <p><i>Returns:</i> <code>true</code> if the <code>open</code> function has 
@@ -541,6 +542,25 @@ const_reverse_iterator  crend() const;</pre>
     <p><i>Returns:</i> A reference to the <code>header_page</code> object for 
     the container.</p>
   </blockquote>
+  <pre>key_compare  key_comp() const;</pre>
+  <blockquote>
+    <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
+    <p><i>Returns:</i> The comparison object from the constructor or <code>open</code> 
+    function.</p>
+  </blockquote>
+  <pre>value_compare  value_comp() const;</pre>
+  <blockquote>
+    <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
+    <p><i>Returns:</i> A <code>value_compare</code> object constructed from the 
+    comparison object from the constructor or <code>open</code> function.</p>
+  </blockquote>
+  <pre>bool  ok_to_pack() const;</pre>
+  <blockquote>
+    <p><i>Returns:</i> <code>true</code> if all prior <code>insert</code> and
+    <code>emplace</code> calls have been applied at <code>end()</code>, and 
+    there have been no <code>erase</code> calls.</p>
+  </blockquote>
+    <h4><a name="btree_set-capacity">btree_set capacity</a></h4>
   <pre>bool  empty() const;</pre>
   <blockquote>
     <p><i>Returns:</i> <code>!size()</code></p>
@@ -568,6 +588,7 @@ const_reverse_iterator  crend() const;</pre>
     <p><i>Returns:</i> The value of the <code>max</code> argument to the most 
     recent call to the <code>max_cache_size</code> function.</p>
   </blockquote>
+    <h4><a name="btree_set-tuning">btree_set tuning</a></h4>
   <pre>void  max_cache_size(std::size_t max);  </pre>
   <blockquote>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
@@ -581,6 +602,7 @@ const_reverse_iterator  crend() const;</pre>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Effects:</i> <code>max_cache_size((mb*1048576)/node_size())</code><i>.</i></p>
   </blockquote>
+    <h4><a name="btree_set-modifiers">btree_set modifiers</a></h4>
   <pre>std::pair&lt;const_iterator, bool&gt;
   emplace(const value_type&amp; value);</pre>
   <blockquote>
@@ -644,24 +666,7 @@ const_reverse_iterator  crend() const;</pre>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Postconditions:</i> <code>empty()</code> is <code>true</code>.</p>
   </blockquote>
-  <pre>key_compare  key_comp() const;</pre>
-  <blockquote>
-    <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
-    <p><i>Returns:</i> The comparison object from the constructor or <code>open</code> 
-    function.</p>
-  </blockquote>
-  <pre>value_compare  value_comp() const;</pre>
-  <blockquote>
-    <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
-    <p><i>Returns:</i> A <code>value_compare</code> object constructed from the 
-    comparison object from the constructor or <code>open</code> function.</p>
-  </blockquote>
-  <pre>bool  ok_to_pack() const;</pre>
-  <blockquote>
-    <p><i>Returns:</i> <code>true</code> if all prior <code>insert</code> and
-    <code>emplace</code> calls have been applied at <code>end()</code>, and 
-    there have been no <code>erase</code> calls.</p>
-  </blockquote>
+    <h4><a name="btree_set-operations">btree_set operations</a></h4>
   <pre>template &lt;class K&gt;
 const_iterator  find(const K&amp; k) const;
 const_iterator  find(const Key&amp; k) const;</pre>
@@ -921,7 +926,7 @@ btree_map(InputIterator begin, InputIterator end,
   <hr>
 
   <p>Revised 
-  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->15 August 2013<!--webbot bot="Timestamp" endspan i-checksum="31359" --></p>
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->16 August 2013<!--webbot bot="Timestamp" endspan i-checksum="31361" --></p>
 
   <p>© Copyright Beman Dawes, 2013</p>
 
