@@ -285,7 +285,7 @@ public:
   bool              is_open() const       {BOOST_ASSERT(!m_index_btree.is_open()
                                              || m_file->is_open());
                                            return m_index_btree.is_open();}
-  bool              read_only() const     {return m_index_btree.read_only();}
+  flags::bitmask    flags() const         {return m_index_btree.flags();}
   bool              index_empty() const   {return m_index_btree.empty();}
   path_type         index_path() const    {return m_index_btree.path();}
   index_size_type   index_size() const    {return m_index_btree.size();}

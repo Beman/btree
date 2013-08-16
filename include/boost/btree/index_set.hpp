@@ -116,7 +116,7 @@ public:
   std::pair<const_iterator, bool>
     insert_file_position(file_position pos)
   {
-    BOOST_ASSERT(!base::read_only());
+    BOOST_ASSERT((base::flags() & flags::read_only) == 0);
     std::pair<typename base::index_type::const_iterator, bool>
       result(base::m_index_btree.insert(index_key(pos)));
     return std::pair<const_iterator, bool>(
@@ -127,7 +127,7 @@ public:
     insert(const value_type& value)
   //  Effects: if !find(k) then insert_file_position(push_back(value));
   {
-    BOOST_ASSERT(!base::read_only());
+    BOOST_ASSERT((base::flags() & flags::read_only) == 0);
     if (base::find(value) == base::end())
     {
       std::pair<const_iterator, bool> result(insert_file_position(push_back(value)));
@@ -232,7 +232,7 @@ public:
 
   const_iterator insert_file_position(file_position pos)
   {
-    BOOST_ASSERT(!base::read_only());
+    BOOST_ASSERT((base::flags() & flags::read_only) == 0);
     typename base::index_type::const_iterator
       result(base::m_index_btree.insert(index_key(pos)));
     return const_iterator(result, base::file());
@@ -240,7 +240,7 @@ public:
 
   const_iterator insert(const value_type& value)
   {
-    BOOST_ASSERT(!base::read_only());
+    BOOST_ASSERT((base::flags() & flags::read_only) == 0);
     return insert_file_position(push_back(value));
   }
 };

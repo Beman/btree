@@ -29,8 +29,9 @@
 
   TODO:
 
-  * If C++11 type traits are available, static assert set, map, index/file, types
-    meet is_trivially_copyable<>
+  * For maps, many of the operations (and perhaps other) functions need to have const
+    and non-const overloads, and return const_iterator or iterator accordingly. See
+    Table 102 Associative container requirements.
 
   * flags for key_varies and mapped_varies added, but not being set or used yet.
     key and mapped size no longer set to -1 to indicate variable length. 
@@ -326,8 +327,7 @@ public:
   bool               is_open() const        { return m_mgr.is_open(); }
   const filesystem::path&
                      path() const           { return m_mgr.path(); }
-  bool               read_only() const      { return m_read_only; }
-  bool               cache_branches() const { return m_cache_branches; }
+  flags::bitmask     flags() const          { return m_flags; }
 
   // TODO: why are these two exposed? See main TODO list above.
   const buffer_manager&
@@ -505,9 +505,8 @@ private:
   std::size_t        m_max_leaf_elements;
   std::size_t        m_max_branch_elements;
 
-  bool               m_read_only;
+  flags::bitmask     m_flags;
   bool               m_ok_to_pack;  // true while all inserts ordered and no erases
-  bool               m_cache_branches; 
                                                
 
 //--------------------------------------------------------------------------------------//
@@ -1008,7 +1007,7 @@ std::ostream& operator<<(std::ostream& os,
 template <class Key, class Base>
 btree_base<Key,Base>::btree_base()
   // initialize in the correct order to avoid voluminous gcc warnings:
-  : m_mgr(m_node_alloc),  m_cache_branches(false)
+  : m_mgr(m_node_alloc)
 { 
   m_mgr.owner(this);
 
@@ -1022,8 +1021,7 @@ btree_base<Key,Base>::btree_base()
 template <class Key, class Base>
 btree_base<Key,Base>::btree_base(const boost::filesystem::path& p,
   flags::bitmask flgs, uint64_t signature, const compare_type& comp, std::size_t node_sz)
-  // initialize in the correct order to avoid voluminous gcc warnings:
-  : m_mgr(m_node_alloc), m_cache_branches(false)
+    : m_mgr(m_node_alloc)
 { 
   m_mgr.owner(this);
 
@@ -1074,7 +1072,13 @@ btree_base<Key,Base>::m_open(const boost::filesystem::path& p,
 
   m_branch_comp = comp;  // type branch_compare, which is its own type and has a
                          // constructor from compare_type
+  m_flags = flgs;
 
+  if (cache_branches_default(flgs) & flags::cache_branches)
+    m_flags |= flags::cache_branches;
+  if (flgs & flags::truncate)
+    m_flags |= flags::read_write;  // truncate implies read_write
+ 
   oflag::bitmask open_flags = oflag::in;
   if (flgs & flags::read_write)
     open_flags |= oflag::out;
@@ -1082,10 +1086,7 @@ btree_base<Key,Base>::m_open(const boost::filesystem::path& p,
     open_flags |= oflag::out | oflag::truncate;
   if (flgs & flags::preload)
     open_flags |= oflag::preload;
-  if (cache_branches_default(flgs) & flags::cache_branches)
-    m_cache_branches = true;
 
-  m_read_only = (open_flags & oflag::out) == 0;
   m_ok_to_pack = true;
   m_max_leaf_elements
     = (node_sz - leaf_data::value_offset()) / sizeof(value_type);
@@ -1253,7 +1254,7 @@ btree_base<Key,Base>::m_new_node(node_level_type lv)
     m_hdr.increment_leaf_node_count();
 
   np->needs_write(true);
-  np->never_free(lv > 0 && cache_branches());
+  np->never_free(lv > 0 && (flags() & flags::cache_branches));
 //  cout << "******* lv:" << int(lv) << " cache_branches():" << cache_branches()
 //    << " never_free:" << np->never_free() << endl;;
   np->level(lv);
@@ -1528,7 +1529,7 @@ typename btree_base<Key,Base>::const_iterator
 btree_base<Key,Base>::erase(const_iterator pos)
 {
   BOOST_ASSERT_MSG(is_open(), "erase() on unopen btree");
-  BOOST_ASSERT_MSG(!read_only(), "erase() on read only btree");
+  BOOST_ASSERT_MSG((flags() & flags::read_only) == 0, "erase() on read only btree");
   BOOST_ASSERT_MSG(pos != end(), "erase() on end iterator");
   BOOST_ASSERT(pos.m_node);
   BOOST_ASSERT(pos.m_node->is_leaf());
@@ -1667,7 +1668,7 @@ typename btree_base<Key,Base>::size_type
 btree_base<Key,Base>::erase(const key_type& k)
 {
   BOOST_ASSERT_MSG(is_open(), "erase() on unopen btree");
-  BOOST_ASSERT_MSG(!read_only(), "erase() on read only btree");
+  BOOST_ASSERT_MSG((flags() & flags::read_only) == 0, "erase() on read only btree");
   size_type count = 0;
   const_iterator it = lower_bound(k);
     
@@ -1684,16 +1685,18 @@ typename btree_base<Key,Base>::const_iterator
 btree_base<Key,Base>::erase(const_iterator first, const_iterator last)
 {
   BOOST_ASSERT_MSG(is_open(), "erase() on unopen btree");
-  BOOST_ASSERT_MSG(!read_only(), "erase() on read only btree");
-  // caution: last must be revalidated when on the same node as first
+  BOOST_ASSERT_MSG((flags() & flags::read_only) == 0, "erase() on read only btree");
+  //
   while (first != last)
   {
+    // last must be adjusted when on the same node as first
     if (last != end() && first.m_node == last.m_node)
     {
-      BOOST_ASSERT(first.m_element < last.m_element);
-      --last;  // revalidate in anticipation of erasing a prior element on same node
+      BOOST_ASSERT(first.m_element <= last.m_element);
+      --last;  // adjust in anticipation of erasing a prior element on same node
     }
-    first = erase(first);
+    first = erase(first);  // this form of is essential because it does not require
+                           // last have a valid leaf-to-root parent chain
   }
   return last;
 }
@@ -1705,7 +1708,7 @@ std::pair<typename btree_base<Key,Base>::const_iterator, bool>
 btree_base<Key,Base>::m_insert_unique(const key_type& k)
 {
   BOOST_ASSERT_MSG(is_open(), "insert() on unopen btree");
-  BOOST_ASSERT_MSG(!read_only(), "insert() on read only btree");
+  BOOST_ASSERT_MSG((flags() & flags::read_only) == 0, "insert() on read only btree");
   iterator insert_point = m_special_lower_bound(k);
 
   bool is_unique = insert_point.m_element == insert_point.m_node->leaf().end()
@@ -1726,7 +1729,7 @@ inline typename btree_base<Key,Base>::const_iterator
 btree_base<Key,Base>::m_insert_non_unique(const key_type& k)
 {
   BOOST_ASSERT_MSG(is_open(), "insert() on unopen btree");
-  BOOST_ASSERT_MSG(!read_only(), "insert() on read only btree");
+  BOOST_ASSERT_MSG((flags() & flags::read_only) == 0, "insert() on read only btree");
   iterator insert_point = m_special_upper_bound(k);
   return m_leaf_insert(insert_point, k);
 }
@@ -1738,7 +1741,7 @@ typename btree_base<Key,Base>::iterator
 btree_base<Key,Base>::m_update(iterator itr)
 {
   BOOST_ASSERT_MSG(is_open(), "update() on unopen btree");
-  BOOST_ASSERT_MSG(!read_only(), "update() on read only btree");
+  BOOST_ASSERT_MSG((flags() & flags::read_only) == 0, "update() on read only btree");
   itr.m_node->needs_write(true);
   return itr;
 }

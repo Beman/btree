@@ -354,7 +354,6 @@
     void                    clear();
                           
     // <a href="#btree_set-operations">operations</a>
-    //   objects of types K and Key are required to be key_comp() comparable
     template &lt;class K&gt;
     const_iterator          find(const K&amp; k) const;
     const_iterator          find(const Key&amp; k) const;
@@ -667,6 +666,9 @@ const_reverse_iterator  crend() const;</pre>
     <p><i>Postconditions:</i> <code>empty()</code> is <code>true</code>.</p>
   </blockquote>
     <h4><a name="btree_set-operations">btree_set operations</a></h4>
+    <p>Objects of types <code>K</code> and <code>Key</code> are required to be
+    <code>key_comp()</code> comparable.<br>
+&nbsp;</p>
   <pre>template &lt;class K&gt;
 const_iterator  find(const K&amp; k) const;
 const_iterator  find(const Key&amp; k) const;</pre>

@@ -240,7 +240,7 @@ void construct_new_test(BT& bt, const fs::path& p)
   BOOST_TEST(bt.is_open());
   BOOST_TEST_EQ(bt.size(), 0U);
   BOOST_TEST(bt.empty());
-  BOOST_TEST(!bt.read_only());
+  BOOST_TEST((bt.flags() & btree::flags::read_only) == 0);
   BOOST_TEST(bt.node_size() == btree::default_node_size);  // the default
   BOOST_TEST(bt.max_cache_size() ==
     btree::max_cache_default(btree::flags::read_write, 0));
@@ -600,7 +600,7 @@ void insert_tests(BTree& bt)
 
   BOOST_TEST(bt.size() == 0U);
   BOOST_TEST(bt.empty());
-  BOOST_TEST(!bt.read_only());
+  BOOST_TEST((bt.flags() & btree::flags::read_only) == 0);
   BOOST_TEST(bt.node_size() == 128);
   BOOST_TEST(bt.begin() == bt.end());
 

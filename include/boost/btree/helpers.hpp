@@ -100,19 +100,19 @@ namespace flags
     none          = 0,
 
     // bitmasks set by implemenation, ignored if passed in by user:
-    unique        = 1,    // set or map
-    key_only      = 2,    // set or multiset
+    unique         = 1,    // set or map
+    key_only       = 2,    // set or multiset
  
     // open values (choose one):
-    read_only   = 0x100,   // file must exist
-    read_write  = 0x200,   // open existing file, otherwise create new file
-    truncate    = 0x400,   // same as read_write except existing file truncated
+    read_only      = 0x100,   // file must exist
+    read_write     = 0x200,   // open existing file, otherwise create new file
+    truncate       = 0x400,   // same as read_write except existing file truncated
 
     // bitmask options set by user; not present in header:
     preload        = 0x1000, // existing file read to preload O/S file cache
     cache_branches = 0x2000, // enable permanent cache of all branch pages touched;
-                              // otherwise make branch pages available when use count
-                              // becomes 0, just like leaf pages.
+                             // otherwise make branch pages available when use count
+                             // becomes 0, just like leaf pages.
 
      // optimization hints; choose one. not present in header
      least_memory  = 0x10000,
