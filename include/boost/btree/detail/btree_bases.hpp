@@ -40,10 +40,6 @@
   
   * btree_unit_test.cpp: review tests that are commented out.
 
-  * Upgrade m_update() to allow new dynamic size different from old dynamic size
-
-  * Add static_assert Key, T are is_trivially_copyable
-
   * Should header() be part of the public interface?
       - Add individual get, and where appropriate, set, functions.
       - Move header file to detail.
@@ -153,6 +149,7 @@ public:
   typedef typename Traits::node_size_type   node_size_type;
   typedef typename Traits::node_level_type  node_level_type;
   typedef Key                               value_type;
+  typedef Key const                         iterator_value_type;
   typedef Key                               mapped_type;
   typedef Traits                            traits_type;
   typedef Compare                           compare_type;
@@ -176,6 +173,7 @@ public:
   typedef typename Traits::node_size_type   node_size_type;
   typedef typename Traits::node_level_type  node_level_type;
   typedef std::pair<const Key, T>           value_type;
+  typedef std::pair<const Key, T>           iterator_value_type;
   typedef T                                 mapped_type;
   typedef Traits                            traits_type;
   typedef Compare                           compare_type;
@@ -273,8 +271,10 @@ public:
   typedef value_type*                           pointer;
   typedef const value_type*                     const_pointer;
 
-  typedef iterator_type<const value_type>       iterator;
-  typedef iterator                              const_iterator;
+  // for sets, these are the same type; for maps they are different types
+  typedef iterator_type<
+    typename Base::iterator_value_type>         iterator;
+  typedef iterator_type<value_type const>       const_iterator;
 
   typedef std::reverse_iterator<iterator>       reverse_iterator;
   typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
@@ -822,6 +822,7 @@ private:
     typedef typename btree_base::btree_node_ptr::use_count_type use_count_type;
 
     iterator_type(): m_element(0) {}
+    iterator_type(btree_node_ptr p, T* e) : m_node(p), m_element(e) {}
     iterator_type(buffer_ptr p, T* e)
       : m_node(static_cast<typename btree_base::btree_node_ptr>(p)),
         m_element(e) {}
@@ -867,10 +868,14 @@ protected:
     m_insert_non_unique(const key_type& k);
   // Remark: Insert after any elements with equivalent keys, per C++ standard
 
-  iterator m_update(iterator itr);
-
   void m_open(const boost::filesystem::path& p, flags::bitmask flgs, uint64_t signature,
               const compare_type& comp, std::size_t node_sz);
+
+  iterator m_write_cast(const_iterator itr)
+  {
+    itr.m_node->needs_write(true);
+    return iterator(itr.m_node, const_cast<value_type*>(itr.m_element));
+  }
 
 //--------------------------------------------------------------------------------------//
 //                              private member functions                                //
@@ -905,21 +910,21 @@ private:
   }
 
   template <class K>
-  iterator m_special_lower_bound(const K& k) const;
-  // returned iterator::m_element is the insertion point, and thus may be the 
-  // past-the-end leaf iterator for iterator::m_node
+  const_iterator m_special_lower_bound(const K& k) const;
+  // returned const_iterator::m_element is the insertion point, and thus may be the 
+  // past-the-end leaf const_iterator for const_iterator::m_node
   // postcondition: parent pointers are set, all the way up the chain to the root
 
   template <class K> 
-  iterator m_special_upper_bound(const K& k) const;
-  // returned iterator::m_element is the insertion point, and thus may be the 
-  // past-the-end leaf iterator for iterator::m_node
+  const_iterator m_special_upper_bound(const K& k) const;
+  // returned const_iterator::m_element is the insertion point, and thus may be the 
+  // past-the-end leaf const_iterator for const_iterator::m_node
   // postcondition: parent pointers are set, all the way up the chain to the root
 
   btree_node_ptr m_new_node(node_level_type lv);
   void  m_new_root();
 
-  const_iterator m_leaf_insert(iterator insert_iter, const key_type& k);
+  const_iterator m_leaf_insert(const_iterator insert_iter, const key_type& k);
 
   void m_branch_insert(btree_node_ptr np, branch_value_type* element, const key_type& k,
     btree_node_ptr child);  // insert key, child->node_id;
@@ -1300,7 +1305,7 @@ btree_base<Key,Base>::m_new_root()
 
 template <class Key, class Base>   
 typename btree_base<Key,Base>::const_iterator
-btree_base<Key,Base>::m_leaf_insert(iterator insert_iter, const key_type& k)
+btree_base<Key,Base>::m_leaf_insert(const_iterator insert_iter, const key_type& k)
 {
   //std::cout << "m_leaf_insert: " << k << std::endl;
   btree_node_ptr       np = insert_iter.node();
@@ -1708,7 +1713,7 @@ btree_base<Key,Base>::m_insert_unique(const key_type& k)
 {
   BOOST_ASSERT_MSG(is_open(), "insert() on unopen btree");
   BOOST_ASSERT_MSG((flags() & flags::read_only) == 0, "insert() on read only btree");
-  iterator insert_point = m_special_lower_bound(k);
+  const_iterator insert_point = m_special_lower_bound(k);
 
   bool is_unique = insert_point.m_element == insert_point.m_node->leaf().end()
                 || key_comp()(k, this->key(*insert_point))
@@ -1729,27 +1734,15 @@ btree_base<Key,Base>::m_insert_non_unique(const key_type& k)
 {
   BOOST_ASSERT_MSG(is_open(), "insert() on unopen btree");
   BOOST_ASSERT_MSG((flags() & flags::read_only) == 0, "insert() on read only btree");
-  iterator insert_point = m_special_upper_bound(k);
+  const_iterator insert_point = m_special_upper_bound(k);
   return m_leaf_insert(insert_point, k);
-}
-
-//----------------------------------- m_update() ---------------------------------------//
-
-template <class Key, class Base>   
-typename btree_base<Key,Base>::iterator
-btree_base<Key,Base>::m_update(iterator itr)
-{
-  BOOST_ASSERT_MSG(is_open(), "update() on unopen btree");
-  BOOST_ASSERT_MSG((flags() & flags::read_only) == 0, "update() on read only btree");
-  itr.m_node->needs_write(true);
-  return itr;
 }
 
 //----------------------------- m_special_lower_bound() --------------------------------//
 
 template <class Key, class Base>
 template <class K>
-typename btree_base<Key,Base>::iterator
+typename btree_base<Key,Base>::const_iterator
 btree_base<Key,Base>::m_special_lower_bound(const K& k) const
 //  m_special_lower_bound() differs from lower_bound() in that if the search key is not
 //  present and the first key greater than the search key is the first key on a leaf
@@ -1802,7 +1795,7 @@ btree_base<Key,Base>::m_special_lower_bound(const K& k) const
   value_type* low
     = std::lower_bound(np->leaf().begin(), np->leaf().end(), k, value_comp());
 
-  return iterator(np, low);
+  return const_iterator(np, low);
 }
 
 //---------------------------------- lower_bound() -------------------------------------//
@@ -1834,7 +1827,7 @@ btree_base<Key,Base>::lower_bound(const K& k) const
 
 template <class Key, class Base>
 template <class K> 
-typename btree_base<Key,Base>::iterator
+typename btree_base<Key,Base>::const_iterator
 btree_base<Key,Base>::m_special_upper_bound(const K& k) const
 {
   btree_node_ptr np = m_root;
@@ -1860,7 +1853,7 @@ btree_base<Key,Base>::m_special_upper_bound(const K& k) const
   value_type* up
     = std::upper_bound(np->leaf().begin(), np->leaf().end(), k, value_comp());
 
-  return iterator(np, up);
+  return const_iterator(np, up);
 }
 
 //---------------------------------- upper_bound() -------------------------------------//

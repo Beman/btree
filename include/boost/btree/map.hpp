@@ -139,13 +139,9 @@ namespace boost
         }
       }
 
-      iterator update(iterator itr, const T& mapped_value)
-      {
-        std::memcpy(const_cast<T*>(&itr->second), &mapped_value, sizeof(T));
-        return btree_base<Key,btree_map_base<Key,T,Traits,Compare> >::m_update(itr);
-      }
+      iterator writeable(const_iterator itr)  {return m_write_cast(itr);}
 
-     };
+    };
 
 //--------------------------------------------------------------------------------------//
 //                               class btree_multimap                                   //
@@ -247,11 +243,8 @@ namespace boost
         }
       }
 
-      iterator update(iterator itr, const T& mapped_value)
-      {
-        std::memcpy(const_cast<T*>(&itr->second), &mapped_value, sizeof(T));
-        return btree_base<Key,btree_map_base<Key,T,Traits,Compare> >::m_update(itr);
-      }
+      iterator writeable(const_iterator itr)  {return m_write_cast(itr);}
+
     };
 
 

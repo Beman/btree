@@ -144,7 +144,7 @@ namespace
         bt_old.max_cache_size(cache_sz);
         BT bt_new(path, btree::flags::truncate, -1, btree::less(), node_sz);
         bt_new.max_cache_size(cache_sz);
-        for (typename BT::iterator it = bt_old.begin(); it != bt_old.end(); ++it)
+        for (typename BT::const_iterator it = bt_old.begin(); it != bt_old.end(); ++it)
         {
           bt_new.emplace(bt_old.key(*it), bt_old.mapped(*it));
         }

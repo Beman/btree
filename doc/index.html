@@ -44,9 +44,8 @@
       <td>
       <p align="center">
       <img border="0" src="../../../doc/html/images/warning.png" width="24" height="24"> 
-      Warning: The implementation is at an early beta stage.<p align="center">
-      <b>The library should only be used by those willing to assume the many 
-      risks of early beta software.</b></td>
+      Warning: The implementation is at a beta stage.<p align="center">
+      <b>The library should only be used by those willing to assume the  risks of  beta software.</b></td>
     </tr>
   </table>
 
@@ -92,14 +91,14 @@
       <li>Types supplied by the <code>Key</code> and
         <code>T</code> template parameters must be copyable via
       <code>std::memcpy</code> and must not contain pointers or references.</li>
-      <li>All iterators are constant iterators; <code>iterator</code> and <code>
-      const_iterator</code> are the same type. An <code>update()</code> function 
-      is used to update <code>mapped_type</code> values in maps.</li>
+      <li>Interfaces traffic in <code>const_iterator</code>. Maps provide a
+      <code>writable()</code> function that turns a const_iterator into an 
+      iterator.</li>
       <li><code>insert()</code>,&nbsp; <code>emplace()</code>, and <code>erase()</code>
         invalidate iterators.</li>
       <li>No <code>operator[]</code> or <code>at</code> functions supplied. 
       Returning references to data that can be swapped out even by const 
-      functions is far too dangerous.<br>
+      functions is too dangerous.<br>
 &nbsp;</li>
     </ul>
     </li>
@@ -156,7 +155,10 @@
     </ul>
     </li>
     <li>The disk file includes meta information about the
-      tree, including user supplied information.</li>
+      tree, including user supplied information.<br>
+&nbsp;</li>
+    <li>Currently implemented in C++03. Tests pass in recent versions of GCC on 
+    Linux, OS X, and Windows, VC++ on Windows, and Clang on OS X. </li>
   </ul>
 
   <h2>Coming Soon</h2>
@@ -165,7 +167,8 @@
     <li><code>index_map</code> and <code>index_multimap</code>; all data lives 
     in a flat file. <code>key_index_map</code> and <code>key_index_multimap</code>; 
     keys live in the B-tree while the <code>mapped_type</code> data lives in a 
-    flat file.</li>
+    flat file.<br>
+&nbsp;</li>
     <li>A bulk load option that generates packed trees. Fastest way to load 
     large datasets.</li>
   </ul>
@@ -267,7 +270,7 @@
   <hr>
 
   <p>Revised 
-  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->13 August 2013<!--webbot bot="Timestamp" endspan i-checksum="31355" --></p>
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->17 August 2013<!--webbot bot="Timestamp" endspan i-checksum="31363" --></p>
 
   <p>© Copyright Beman Dawes, 2010, 2013</p>
 

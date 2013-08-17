@@ -189,8 +189,8 @@ void types_test()
   BOOST_TEST((boost::is_same<std_set::const_reference, int const&>::value));
   BOOST_TEST((boost::is_same< bt_set::const_reference, int const&>::value));
 
-  BOOST_TEST((boost::is_same<std_set::iterator::reference, int const&>::value));
-  BOOST_TEST((boost::is_same< bt_set::iterator::reference, int const&>::value));
+  BOOST_TEST((boost::is_same<std_set::const_iterator::reference, int const&>::value));
+  BOOST_TEST((boost::is_same< bt_set::const_iterator::reference, int const&>::value));
   
   BOOST_TEST((boost::is_same<std_set::const_iterator::reference, int const&>::value));
   BOOST_TEST((boost::is_same< bt_set::const_iterator::reference, int const&>::value));
@@ -222,7 +222,7 @@ void types_test()
   BOOST_TEST((boost::is_same<std_map::iterator::reference,
     std::pair<const int, long>& >::value));
   BOOST_TEST((boost::is_same< bt_map::iterator::reference,
-    const std::pair<const int, long>& >::value));
+    std::pair<const int, long>& >::value));
 
   BOOST_TEST((boost::is_same<std_map::const_iterator::reference,
     const std::pair<const int, long>& >::value));
@@ -393,7 +393,7 @@ void small_variable_set()
   fs::remove(p);
   typedef btree::btree_set<data_type> btree_type;
   btree_type bt(p, btree::flags::truncate, -1, btree::less(), 128);
-  std::pair<btree_type::iterator, bool> result;
+  std::pair<btree_type::const_iterator, bool> result;
 
   data_type stuff;
 
@@ -1061,7 +1061,8 @@ void insert_non_unique_tests(BTree& bt)
     //btree::dump_dot(std::cout, bt);
    
     int j = 0;
-    for (typename BTree::const_iterator_range range = bt.equal_range(3);
+    std::pair<typename BTree::const_iterator, typename BTree::const_iterator> range;
+    for (range = bt.equal_range(3);
          range.first != range.second; ++range.first)
     {
       //cout << range.first->first.x << ", " << range.first->second << endl;
@@ -1112,16 +1113,18 @@ void update_test()
     bt.emplace(fat(random_value()), n);
   }
 
-  for (bt_type::iterator itr = bt.begin(); itr != bt.end(); ++itr)
+  for (bt_type::const_iterator itr = bt.begin(); itr != bt.end(); ++itr)
   {
 //    cout << "    " << itr->first << "," << itr->second << '\n';
     int n = itr->second;
-    bt_type::iterator new_itr =  bt.update(itr, -n);
-    BOOST_TEST(itr == new_itr);
-    BOOST_TEST(new_itr->second == -n);
+    bt_type::iterator nc_itr =  bt.writeable(itr);
+//    BOOST_TEST(itr == nc_itr);
+    nc_itr->second = -n;
+    BOOST_TEST(itr->second == -n);
+    BOOST_TEST(nc_itr->second == -n);
   }
 
-  for (bt_type::iterator itr = bt.begin(); itr != bt.end(); ++itr)
+  for (bt_type::const_iterator itr = bt.begin(); itr != bt.end(); ++itr)
   {
 //    cout << "    " << itr->first << "," << itr->second << '\n';
     BOOST_TEST(itr->second <= 0);
@@ -1268,7 +1271,7 @@ void  reopen_btree_object_test()
   fs::rename(path, path2);
   map_type bt2(path2);
   bt.open(path, btree::flags::truncate, -1, btree::less(), 128);
-  for (map_type::iterator it = bt2.begin(); it != bt2.end(); ++it)
+  for (map_type::const_iterator it = bt2.begin(); it != bt2.end(); ++it)
     bt.emplace(it->first, it->second);
   BOOST_TEST_EQ(bt.size(), bt2.size());
   bt2.close();

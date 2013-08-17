@@ -197,14 +197,16 @@
   <h3><a name="Function-object-less">Function object <code>btree::less</code></a></h3>
 
   <p>Provides heterogeneous comparisons as required to implement indexes and 
-  other indirect references. Also generally useful; see N3657, N3421. 
+  other indirect references. Also generally useful; see 
+  <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3657.htm">N3657</a>,
+  <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2012/n3421.htm">N3421</a>. 
   Heterogeneous comparisons will be provided in the C++14 standard library, but 
   until then <code>btree::less</code> provides the functionality.</p>
   <p>Note: Allowing <code>less::operator()</code> to accept arguments of two 
   different types does not eliminate the requirement that objects of the two 
   types be themselves <code>&lt;</code> comparable. For example, type <code>fat</code> 
   in <a href="../test/btree_unit_test.cpp">test/btree_unit_test.cpp</a> 
-  supplies, as required, two non-member <code>operator&lt;</code> functions so that 
+  supplies two non-member <code>operator&lt;</code> functions so that 
   a <code>fat</code> object to be <code>&lt;</code> compared to an <code>int</code> 
   and an <code>int</code> can be compared to a <code>fat</code> object. </p>
 
@@ -228,24 +230,24 @@
   in the same container, calling <code>comp(k1, k2)</code> shall always return 
   the same value. </p>
   <p>An associative container supports unique keys if it may contain at most one 
-  element for each key. Otherwise, it supports equivalent keys. The btree_set 
-  and btree_map classes support unique keys; the btree_multiset and 
-  btree_multimap classes support equivalent keys. For btree_multiset and 
-  btree_multimap, insert, emplace, and erase preserve the relative ordering of 
+  element for each key. Otherwise, it supports equivalent keys. The <code>btree_set</code> 
+  and <code>btree_map</code> classes support unique keys; the <code>btree_multiset</code> and 
+  <code>btree_multimap</code> classes support equivalent keys. For <code>btree_multiset</code> and 
+  <code>btree_multimap</code>, <code>insert</code>, <code>emplace</code>, and 
+  <code>erase</code> preserve the relative ordering of 
   equivalent elements. </p>
-  <p>For btree_set and btree_multiset the value type is the same as the key 
-  type. For btree_map and btree_multimap it is equal to std::pair&lt;const Key, T&gt;.
+  <p>For <code>btree_set</code> and <code>btree_multiset</code> the value type is the same as the key 
+  type. For <code>btree_map</code> and <code>btree_multimap</code> it is equal to 
+  <code>std::pair&lt;const Key, T&gt;</code>.
   </p>
-  <p><code>iterator</code> of an associative container is of the bidirectional 
-  iterator category. For associative containers where the value type is the same 
-  as the key type, both iterator and const_iterator are constant iterators. It 
-  is unspecified whether or not iterator and const_iterator are the same type. [ 
-  Note: iterator and const_- iterator have identical semantics in this case, and 
-  iterator is convertible to const_iterator. Users can avoid violating the One 
-  Definition Rule by always using const_iterator in their function parameter 
-  lists. —end note ] </p>
+  <p>Iterators of  associative containers are bidirectional 
+  iterators.
+  </p>
 
   <h2>Sets</h2>
+
+  <p>Iterators <code>iterator</code> and <code>const_iterator</code> are the 
+  same type and that type is a constant iterator.</p>
 
   <h3>Header &lt;boost/btree/set.hpp&gt; synopsis</h3>
 
@@ -928,7 +930,7 @@ btree_map(InputIterator begin, InputIterator end,
   <hr>
 
   <p>Revised 
-  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->16 August 2013<!--webbot bot="Timestamp" endspan i-checksum="31361" --></p>
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->17 August 2013<!--webbot bot="Timestamp" endspan i-checksum="31363" --></p>
 
   <p>© Copyright Beman Dawes, 2013</p>
 
