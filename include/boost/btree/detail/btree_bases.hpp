@@ -155,7 +155,7 @@ public:
   typedef Key                               value_type;
   typedef Key                               mapped_type;
   typedef Traits                            traits_type;
-  typedef Compare                              compare_type;
+  typedef Compare                           compare_type;
   typedef compare_type                      value_compare;
 
   const Key&          key(const value_type& v) const   // really handy, so expose
@@ -178,7 +178,7 @@ public:
   typedef std::pair<const Key, T>           value_type;
   typedef T                                 mapped_type;
   typedef Traits                            traits_type;
-  typedef Compare                              compare_type;
+  typedef Compare                           compare_type;
 
   const Key&  key(const value_type& v) const  // really handy, so expose
     {return v.first;}
@@ -278,8 +278,6 @@ public:
 
   typedef std::reverse_iterator<iterator>       reverse_iterator;
   typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
-  typedef std::pair<const_iterator, const_iterator>
-                                                const_iterator_range;
 
   typedef typename Base::traits_type            traits_type;
   typedef typename Base::node_id_type           node_id_type;
@@ -306,6 +304,8 @@ public:
   // TODO: operator unspecified-bool-type, operator!
   
   // iterators:
+    //   Non-const overloads are not provided because of the need to explicitly know
+    //   when an update, if allowed, will occur. See map and multimap update() function.
 
   const_iterator     begin() const;
   const_iterator     end() const            { return m_end_iterator; }
@@ -334,14 +334,15 @@ public:
                      manager() const        { return m_mgr; }
   const header_page& header() const         { BOOST_ASSERT(is_open());
                                               return m_hdr; }
+  key_compare        key_comp() const       { return m_comp; }
+  value_compare      value_comp() const     { return m_value_comp; }
 
   // capacity:
 
   bool          empty() const               { return !size(); }
   size_type     size() const                { return m_hdr.element_count(); }
-  //size_type     max_size() const            { return ; }
+  size_type     max_size() const            { return -1; }
   bool          ok_to_pack() const          { return m_ok_to_pack; }
-
   std::size_t   node_size() const           { BOOST_ASSERT(is_open());
                                               return m_mgr.data_size(); }
   std::size_t   max_cache_size() const      { BOOST_ASSERT(is_open());
@@ -380,19 +381,19 @@ public:
   //iterator insert(const_iterator position, P&&);
   //void insert(initializer_list<value_type>);
 
+  //  const_iterator is returned because of the need to explicitly know when an update,
+  //  if allowed, will occur. See map and multimap update() function.
   const_iterator     erase(const_iterator position);
   size_type          erase(const key_type& k);
   const_iterator     erase(const_iterator first, const_iterator last);
+
   void               clear();
 
-  // observers:
-
-  key_compare        key_comp() const       { return m_comp; }
-  value_compare      value_comp() const     { return m_value_comp; }
-
   // operations:
-  //   it is required that objects of types K and Key be key_comp() comparable
-
+  //   Types K and Key are required to be key_comp() comparable
+  //   Non-const overloads are not provided because of the need to explicitly know
+  //   when an update, if allowed, will occur. See map and multimap update() function.
+ 
   template <class K>
   const_iterator     find(const K& k) const;
   const_iterator     find(const Key& k) const          {return find<Key>(k);}
@@ -410,14 +411,12 @@ public:
   const_iterator     upper_bound(const Key& k) const   {return upper_bound<Key>(k);}
 
   template <class K>
-  const_iterator_range  equal_range(const K& k) const
-  {
-    return std::make_pair(lower_bound(k), upper_bound(k));
-  }
-  const_iterator_range  equal_range(const Key& k) const
-  {
-    return std::make_pair(lower_bound<Key>(k), upper_bound<Key>(k));
-  }
+    std::pair<const_iterator, const_iterator>
+      equal_range(const K& k) const
+        {return std::make_pair(lower_bound(k), upper_bound(k));}
+  std::pair<const_iterator, const_iterator>
+    equal_range(const Key& k) const
+      {return std::make_pair(lower_bound<Key>(k), upper_bound<Key>(k));}
 
 //------------------------------  inspect leaf-to-root  --------------------------------//
 
