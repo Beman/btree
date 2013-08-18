@@ -18,6 +18,72 @@
 #include <boost/assert.hpp>
 #include <boost/static_assert.hpp>
 #include <boost/type_traits/is_pointer.hpp>
+#include <algorithm>
+#include <utility>
+
+namespace boost
+{
+  namespace btree
+  {
+//--------------------------------------------------------------------------------------//
+//                                    synopsis                                          //
+//--------------------------------------------------------------------------------------//
+
+    template <class Key,    // requires memcpyable type without pointers or references
+              class Traits = btree::default_traits,
+              class Compare = btree::less >
+    class btree_set;
+
+    template <class Key, class Traits, class Compare>
+      bool operator==(const btree_set<Key,Traits,Compare>& x,
+        const btree_set<Key,Traits,Compare>& y);
+    template <class Key, class Traits, class Compare>
+      bool operator< (const btree_set<Key,Traits,Compare>& x,
+        const btree_set<Key,Traits,Compare>& y);
+    template <class Key, class Traits, class Compare>
+      bool operator!=(const btree_set<Key,Traits,Compare>& x,
+        const btree_set<Key,Traits,Compare>& y);
+    template <class Key, class Traits, class Compare>
+      bool operator> (const btree_set<Key,Traits,Compare>& x,
+        const btree_set<Key,Traits,Compare>& y);
+    template <class Key, class Traits, class Compare>
+      bool operator>=(const btree_set<Key,Traits,Compare>& x,
+        const btree_set<Key,Traits,Compare>& y);
+    template <class Key, class Traits, class Compare>
+      bool operator<=(const btree_set<Key,Traits,Compare>& x,
+        const btree_set<Key,Traits,Compare>& y);
+
+    template <class Key, class Traits, class Compare>
+      void swap(btree_set<Key,Traits,Compare>& x,
+        btree_set<Key,Traits,Compare>& y);
+
+    template <class Key,    // requires memcpyable type without pointers or references
+              class Traits = btree::default_traits,
+              class Compare = btree::less >
+    class btree_multiset;
+
+    template <class Key, class Traits, class Compare>
+      bool operator==(const btree_multiset<Key,Traits,Compare>& x,
+        const btree_multiset<Key,Traits,Compare>& y);
+    template <class Key, class Traits, class Compare>
+      bool operator< (const btree_multiset<Key,Traits,Compare>& x,
+        const btree_multiset<Key,Traits,Compare>& y);
+    template <class Key, class Traits, class Compare>
+      bool operator!=(const btree_multiset<Key,Traits,Compare>& x,
+        const btree_multiset<Key,Traits,Compare>& y);
+    template <class Key, class Traits, class Compare>
+      bool operator> (const btree_multiset<Key,Traits,Compare>& x,
+        const btree_multiset<Key,Traits,Compare>& y);
+    template <class Key, class Traits, class Compare>
+      bool operator>=(const btree_multiset<Key,Traits,Compare>& x,
+        const btree_multiset<Key,Traits,Compare>& y);
+    template <class Key, class Traits, class Compare>
+      bool operator<=(const btree_multiset<Key,Traits,Compare>& x,
+        const btree_multiset<Key,Traits,Compare>& y);
+
+    template <class Key, class Traits, class Compare>
+      void swap(btree_multiset<Key,Traits,Compare>& x,
+        btree_multiset<Key,Traits,Compare>& y);
 
 /*  Rationale for order of constructor and open arguments:
       * path is required, and is a natural first argument.
@@ -29,18 +95,13 @@
         would be more appropriate.
 */
 
-namespace boost
-{
-  namespace btree
-  {
-
 //--------------------------------------------------------------------------------------//
 //                                class btree_set                                       //
 //--------------------------------------------------------------------------------------//
 
     template <class Key,    // requires memcpyable type without pointers or references
-              class Traits = default_traits,
-              class Compare = btree::less>
+              class Traits,
+              class Compare>
     class btree_set
       : public btree_base<Key, btree_set_base<Key,Traits,Compare> >
     {
@@ -130,13 +191,34 @@ namespace boost
       }
     };
 
+    template <class Key, class Traits, class Compare>
+      inline bool operator==(const btree_set<Key,Traits,Compare>& x,
+        const btree_set<Key,Traits,Compare>& y)
+      { return x.size() == y.size() && std::equal(x.begin(), x.end(), y.begin()); }
+    template <class Key, class Traits, class Compare>
+      inline bool operator< (const btree_set<Key,Traits,Compare>& x,
+        const btree_set<Key,Traits,Compare>& y)
+      { return std::lexicographical_compare(x.begin(), x.end(), y.begin(), y.end()); }
+    template <class Key, class Traits, class Compare>
+      inline bool operator!=(const btree_set<Key,Traits,Compare>& x,
+        const btree_set<Key,Traits,Compare>& y) { return !(x == y); }
+    template <class Key, class Traits, class Compare>
+      inline bool operator> (const btree_set<Key,Traits,Compare>& x,
+        const btree_set<Key,Traits,Compare>& y) { return y < x; }
+    template <class Key, class Traits, class Compare>
+      inline bool operator>=(const btree_set<Key,Traits,Compare>& x,
+        const btree_set<Key,Traits,Compare>& y) { return !(x < y); }
+    template <class Key, class Traits, class Compare>
+      inline bool operator<=(const btree_set<Key,Traits,Compare>& x,
+        const btree_set<Key,Traits,Compare>& y) { return !(x > y); }
+
 //--------------------------------------------------------------------------------------//
 //                              class btree_multiset                                    //
 //--------------------------------------------------------------------------------------//
 
     template <class Key,    // requires memcpyable type without pointers or references
-              class Traits = default_traits,
-              class Compare = btree::less>              
+              class Traits,
+              class Compare>              
     class btree_multiset
       : public btree_base<Key, btree_set_base<Key,Traits,Compare> >
     {
@@ -221,6 +303,27 @@ namespace boost
         }
       }
     };
+
+    template <class Key, class Traits, class Compare>
+      inline bool operator==(const btree_multiset<Key,Traits,Compare>& x,
+        const btree_multiset<Key,Traits,Compare>& y)
+      { return x.size() == y.size() && std::equal(x.begin(), x.end(), y.begin()); }
+    template <class Key, class Traits, class Compare>
+      inline bool operator< (const btree_multiset<Key,Traits,Compare>& x,
+        const btree_multiset<Key,Traits,Compare>& y)
+      { return std::lexicographical_compare(x.begin(), x.end(), y.begin(), y.end()); }
+    template <class Key, class Traits, class Compare>
+      inline bool operator!=(const btree_multiset<Key,Traits,Compare>& x,
+        const btree_multiset<Key,Traits,Compare>& y) { return !(x == y); }
+    template <class Key, class Traits, class Compare>
+      inline bool operator> (const btree_multiset<Key,Traits,Compare>& x,
+        const btree_multiset<Key,Traits,Compare>& y) { return y < x; }
+    template <class Key, class Traits, class Compare>
+      inline bool operator>=(const btree_multiset<Key,Traits,Compare>& x,
+        const btree_multiset<Key,Traits,Compare>& y) { return !(x < y); }
+    template <class Key, class Traits, class Compare>
+      inline bool operator<=(const btree_multiset<Key,Traits,Compare>& x,
+        const btree_multiset<Key,Traits,Compare>& y) { return !(x > y); }
 
   } // namespace btree
 } // namespace boost

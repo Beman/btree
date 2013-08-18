@@ -14,6 +14,7 @@
 //  See stl_test.cpp for large scale stress testing.                                    //
 //                                                                                      //
 //--------------------------------------------------------------------------------------//
+#include <boost/config/warning_disable.hpp>
 
 #include <iostream>
 #include <boost/btree/btree_map.hpp>
@@ -1509,6 +1510,45 @@ void  insert_unique_return_iterator_test()
   cout << "     insert_unique_return_iterator_test complete" << endl;
 }
 
+//----------------------  relational_non_member_functions_test  -------------------------//
+
+void  relational_non_member_functions_test()
+{
+  cout << "  relational_non_member_functions_test..." << endl;
+
+  typedef btree::btree_set<fat> btree_type;
+  btree_type bt1("relational_non_member_1.btr", btree::flags::truncate,
+    -1, btree::less(), 128);
+  bt1.max_cache_size(0);  // maximum stress
+  btree_type bt2("relational_non_member_2.btr", btree::flags::truncate,
+    -1, btree::less(), 128);
+  bt2.max_cache_size(0);  // maximum stress
+
+  for (int i = 1; i <= 20; ++i)
+    bt1.insert(fat(i));
+
+  for (int i = 1; i <= 19; ++i)
+    bt2.insert(fat(i));
+  bt2.insert(fat(99));
+
+  BOOST_TEST_EQ(bt1.size(), bt2.size());
+  BOOST_TEST(!(bt1 == bt2));
+  BOOST_TEST(bt1 != bt2);
+  BOOST_TEST(bt1 < bt2);
+  BOOST_TEST(bt1 <= bt2);
+  BOOST_TEST(!(bt1 > bt2));
+  BOOST_TEST(!(bt1 >= bt2));
+ 
+  BOOST_TEST(!(bt2 == bt1));
+  BOOST_TEST(bt2 != bt1);
+  BOOST_TEST(!(bt2 < bt1));
+  BOOST_TEST(!(bt2 <= bt1));
+  BOOST_TEST(bt2 > bt1);
+  BOOST_TEST(bt2 >= bt1);
+
+  cout << "     relational_non_member_functions_test complete" << endl;
+}
+
 //-------------------------------------  _test  ----------------------------------------//
 
 void  _test()
@@ -1574,6 +1614,7 @@ int cpp_main(int argc, char* argv[])
   insert_and_erase_test();
   insert_non_unique();
   find_and_bounds();
+  relational_non_member_functions_test();
   erase_return_iterator_validity_test(0);    // starting at begin is special case, so
                                              // test explicitly. 
   erase_return_iterator_validity_test(1);    // start near begin
