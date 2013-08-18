@@ -139,7 +139,7 @@ namespace boost
         }
       }
 
-      iterator writeable(const_iterator itr)  {return m_write_cast(itr);}
+      iterator writable(const_iterator itr)  {return m_write_cast(itr);}
 
     };
 
@@ -243,7 +243,7 @@ namespace boost
         }
       }
 
-      iterator writeable(const_iterator itr)  {return m_write_cast(itr);}
+      iterator writable(const_iterator itr)  {return m_write_cast(itr);}
 
     };
 

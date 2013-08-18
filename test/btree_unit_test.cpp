@@ -11,7 +11,7 @@
 //                                                                                      //
 //  These tests lightly exercise many portions of the interface. They do not attempt    //
 //  to stress the many combinations of control paths possible in large scale use.       //
-//  See stl_equivalence_test.cpp for large scale stress testing.                        //
+//  See stl_test.cpp for large scale stress testing.                                    //
 //                                                                                      //
 //--------------------------------------------------------------------------------------//
 
@@ -172,7 +172,7 @@ void types_test()
 
   //  test std::set and std::map to add insight into types
 
-  typedef std::set<int>                  std_set;
+  typedef std::set<int>                 std_set;
   typedef btree::btree_set<int>         bt_set;
 
   BOOST_TEST((boost::is_same<std_set::key_type, int>::value));
@@ -195,7 +195,7 @@ void types_test()
   BOOST_TEST((boost::is_same<std_set::const_iterator::reference, int const&>::value));
   BOOST_TEST((boost::is_same< bt_set::const_iterator::reference, int const&>::value));
 
-  typedef std::map<int, long>            std_map;
+  typedef std::map<int, long>           std_map;
   typedef btree::btree_map<int, long>   bt_map;
 
   BOOST_TEST((boost::is_same<std_map::key_type, int>::value));
@@ -589,6 +589,57 @@ void small_variable_map()
 //  cout << "  alignment..." << endl;
 //  cout << "    alignment complete" << endl;
 //}
+
+
+//-------------------------------------  iterator_unit_test  ---------------------------//
+
+void  iterator_unit_test()
+{
+  cout << "  iterator_unit_test..." << endl;
+
+  typedef btree::btree_set<int> bt_set;
+
+  bt_set set("bt_set.btr", btree::flags::truncate);
+
+  bt_set::iterator itr1;
+  itr1 = set.begin();
+  BOOST_TEST(itr1 == set.end()); 
+  BOOST_TEST(set.end() == itr1); 
+
+  bt_set::const_iterator itr2;
+  itr2 = set.begin();
+  BOOST_TEST(itr2 == set.end()); 
+  BOOST_TEST(set.end() == itr2); 
+
+  BOOST_TEST(itr1 == itr2);
+  BOOST_TEST(itr2 == itr1);
+  itr2 = itr1;
+  BOOST_TEST(itr1 == itr2);
+  BOOST_TEST(itr2 == itr1);
+
+  typedef btree::btree_map<int, char>  bt_map;
+  bt_map map("bt_set.btr", btree::flags::truncate);
+  map.emplace(1, 'a');
+
+  bt_map::iterator itr3;
+  itr3 = map.writable(map.begin());
+  BOOST_TEST(itr3 == map.begin()); 
+  BOOST_TEST(map.begin() == itr3); 
+
+  bt_map::const_iterator itr4;
+  itr4 = map.begin();
+  ++itr4;
+  BOOST_TEST(itr4 == map.end()); 
+  BOOST_TEST(map.end() == itr4); 
+
+  BOOST_TEST(itr3 != itr4);
+  BOOST_TEST(itr4 != itr3);
+  itr4 = itr3;
+  BOOST_TEST(itr3 == itr4);
+  BOOST_TEST(itr4 == itr3);
+
+  cout << "     iterator_unit_test complete" << endl;
+}
 
 //------------------------------------- insert -----------------------------------------//
 
@@ -1117,7 +1168,7 @@ void update_test()
   {
 //    cout << "    " << itr->first << "," << itr->second << '\n';
     int n = itr->second;
-    bt_type::iterator nc_itr =  bt.writeable(itr);
+    bt_type::iterator nc_itr =  bt.writable(itr);
 //    BOOST_TEST(itr == nc_itr);
     nc_itr->second = -n;
     BOOST_TEST(itr->second == -n);
@@ -1483,6 +1534,7 @@ int cpp_main(int argc, char* argv[])
   small_variable_set();
   small_variable_map();
   //alignment();
+  iterator_unit_test();
   insert_and_erase_test();
   insert_non_unique();
   find_and_bounds();

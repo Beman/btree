@@ -29,10 +29,6 @@
 
   TODO:
 
-  * For maps, many of the operations (and perhaps other) functions need to have const
-    and non-const overloads, and return const_iterator or iterator accordingly. See
-    Table 102 Associative container requirements.
-
   * flags for key_varies and mapped_varies added, but not being set or used yet.
     key and mapped size no longer set to -1 to indicate variable length. 
   
@@ -395,19 +391,19 @@ public:
   //   when an update, if allowed, will occur. See map and multimap update() function.
  
   template <class K>
-  const_iterator     find(const K& k) const;
+    const_iterator   find(const K& k) const;
   const_iterator     find(const Key& k) const          {return find<Key>(k);}
 
   template <class K>
-  size_type          count(const K& k) const;
+    size_type        count(const K& k) const;
   size_type          count(const Key& k) const         {return count<Key>(k);}
 
   template <class K>
-  const_iterator     lower_bound(const K& k) const;
+    const_iterator   lower_bound(const K& k) const;
   const_iterator     lower_bound(const Key& k) const   {return lower_bound<Key>(k);}
 
   template <class K>
-  const_iterator     upper_bound(const K& k) const;
+    const_iterator   upper_bound(const K& k) const;
   const_iterator     upper_bound(const Key& k) const   {return upper_bound<Key>(k);}
 
   template <class K>
@@ -535,7 +531,7 @@ private:
   
   //------------------------ leaf data formats and operations --------------------------//
 
- class leaf_data : public btree_data
+  class leaf_data : public btree_data
   {
     friend class btree_base;
   public:
@@ -815,7 +811,8 @@ private:
   {
 
   private:
-    typename btree_base::btree_node_ptr  m_node; 
+    typename btree_base::btree_node_ptr  m_node;     // 0 for uninitialized iterator,
+                                                     //   == m_end_node for end iterator
     T*                                   m_element;  // 0 for end iterator
 
   public:
@@ -827,31 +824,46 @@ private:
       : m_node(static_cast<typename btree_base::btree_node_ptr>(p)),
         m_element(e) {}
 
-    typename
-    btree_base::btree_node_ptr::use_count_type use_count() const
-      {return m_node->use_count();}
-
     iterator_type(buffer_ptr p)  // used solely to setup the end iterator
       : m_node(static_cast<typename btree_base::btree_node_ptr>(p)),
         m_element(0) {}
 
+    template <class Other>
+    iterator_type(iterator_type<Other> const& other)
+      : m_node(other.m_node), m_element(other.m_element) {}
+
+    typename
+    btree_base::btree_node_ptr::use_count_type use_count() const
+      {return m_node->use_count();}
+
+  private:
     friend class boost::iterator_core_access;
     friend class btree_base;
+    template <class> friend class iterator_type;
    
-    T& dereference() const  { return *m_element; }
+    T& dereference() const
+    { 
+      BOOST_ASSERT_MSG(m_node.get(),
+        "Attempt to dereference uninitialized btree iterator");
+      BOOST_ASSERT_MSG(m_element,
+        "Attempt to dereference end btree iterator");
+      return *m_element;
+    }
  
-    bool equal(const iterator_type& rhs) const
+    template <class Other>
+    bool equal(iterator_type<Other> const& rhs) const
     {
+      BOOST_ASSERT_MSG(m_node.get(), "Attempt to compare uninitialized btree iterator");
       return m_element == rhs.m_element
         // check node_id() in case node memory has been reused
         && m_node->node_id() == rhs.m_node->node_id();
     }
 
-    //  TODO: make these protected? AFAICR, only special test and debug code needs them
-
     void increment();
     void decrement();
 
+    public:
+    //  TODO: make these protected? AFAICR, only special test and debug code needs them
     typedef typename btree_base::btree_node_ptr  btree_node_ptr;
     const btree_node_ptr&  node() const {return m_node;}
   };
@@ -2006,8 +2018,9 @@ template <class T>
 void
 btree_base<Key,Base>::iterator_type<T>::increment()
 {
-  BOOST_ASSERT_MSG(m_element != 0, "increment of end iterator"); 
-  BOOST_ASSERT(m_node);
+  BOOST_ASSERT_MSG(m_node.get(),
+    "Attempt to increment uninitialized btree iterator");
+  BOOST_ASSERT_MSG(m_element, "Attempt to increment end btree iterator"); 
   BOOST_ASSERT(m_element >= m_node->leaf().begin());
   BOOST_ASSERT(m_element < m_node->leaf().end());
 
@@ -2034,6 +2047,8 @@ template <class T>
 void
 btree_base<Key,Base>::iterator_type<T>::decrement()
 {
+  BOOST_ASSERT_MSG(m_node.get(),
+    "Attempt to decrement uninitialized btree iterator");
   if (*this == reinterpret_cast<const btree_base<Key,Base>*>
         (m_node->manager()->owner())->end())
     *this = reinterpret_cast<btree_base<Key,Base>*>
