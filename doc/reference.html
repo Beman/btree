@@ -249,7 +249,7 @@
   <p>Iterators <code>iterator</code> and <code>const_iterator</code> are the 
   same type and that type is a constant iterator.</p>
 
-  <h3>Header &lt;boost/btree/set.hpp&gt; synopsis</h3>
+  <h3><a name="btree_set">Header</a> &lt;boost/btree/set.hpp&gt; synopsis</h3>
 
   <pre>namespace boost { namespace btree
 {
@@ -342,7 +342,7 @@
 
     // <a href="#btree_set-modifiers">modifiers</a>    
     std::pair&lt;const_iterator, bool&gt;
-      emplace(const value_type&amp; value);  // special case not requiring c++11x support
+      emplace(const value_type&amp; value);  // special case not requiring c++11x
 
     std::pair&lt;const_iterator, bool&gt;
       insert(const value_type&amp; value);
@@ -608,19 +608,18 @@ const_reverse_iterator  crend() const;</pre>
   emplace(const value_type&amp; value);</pre>
   <blockquote>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
-    <p><i>Effects:</i> Inserts a value_type object t constructed with 
-    std::forward&lt;Args&gt;(args)... if and only if there is no element in the 
-    container with key equivalent to the key of t. The bool component of the 
+    <p><i>Effects:</i> Inserts <code>value</code> if and only if there is no element in the 
+    container with key equivalent to <code>value</code>. The bool component of the 
     returned pair is true if and only if the insertion takes place, and the 
     iterator component of the pair points to the element with key equivalent to 
-    the key of t.</p>
-    <p><i>Returns:</i> </p>
+    the key of <code>value</code>.</p>
+    <p><i>Returns:</i> The pair described in <i>Effects</i>.</p>
   </blockquote>
   <pre>std::pair&lt;const_iterator, bool&gt;
   insert(const value_type&amp; value);</pre>
   <blockquote>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
-    <p><i>Effects:</i> Inserts <code>value</code> if and only if there is no 
+    <p dir="ltr"><i>Effects:</i> Inserts <code>value</code> if and only if there is no 
     element in the container with key equivalent to the key of <code>value</code>. 
     The <code>bool</code> component of the returned pair is <code>true</code> if 
     and only if the insertion takes place, and the iterator component of the 
@@ -676,9 +675,9 @@ const_iterator  find(const K&amp; k) const;
 const_iterator  find(const Key&amp; k) const;</pre>
   <blockquote>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
-    <p><i>Returns:</i> An iterator pointing to the element with the key 
-    equivalent to <code>k</code>, or <code>end()</code> if such an element is 
-    not found.</p>
+    <p><i>Returns:</i> An iterator pointing to the first element with the key 
+    equivalent to <code>k</code>, or <code>end()</code> if no such element is 
+    found.</p>
   </blockquote>
   <pre>template &lt;class K&gt;
 size_type  count(const K&amp; k) const;
@@ -714,6 +713,67 @@ const_iterator_range  equal_range(const Key&amp; k) const;</pre>
     upper_bound(k)</code>).</p>
   </blockquote>
   <h3>Header &lt;boost/btree/multiset.hpp&gt; synopsis</h3>
+
+  <p>Class <code>btree_multiset</code> is the functionally the same as <code>
+  btree_set</code> except:</p>
+
+  <ul>
+    <li>The name differs, so the name of constructors differ.</li>
+    <li><code>btree_multiset</code> supports equivalent keys while btree_set 
+    support unique keys.</li>
+    <li>Several modifier functions have different behavior for equivalent keys, 
+    and different return types.</li>
+  </ul>
+  <p>For brevity, only synopsis shows only the functions with different behavior 
+  and return types, and only these functions have detailed specifications. For 
+  all other content, see <code>btree_set.</code></p>
+
+  <pre>  template &lt;class Key,    // requires memcpyable type without pointers or references
+            class Traits = default_traits,
+            class Compare = btree::less&gt;
+  class btree_multiset
+  {
+  public:
+    ...
+
+    // modifiers    
+    const_iterator  emplace(const value_type&amp; value);  // special case not requiring c++11x
+
+    const_iterator  insert(const value_type&amp; value);
+
+    template &lt;class InputIterator&gt;
+      void insert(InputIterator begin, InputIterator end);
+
+    ...
+  };
+}}  // namespaces</pre>
+  <h4>btree_multiset modifiers</h4>
+  <pre>const_iterator emplace(const value_type&amp; value);</pre>
+  <blockquote>
+    <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
+    <p><i>Effects:</i> Inserts <code>value</code>. If a range containing 
+    elements equivalent to <code>value</code> exists, <code>value</code> is 
+    inserted at the end of that range.</p>
+    <p><i>Returns:</i> An iterator pointing to the newly inserted element.</p>
+  </blockquote>
+  <pre>const_iterator insert(const value_type&amp; value);</pre>
+  <blockquote>
+    <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
+    <p><i>Effects:</i> Inserts <code>value</code>. If a range containing 
+    elements equivalent to <code>value</code> exists, <code>value</code> is 
+    inserted at the end of that range.</p>
+    <p><i>Returns:</i> An iterator pointing to the newly inserted element.</p>
+  </blockquote>
+  <pre>template &lt;class InputIterator&gt;
+  void insert(InputIterator begin, InputIterator end);</pre>
+  <blockquote>
+    <p><i>Requires:</i> <code>value_type</code> is constructible from <code>
+    *begin</code>. <code>begin</code> and <code>end</code> are not iterators 
+    into <code>*this</code>. <code>is_open()</code> is <code>true</code>. </p>
+    <p><i>Effects:</i> Inserts each element from the range <code>[begin,end)</code>. 
+    If a range containing elements equivalent to the element being inserted 
+    exists, that element is inserted at the end of that range.</p>
+  </blockquote>
 
   <h2>Maps</h2>
 
@@ -930,7 +990,7 @@ btree_map(InputIterator begin, InputIterator end,
   <hr>
 
   <p>Revised 
-  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->17 August 2013<!--webbot bot="Timestamp" endspan i-checksum="31363" --></p>
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->18 August 2013<!--webbot bot="Timestamp" endspan i-checksum="31365" --></p>
 
   <p>© Copyright Beman Dawes, 2013</p>
 
