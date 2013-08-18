@@ -13,7 +13,7 @@
 #include <boost/btree/helpers.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/btree/mmff.hpp>
-#include <boost/btree/set.hpp>
+#include <boost/btree/btree_set.hpp>
 #include <boost/iterator/iterator_facade.hpp>
 #include <boost/assert.hpp>
 

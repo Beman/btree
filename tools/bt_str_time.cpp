@@ -7,7 +7,7 @@
 
 //  See http://www.boost.org/libs/btree for documentation.
 
-#include <boost/btree/map.hpp>
+#include <boost/btree/btree_map.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/cstdint.hpp>
 #include <boost/btree/support/c_str_proxy.hpp>

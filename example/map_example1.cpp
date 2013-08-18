@@ -7,7 +7,7 @@
 
 
 #include <map>
-#include <boost/btree/map.hpp>
+#include <boost/btree/btree_map.hpp>
 #include <iostream>
 using std::cout;
 

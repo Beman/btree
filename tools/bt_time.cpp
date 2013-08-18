@@ -7,7 +7,7 @@
 
 //  See http://www.boost.org/libs/btree for documentation.
 
-#include <boost/btree/map.hpp>
+#include <boost/btree/btree_map.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/random.hpp>
 #include <boost/timer/timer.hpp>

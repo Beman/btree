@@ -9,7 +9,7 @@
 #include <map>
 #include <utility>
 #include <string>
-#include <boost/btree/map.hpp>
+#include <boost/btree/btree_map.hpp>
 #include <boost/btree/support/strbuf.hpp>
 #include <iostream>
 using std::cout;

@@ -16,8 +16,8 @@
 //--------------------------------------------------------------------------------------//
 
 #include <iostream>
-#include <boost/btree/map.hpp>
-#include <boost/btree/set.hpp>
+#include <boost/btree/btree_map.hpp>
+#include <boost/btree/btree_set.hpp>
 #include <boost/btree/support/fixstr.hpp>
 #include <boost/detail/lightweight_main.hpp>
 #include <boost/detail/lightweight_test.hpp>

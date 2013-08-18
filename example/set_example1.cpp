@@ -12,7 +12,7 @@ using std::cout;
 //typedef std::set<int> set_type;
 //set_type s;
 
-#include <boost/btree/set.hpp>
+#include <boost/btree/btree_set.hpp>
 
 
 int main()
