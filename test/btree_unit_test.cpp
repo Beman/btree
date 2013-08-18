@@ -1475,6 +1475,40 @@ void  erase_return_iterator_validity_test(int start)
   cout << "    erase_return_iterator_validity_test complete" << endl;
 }
 
+//-----------------------  insert_unique_return_iterator_test  -------------------------//
+
+void  insert_unique_return_iterator_test()
+{
+  cout << "  insert_unique_return_iterator_test..." << endl;
+
+  fs::path path("btree_set.insert-unique.btree");
+  typedef btree::btree_set<fat> btree_type;
+  btree_type bt(path, btree::flags::truncate, -1, btree::less(), 128);
+  bt.max_cache_size(0);  // maximum stress
+  std::pair<btree_type::const_iterator, bool> result;
+
+  const unsigned int levels = 4;
+
+  cout << "    insert elements until levels reaches " << levels << endl;
+  for (int i = 1; bt.header().levels() <= levels; ++i)
+  {
+    result = bt.insert(fat(i));
+    BOOST_TEST(result.second);
+    BOOST_TEST(result.first != bt.end());
+    BOOST_TEST_EQ(result.first->x, i);
+  }
+
+  for (int i = 1; bt.header().levels() <= levels; i = (i+1) * -2)
+  {
+    result = bt.insert(fat(i));
+    BOOST_TEST(!result.second);
+    BOOST_TEST(result.first != bt.end());
+    BOOST_TEST_EQ(result.first->x, i);
+  }
+
+  cout << "     insert_unique_return_iterator_test complete" << endl;
+}
+
 //-------------------------------------  _test  ----------------------------------------//
 
 void  _test()
@@ -1483,6 +1517,8 @@ void  _test()
 
   cout << "     _test complete" << endl;
 }
+
+//--------------------------------------------------------------------------------------//
 
 }  // unnamed namespace
 
@@ -1543,7 +1579,7 @@ int cpp_main(int argc, char* argv[])
   erase_return_iterator_validity_test(1);    // start near begin
   erase_return_iterator_validity_test(190);  // start near end
   erase_return_iterator_validity_test(192);  // start at last element
-
+  insert_unique_return_iterator_test();
   update_test();
   //iteration();
   //multi();
