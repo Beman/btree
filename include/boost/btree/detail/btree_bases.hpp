@@ -80,9 +80,7 @@
     Instead provide observer functions that call the equivalent manager() and header()
     observer functions.
 
-  * Non-member btree_* functions not implemented yet. See line 2190 or thereabouts.
-
-  * An insert_packed() function could avoid searching and cache thrashing by hanging onto
+   * An insert_packed() function could avoid searching and cache thrashing by hanging onto
     an iterator between calls. Check pack optimization applies (last page, etc) and verify
     new element > previous element (>= if non-unique), then just tack on the end; see
     m_branch_insert. Consider whether or not this could be combined with an insert-with-
@@ -1128,7 +1126,8 @@ btree_base<Key,Base>::m_open(const boost::filesystem::path& p,
 
     m_mgr.data_size(m_hdr.node_size());
     m_root = m_mgr.read(m_hdr.root_node_id());
-    max_cache_size(max_cache_default(flgs, boost::filesystem::file_size(p)));
+    max_cache_size(max_cache_default(flgs,
+      static_cast<std::size_t>(boost::filesystem::file_size(p))));
   }
   else
   { // new or truncated file
@@ -1157,7 +1156,9 @@ btree_base<Key,Base>::m_open(const boost::filesystem::path& p,
     m_hdr.last_node_id(m_root->node_id());
     m_root->level(0);
     m_root->size(0);
-    max_cache_size(max_cache_default(flgs, 0));
+    max_cache_size(max_cache_default(flgs,
+      static_cast<std::size_t>(boost::filesystem::file_size(p))));
+
   }
 }
 
