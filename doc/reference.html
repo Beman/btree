@@ -33,183 +33,6 @@
     </tr>
   </table>
 
-  <h2>Header &lt;boost/btree/helpers.hpp&gt;</h2>
-
-  <p>The components in this header are included by the other boost/btree 
-  headers. </p>
-
-  <h3>Synopsis</h3>
-
-  <pre>namespace boost { namespace btree
-{
-  //  Version numbers and default constants
-  static const uint16_t major_version = 0;  // version identification
-  static const uint16_t minor_version = 1;
-
-  static const std::size_t default_node_size = 4096;  // determined by O/S page size
-
-  //  <a href="#Traits">Traits</a>
-  struct big_endian_traits;
-  struct little_endian_traits;
-  struct native_endian_traits;
-  
-  typedef big_endian_traits  default_traits;  // see rationale below
-  
-  //  <a href="#Flags">Flags</a>
-  namespace flags
-  {
-    enum bitmask;
-
-    BOOST_BITMASK(bitmask);
-  
-    bitmask user_flags(bitmask m);
-    bitmask permanent_flags(bitmask m);
-  }  // namespace flags
-  
-  //  <a href="#Constants">Constants</a>
-  const uint32_t KB = 1024;
-  const uint32_t MB = 1048576;  // 1024 * 1024
-  const uint32_t GB = 1073741824;  // 1024 * 1024 * 1024
-  
-  //  <a href="#Hint-based-defaults">Hint based defaults</a>
-  std::size_t     max_cache_default(flags::bitmask flgs, std::size_t file_size);
-  flags::bitmask  cache_branches_default(flags::bitmask flgs);
-  std::size_t     reserve_default(flags::bitmask flgs);
-  
-  //  <a href="#Function-object-less">Function object btree::less</a>
-  struct less
-  {
-    template &lt;class T, class U&gt bool operator()(const T& t, const U& u) const
-      { return t  &lt; u; }
-  };
-  
-}}  // namespaces</pre>
-  <h3><a name="Traits">Traits</a></h3>
-  <p>Traits provide the types for management objects on B-tree disk nodes. Nodes 
-  are usually 4096 bytes in length for current hard disk hardware, and every 
-  byte wasted in overhead causes a measurable reduction in speed as the tree 
-  adds levels. That may favor unaligned traits, particularly if the user&#39;s key 
-  and mapped types are also unaligned.</p>
-  <p>On the other hand, aligned types are in theory more efficient and generate 
-  less code.</p>
-  <p>Actual timing tests on typical 2012 desktop hardware and operating systems, 
-  show virtually no real-world speed differences between aligned and unaligned 
-  traits, or native and non-native endian traits. Other factors, such as maximum 
-  cache size, size of mapped data, portability, and so on, determine B-tree 
-  performance.</p>
-  <p>The <code>big_endian_traits</code> are chosen as the default because file 
-  dumps are easier to read, files are portable, and none of the other traits 
-  show any measurable effect on performance.</p>
-
-  <pre>namespace boost { namespace btree
-{
- struct big_endian_traits
-  {
-    typedef endian::big_uint32un_t  node_id_type;     // node ids are page numbers
-    typedef uint8_t                 node_level_type;  // level of node; 0 for leaf node.
-    typedef endian::big_uint24un_t  node_size_type;   // permits large node sizes
-    static const BOOST_SCOPED_ENUM(endian::order) header_endianness
-      = endian::order::big;
-  };
-  
-  struct little_endian_traits
-  {
-    typedef endian::little_uint32un_t  node_id_type;     // node ids are page numbers
-    typedef uint8_t                    node_level_type;  // level of node; 0 for leaf node.
-    typedef endian::little_uint24un_t  node_size_type;   // permits large node sizes
-    static const BOOST_SCOPED_ENUM(endian::order) header_endianness
-      = endian::order::little;
-  };
-    
-  struct native_endian_traits
-  {
-    typedef endian::native_uint32un_t  node_id_type;     // node ids are page numbers
-    typedef uint8_t                    node_level_type;  // level of node; 0 for leaf node.
-    typedef endian::native_uint24un_t  node_size_type;   // permits large node sizes
-    static const BOOST_SCOPED_ENUM(endian::order) header_endianness
-  #   ifdef BOOST_BIG_ENDIAN
-      = endian::order::big;
-  #   else
-      = endian::order::little;
-  #   endif
-  };
-
-  typedef big_endian_traits  default_traits;  // see rationale above
-
-}}  // namespaces </pre>
-
-  <h3><a name="Flags">Flags</a></h3>
-
-  <p>The <code>flags::bitmask</code> enum is a bitmask type [C++ 17.5.2.1.3 bitmask.types] 
-  used to package disparate arguments to constructors and open functions into a 
-  single value. </p>
-
-  <pre>namespace boost { namespace btree
-{
-  namespace flags
-  {
-    enum bitmask
-    {
-      none          = 0,
-  
-      // bitmasks set by implemenation, ignored if passed in by user:
-      unique        = 1,    // set or map
-      key_only      = 2,    // set or multiset
-   
-      // open values (choose one):
-      read_only   = 0x100,   // file must exist
-      read_write  = 0x200,   // open existing file, otherwise create new file
-      truncate    = 0x400,   // same as read_write except existing file truncated
-  
-      // bitmask options set by user; not present in header:
-      preload        = 0x1000, // existing file read to preload O/S file cache
-      cache_branches = 0x2000, // enable permanent cache of all branch nodes touched;
-                               // otherwise make branch node available when use count
-                               // becomes 0, just like leaf nodes.
-  
-      // optimization hints; choose one. not present in header
-      least_memory  = 0x10000,
-      low_memory    = 0x20000,
-      balanced      = 0,
-      fast          = 0x30000,
-      fastest       = 0x40000,
-    };
-  
-    BOOST_BITMASK(bitmask);
-  
-    bitmask user_flags(bitmask m)         {return m & ~(unique|key_only);}
-    bitmask permanent_flags(bitmask m)    {return m & (unique|key_only);}
-  }  // namespace flags  
-}}  // namespaces</pre>
-
-  <h3><a name="Constants">Constants</a></h3>
-
-  <p>These constants are handy multipliers for specifying the large values 
-  sometimes needed for size related function arguments. </p>
-
-  <h3><a name="Hint-based-defaults">Hint based defaults</a></h3>
-
-  <p>Internally, the optimization hint flags are translated into default values 
-  by these functions. These values are unspecified to allow implementations to 
-  make refinements as experience develops and hardware evolves. The functions 
-  are exposed so that users can monitor the defaults if desired.</p>
-
-  <h3><a name="Function-object-less">Function object <code>btree::less</code></a></h3>
-
-  <p>Provides heterogeneous comparisons as required to implement indexes and 
-  other indirect references. Also generally useful; see 
-  <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3657.htm">N3657</a>,
-  <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2012/n3421.htm">N3421</a>. 
-  Heterogeneous comparisons will be provided in the C++14 standard library, but 
-  until then <code>btree::less</code> provides the functionality.</p>
-  <p>Note: Allowing <code>less::operator()</code> to accept arguments of two 
-  different types does not eliminate the requirement that objects of the two 
-  types be themselves <code>&lt;</code> comparable. For example, type <code>fat</code> 
-  in <a href="../test/btree_unit_test.cpp">test/btree_unit_test.cpp</a> 
-  supplies two non-member <code>operator&lt;</code> functions so that 
-  a <code>fat</code> object to be <code>&lt;</code> compared to an <code>int</code> 
-  and an <code>int</code> can be compared to a <code>fat</code> object. </p>
-
   <h2>B-tree associative containers</h2>
 
   <p>Associative containers provide fast retrieval of data based on keys. The 
@@ -219,7 +42,7 @@
   <p dir="ltr">Each associative container is parameterized on <code>Key</code> 
   and an ordering relation <code>Compare</code> that induces a strict weak 
   ordering on elements of <code>Key</code>. In addition, <code>btree_map</code> 
-  and <code>btree_multimap</code> associate an arbitrary mapped type <code>T</code> 
+  and <code>btree_multimap</code> associate a mapped type <code>T</code> 
   with the <code>Key</code>. The object of type <code>Compare</code> is called 
   the comparison object of a container. </p>
   <p>The phrase “equivalence of keys” means the equivalence relation imposed by 
@@ -241,10 +64,18 @@
   <code>std::pair&lt;const Key, T&gt;</code>.
   </p>
   <p>Iterators of  associative containers are bidirectional 
-  iterators.
-  </p>
+  iterators. For <code>btree_set</code> 
+  and <code>btree_multiset</code>, iterator types <code>iterator</code> and <code>const_iterator</code> are the 
+  same type and is a constant iterator. For <code>btree_map</code> 
+  and <code>btree_multimap</code>, iterator types <code>iterator</code> and <code>const_iterator</code> are 
+  different types and <code>const_iterator</code> is a constant iterator.</p>
 
-  <h2><a name="Common-interface">Container interface</a> and functionality</h2>
+  <h2><a name="Common-interface">Interface</a> and functionality</h2>
+
+  <p>The interfaces and functionality for the four B-tree associative containers 
+  share the same description. Material which is specific to particular container 
+  types uses <i><b>bold italic font</b></i> to indicate the applicable type or 
+  types.</p>
 
   <h3><a name="Common synopsis">Synopsis</a></h3>
   <pre>namespace boost { namespace btree
@@ -253,27 +84,47 @@
             <i><b>class T,  // btree_map and btree_multimap only</b></i>
             class Traits = default_traits,
             class Compare = btree::less&gt;
-  class <b><i>class-name</i></b>
+  class <b><i>class-name    // btree_set, btree_multiset, btree_map, or btree_multimap</i></b>
   {
   public:
     // types:
     typedef Key                     key_type;
-    typedef Key                     value_type;
+    typedef T                       mapped_type;      <i><b>// maps</b></i>
+    typedef Key                     value_type;       <i><b>// sets</b></i>
+    typedef std::pair&lt;const Key, T&gt; value_type;<i><b>       // maps</b></i>
     typedef Traits                  traits_type;
     typedef Compare                 key_compare;
-    typedef Compare                 value_compare;
-    typedef const value_type&amp;       reference;
+    typedef const value_type&amp;       reference;<i><b>        // sets</b></i>
+    typedef value_type&amp;             reference;<i><b>        // maps</b></i>
     typedef const value_type&amp;       const_reference;
     typedef <i>implementation-defined</i>  iterator;
     typedef <i>implementation-defined</i>  const_iterator;
-    typedef implementation-defined  size_type;
-    typedef implementation-defined  difference_type;
-    typedef const value_type*       pointer;
+    typedef uint64_t                size_type;
+    typedef int64_t                 difference_type;
+    typedef const value_type*       pointer;          <i><b>// sets</b></i>
+    typedef value_type*             pointer;          <i><b>// maps</b></i>
     typedef const value_type*       const_pointer;
     typedef std::reverse_iterator&lt;iterator&gt;
                                     reverse_iterator;
     typedef std::reverse_iterator&lt;const_iterator&gt;
                                     const_reverse_iterator;
+
+    typedef Compare                 value_compare;    <i><b>// sets</b></i>
+
+    <i><b>// maps:</b></i>
+    class value_compare
+    {
+      friend class <b><i>class-name</i></b>;
+    protected:
+      Compare comp;
+      value_compare(Compare c) : comp(c) {}
+    public:
+      bool operator()(const value_type&amp; x, const value_type&amp; y) const
+      {
+        return comp(x.first, y.first);
+      }
+    };
+    
     // <a href="#btree_set-constructors-and-destructor">construction and destruction</a>
     explicit <b><i>class-name</i></b>();
 
@@ -776,10 +627,193 @@ const_iterator_range  equal_range(const Key&amp; k) const;</pre>
     upper_bound(k)</code>).</p>
   </blockquote>
 
-  <h2>Sets</h2>
+  <h2 dir="ltr">Helpers</h2>
 
-  <p>Iterators <code>iterator</code> and <code>const_iterator</code> are the 
-  same type and that type is a constant iterator.</p>
+  <h3 dir="ltr">Header &lt;boost/btree/helpers.hpp&gt;Synopsis</h3>
+
+  <p dir="ltr">The components in this header are included by the other boost/btree 
+  headers. </p>
+
+  <div dir="ltr">
+
+  <pre>namespace boost { namespace btree
+{
+  //  Version numbers and default constants
+  static const uint16_t major_version = 0;  // version identification
+  static const uint16_t minor_version = 1;
+
+  static const std::size_t default_node_size = 4096;  // determined by O/S page size
+
+  //  <a href="#Traits">Traits</a>
+  struct big_endian_traits;
+  struct little_endian_traits;
+  struct native_endian_traits;
+  
+  typedef big_endian_traits  default_traits;  // see rationale below
+  
+  //  <a href="#Flags">Flags</a>
+  namespace flags
+  {
+    enum bitmask;
+
+    BOOST_BITMASK(bitmask);
+  
+    bitmask user_flags(bitmask m);
+    bitmask permanent_flags(bitmask m);
+  }  // namespace flags
+  
+  //  <a href="#Constants">Constants</a>
+  const uint32_t KB = 1024;
+  const uint32_t MB = 1048576;  // 1024 * 1024
+  const uint32_t GB = 1073741824;  // 1024 * 1024 * 1024
+  
+  //  <a href="#Hint-based-defaults">Hint based defaults</a>
+  std::size_t     max_cache_default(flags::bitmask flgs, std::size_t file_size);
+  flags::bitmask  cache_branches_default(flags::bitmask flgs);
+  std::size_t     reserve_default(flags::bitmask flgs);
+  
+  //  <a href="#Function-object-less">Function object btree::less</a>
+  struct less
+  {
+    template &lt;class T, class U&gt bool operator()(const T& t, const U& u) const
+      { return t  &lt; u; }
+  };
+  
+}}  // namespaces</pre>
+  </div>
+  <h3 dir="ltr"><a name="Traits">Traits</a></h3>
+  <p dir="ltr">Traits provide the types for management objects on B-tree disk nodes. Nodes 
+  are usually 4096 bytes in length for current hard disk hardware, and every 
+  byte wasted in overhead causes a measurable reduction in speed as the tree 
+  adds levels. That may favor unaligned traits, particularly if the user&#39;s key 
+  and mapped types are also unaligned.</p>
+  <p dir="ltr">On the other hand, aligned types are in theory more efficient and generate 
+  less code.</p>
+  <p dir="ltr">Actual timing tests on typical 2012 desktop hardware and operating systems, 
+  show virtually no real-world speed differences between aligned and unaligned 
+  traits, or native and non-native endian traits. Other factors, such as maximum 
+  cache size, size of mapped data, portability, and so on, determine B-tree 
+  performance.</p>
+  <p dir="ltr">The <code>big_endian_traits</code> are chosen as the default because file 
+  dumps are easier to read, files are portable, and none of the other traits 
+  show any measurable effect on performance.</p>
+
+  <div dir="ltr">
+
+  <pre>namespace boost { namespace btree
+{
+ struct big_endian_traits
+  {
+    typedef endian::big_uint32un_t  node_id_type;     // node ids are page numbers
+    typedef uint8_t                 node_level_type;  // level of node; 0 for leaf node.
+    typedef endian::big_uint24un_t  node_size_type;   // permits large node sizes
+    static const BOOST_SCOPED_ENUM(endian::order) header_endianness
+      = endian::order::big;
+  };
+  
+  struct little_endian_traits
+  {
+    typedef endian::little_uint32un_t  node_id_type;     // node ids are page numbers
+    typedef uint8_t                    node_level_type;  // level of node; 0 for leaf node.
+    typedef endian::little_uint24un_t  node_size_type;   // permits large node sizes
+    static const BOOST_SCOPED_ENUM(endian::order) header_endianness
+      = endian::order::little;
+  };
+    
+  struct native_endian_traits
+  {
+    typedef endian::native_uint32un_t  node_id_type;     // node ids are page numbers
+    typedef uint8_t                    node_level_type;  // level of node; 0 for leaf node.
+    typedef endian::native_uint24un_t  node_size_type;   // permits large node sizes
+    static const BOOST_SCOPED_ENUM(endian::order) header_endianness
+  #   ifdef BOOST_BIG_ENDIAN
+      = endian::order::big;
+  #   else
+      = endian::order::little;
+  #   endif
+  };
+
+  typedef big_endian_traits  default_traits;  // see rationale above
+
+}}  // namespaces </pre>
+
+  </div>
+
+  <h3 dir="ltr"><a name="Flags">Flags</a></h3>
+
+  <p dir="ltr">The <code>flags::bitmask</code> enum is a bitmask type [C++ 17.5.2.1.3 bitmask.types] 
+  used to package disparate arguments to constructors and open functions into a 
+  single value. </p>
+
+  <div dir="ltr">
+
+  <pre>namespace boost { namespace btree
+{
+  namespace flags
+  {
+    enum bitmask
+    {
+      none          = 0,
+  
+      // bitmasks set by implemenation, ignored if passed in by user:
+      unique        = 1,    // set or map
+      key_only      = 2,    // set or multiset
+   
+      // open values (choose one):
+      read_only   = 0x100,   // file must exist
+      read_write  = 0x200,   // open existing file, otherwise create new file
+      truncate    = 0x400,   // same as read_write except existing file truncated
+  
+      // bitmask options set by user; not present in header:
+      preload        = 0x1000, // existing file read to preload O/S file cache
+      cache_branches = 0x2000, // enable permanent cache of all branch nodes touched;
+                               // otherwise make branch node available when use count
+                               // becomes 0, just like leaf nodes.
+  
+      // optimization hints; choose one. not present in header
+      least_memory  = 0x10000,
+      low_memory    = 0x20000,
+      balanced      = 0,
+      fast          = 0x30000,
+      fastest       = 0x40000,
+    };
+  
+    BOOST_BITMASK(bitmask);
+  
+    bitmask user_flags(bitmask m)         {return m & ~(unique|key_only);}
+    bitmask permanent_flags(bitmask m)    {return m & (unique|key_only);}
+  }  // namespace flags  
+}}  // namespaces</pre>
+
+  </div>
+
+  <h3 dir="ltr"><a name="Constants">Constants</a></h3>
+
+  <p dir="ltr">These constants are handy multipliers for specifying the large values 
+  sometimes needed for size related function arguments. </p>
+
+  <h3 dir="ltr"><a name="Hint-based-defaults">Hint based defaults</a></h3>
+
+  <p dir="ltr">Internally, the optimization hint flags are translated into default values 
+  by these functions. These values are unspecified to allow implementations to 
+  make refinements as experience develops and hardware evolves. The functions 
+  are exposed so that users can monitor the defaults if desired.</p>
+
+  <h3 dir="ltr"><a name="Function-object-less">Function object <code>btree::less</code></a></h3>
+
+  <p dir="ltr">Provides heterogeneous comparisons as required to implement indexes and 
+  other indirect references. Also generally useful; see 
+  <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3657.htm">N3657</a>,
+  <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2012/n3421.htm">N3421</a>. 
+  Heterogeneous comparisons will be provided in the C++14 standard library, but 
+  until then <code>btree::less</code> provides the functionality.</p>
+  <p dir="ltr">Note: Allowing <code>less::operator()</code> to accept arguments of two 
+  different types does not eliminate the requirement that objects of the two 
+  types be themselves <code>&lt;</code> comparable. For example, type <code>fat</code> 
+  in <a href="../test/btree_unit_test.cpp">test/btree_unit_test.cpp</a> 
+  supplies two non-member <code>operator&lt;</code> functions so that 
+  a <code>fat</code> object to be <code>&lt;</code> compared to an <code>int</code> 
+  and an <code>int</code> can be compared to a <code>fat</code> object. </p>
 
   <p>&nbsp;</p>
   
