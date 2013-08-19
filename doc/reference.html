@@ -63,12 +63,27 @@
   type. For <code>btree_map</code> and <code>btree_multimap</code> it is equal to 
   <code>std::pair&lt;const Key, T&gt;</code>.
   </p>
+  <h3 dir="ltr">Requirements on template parameters</h3>
+
+  <p dir="ltr">Types supplied by the <code>Key</code> and <code>T</code> 
+  template parameters must be copyable via <code>std::memcpy</code> and must not 
+  contain pointers or references. </p>
+
+  <h3>Iterators</h3>
+
   <p>Iterators of  associative containers are bidirectional 
   iterators. For <code>btree_set</code> 
   and <code>btree_multiset</code>, iterator types <code>iterator</code> and <code>const_iterator</code> are the 
   same type and is a constant iterator. For <code>btree_map</code> 
   and <code>btree_multimap</code>, iterator types <code>iterator</code> and <code>const_iterator</code> are 
   different types and <code>const_iterator</code> is a constant iterator.</p>
+
+  <p>Functions <code>insert()</code>,&nbsp; <code>emplace()</code>, and <code>erase()</code> 
+  invalidate iterators.</p>
+
+  <p>Interfaces traffic in <code>const_iterator</code>. Maps provide a <code>
+  writable()</code> function that turns a <code>const_iterator</code> into an
+  <code>iterator</code>.</p>
 
   <h2><a name="Common-interface">Interface</a> and functionality</h2>
 
@@ -815,8 +830,6 @@ const_iterator_range  equal_range(const Key&amp; k) const;</pre>
   a <code>fat</code> object to be <code>&lt;</code> compared to an <code>int</code> 
   and an <code>int</code> can be compared to a <code>fat</code> object. </p>
 
-  <p>&nbsp;</p>
-  
   <hr>
 
   <p>Revised 
