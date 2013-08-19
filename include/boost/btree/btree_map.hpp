@@ -143,6 +143,27 @@ namespace boost
 
     };
 
+    template <class Key, class T, class Traits, class Compare>
+      inline bool operator==(const btree_map<Key,T,Traits,Compare>& x,
+        const btree_map<Key,T,Traits,Compare>& y)
+      { return x.size() == y.size() && std::equal(x.begin(), x.end(), y.begin()); }
+    template <class Key, class T, class Traits, class Compare>
+      inline bool operator< (const btree_map<Key,T,Traits,Compare>& x,
+        const btree_map<Key,T,Traits,Compare>& y)
+      { return std::lexicographical_compare(x.begin(), x.end(), y.begin(), y.end()); }
+    template <class Key, class T, class Traits, class Compare>
+      inline bool operator!=(const btree_map<Key,T,Traits,Compare>& x,
+        const btree_map<Key,T,Traits,Compare>& y) { return !(x == y); }
+    template <class Key, class T, class Traits, class Compare>
+      inline bool operator> (const btree_map<Key,T,Traits,Compare>& x,
+        const btree_map<Key,T,Traits,Compare>& y) { return y < x; }
+    template <class Key, class T, class Traits, class Compare>
+      inline bool operator>=(const btree_map<Key,T,Traits,Compare>& x,
+        const btree_map<Key,T,Traits,Compare>& y) { return !(x < y); }
+    template <class Key, class T, class Traits, class Compare>
+      inline bool operator<=(const btree_map<Key,T,Traits,Compare>& x,
+        const btree_map<Key,T,Traits,Compare>& y) { return !(x > y); }
+
 //--------------------------------------------------------------------------------------//
 //                               class btree_multimap                                   //
 //--------------------------------------------------------------------------------------//
@@ -247,6 +268,26 @@ namespace boost
 
     };
 
+    template <class Key, class T, class Traits, class Compare>
+      inline bool operator==(const btree_multimap<Key,T,Traits,Compare>& x,
+        const btree_multimap<Key,T,Traits,Compare>& y)
+      { return x.size() == y.size() && std::equal(x.begin(), x.end(), y.begin()); }
+    template <class Key, class T, class Traits, class Compare>
+      inline bool operator< (const btree_multimap<Key,T,Traits,Compare>& x,
+        const btree_multimap<Key,T,Traits,Compare>& y)
+      { return std::lexicographical_compare(x.begin(), x.end(), y.begin(), y.end()); }
+    template <class Key, class T, class Traits, class Compare>
+      inline bool operator!=(const btree_multimap<Key,T,Traits,Compare>& x,
+        const btree_multimap<Key,T,Traits,Compare>& y) { return !(x == y); }
+    template <class Key, class T, class Traits, class Compare>
+      inline bool operator> (const btree_multimap<Key,T,Traits,Compare>& x,
+        const btree_multimap<Key,T,Traits,Compare>& y) { return y < x; }
+    template <class Key, class T, class Traits, class Compare>
+      inline bool operator>=(const btree_multimap<Key,T,Traits,Compare>& x,
+        const btree_multimap<Key,T,Traits,Compare>& y) { return !(x < y); }
+    template <class Key, class T, class Traits, class Compare>
+      inline bool operator<=(const btree_multimap<Key,T,Traits,Compare>& x,
+        const btree_multimap<Key,T,Traits,Compare>& y) { return !(x > y); }
 
   } // namespace btree
 } // namespace boost

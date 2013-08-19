@@ -59,8 +59,6 @@
 
   * Should (some) constructors, open, have max_cache_size argument?
 
-  * Verify, document, that a max_cache_size(-1) is "all".
-
   * Problem: if key_type or mapped type require 64-bit alignment on some machines, but
     not on others (for example, 32-bit gcc builds), would need to artificially force
     64-bit alignment to ensure data portability with endian traits. Is an alignment trait
@@ -388,7 +386,7 @@ public:
   // operations:
   //   Types K and Key are required to be key_comp() comparable
   //   Non-const overloads are not provided because of the need to explicitly know
-  //   when an update, if allowed, will occur. See map and multimap update() function.
+  //   when an update, if allowed, will occur. See map and multimap writable() function.
  
   template <class K>
     const_iterator   find(const K& k) const;
