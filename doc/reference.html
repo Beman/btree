@@ -244,14 +244,16 @@
   iterators.
   </p>
 
-  <h2><a name="Common-interface">Shared container interface</a></h2>
+  <h2><a name="Common-interface">Container interface</a> and functionality</h2>
 
-  <h3><a name="Common synopsis">Shared synopsis</a></h3>
+  <h3><a name="Common synopsis">Synopsis</a></h3>
   <pre>namespace boost { namespace btree
 {
-  template &lt;class Key,    // requires memcpyable type without pointers or references
-            class Traits = default_traits, class Compare = btree::less&gt;
-  class btree_set
+  template &lt;class Key,
+            <i><b>class T,  // btree_map and btree_multimap only</b></i>
+            class Traits = default_traits,
+            class Compare = btree::less&gt;
+  class <b><i>class-name</i></b>
   {
   public:
     // types:
@@ -273,19 +275,19 @@
     typedef std::reverse_iterator&lt;const_iterator&gt;
                                     const_reverse_iterator;
     // <a href="#btree_set-constructors-and-destructor">construction and destruction</a>
-    explicit btree_set();
+    explicit <b><i>class-name</i></b>();
 
-    explicit btree_set(const boost::filesystem::path&amp; pth,
+    explicit <b><i>class-name</i></b>(const boost::filesystem::path&amp; pth,
       flags::bitmask flgs = flags::read_only, uint64_t sig = -1,
       const Compare&amp; comp = Compare(), std::size_t node_sz = default_node_size); 
 
     template &lt;class InputIterator&gt;
-    btree_set(InputIterator begin, InputIterator end,
+    <b><i>class-name</i></b>(InputIterator begin, InputIterator end,
       const boost::filesystem::path&amp; pth,
       flags::bitmask flgs = flags::read_only, uint64_t sig = -1,
       const Compare&amp; comp = Compare(), std::size_t node_sz = default_node_size); 
 
-   ~btree_set();
+   ~<b><i>class-name</i></b>();
 
     // <a href="#btree_set-file-operations">file operations</a>
     void open(const boost::filesystem::path&amp; pth,
@@ -330,20 +332,26 @@
     void                    max_cache_megabytes(std::size_t mb);
 
     // <a href="#btree_set-modifiers">modifiers</a>    
-    std::pair&lt;const_iterator, bool&gt;
-      emplace(const value_type&amp; value);  // special case not requiring c++11x
 
     std::pair&lt;const_iterator, bool&gt;
-      insert(const value_type&amp; value);
+                   emplace(const value_type&amp; x);  <i><b>// btree_set only</b></i>
+    const_iterator emplace(const value_type&amp; x);  <i><b>// btree_multiset only</b></i>
+    std::pair&lt;const_iterator, bool&gt;
+                   emplace(const key_type&amp; k, const mapped_type&amp; x); <i><b>// btree_map only</b></i>
+    const_iterator emplace(const key_type&amp; k, const mapped_type&amp; x); <i><b>// btree_multimap only</b></i>
+
+    std::pair&lt;const_iterator, bool&gt;
+                   insert(const value_type&amp; x);  <i><b>// btree_set and btree_map only</b></i>
+    const_iterator insert(const value_type&amp; x);  <i><b>// btree_multiset and btree_multimap only</b></i>
 
     template &lt;class InputIterator&gt;
-      void insert(InputIterator begin, InputIterator end);
+      void                  insert(InputIterator begin, InputIterator end);
 
     const_iterator          erase(const_iterator position);
     size_type               erase(const key_type&amp; k);
     const_iterator          erase(const_iterator first, const_iterator last);
     void                    clear();
-                          
+
     // <a href="#btree_set-operations">operations</a>
     template &lt;class K&gt;
       const_iterator        find(const K&amp; k) const;
@@ -369,11 +377,11 @@
 
 <h4><a name="btree_set-constructors-and-destructor">Construction and destruction</a> </h4>
 
-  <pre>explicit btree_set();</pre>
+  <pre>explicit <b><i>class-name</i></b>();</pre>
   <blockquote>
     <p><i>Postconditions:</i> <code>is_open()</code> is <code>false</code>.</p>
   </blockquote>
-  <pre>explicit btree_set(const boost::filesystem::path&amp; pth,
+  <pre>explicit <b><i>class-name</i></b>(const boost::filesystem::path&amp; pth,
   flags::bitmask flgs = flags::read_only,
   uint64_t sig = -1,  
   const Compare&amp; comp = Compare(),
@@ -382,7 +390,7 @@
     <p><i>Effects:</i> <code>open(p, flgs, sig, comp, node_sz)</code></p>
   </blockquote>
   <pre>template &lt;class InputIterator&gt;
-btree_set(InputIterator begin, InputIterator end,
+<b><i>class-name</i></b>(InputIterator begin, InputIterator end,
   const boost::filesystem::path&amp; pth,
   flags::bitmask flgs = flags::read_only,
   uint64_t sig = -1,  
@@ -391,7 +399,7 @@ btree_set(InputIterator begin, InputIterator end,
   <blockquote>
     <p><i>Effects:</i> <code>open(p, flgs, sig, comp, node_sz)</code></p>
   </blockquote>
-  <pre>~btree_set();</pre>
+  <pre>~<b><i>class-name</i></b>();</pre>
   <blockquote>
   <p><i>Effects:</i></p>
   <blockquote>
@@ -592,37 +600,80 @@ const_reverse_iterator  crend() const;</pre>
     <p><i>Effects:</i> <code>max_cache_size((mb*1048576)/node_size())</code><i>.</i></p>
   </blockquote>
     <h4><a name="btree_set-modifiers">Modifiers</a></h4>
-  <pre>std::pair&lt;const_iterator, bool&gt;
-  emplace(const value_type&amp; value);</pre>
+  <pre>std::pair&lt;const_iterator, bool&gt; emplace(const value_type&amp; x);<b><i>  // btree_set only</i></b></pre>
   <blockquote>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
-    <p><i>Effects:</i> Inserts <code>value</code> if and only if there is no element in the 
-    container with key equivalent to <code>value</code>. The bool component of the 
+    <p><i>Effects:</i> Inserts <code>x</code> if and only if there is no element in the 
+    container with key equivalent to <code>x</code>. The bool component of the 
     returned pair is true if and only if the insertion takes place, and the 
     iterator component of the pair points to the element with key equivalent to 
-    the key of <code>value</code>.</p>
+    the key of <code>x</code>.</p>
+    <p><i>Returns:</i> The pair described in <i>Effects</i>.</p>
+  </blockquote>
+  <pre>const_iterator emplace(const value_type&amp; x);  <b><i>// btree_multiset only</i></b></pre>
+  <blockquote>
+    <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
+    <p><i>Effects:</i> Inserts <code>x</code>. If a range containing elements 
+    equivalent to <code>x</code> exists, <code>x</code> is inserted at the end 
+    of that range.</p>
+    <p><i>Returns:</i> An iterator pointing to the newly inserted element.</p>
+  </blockquote>
+  <pre>std::pair&lt;const_iterator, bool&gt;
+  emplace(const key_type&amp; k, const mapped_type&amp; m);<b><i>  // btree_map only</i></b></pre>
+  <blockquote>
+    <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
+    <p><i>Effects:</i> Inserts an element constructed from <code>k</code> and
+    <code>m</code> if and only if there is no element in the 
+    container with key equivalent to <code>k</code>. The bool component of the 
+    returned pair is true if and only if the insertion takes place, and the 
+    iterator component of the pair points to the element with key equivalent to
+    <code>k</code>.</p>
     <p><i>Returns:</i> The pair described in <i>Effects</i>.</p>
   </blockquote>
   <pre>std::pair&lt;const_iterator, bool&gt;
-  insert(const value_type&amp; value);</pre>
+  emplace(const key_type&amp; k, const mapped_type&amp; m);<b><i>  // btree_multimap only</i></b></pre>
   <blockquote>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
-    <p dir="ltr"><i>Effects:</i> Inserts <code>value</code> if and only if there is no 
-    element in the container with key equivalent to the key of <code>value</code>. 
+    <p><i>Effects:</i> Inserts an element constructed from <code>k</code> and
+    <code>m</code>.</p>
+    <p><i>Returns:</i> An iterator pointing to the newly inserted element.</p>
+  </blockquote>
+  <pre>std::pair&lt;const_iterator, bool&gt; insert(const value_type&amp; x);  <b><i>// btree_set and btree_map only</i></b></pre>
+  <blockquote>
+    <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
+    <p dir="ltr"><i>Effects:</i> Inserts <code>x</code> if and only if there is no 
+    element in the container with key equivalent to the key of <code>x</code>. 
     The <code>bool</code> component of the returned pair is <code>true</code> if 
     and only if the insertion takes place, and the iterator component of the 
     pair points to the element with key equivalent to the key of <code>value</code>.</p>
     <p><i>Returns:</i> The pair described in <i>Effects</i>.</p>
   </blockquote>
+  <pre>const_iterator insert(const value_type&amp; x);  <b><i>// btree_multiset and btree_multimap only</i></b></pre>
+  <blockquote>
+    <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
+    <p><i>Effects:</i> Inserts <code>x</code>. If a range containing 
+    elements equivalent to <code>x</code> exists, <code>x</code> is 
+    inserted at the end of that range.</p>
+    <p><i>Returns:</i> An iterator pointing to the newly inserted element.</p>
+  </blockquote>
   <pre>template &lt;class InputIterator&gt;
   void insert(InputIterator begin, InputIterator end);</pre>
   <blockquote>
-    <p><i>Requires:</i> <code>value_type</code> is constructible from <code>
-    *begin</code>. <code>begin</code> and <code>end</code> are not iterators 
-    into <code>*this</code>. <code>is_open()</code> is <code>true</code>. </p>
-    <p><i>Effects:</i> Inserts each element from the range <code>[begin,end)</code> 
+    <p><i>Requires:</i></p>
+    <ul>
+      <li> <code>is_open()</code> is <code>true</code>. </li>
+      <li> <code>value_type</code> is constructible from <code>
+    *begin</code>.</li>
+      <li> <code>begin</code> and <code>end</code> are not iterators 
+    into <code>*this</code>. </li>
+    </ul>
+    <p><i>Effects:</i></p>
+    <ul>
+      <li><b><i>btree_set and btree_map:</i></b> Inserts each element from the range <code>[begin,end)</code> 
     if and only if there is no element with key equivalent to the key of that 
-    element.</p>
+    element.</li>
+      <li><b><i>btree_multiset and btree_multimap:</i></b> Inserts each element from the range <code>[begin,end)</code>.</li>
+    </ul>
   </blockquote>
   <pre>const_iterator  erase(const_iterator position);</pre>
   <blockquote>
@@ -764,70 +815,6 @@ const_iterator_range  equal_range(const Key&amp; k) const;</pre>
     void swap(btree_multiset&lt;Key,Traits,Compare&gt;&amp; x,
       btree_multiset&lt;Key,Traits,Compare&gt;&amp; y);
 }}</pre>
-  <h3>Class btree_set</h3>
-
-  <h3>Class btree_multiset</h3>
-
-  <p>Class <code>btree_multiset</code> is the functionally the same as <code>
-  btree_set</code> except:</p>
-
-  <ul>
-    <li>The name differs, so the name of constructors differ.</li>
-    <li><code>btree_multiset</code> supports equivalent keys while btree_set 
-    support unique keys.</li>
-    <li>Several modifier functions have different behavior for equivalent keys, 
-    and different return types.</li>
-  </ul>
-  <p>For brevity, only synopsis shows only the functions with different behavior 
-  and return types, and only these functions have detailed specifications. For 
-  all other content, see <code>btree_set.</code></p>
-
-  <pre>  template &lt;class Key,    // requires memcpyable type without pointers or references
-            class Traits = default_traits,
-            class Compare = btree::less&gt;
-  class btree_multiset
-  {
-  public:
-    ...
-
-    // modifiers    
-    const_iterator  emplace(const value_type&amp; value);  // special case not requiring c++11x
-
-    const_iterator  insert(const value_type&amp; value);
-
-    template &lt;class InputIterator&gt;
-      void insert(InputIterator begin, InputIterator end);
-
-    ...
-  };
-}}  // namespaces</pre>
-  <h4>btree_multiset modifiers</h4>
-  <pre>const_iterator emplace(const value_type&amp; value);</pre>
-  <blockquote>
-    <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
-    <p><i>Effects:</i> Inserts <code>value</code>. If a range containing 
-    elements equivalent to <code>value</code> exists, <code>value</code> is 
-    inserted at the end of that range.</p>
-    <p><i>Returns:</i> An iterator pointing to the newly inserted element.</p>
-  </blockquote>
-  <pre>const_iterator insert(const value_type&amp; value);</pre>
-  <blockquote>
-    <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
-    <p><i>Effects:</i> Inserts <code>value</code>. If a range containing 
-    elements equivalent to <code>value</code> exists, <code>value</code> is 
-    inserted at the end of that range.</p>
-    <p><i>Returns:</i> An iterator pointing to the newly inserted element.</p>
-  </blockquote>
-  <pre>template &lt;class InputIterator&gt;
-  void insert(InputIterator begin, InputIterator end);</pre>
-  <blockquote>
-    <p><i>Requires:</i> <code>value_type</code> is constructible from <code>
-    *begin</code>. <code>begin</code> and <code>end</code> are not iterators 
-    into <code>*this</code>. <code>is_open()</code> is <code>true</code>. </p>
-    <p><i>Effects:</i> Inserts each element from the range <code>[begin,end)</code>. 
-    If a range containing elements equivalent to the element being inserted 
-    exists, that element is inserted at the end of that range.</p>
-  </blockquote>
 
   <h2>Maps</h2>
 
@@ -892,157 +879,7 @@ const_iterator_range  equal_range(const Key&amp; k) const;</pre>
       btree_multimap&lt;Key,T,Traits,Compare&gt;&amp; y);
 }}</pre>
 
-<h3>Class btree_map</h3>
-  
-      <pre>namespace boost { namespace btree {
-
-template &lt;class Key, class T, class Traits = default_traits,
-          class Comp = btree::less &gt;
-class btree_map
-{
-public:
-  // types:
-  typedef Key                                   key_type;
-  typedef T                                     mapped_type;
-  typedef typename Base::value_type             value_type;
-  typedef Comp                                  key_compare;
-  typedef typename Base::value_compare          value_compare; 
-  typedef value_type&amp;                           reference;
-  typedef const value_type&amp;                     const_reference;
-  typedef boost::uint64_t                       size_type;
-  typedef value_type*                           pointer;
-  typedef const value_type*                     const_pointer;
-
-  typedef iterator_type&lt;const value_type&gt;       iterator;
-  typedef iterator                              const_iterator;
-
-  typedef std::reverse_iterator&lt;iterator&gt;       reverse_iterator;
-  typedef std::reverse_iterator&lt;const_iterator&gt; const_reverse_iterator;
-  typedef std::pair&lt;const_iterator, const_iterator&gt;
-                                                const_iterator_range;
-
-  typedef typename Traits::page_id_type         page_id_type;
-  typedef typename Traits::page_size_type       page_size_type;
-  typedef typename Traits::page_level_type      page_level_type;
-
-  // construct/destroy:
-
-  explicit btree_map(const Comp&amp; comp = Comp());
-
-  explicit btree_map(const boost::filesystem::path&amp; p,
-    flags::bitmask flgs = flags::read_only,
-    uint64_t signature = -1, 
-    std::size_t pg_sz = default_page_size,  // ignored if existing file
-    const Comp&amp; comp = Comp());
-
-  template &lt;class InputIterator&gt;
-  btree_map(InputIterator begin, InputIterator end,
-    const boost::filesystem::path&amp; p,
-    flags::bitmask flgs = flags::read_only,
-    uint64_t signature = -1, 
-    std::size_t pg_sz = default_page_size,  // ignored if existing file
-    const Comp&amp; comp = Comp());
-
-  ~btree_base();
-
-  //  file operations:
-  void open(const boost::filesystem::path&amp; p,
-    flags::bitmask flgs = flags::read_only,
-    uint64_t signature = -1, 
-    std::size_t pg_sz = default_page_size);
-  void flush();
-  void close();
-
-  // TODO: operator unspecified-bool-type, operator!
-  
-  // iterators:
-
-  const_iterator          begin() const;
-  const_iterator          end() const;
-  const_iterator          last() const;
-  const_reverse_iterator  rbegin() const;     
-  const_reverse_iterator  rend() const;
-
-  const_iterator          cbegin() const;
-  const_iterator          cend() const;
-  const_reverse_iterator  crbegin() const;    
-  const_reverse_iterator  crend() const;
-
-  // observers:
-  key_compare             key_comp() const;
-  value_compare           value_comp() const;
-  const buffer_manager&amp;   manager() const;
-  bool                    is_open() const;
-  const filesystem::path&amp; file_path() const;
-  bool                    read_only() const;
-  const header_page&amp;      header() const;
-  void                    dump_dot(std::ostream&amp; os) const; // Graphviz dot format
-
-  // capacity:
-  bool                    empty() const;
-  size_type               size() const;
-  std::size_t             page_size() const;
-  std::size_t             max_cache_size() const;
-  void                    max_cache_size(std::size_t m);
-
-  // modifiers:
-  std::pair&lt;const_iterator, bool&gt;
-                          emplace(const Key&amp; key, const T&amp; mapped_value);
-  std::pair&lt;const_iterator, bool&gt;
-                          insert(const map_value&lt;Key, T&gt;&amp; value);
-
-  template &lt;class InputIterator&gt;
-  void                    insert(InputIterator begin, InputIterator end);
-
-};
-} // namespace btree
-} // namespace boost</pre>
-
-  <h4>btree_map constructors and open</h4>
-  <pre>explicit btree_map(const boost::filesystem::path&amp; p,
-  flags::bitmask flgs = flags::read_only,
-  uint64_t signature = -1, 
-  std::size_t pg_sz = default_page_size,  // ignored if existing file
-  const Comp&amp; comp = Comp());
-
-template &lt;class InputIterator&gt;
-btree_map(InputIterator begin, InputIterator end,
-  const boost::filesystem::path&amp; p,
-  flags::bitmask flgs = flags::read_only,
-  uint64_t signature = -1, 
-  std::size_t pg_sz = default_page_size,  // ignored if existing file
-  const Comp&amp; comp = Comp());</pre>
-  <blockquote>
-    <p><i>Effects:</i> <code>open(p, flgs, signature, pg_sz, comp)</code>.</p>
-    <p><i>Throws:</i> See <a href="#open">open</a>.</p>
-  </blockquote>
-  <pre>void <a name="open">open</a>(const boost::filesystem::path&amp; p,
-  flags::bitmask flgs = flags::read_only,
-  uint64_t signature = -1, 
-  std::size_t pg_sz = default_page_size);</pre>
-  <blockquote>
-    <p><i>Throws:</i> <code>std::runtime_error</code> if the file exists and
-    <code>flgs flags::truncate</code> is not set and:</p>
-    <blockquote>
-      <ul>
-        <li>The file does not begin with a btree header, or</li>
-        <li>Any of these attributes of the btree being opened are not equal to 
-        the same attribute at time of file creation:<ul>
-          <li><code>signature</code>,</li>
-          <li>endianness,</li>
-          <li>association arity [<i>Note:</i> sets are arity 1, maps are arity 2&nbsp;
-          <i>-- end note</i>],</li>
-          <li>association uniqueness [<i>Note:</i> sets and maps are unique, 
-          multisets and multimaps are not unique&nbsp; <i>-- end note</i>],</li>
-          <li><code>sizeof(key_type)</code>,</li>
-          <li><code>sizeof(mapped_type)</code>.</li>
-        </ul>
-        </li>
-      </ul>
-    </blockquote>
-  </blockquote>
-  
-  <h3>Class btree_multimap</h3>
+  <p>&nbsp;</p>
   
   <hr>
 
