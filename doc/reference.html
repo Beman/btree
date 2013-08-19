@@ -373,6 +373,30 @@
       std::pair&lt;const_iterator, const_iterator&gt;  equal_range(const K&amp; k) const;
     std::pair&lt;const_iterator, const_iterator&gt;    equal_range(const key_type&amp; k) const;
   };
+
+  // non-member functions
+
+  <i><b>// Template parameter T is only present for btree_map and btree_multimap</b></i>
+    
+  template &lt;class Key, class T, class Traits, class Compare&gt;
+    bool operator==(const <b><i>class-name</i></b>&lt;Key,T,Traits,Compare&gt;&amp; x,
+      const <b><i>class-name</i></b>&lt;Key,T,Traits,Compare&gt;&amp; y);
+  template &lt;class Key, class T, class Traits, class Compare&gt;
+    bool operator&lt; (const <b><i>class-name</i></b>&lt;Key,T,Traits,Compare&gt;&amp; x,
+      const <b><i>class-name</i></b>&lt;Key,T,Traits,Compare&gt;&amp; y);
+  template &lt;class Key, class T, class Traits, class Compare&gt;
+    bool operator!=(const <b><i>class-name</i></b>&lt;Key,T,Traits,Compare&gt;&amp; x,
+      const <b><i>class-name</i></b>&lt;Key,T,Traits,Compare&gt;&amp; y);
+  template &lt;class Key, class T, class Traits, class Compare&gt;
+    bool operator&gt; (const <b><i>class-name</i></b>&lt;Key,T,Traits,Compare&gt;&amp; x,
+      const <b><i>class-name</i></b>&lt;Key,T,Traits,Compare&gt;&amp; y);
+  template &lt;class Key, class T, class Traits, class Compare&gt;
+    bool operator&gt;=(const <b><i>class-name</i></b>&lt;Key,T,Traits,Compare&gt;&amp; x,
+      const <b><i>class-name</i></b>&lt;Key,T,Traits,Compare&gt;&amp; y);
+  template &lt;class Key, class T, class Traits, class Compare&gt;
+    bool operator&lt;=(const <b><i>class-name</i></b>&lt;Key,T,Traits,Compare&gt;&amp; x,
+      const <b><i>class-name</i></b>&lt;Key,T,Traits,Compare&gt;&amp; y);
+
 }}  // namespaces</pre>
 
 <h4><a name="btree_set-constructors-and-destructor">Construction and destruction</a> </h4>
@@ -756,128 +780,6 @@ const_iterator_range  equal_range(const Key&amp; k) const;</pre>
 
   <p>Iterators <code>iterator</code> and <code>const_iterator</code> are the 
   same type and that type is a constant iterator.</p>
-
-  <h3><a name="btree_set">Header</a> &lt;boost/btree/btree_set.hpp&gt; synopsis</h3>
-
-  <pre>namespace boost { namespace btree
-{
-  template &lt;class Key,    // requires memcpyable type without pointers or references
-            class Traits = default_traits, class Compare = btree::less&gt;
-    class btree_set;
-    
-  template &lt;class Key, class Traits, class Compare&gt;
-    bool operator==(const btree_set&lt;Key,Traits,Compare&gt;&amp; x,
-      const btree_set&lt;Key,Traits,Compare&gt;&amp; y);
-  template &lt;class Key, class Traits, class Compare&gt;
-    bool operator&lt; (const btree_set&lt;Key,Traits,Compare&gt;&amp; x,
-      const btree_set&lt;Key,Traits,Compare&gt;&amp; y);
-  template &lt;class Key, class Traits, class Compare&gt;
-    bool operator!=(const btree_set&lt;Key,Traits,Compare&gt;&amp; x,
-      const btree_set&lt;Key,Traits,Compare&gt;&amp; y);
-  template &lt;class Key, class Traits, class Compare&gt;
-    bool operator&gt; (const btree_set&lt;Key,Traits,Compare&gt;&amp; x,
-      const btree_set&lt;Key,Traits,Compare&gt;&amp; y);
-  template &lt;class Key, class Traits, class Compare&gt;
-    bool operator&gt;=(const btree_set&lt;Key,Traits,Compare&gt;&amp; x,
-      const btree_set&lt;Key,Traits,Compare&gt;&amp; y);
-  template &lt;class Key, class Traits, class Compare&gt;
-    bool operator&lt;=(const btree_set&lt;Key,Traits,Compare&gt;&amp; x,
-      const btree_set&lt;Key,Traits,Compare&gt;&amp; y);
-
-  template &lt;class Key, class Traits, class Compare&gt;
-    void swap(btree_set&lt;Key,Traits,Compare&gt;&amp; x,
-      btree_set&lt;Key,Traits,Compare&gt;&amp; y);
-
-&nbsp; template &lt;class Key,&nbsp;&nbsp;&nbsp; // requires memcpyable type without pointers or references
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;class Traits = default_traits, class Compare = btree::less&gt;
-&nbsp;&nbsp;  class btree_multiset;
-
-  template &lt;class Key, class Traits, class Compare&gt;
-    bool operator==(const btree_multiset&lt;Key,Traits,Compare&gt;&amp; x,
-      const btree_multiset&lt;Key,Traits,Compare&gt;&amp; y);
-  template &lt;class Key, class Traits, class Compare&gt;
-    bool operator&lt; (const btree_multiset&lt;Key,Traits,Compare&gt;&amp; x,
-      const btree_multiset&lt;Key,Traits,Compare&gt;&amp; y);
-  template &lt;class Key, class Traits, class Compare&gt;
-    bool operator!=(const btree_multiset&lt;Key,Traits,Compare&gt;&amp; x,
-      const btree_multiset&lt;Key,Traits,Compare&gt;&amp; y);
-  template &lt;class Key, class Traits, class Compare&gt;
-    bool operator&gt; (const btree_multiset&lt;Key,Traits,Compare&gt;&amp; x,
-      const btree_multiset&lt;Key,Traits,Compare&gt;&amp; y);
-  template &lt;class Key, class Traits, class Compare&gt;
-    bool operator&gt;=(const btree_multiset&lt;Key,Traits,Compare&gt;&amp; x,
-      const btree_multiset&lt;Key,Traits,Compare&gt;&amp; y);
-  template &lt;class Key, class Traits, class Compare&gt;
-    bool operator&lt;=(const btree_multiset&lt;Key,Traits,Compare&gt;&amp; x,
-      const btree_multiset&lt;Key,Traits,Compare&gt;&amp; y);
-
-  template &lt;class Key, class Traits, class Compare&gt;
-    void swap(btree_multiset&lt;Key,Traits,Compare&gt;&amp; x,
-      btree_multiset&lt;Key,Traits,Compare&gt;&amp; y);
-}}</pre>
-
-  <h2>Maps</h2>
-
-  <h3>Header &lt;boost/btree/btree_map.hpp&gt; synopsis</h3>
-  
-  <pre>namespace boost { namespace btree
-{
-  template &lt;class Key,    // requires memcpyable type without pointers or references
-            class T,      // ditto
-            class Traits = default_traits, class Compare = btree::less&gt;
-    class btree_map;
-    
-  template &lt;class Key, class T, class Traits, class Compare&gt;
-    bool operator==(const btree_map&lt;Key,T,Traits,Compare&gt;&amp; x,
-      const btree_map&lt;Key,T,Traits,Compare&gt;&amp; y);
-  template &lt;class Key, class T, class Traits, class Compare&gt;
-    bool operator&lt; (const btree_map&lt;Key,T,Traits,Compare&gt;&amp; x,
-      const btree_map&lt;Key,T,Traits,Compare&gt;&amp; y);
-  template &lt;class Key, class T, class Traits, class Compare&gt;
-    bool operator!=(const btree_map&lt;Key,T,Traits,Compare&gt;&amp; x,
-      const btree_map&lt;Key,T,Traits,Compare&gt;&amp; y);
-  template &lt;class Key, class T, class Traits, class Compare&gt;
-    bool operator&gt; (const btree_map&lt;Key,T,Traits,Compare&gt;&amp; x,
-      const btree_map&lt;Key,T,Traits,Compare&gt;&amp; y);
-  template &lt;class Key, class T, class Traits, class Compare&gt;
-    bool operator&gt;=(const btree_map&lt;Key,T,Traits,Compare&gt;&amp; x,
-      const btree_map&lt;Key,T,Traits,Compare&gt;&amp; y);
-  template &lt;class Key, class T, class Traits, class Compare&gt;
-    bool operator&lt;=(const btree_map&lt;Key,T,Traits,Compare&gt;&amp; x,
-      const btree_map&lt;Key,T,Traits,Compare&gt;&amp; y);
-
-  template &lt;class Key, class T, class Traits, class Compare&gt;
-    void swap(btree_map&lt;Key,T,Traits,Compare&gt;&amp; x,
-      btree_map&lt;Key,T,Traits,Compare&gt;&amp; y);
-
-&nbsp; template &lt;class Key,&nbsp;&nbsp;&nbsp; // requires memcpyable type without pointers or references
-            class T,      // ditto
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;class Traits = default_traits, class Compare = btree::less&gt;
-&nbsp;&nbsp;  class btree_multimap;
-
-  template &lt;class Key, class T, class Traits, class Compare&gt;
-    bool operator==(const btree_multimap&lt;Key,T,Traits,Compare&gt;&amp; x,
-      const btree_multimap&lt;Key,T,Traits,Compare&gt;&amp; y);
-  template &lt;class Key, class T, class Traits, class Compare&gt;
-    bool operator&lt; (const btree_multimap&lt;Key,T,Traits,Compare&gt;&amp; x,
-      const btree_multimap&lt;Key,T,Traits,Compare&gt;&amp; y);
-  template &lt;class Key, class T, class Traits, class Compare&gt;
-    bool operator!=(const btree_multimap&lt;Key,T,Traits,Compare&gt;&amp; x,
-      const btree_multimap&lt;Key,T,Traits,Compare&gt;&amp; y);
-  template &lt;class Key, class T, class Traits, class Compare&gt;
-    bool operator&gt; (const btree_multimap&lt;Key,T,Traits,Compare&gt;&amp; x,
-      const btree_multimap&lt;Key,T,Traits,Compare&gt;&amp; y);
-  template &lt;class Key, class T, class Traits, class Compare&gt;
-    bool operator&gt;=(const btree_multimap&lt;Key,T,Traits,Compare&gt;&amp; x,
-      const btree_multimap&lt;Key,T,Traits,Compare&gt;&amp; y);
-  template &lt;class Key, class T, class Traits, class Compare&gt;
-    bool operator&lt;=(const btree_multimap&lt;Key,T,Traits,Compare&gt;&amp; x,
-      const btree_multimap&lt;Key,T,Traits,Compare&gt;&amp; y);
-
-  template &lt;class Key, class T, class Traits, class Compare&gt;
-    void swap(btree_multimap&lt;Key,T,Traits,Compare&gt;&amp; x,
-      btree_multimap&lt;Key,T,Traits,Compare&gt;&amp; y);
-}}</pre>
 
   <p>&nbsp;</p>
   
