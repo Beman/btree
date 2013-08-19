@@ -244,71 +244,9 @@
   iterators.
   </p>
 
-  <h2>Sets</h2>
+  <h2><a name="Common-interface">Shared container interface</a></h2>
 
-  <p>Iterators <code>iterator</code> and <code>const_iterator</code> are the 
-  same type and that type is a constant iterator.</p>
-
-  <h3><a name="btree_set">Header</a> &lt;boost/btree/btree_set.hpp&gt; synopsis</h3>
-
-  <pre>namespace boost { namespace btree
-{
-  template &lt;class Key,    // requires memcpyable type without pointers or references
-            class Traits = default_traits, class Compare = btree::less&gt;
-    class btree_set;
-    
-  template &lt;class Key, class Traits, class Compare&gt;
-    bool operator==(const btree_set&lt;Key,Traits,Compare&gt;&amp; x,
-      const btree_set&lt;Key,Traits,Compare&gt;&amp; y);
-  template &lt;class Key, class Traits, class Compare&gt;
-    bool operator&lt; (const btree_set&lt;Key,Traits,Compare&gt;&amp; x,
-      const btree_set&lt;Key,Traits,Compare&gt;&amp; y);
-  template &lt;class Key, class Traits, class Compare&gt;
-    bool operator!=(const btree_set&lt;Key,Traits,Compare&gt;&amp; x,
-      const btree_set&lt;Key,Traits,Compare&gt;&amp; y);
-  template &lt;class Key, class Traits, class Compare&gt;
-    bool operator&gt; (const btree_set&lt;Key,Traits,Compare&gt;&amp; x,
-      const btree_set&lt;Key,Traits,Compare&gt;&amp; y);
-  template &lt;class Key, class Traits, class Compare&gt;
-    bool operator&gt;=(const btree_set&lt;Key,Traits,Compare&gt;&amp; x,
-      const btree_set&lt;Key,Traits,Compare&gt;&amp; y);
-  template &lt;class Key, class Traits, class Compare&gt;
-    bool operator&lt;=(const btree_set&lt;Key,Traits,Compare&gt;&amp; x,
-      const btree_set&lt;Key,Traits,Compare&gt;&amp; y);
-
-  template &lt;class Key, class Traits, class Compare&gt;
-    void swap(btree_set&lt;Key,Traits,Compare&gt;&amp; x,
-      btree_set&lt;Key,Traits,Compare&gt;&amp; y);
-
-&nbsp; template &lt;class Key,&nbsp;&nbsp;&nbsp; // requires memcpyable type without pointers or references
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;class Traits = default_traits, class Compare = btree::less&gt;
-&nbsp;&nbsp;  class btree_multiset;
-
-  template &lt;class Key, class Traits, class Compare&gt;
-    bool operator==(const btree_multiset&lt;Key,Traits,Compare&gt;&amp; x,
-      const btree_multiset&lt;Key,Traits,Compare&gt;&amp; y);
-  template &lt;class Key, class Traits, class Compare&gt;
-    bool operator&lt; (const btree_multiset&lt;Key,Traits,Compare&gt;&amp; x,
-      const btree_multiset&lt;Key,Traits,Compare&gt;&amp; y);
-  template &lt;class Key, class Traits, class Compare&gt;
-    bool operator!=(const btree_multiset&lt;Key,Traits,Compare&gt;&amp; x,
-      const btree_multiset&lt;Key,Traits,Compare&gt;&amp; y);
-  template &lt;class Key, class Traits, class Compare&gt;
-    bool operator&gt; (const btree_multiset&lt;Key,Traits,Compare&gt;&amp; x,
-      const btree_multiset&lt;Key,Traits,Compare&gt;&amp; y);
-  template &lt;class Key, class Traits, class Compare&gt;
-    bool operator&gt;=(const btree_multiset&lt;Key,Traits,Compare&gt;&amp; x,
-      const btree_multiset&lt;Key,Traits,Compare&gt;&amp; y);
-  template &lt;class Key, class Traits, class Compare&gt;
-    bool operator&lt;=(const btree_multiset&lt;Key,Traits,Compare&gt;&amp; x,
-      const btree_multiset&lt;Key,Traits,Compare&gt;&amp; y);
-
-  template &lt;class Key, class Traits, class Compare&gt;
-    void swap(btree_multiset&lt;Key,Traits,Compare&gt;&amp; x,
-      btree_multiset&lt;Key,Traits,Compare&gt;&amp; y);
-}}</pre>
-  <h3>Class btree_set</h3>
-
+  <h3><a name="Common synopsis">Shared synopsis</a></h3>
   <pre>namespace boost { namespace btree
 {
   template &lt;class Key,    // requires memcpyable type without pointers or references
@@ -334,7 +272,7 @@
                                     reverse_iterator;
     typedef std::reverse_iterator&lt;const_iterator&gt;
                                     const_reverse_iterator;
-    // <a href="#btree_set-constructors-and-destructor">construct/destroy</a>
+    // <a href="#btree_set-constructors-and-destructor">construction and destruction</a>
     explicit btree_set();
 
     explicit btree_set(const boost::filesystem::path&amp; pth,
@@ -429,8 +367,7 @@
   };
 }}  // namespaces</pre>
 
-<h4><a name="btree_set-constructors-and-destructor">btree_set constructors and 
-destructor</a> </h4>
+<h4><a name="btree_set-constructors-and-destructor">Construction and destruction</a> </h4>
 
   <pre>explicit btree_set();</pre>
   <blockquote>
@@ -463,7 +400,7 @@ catch (...) {}</pre>
   </blockquote>
   </blockquote>
   
-  <h4><a name="btree_set-file-operations">btree_set file operations</a></h4>
+  <h4><a name="btree_set-file-operations">File operations</a></h4>
   
   <pre>void open(const boost::filesystem::path&amp; pth,
   flags::bitmask flgs = flags::read_only,
@@ -533,7 +470,7 @@ catch (...) {}</pre>
     close the external file. Otherwise, no effect.</p>
     <p><i>Postconditions:</i> <code>is_open() == false</code></p>
   </blockquote>
-  <h4><a name="btree_set-iterators">btree_set iterators</a></h4>
+  <h4><a name="btree_set-iterators">Iterators</a></h4>
   <pre>const_iterator  begin() const;
 const_iterator  cbegin() const;</pre>
   <blockquote>
@@ -560,7 +497,7 @@ const_reverse_iterator  crend() const;</pre>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Returns:</i> <code>std::reverse_iterator(begin())</code>.</p>
   </blockquote>
-    <h4><a name="btree_set-observers">btree_set observers</a></h4>
+    <h4><a name="btree_set-observers">Observers</a></h4>
   <pre>bool  is_open() const;</pre>
   <blockquote>
     <p><i>Returns:</i> <code>true</code> if the <code>open</code> function has 
@@ -612,7 +549,7 @@ const_reverse_iterator  crend() const;</pre>
     <code>emplace</code> calls have been applied at <code>end()</code>, and 
     there have been no <code>erase</code> calls.</p>
   </blockquote>
-    <h4><a name="btree_set-capacity">btree_set capacity</a></h4>
+    <h4><a name="btree_set-capacity">Capacity</a></h4>
   <pre>bool  empty() const;</pre>
   <blockquote>
     <p><i>Returns:</i> <code>!size()</code></p>
@@ -640,7 +577,7 @@ const_reverse_iterator  crend() const;</pre>
     <p><i>Returns:</i> The value of the <code>max</code> argument to the most 
     recent call to the <code>max_cache_size</code> function.</p>
   </blockquote>
-    <h4><a name="btree_set-tuning">btree_set tuning</a></h4>
+    <h4><a name="btree_set-tuning">Tuning</a></h4>
   <pre>void  max_cache_size(std::size_t max);  </pre>
   <blockquote>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
@@ -654,7 +591,7 @@ const_reverse_iterator  crend() const;</pre>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Effects:</i> <code>max_cache_size((mb*1048576)/node_size())</code><i>.</i></p>
   </blockquote>
-    <h4><a name="btree_set-modifiers">btree_set modifiers</a></h4>
+    <h4><a name="btree_set-modifiers">Modifiers</a></h4>
   <pre>std::pair&lt;const_iterator, bool&gt;
   emplace(const value_type&amp; value);</pre>
   <blockquote>
@@ -717,7 +654,7 @@ const_reverse_iterator  crend() const;</pre>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Postconditions:</i> <code>empty()</code> is <code>true</code>.</p>
   </blockquote>
-    <h4><a name="btree_set-operations">btree_set operations</a></h4>
+    <h4><a name="btree_set-operations">Operations</a></h4>
     <p>Objects of types <code>K</code> and <code>Key</code> are required to be
     <code>key_comp()</code> comparable.<br>
 &nbsp;</p>
@@ -763,6 +700,72 @@ const_iterator_range  equal_range(const Key&amp; k) const;</pre>
     <p><i>Returns:</i> Equivalent to <code>std::make_pair(lower_bound(k), 
     upper_bound(k)</code>).</p>
   </blockquote>
+
+  <h2>Sets</h2>
+
+  <p>Iterators <code>iterator</code> and <code>const_iterator</code> are the 
+  same type and that type is a constant iterator.</p>
+
+  <h3><a name="btree_set">Header</a> &lt;boost/btree/btree_set.hpp&gt; synopsis</h3>
+
+  <pre>namespace boost { namespace btree
+{
+  template &lt;class Key,    // requires memcpyable type without pointers or references
+            class Traits = default_traits, class Compare = btree::less&gt;
+    class btree_set;
+    
+  template &lt;class Key, class Traits, class Compare&gt;
+    bool operator==(const btree_set&lt;Key,Traits,Compare&gt;&amp; x,
+      const btree_set&lt;Key,Traits,Compare&gt;&amp; y);
+  template &lt;class Key, class Traits, class Compare&gt;
+    bool operator&lt; (const btree_set&lt;Key,Traits,Compare&gt;&amp; x,
+      const btree_set&lt;Key,Traits,Compare&gt;&amp; y);
+  template &lt;class Key, class Traits, class Compare&gt;
+    bool operator!=(const btree_set&lt;Key,Traits,Compare&gt;&amp; x,
+      const btree_set&lt;Key,Traits,Compare&gt;&amp; y);
+  template &lt;class Key, class Traits, class Compare&gt;
+    bool operator&gt; (const btree_set&lt;Key,Traits,Compare&gt;&amp; x,
+      const btree_set&lt;Key,Traits,Compare&gt;&amp; y);
+  template &lt;class Key, class Traits, class Compare&gt;
+    bool operator&gt;=(const btree_set&lt;Key,Traits,Compare&gt;&amp; x,
+      const btree_set&lt;Key,Traits,Compare&gt;&amp; y);
+  template &lt;class Key, class Traits, class Compare&gt;
+    bool operator&lt;=(const btree_set&lt;Key,Traits,Compare&gt;&amp; x,
+      const btree_set&lt;Key,Traits,Compare&gt;&amp; y);
+
+  template &lt;class Key, class Traits, class Compare&gt;
+    void swap(btree_set&lt;Key,Traits,Compare&gt;&amp; x,
+      btree_set&lt;Key,Traits,Compare&gt;&amp; y);
+
+&nbsp; template &lt;class Key,&nbsp;&nbsp;&nbsp; // requires memcpyable type without pointers or references
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;class Traits = default_traits, class Compare = btree::less&gt;
+&nbsp;&nbsp;  class btree_multiset;
+
+  template &lt;class Key, class Traits, class Compare&gt;
+    bool operator==(const btree_multiset&lt;Key,Traits,Compare&gt;&amp; x,
+      const btree_multiset&lt;Key,Traits,Compare&gt;&amp; y);
+  template &lt;class Key, class Traits, class Compare&gt;
+    bool operator&lt; (const btree_multiset&lt;Key,Traits,Compare&gt;&amp; x,
+      const btree_multiset&lt;Key,Traits,Compare&gt;&amp; y);
+  template &lt;class Key, class Traits, class Compare&gt;
+    bool operator!=(const btree_multiset&lt;Key,Traits,Compare&gt;&amp; x,
+      const btree_multiset&lt;Key,Traits,Compare&gt;&amp; y);
+  template &lt;class Key, class Traits, class Compare&gt;
+    bool operator&gt; (const btree_multiset&lt;Key,Traits,Compare&gt;&amp; x,
+      const btree_multiset&lt;Key,Traits,Compare&gt;&amp; y);
+  template &lt;class Key, class Traits, class Compare&gt;
+    bool operator&gt;=(const btree_multiset&lt;Key,Traits,Compare&gt;&amp; x,
+      const btree_multiset&lt;Key,Traits,Compare&gt;&amp; y);
+  template &lt;class Key, class Traits, class Compare&gt;
+    bool operator&lt;=(const btree_multiset&lt;Key,Traits,Compare&gt;&amp; x,
+      const btree_multiset&lt;Key,Traits,Compare&gt;&amp; y);
+
+  template &lt;class Key, class Traits, class Compare&gt;
+    void swap(btree_multiset&lt;Key,Traits,Compare&gt;&amp; x,
+      btree_multiset&lt;Key,Traits,Compare&gt;&amp; y);
+}}</pre>
+  <h3>Class btree_set</h3>
+
   <h3>Class btree_multiset</h3>
 
   <p>Class <code>btree_multiset</code> is the functionally the same as <code>
@@ -1044,7 +1047,7 @@ btree_map(InputIterator begin, InputIterator end,
   <hr>
 
   <p>Revised 
-  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->18 August 2013<!--webbot bot="Timestamp" endspan i-checksum="31365" --></p>
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->19 August 2013<!--webbot bot="Timestamp" endspan i-checksum="31367" --></p>
 
   <p>© Copyright Beman Dawes, 2013</p>
 
