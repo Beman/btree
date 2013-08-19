@@ -249,13 +249,70 @@
   <p>Iterators <code>iterator</code> and <code>const_iterator</code> are the 
   same type and that type is a constant iterator.</p>
 
-  <h3><a name="btree_set">Header</a> &lt;boost/btree/set.hpp&gt; synopsis</h3>
+  <h3><a name="btree_set">Header</a> &lt;boost/btree/btree_set.hpp&gt; synopsis</h3>
 
   <pre>namespace boost { namespace btree
 {
   template &lt;class Key,    // requires memcpyable type without pointers or references
-            class Traits = default_traits,
-            class Compare = btree::less&gt;
+            class Traits = default_traits, class Compare = btree::less&gt;
+    class btree_set;
+    
+  template &lt;class Key, class Traits, class Compare&gt;
+    bool operator==(const btree_set&lt;Key,Traits,Compare&gt;&amp; x,
+      const btree_set&lt;Key,Traits,Compare&gt;&amp; y);
+  template &lt;class Key, class Traits, class Compare&gt;
+    bool operator&lt; (const btree_set&lt;Key,Traits,Compare&gt;&amp; x,
+      const btree_set&lt;Key,Traits,Compare&gt;&amp; y);
+  template &lt;class Key, class Traits, class Compare&gt;
+    bool operator!=(const btree_set&lt;Key,Traits,Compare&gt;&amp; x,
+      const btree_set&lt;Key,Traits,Compare&gt;&amp; y);
+  template &lt;class Key, class Traits, class Compare&gt;
+    bool operator&gt; (const btree_set&lt;Key,Traits,Compare&gt;&amp; x,
+      const btree_set&lt;Key,Traits,Compare&gt;&amp; y);
+  template &lt;class Key, class Traits, class Compare&gt;
+    bool operator&gt;=(const btree_set&lt;Key,Traits,Compare&gt;&amp; x,
+      const btree_set&lt;Key,Traits,Compare&gt;&amp; y);
+  template &lt;class Key, class Traits, class Compare&gt;
+    bool operator&lt;=(const btree_set&lt;Key,Traits,Compare&gt;&amp; x,
+      const btree_set&lt;Key,Traits,Compare&gt;&amp; y);
+
+  template &lt;class Key, class Traits, class Compare&gt;
+    void swap(btree_set&lt;Key,Traits,Compare&gt;&amp; x,
+      btree_set&lt;Key,Traits,Compare&gt;&amp; y);
+
+&nbsp; template &lt;class Key,&nbsp;&nbsp;&nbsp; // requires memcpyable type without pointers or references
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;class Traits = default_traits, class Compare = btree::less&gt;
+&nbsp;&nbsp;  class btree_multiset;
+
+  template &lt;class Key, class Traits, class Compare&gt;
+    bool operator==(const btree_multiset&lt;Key,Traits,Compare&gt;&amp; x,
+      const btree_multiset&lt;Key,Traits,Compare&gt;&amp; y);
+  template &lt;class Key, class Traits, class Compare&gt;
+    bool operator&lt; (const btree_multiset&lt;Key,Traits,Compare&gt;&amp; x,
+      const btree_multiset&lt;Key,Traits,Compare&gt;&amp; y);
+  template &lt;class Key, class Traits, class Compare&gt;
+    bool operator!=(const btree_multiset&lt;Key,Traits,Compare&gt;&amp; x,
+      const btree_multiset&lt;Key,Traits,Compare&gt;&amp; y);
+  template &lt;class Key, class Traits, class Compare&gt;
+    bool operator&gt; (const btree_multiset&lt;Key,Traits,Compare&gt;&amp; x,
+      const btree_multiset&lt;Key,Traits,Compare&gt;&amp; y);
+  template &lt;class Key, class Traits, class Compare&gt;
+    bool operator&gt;=(const btree_multiset&lt;Key,Traits,Compare&gt;&amp; x,
+      const btree_multiset&lt;Key,Traits,Compare&gt;&amp; y);
+  template &lt;class Key, class Traits, class Compare&gt;
+    bool operator&lt;=(const btree_multiset&lt;Key,Traits,Compare&gt;&amp; x,
+      const btree_multiset&lt;Key,Traits,Compare&gt;&amp; y);
+
+  template &lt;class Key, class Traits, class Compare&gt;
+    void swap(btree_multiset&lt;Key,Traits,Compare&gt;&amp; x,
+      btree_multiset&lt;Key,Traits,Compare&gt;&amp; y);
+}}</pre>
+  <h3>Class btree_set</h3>
+
+  <pre>namespace boost { namespace btree
+{
+  template &lt;class Key,    // requires memcpyable type without pointers or references
+            class Traits = default_traits, class Compare = btree::less&gt;
   class btree_set
   {
   public:
@@ -281,27 +338,21 @@
     explicit btree_set();
 
     explicit btree_set(const boost::filesystem::path&amp; pth,
-      flags::bitmask flgs = flags::read_only,
-      uint64_t sig = -1,
-      const Compare&amp; comp = Compare(),
-      std::size_t node_sz = default_node_size); 
+      flags::bitmask flgs = flags::read_only, uint64_t sig = -1,
+      const Compare&amp; comp = Compare(), std::size_t node_sz = default_node_size); 
 
     template &lt;class InputIterator&gt;
     btree_set(InputIterator begin, InputIterator end,
       const boost::filesystem::path&amp; pth,
-      flags::bitmask flgs = flags::read_only,
-      uint64_t sig = -1,
-      const Compare&amp; comp = Compare(),
-      std::size_t node_sz = default_node_size); 
+      flags::bitmask flgs = flags::read_only, uint64_t sig = -1,
+      const Compare&amp; comp = Compare(), std::size_t node_sz = default_node_size); 
 
    ~btree_set();
 
     // <a href="#btree_set-file-operations">file operations</a>
     void open(const boost::filesystem::path&amp; pth,
-      flags::bitmask flgs = flags::read_only,
-      uint64_t sig = -1,
-      const Compare&amp; comp = Compare(),
-      std::size_t node_sz = default_node_size); 
+      flags::bitmask flgs = flags::read_only, uint64_t sig = -1, 
+      const Compare&amp; comp = Compare(), std::size_t node_sz = default_node_size); 
     void                    flush();
     void                    close();
 
@@ -357,24 +408,24 @@
                           
     // <a href="#btree_set-operations">operations</a>
     template &lt;class K&gt;
-    const_iterator          find(const K&amp; k) const;
-    const_iterator          find(const Key&amp; k) const;
+      const_iterator        find(const K&amp; k) const;
+    const_iterator          find(const key_type&amp; k) const;
 
     template &lt;class K&gt;
-    size_type               count(const K&amp; k) const;
-    size_type               count(const Key&amp; k) const;
+      size_type             count(const K&amp; k) const;
+    size_type               count(const key_type&amp; k) const;
 
     template &lt;class K&gt;
-    const_iterator          lower_bound(const K&amp; k) const;
-    const_iterator          lower_bound(const Key&amp; k) const;
+      const_iterator        lower_bound(const K&amp; k) const;
+    const_iterator          lower_bound(const key_type&amp; k) const;
 
     template &lt;class K&gt;
-    const_iterator          upper_bound(const K&amp; k) const;
-    const_iterator          upper_bound(const Key&amp; k) const;
+      const_iterator        upper_bound(const K&amp; k) const;
+    const_iterator          upper_bound(const key_type&amp; k) const;
 
     template &lt;class K&gt;
-    const_iterator_range    equal_range(const K&amp; k) const;
-    const_iterator_range    equal_range(const Key&amp; k) const;
+      std::pair&lt;const_iterator, const_iterator&gt;  equal_range(const K&amp; k) const;
+    std::pair&lt;const_iterator, const_iterator&gt;    equal_range(const key_type&amp; k) const;
   };
 }}  // namespaces</pre>
 
@@ -712,7 +763,7 @@ const_iterator_range  equal_range(const Key&amp; k) const;</pre>
     <p><i>Returns:</i> Equivalent to <code>std::make_pair(lower_bound(k), 
     upper_bound(k)</code>).</p>
   </blockquote>
-  <h3>Header &lt;boost/btree/multiset.hpp&gt; synopsis</h3>
+  <h3>Class btree_multiset</h3>
 
   <p>Class <code>btree_multiset</code> is the functionally the same as <code>
   btree_set</code> except:</p>
@@ -777,58 +828,73 @@ const_iterator_range  equal_range(const Key&amp; k) const;</pre>
 
   <h2>Maps</h2>
 
-  <h3>Header &lt;boost/btree/map.hpp&gt; synopsis</h3>
-    <pre>namespace boost { namespace btree {
+  <h3>Header &lt;boost/btree/btree_map.hpp&gt; synopsis</h3>
+  
+  <pre>namespace boost { namespace btree
+{
+  template &lt;class Key,    // requires memcpyable type without pointers or references
+            class T,      // ditto
+            class Traits = default_traits, class Compare = btree::less&gt;
+    class btree_map;
+    
+  template &lt;class Key, class T, class Traits, class Compare&gt;
+    bool operator==(const btree_map&lt;Key,T,Traits,Compare&gt;&amp; x,
+      const btree_map&lt;Key,T,Traits,Compare&gt;&amp; y);
+  template &lt;class Key, class T, class Traits, class Compare&gt;
+    bool operator&lt; (const btree_map&lt;Key,T,Traits,Compare&gt;&amp; x,
+      const btree_map&lt;Key,T,Traits,Compare&gt;&amp; y);
+  template &lt;class Key, class T, class Traits, class Compare&gt;
+    bool operator!=(const btree_map&lt;Key,T,Traits,Compare&gt;&amp; x,
+      const btree_map&lt;Key,T,Traits,Compare&gt;&amp; y);
+  template &lt;class Key, class T, class Traits, class Compare&gt;
+    bool operator&gt; (const btree_map&lt;Key,T,Traits,Compare&gt;&amp; x,
+      const btree_map&lt;Key,T,Traits,Compare&gt;&amp; y);
+  template &lt;class Key, class T, class Traits, class Compare&gt;
+    bool operator&gt;=(const btree_map&lt;Key,T,Traits,Compare&gt;&amp; x,
+      const btree_map&lt;Key,T,Traits,Compare&gt;&amp; y);
+  template &lt;class Key, class T, class Traits, class Compare&gt;
+    bool operator&lt;=(const btree_map&lt;Key,T,Traits,Compare&gt;&amp; x,
+      const btree_map&lt;Key,T,Traits,Compare&gt;&amp; y);
+
+  template &lt;class Key, class T, class Traits, class Compare&gt;
+    void swap(btree_map&lt;Key,T,Traits,Compare&gt;&amp; x,
+      btree_map&lt;Key,T,Traits,Compare&gt;&amp; y);
+
+&nbsp; template &lt;class Key,&nbsp;&nbsp;&nbsp; // requires memcpyable type without pointers or references
+            class T,      // ditto
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;class Traits = default_traits, class Compare = btree::less&gt;
+&nbsp;&nbsp;  class btree_multimap;
+
+  template &lt;class Key, class T, class Traits, class Compare&gt;
+    bool operator==(const btree_multimap&lt;Key,T,Traits,Compare&gt;&amp; x,
+      const btree_multimap&lt;Key,T,Traits,Compare&gt;&amp; y);
+  template &lt;class Key, class T, class Traits, class Compare&gt;
+    bool operator&lt; (const btree_multimap&lt;Key,T,Traits,Compare&gt;&amp; x,
+      const btree_multimap&lt;Key,T,Traits,Compare&gt;&amp; y);
+  template &lt;class Key, class T, class Traits, class Compare&gt;
+    bool operator!=(const btree_multimap&lt;Key,T,Traits,Compare&gt;&amp; x,
+      const btree_multimap&lt;Key,T,Traits,Compare&gt;&amp; y);
+  template &lt;class Key, class T, class Traits, class Compare&gt;
+    bool operator&gt; (const btree_multimap&lt;Key,T,Traits,Compare&gt;&amp; x,
+      const btree_multimap&lt;Key,T,Traits,Compare&gt;&amp; y);
+  template &lt;class Key, class T, class Traits, class Compare&gt;
+    bool operator&gt;=(const btree_multimap&lt;Key,T,Traits,Compare&gt;&amp; x,
+      const btree_multimap&lt;Key,T,Traits,Compare&gt;&amp; y);
+  template &lt;class Key, class T, class Traits, class Compare&gt;
+    bool operator&lt;=(const btree_multimap&lt;Key,T,Traits,Compare&gt;&amp; x,
+      const btree_multimap&lt;Key,T,Traits,Compare&gt;&amp; y);
+
+  template &lt;class Key, class T, class Traits, class Compare&gt;
+    void swap(btree_multimap&lt;Key,T,Traits,Compare&gt;&amp; x,
+      btree_multimap&lt;Key,T,Traits,Compare&gt;&amp; y);
+}}</pre>
+
+<h3>Class btree_map</h3>
+  
+      <pre>namespace boost { namespace btree {
 
 template &lt;class Key, class T, class Traits = default_traits,
-          class Comp = btree::less&lt;Key&gt; &gt;
-  class btree_map;
-
-template &lt;class Key, class T, class Traits = default_traits,
-          class Comp = btree::less&lt;Key&gt; &gt;
-  class btree_multimap;
-
-struct big_endian_traits
-{
-  typedef endian::big_uint32un_t  node_id_type;     // node ids are page numbers
-  typedef uint8_t                 node_level_type;  // level of node; 0 for leaf node.
-  typedef endian::big_uint24un_t  node_size_type;   // permits large node sizes
-  static const BOOST_SCOPED_ENUM(endian::order) header_endianness
-    = endian::order::big;
-};
-
-struct little_endian_traits
-{
-  typedef endian::little_uint32un_t  node_id_type;     // node ids are page numbers
-  typedef uint8_t                    node_level_type;  // level of node; 0 for leaf node.
-  typedef endian::little_uint24un_t  node_size_type;   // permits large node sizes
-  static const BOOST_SCOPED_ENUM(endian::order) header_endianness
-    = endian::order::little;
-};
-
-struct native_endian_traits
-{
-  typedef endian::native_uint32un_t  node_id_type;     // node ids are page numbers
-  typedef uint8_t                    node_level_type;  // level of node; 0 for leaf node.
-  typedef endian::native_uint24un_t  node_size_type;   // permits large node sizes
-  static const BOOST_SCOPED_ENUM(endian::order) header_endianness
-#   ifdef BOOST_BIG_ENDIAN
-        = endian::order::big;
-#   else
-        = endian::order::little;
-#   endif
-};
-
-typedef big_endian_traits  default_traits;
-
-} // namespace btree
-} // namespace boost</pre>
-
-  <h2>Class btree_map</h2>
-    <pre>namespace boost { namespace btree {
-
-template &lt;class Key, class T, class Traits = default_traits,
-          class Comp = btree::less&lt;Key&gt; &gt;
+          class Comp = btree::less &gt;
 class btree_map
 {
 public:
@@ -925,25 +991,11 @@ public:
   template &lt;class InputIterator&gt;
   void                    insert(InputIterator begin, InputIterator end);
 
-  iterator                update(iterator itr, const T&amp; mapped_value);
-  const_iterator          erase(const_iterator position);
-  size_type               erase(const key_type&amp; k);
-  const_iterator          erase(const_iterator first, const_iterator last);
-  void                    clear();
-
-  // operations:
-  const_iterator          find(const key_type&amp; k) const;
-  size_type               count(const key_type&amp; k) const;
-
-  const_iterator          lower_bound(const key_type&amp; k) const;
-  const_iterator          upper_bound(const key_type&amp; k) const;
-
-  const_iterator_range    equal_range(const key_type&amp; k) const;
 };
 } // namespace btree
 } // namespace boost</pre>
 
-  <h3>btree_map constructors and open</h3>
+  <h4>btree_map constructors and open</h4>
   <pre>explicit btree_map(const boost::filesystem::path&amp; p,
   flags::bitmask flgs = flags::read_only,
   uint64_t signature = -1, 
@@ -986,6 +1038,8 @@ btree_map(InputIterator begin, InputIterator end,
       </ul>
     </blockquote>
   </blockquote>
+  
+  <h3>Class btree_multimap</h3>
   
   <hr>
 
