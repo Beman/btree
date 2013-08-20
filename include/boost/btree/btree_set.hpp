@@ -18,6 +18,8 @@
 #include <boost/assert.hpp>
 #include <boost/static_assert.hpp>
 #include <boost/type_traits/is_pointer.hpp>
+#include <boost/type_traits/is_same.hpp>
+#include <string>
 #include <algorithm>
 #include <utility>
 
@@ -113,10 +115,11 @@ namespace boost
       typedef typename
         btree_base<Key, btree_set_base<Key,Traits,Compare> >::iterator        iterator;
 
-      BOOST_STATIC_ASSERT_MSG( !boost::is_pointer<Key>::value,
-        "Key must not be a pointer type");
+      BOOST_STATIC_ASSERT_MSG(!boost::is_pointer<Key>::value,
+        "btree Key must not be a pointer type");
+      BOOST_STATIC_ASSERT_MSG(!(boost::is_same<Key, std::string>::value),
+        "btree Key must not be std::string");
 
-      // <Key,Traits> is required by GCC but not by VC++
       explicit btree_set()
         : btree_base<Key,btree_set_base<Key,Traits,Compare> >() {}
 
@@ -230,10 +233,11 @@ namespace boost
       typedef typename
         btree_base<Key, btree_set_base<Key,Traits,Compare> >::iterator        iterator;
 
-      BOOST_STATIC_ASSERT_MSG( !boost::is_pointer<Key>::value,
-        "Key must not be a pointer type");
+      BOOST_STATIC_ASSERT_MSG(!boost::is_pointer<Key>::value,
+        "btree Key must not be a pointer type");
+      BOOST_STATIC_ASSERT_MSG(!(boost::is_same<Key, std::string>::value),
+        "btree Key must not be std::string");
 
-      // <Key,Traits> is required by GCC but not by VC++
       explicit btree_multiset()
         : btree_base<Key,btree_set_base<Key,Traits,Compare> >() {}
 

@@ -243,7 +243,7 @@ void construct_new_test(BT& bt, const fs::path& p)
   BOOST_TEST(bt.empty());
   BOOST_TEST((bt.flags() & btree::flags::read_only) == 0);
   BOOST_TEST(bt.node_size() == btree::default_node_size);  // the default
-  BOOST_TEST(bt.max_cache_size() ==
+  BOOST_TEST_EQ(bt.max_cache_size(),
     btree::max_cache_default(btree::flags::read_write, 0));
   bt.max_cache_size(-1);
   BOOST_TEST(bt.max_cache_size() == static_cast<std::size_t>(-1));

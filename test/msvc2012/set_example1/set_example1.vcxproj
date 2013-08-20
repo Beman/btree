@@ -159,12 +159,12 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\example\set_example1.cpp" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\btree_dll\btree_dll.vcxproj">
       <Project>{61954631-3857-4c20-9e7c-1da7baaff426}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\example\set1.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

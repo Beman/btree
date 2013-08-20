@@ -1156,9 +1156,7 @@ btree_base<Key,Base>::m_open(const boost::filesystem::path& p,
     m_hdr.last_node_id(m_root->node_id());
     m_root->level(0);
     m_root->size(0);
-    max_cache_size(max_cache_default(flgs,
-      static_cast<std::size_t>(boost::filesystem::file_size(p))));
-
+    max_cache_size(max_cache_default(flgs, static_cast<std::size_t>(0)));
   }
 }
 

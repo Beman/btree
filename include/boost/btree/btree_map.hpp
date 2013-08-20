@@ -18,6 +18,10 @@
 #include <boost/assert.hpp>
 #include <boost/static_assert.hpp>
 #include <boost/type_traits/is_pointer.hpp>
+#include <boost/type_traits/is_same.hpp>
+#include <string>
+#include <algorithm>
+#include <utility>
 #include <cstring>
 
 /*  Rationale for order of constructor and open arguments:
@@ -55,9 +59,13 @@ namespace boost
         btree_base<Key, btree_map_base<Key,T,Traits,Compare> >::iterator        iterator;
   
       BOOST_STATIC_ASSERT_MSG( !boost::is_pointer<Key>::value,
-        "Key must not be a pointer type");
+        "btree Key must not be a pointer type");
       BOOST_STATIC_ASSERT_MSG( !boost::is_pointer<T>::value,
-        "T must not be a pointer type");
+        "btree T must not be a pointer type");
+      BOOST_STATIC_ASSERT_MSG(!(boost::is_same<Key, std::string>::value),
+        "btree Key must not be std::string");
+      BOOST_STATIC_ASSERT_MSG(!(boost::is_same<T, std::string>::value),
+        "btree T must not be std::string");
 
       explicit btree_map()
         : btree_base<Key,btree_map_base<Key,T,Traits,Compare> >() {}
@@ -184,11 +192,14 @@ namespace boost
         btree_base<Key, btree_map_base<Key,T,Traits,Compare> >::iterator        iterator;
 
       BOOST_STATIC_ASSERT_MSG( !boost::is_pointer<Key>::value,
-        "Key must not be a pointer type");
+        "btree Key must not be a pointer type");
       BOOST_STATIC_ASSERT_MSG( !boost::is_pointer<T>::value,
-        "T must not be a pointer type");
+        "btree T must not be a pointer type");
+      BOOST_STATIC_ASSERT_MSG(!(boost::is_same<Key, std::string>::value),
+        "btree Key must not be std::string");
+      BOOST_STATIC_ASSERT_MSG(!(boost::is_same<T, std::string>::value),
+        "btree T must not be std::string");
 
-      // <Key,T,Compare> is required by GCC but not by VC++
       explicit btree_multimap()
         : btree_base<Key,btree_map_base<Key,T,Traits,Compare> >() {}
 

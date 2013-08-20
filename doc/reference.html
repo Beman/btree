@@ -752,15 +752,12 @@ const_iterator_range  equal_range(const Key&amp; k) const;</pre>
 
 }}  // namespaces </pre>
 
-  </div>
 
-  <h3 dir="ltr"><a name="Flags">Flags</a></h3>
+  <h3><a name="Flags">Flags</a></h3>
 
-  <p dir="ltr">The <code>flags::bitmask</code> enum is a bitmask type [C++ 17.5.2.1.3 bitmask.types] 
+  <p>The <code>flags::bitmask</code> enum is a bitmask type [C++ 17.5.2.1.3 bitmask.types] 
   used to package disparate arguments to constructors and open functions into a 
   single value. </p>
-
-  <div dir="ltr">
 
   <pre>namespace boost { namespace btree
 {
@@ -770,14 +767,16 @@ const_iterator_range  equal_range(const Key&amp; k) const;</pre>
     {
       none          = 0,
   
-      // bitmasks set by implemenation, ignored if passed in by user:
+      // bitmasks set by the implementation, ignored if passed in by user:
       unique        = 1,    // set or map
       key_only      = 2,    // set or multiset
    
       // open values (choose one):
-      read_only   = 0x100,   // file must exist
-      read_write  = 0x200,   // open existing file, otherwise create new file
-      truncate    = 0x400,   // same as read_write except existing file truncated
+      read_only   = 0x100,   // file must exist; opened in read-only mode.
+      read_write  = 0x200,   // open existing file in read-write mode;
+                             //   otherwise create new file.
+      truncate    = 0x400,   // same as read_write except existing file truncated;
+                             //   causes read_write to be set.
   
       // bitmask options set by user; not present in header:
       preload        = 0x1000, // existing file read to preload O/S file cache

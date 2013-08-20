@@ -1,4 +1,4 @@
-//  set_example1.cpp  ------------------------------------------------------------------//
+//  example/set1.cpp  ------------------------------------------------------------------//
 
 //  Copyright Beman Dawes 2011
 
@@ -12,7 +12,7 @@ using namespace boost::btree;
 
 int main()
 {
-  btree_set<int> set("set.btr", flags::truncate);
+  btree_set<int> set("set1.btr", flags::truncate);
 
   set.insert(5);
   set.insert(3);

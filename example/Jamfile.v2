@@ -4,8 +4,6 @@
 # Distributed under the Boost Software License, Version 1.0.
 # See www.boost.org/LICENSE_1_0.txt
 
-# For debugging, build with bjam variant=debug
-
 project 
     : requirements
       <library>/boost/btree//boost_btree
@@ -14,7 +12,7 @@ project
       <toolset>msvc:<asynch-exceptions>on
     ;
     
-exe set1 : set1.cpp ;
+exe set1 : set1.cpp : <link>static ;
 
 alias install : bin ;
 install bin : set1 ;
