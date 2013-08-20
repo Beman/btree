@@ -13,7 +13,9 @@ project
     ;
     
 exe set1 : set1.cpp : <link>static ;
+exe set_read_file : set_read_file.cpp : <link>static ;
+exe set2 : set2.cpp : <link>static ;
 
 alias install : bin ;
-install bin : set1 ;
+install bin : set1 set_read_file set2 ;
 explicit install bin ;

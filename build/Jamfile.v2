@@ -21,6 +21,7 @@ lib boost_btree
     ../../filesystem/build//boost_filesystem
     ../../timer/build//boost_timer
     ../../chrono/build//boost_chrono
+    ../../iostreams/build//boost_iostreams
     :
     <link>shared:<define>BOOST_ALL_DYN_LINK=1 # tell source we're building dll's
     <link>static:<define>BOOST_All_STATIC_LINK=1 # tell source we're building static lib's

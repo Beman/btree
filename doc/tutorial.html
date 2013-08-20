@@ -94,7 +94,97 @@ upper_bound(3) is 5</pre>
   from <code>std::set</code>. Did they work as you expected? Hopefully you 
   answer was &quot;yes&quot;!</p>
   
-  <p>But what about the additional template parameters, constructor arguments, 
+  <p>What is the point of using a <code>btree_set</code> instead of a <code>
+  std::set</code>? Let&#39;s look at another example...</p>
+  
+  <h2>Reading from a B-tree file</h2>
+  
+  <p>Here is the sample code for set_read_file.cpp, showing edits from set1.cpp:</p>
+  
+  <blockquote>
+    <pre>#include &lt;boost/btree/btree_set.hpp&gt;
+#include &lt;iostream&gt;
+using std::cout;
+using namespace boost::btree;
+
+int main()
+{
+  <del>btree_set&lt;int&gt; set(&quot;set1.btr&quot;, flags::truncate);</del>
+  <ins>btree_set&lt;int&gt; set(&quot;set1.btr&quot;);</ins>
+
+  <del>set.insert(5);</del>
+  <del>set.insert(3);</del>
+  <del>set.insert(1);</del>
+
+  for (btree_set&lt;int&gt;::iterator it = set.begin();
+    it != set.end(); ++it)
+    cout &lt;&lt; *it &lt;&lt; &#39;\n&#39;;
+
+  cout &lt;&lt; &quot;lower_bound(3) is &quot; &lt;&lt; *set.lower_bound(3) &lt;&lt; &#39;\n&#39;;
+  cout &lt;&lt; &quot;upper_bound(3) is &quot; &lt;&lt; *set.upper_bound(3) &lt;&lt; &#39;\n&#39;;
+
+  return 0;
+}
+</pre>
+  
+  </blockquote>
+  
+  <p>Since the &quot;set1.btr&quot; file already exists, we let the constructor flags 
+  default to <code>flags::read_only</code> and don&#39;t redo the inserts.</p>
+  <p>The first time this program ran, it crashed with one of those totally 
+  unhelpful Windows error messages. After slapping my forehead, I changed to code to use 
+  an exception reporting wrapper:</p>
+  <blockquote>
+    <pre>#include &lt;boost/btree/btree_set.hpp&gt;
+#include &lt;iostream&gt;
+<ins>#include &lt;boost/detail/lightweight_main.hpp&gt;</ins> 
+
+using std::cout;
+using namespace boost::btree;
+
+<del>int main()</del>
+<ins>int cpp_main(int, char *[])</ins>
+{
+  btree_set&lt;int&gt; set(&quot;set1.btr&quot;);
+
+  for (btree_set&lt;int&gt;::iterator it = set.begin();
+    it != set.end(); ++it)
+    cout &lt;&lt; *it &lt;&lt; &#39;\n&#39;;
+
+  cout &lt;&lt; &quot;lower_bound(3) is &quot; &lt;&lt; *set.lower_bound(3) &lt;&lt; &#39;\n&#39;;
+  cout &lt;&lt; &quot;upper_bound(3) is &quot; &lt;&lt; *set.upper_bound(3) &lt;&lt; &#39;\n&#39;;
+
+  return 0;
+}
+</pre>
+  </blockquote>
+  <p>That compiled and ran, with the exception reporting wrapper</p>
+  <blockquote>
+  <pre>ERROR  ERROR  ERROR  ERROR  ERROR  ERROR  ERROR  ERROR  ERROR  ERROR  ERROR
+
+****************************** std::exception *****************************
+binary_file::open: The system cannot find the file specified: &quot;set1.btr&quot;
+***************************************************************************
+</pre>
+  </blockquote>
+  <p>That illustrates an important point: because B-trees are disk resident, 
+  errors are a commonplace, so your code should expect exceptions to be thrown.</p>
+  
+  <p>After fixing the snafu that put set1.btr in a different directory, set_read_file.cpp 
+  ran fine:</p>
+  
+  <blockquote>
+    <pre>1
+3
+5
+lower_bound(3) is 3
+upper_bound(3) is 5</pre>
+  </blockquote>
+  <p>That brings us back to the original point; <b>B-tree are disk resident</b>, 
+  and that makes them very different animals from standard library associative 
+  containers.</p>
+  
+  <p>What about the additional template parameters, constructor arguments, 
   and member functions that are not present in <code>std::set</code>? You may have spotted 
   these if you looked at the
   <a href="reference.html">referenced documentation</a>? Don&#39;t worry about them 
@@ -121,14 +211,14 @@ using namespace boost::btree;
 
 int main()
 {
-  btree_set&lt;std::string&gt; set(&quot;set2.btr&quot;, flags::truncate);
+  typedef btree_set&lt;std::string&gt; set_type;
+  set_type set(&quot;set2.btr&quot;, flags::truncate);
 
   set.insert(&quot;eat&quot;);
   set.insert(&quot;drink&quot;);
   set.insert(&quot;be merry&quot;);
 
-  for (btree_set&lt;int&gt;::iterator it = set.begin();
-    it != set.end(); ++it)
+  for (set_type::iterator it = set.begin(); it != set.end(); ++it)
     cout &lt;&lt; *it &lt;&lt; &#39;\n&#39;;
 
   return 0;
@@ -153,8 +243,8 @@ Key=std::string
   <h2>Corrected string example</h2>
   
   <blockquote>
-    <pre>#include &lt;boost/btree/btree_set.hpp&gt;
-#include &lt;boost/btree/btree_index_set.hpp&gt;
+    <pre><del>#include &lt;boost/btree/btree_set.hpp&gt;</del>
+<ins>#include &lt;boost/btree/btree_set_index.hpp&gt;</ins>
 #include &lt;string&gt;
 #include &lt;iostream&gt;
 using std::cout;
@@ -162,16 +252,16 @@ using namespace boost::btree;
 
 int main()
 {
-  btree_set&lt;std::string&gt; set(&quot;set2.btr&quot;, flags::truncate);
-  btree_index&lt;boost::string_view&gt; set(&quot;set2.ndx&quot;, &quot;set2.dat&quot;, flags::truncate);
+  <del>typedef btree_set&lt;std::string&gt; set_type;</del>
+  <ins>typedef btree_set_index&lt;boost::string_view&gt; set_type;</ins>
+  <del>set_type set(&quot;set2.btr&quot;, flags::truncate);</del>
+  <ins>set_type set(&quot;set2.ndx&quot;, &quot;set2.dat&quot;, flags::truncate);</ins>
 
   set.insert(&quot;eat&quot;);
   set.insert(&quot;drink&quot;);
   set.insert(&quot;be merry&quot;);
 
-  for (btree_set&lt;int&gt;::iterator it = set.begin();
-  for (btree_index&lt;boost::string_view&gt;::iterator it = set.begin();
-    it != set.end(); ++it)
+  for (set_type::iterator it = set.begin(); it != set.end(); ++it)
     cout &lt;&lt; *it &lt;&lt; &#39;\n&#39;;
 
   return 0;
@@ -180,15 +270,16 @@ int main()
   </blockquote>
   
   
-  <p>...</p>
+  <p>Finally, let&#39;s look at the output of running set2:</p>
+  
   <blockquote>
     <pre>be merry
 drink
 eat
 </pre>
   </blockquote>
-  <p>...</p>
-  <p>...</p>
+  <p>No surprises there! Let&#39;s move on to maps...</p>
+  <h2 dir="ltr">A simple map</h2>
   <p>...</p>
   <p>...</p>
   <hr>

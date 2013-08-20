@@ -20,8 +20,7 @@ int main()
   set.insert("drink");
   set.insert("be merry");
 
-  for (set_type::iterator it = set.begin();
-    it != set.end(); ++it)
+  for (set_type::iterator it = set.begin(); it != set.end(); ++it)
     cout << *it << '\n';
 
   return 0;

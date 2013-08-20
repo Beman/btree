@@ -1,4 +1,4 @@
-//  example/set1.cpp  ------------------------------------------------------------------//
+//  example/set_read_file.cpp  ---------------------------------------------------------//
 
 //  Copyright Beman Dawes 2011
 
@@ -7,16 +7,14 @@
 
 #include <boost/btree/btree_set.hpp>
 #include <iostream>
+#include <boost/detail/lightweight_main.hpp> 
+
 using std::cout;
 using namespace boost::btree;
 
-int main()
+int cpp_main(int, char *[])
 {
-  btree_set<int> set("set1.btr", flags::truncate);
-
-  set.insert(5);
-  set.insert(3);
-  set.insert(1);
+  btree_set<int> set("set1.btr");
 
   for (btree_set<int>::iterator it = set.begin();
     it != set.end(); ++it)

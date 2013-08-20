@@ -16,7 +16,7 @@ body  {
 
 pre   { padding: .5em; background-color: #D7EEFF }
 
-ins   { background-color: #E8FFE8 }
+ins   { background-color: #E8FFE8; text-decoration: none; }
 del   { background-color: #FFD7D7 }
 
 /*** end ***/
