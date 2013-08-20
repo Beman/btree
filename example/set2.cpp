@@ -13,13 +13,14 @@ using namespace boost::btree;
 
 int main()
 {
-  btree_index<boost::string_view> set("set2.ndx", "set2.dat", flags::truncate);
+  typedef btree_index<boost::string_view> set_type;
+  set_type set("set2.ndx", "set2.dat", flags::truncate);
 
   set.insert("eat");
   set.insert("drink");
   set.insert("be merry");
 
-  for (btree_index<boost::string_view>::iterator it = set.begin();
+  for (set_type::iterator it = set.begin();
     it != set.end(); ++it)
     cout << *it << '\n';
 

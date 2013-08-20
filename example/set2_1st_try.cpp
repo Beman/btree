@@ -13,13 +13,14 @@ using namespace boost::btree;
 
 int main()
 {
-  btree_set<std::string> set("set2.btr", flags::truncate);
+  typedef btree_set<std::string> set_type;
+  set_type set("set2.btr", flags::truncate);
 
   set.insert("eat");
   set.insert("drink");
   set.insert("be merry");
 
-  for (btree_set<int>::iterator it = set.begin();
+  for (set_type::iterator it = set.begin();
     it != set.end(); ++it)
     cout << *it << '\n';
 

@@ -70,7 +70,7 @@ int main()
 
    <p>This should be familiar to users of the C++ standard library 
    associative container <code>std::set</code>. The only real difference, other 
-   than names, is the constructor call high-lighted in yellow. Because the 
+   than names, is the high-lighted constructor call. Because the 
    container is disk-resident, an argument supplies a path for the file to be 
    created. A second argument supplies <a href="reference.html#Flags">flags</a> 
    that specify details for opening the file. </p>
@@ -112,7 +112,8 @@ upper_bound(3) is 5</pre>
   <p>An obvious transformation of set1.cpp to handle strings instead of ints 
   looks like example set2_1st_try.cpp:</p>
   
-  <pre>#include &lt;boost/btree/btree_set.hpp&gt;
+  <blockquote>
+    <pre>#include &lt;boost/btree/btree_set.hpp&gt;
 #include &lt;string&gt;
 #include &lt;iostream&gt;
 using std::cout;
@@ -133,9 +134,12 @@ int main()
   return 0;
 }
 </pre>
+  </blockquote>
   
   <p>But this code will not compile! The error message from Visual C++ 2012 
   looks like this:</p>
+  
+  <blockquote>
   
   <pre>..\..\..\boost/btree/btree_set.hpp(120) : error C2338: btree Key must not be std::string
 set2_1st_try.cpp(16) : see reference to class template instantiation &#39;boost::btree
@@ -145,8 +149,48 @@ with
 Key=std::string
 ]
 ...</pre>
-  <p>&nbsp;</p>
+  </blockquote>
+  <h2>Corrected string example</h2>
   
+  <blockquote>
+    <pre>#include &lt;boost/btree/btree_set.hpp&gt;
+#include &lt;boost/btree/btree_index_set.hpp&gt;
+#include &lt;string&gt;
+#include &lt;iostream&gt;
+using std::cout;
+using namespace boost::btree;
+
+int main()
+{
+  btree_set&lt;std::string&gt; set(&quot;set2.btr&quot;, flags::truncate);
+  btree_index&lt;boost::string_view&gt; set(&quot;set2.ndx&quot;, &quot;set2.dat&quot;, flags::truncate);
+
+  set.insert(&quot;eat&quot;);
+  set.insert(&quot;drink&quot;);
+  set.insert(&quot;be merry&quot;);
+
+  for (btree_set&lt;int&gt;::iterator it = set.begin();
+  for (btree_index&lt;boost::string_view&gt;::iterator it = set.begin();
+    it != set.end(); ++it)
+    cout &lt;&lt; *it &lt;&lt; &#39;\n&#39;;
+
+  return 0;
+}
+</pre>
+  </blockquote>
+  
+  
+  <p>...</p>
+  <blockquote>
+    <pre>be merry
+drink
+eat
+</pre>
+  </blockquote>
+  <p>...</p>
+  <p>...</p>
+  <p>...</p>
+  <p>...</p>
   <hr>
 
   <p>Revised 
