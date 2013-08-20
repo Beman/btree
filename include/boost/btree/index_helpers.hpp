@@ -100,7 +100,6 @@ namespace btree
     typedef btree::support::size_t_codec codec;
   public:
     typedef boost::string_view         reference;
-
     typedef endian::big_uint48un_t     index_key;  // position in the flat file
 
     static std::size_t flat_size(const boost::string_view& x)

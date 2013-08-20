@@ -63,11 +63,30 @@
   type. For <code>btree_map</code> and <code>btree_multimap</code> it is equal to 
   <code>std::pair&lt;const Key, T&gt;</code>.
   </p>
-  <h3 dir="ltr">Requirements on template parameters</h3>
+  <h3 dir="ltr"><a name="Requirements-on-template-parameters">Requirements on 
+  template parameters</a></h3>
 
   <p dir="ltr">Types supplied by the <code>Key</code> and <code>T</code> 
-  template parameters must be copyable via <code>std::memcpy</code> and must not 
-  contain pointers or references. </p>
+  template parameters are required to:</p>
+
+  <ul>
+    <li>Be fixed-length, determinable by <code>sizeof</code>.</li>
+    <li dir="ltr">
+
+  <p dir="ltr">Still be valid after copy via <code>std::memcpy</code> to a 
+  different memory location.</p>
+
+    </li>
+    <li dir="ltr">
+
+  <p dir="ltr">Not 
+  contain pointers or references.</p>
+
+    </li>
+  </ul>
+
+  <p dir="ltr">None of the standard library container or container-like types 
+  meet these requirements. </p>
 
   <h3>Iterators</h3>
 
@@ -832,7 +851,7 @@ const_iterator_range  equal_range(const Key&amp; k) const;</pre>
   <hr>
 
   <p>Revised 
-  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->19 August 2013<!--webbot bot="Timestamp" endspan i-checksum="31367" --></p>
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->20 August 2013<!--webbot bot="Timestamp" endspan i-checksum="31350" --></p>
 
   <p>© Copyright Beman Dawes, 2013</p>
 

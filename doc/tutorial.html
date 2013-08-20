@@ -7,7 +7,7 @@
   <meta http-equiv="Content-Type" content=
   "text/html; charset=utf-8">
 
-  <title>B-Tree Home</title>
+  <title>B-Tree Tutorial</title>
   <link rel="stylesheet" type="text/css" href="minimal.css">
 </head>
 
@@ -132,7 +132,7 @@ int main()
   <p>Since the &quot;set1.btr&quot; file already exists, we let the constructor flags 
   default to <code>flags::read_only</code> and don&#39;t redo the inserts.</p>
   <p>The first time this program ran, it crashed with one of those totally 
-  unhelpful Windows error messages. After slapping my forehead, I changed to code to use 
+  unhelpful Windows error messages. The code was changed to code to use 
   an exception reporting wrapper:</p>
   <blockquote>
     <pre>#include &lt;boost/btree/btree_set.hpp&gt;
@@ -158,7 +158,7 @@ using namespace boost::btree;
 }
 </pre>
   </blockquote>
-  <p>That compiled and ran, with the exception reporting wrapper</p>
+  <p>That compiled and ran, with the wrapper reporting:</p>
   <blockquote>
   <pre>ERROR  ERROR  ERROR  ERROR  ERROR  ERROR  ERROR  ERROR  ERROR  ERROR  ERROR
 
@@ -167,10 +167,10 @@ binary_file::open: The system cannot find the file specified: &quot;set1.btr&quo
 ***************************************************************************
 </pre>
   </blockquote>
-  <p>That illustrates an important point: because B-trees are disk resident, 
-  errors are a commonplace, so your code should expect exceptions to be thrown.</p>
+  <p><b>Important point:</b> B-trees are disk resident, so errors are a 
+  commonplace. Your code should expect that exceptions will be thrown.</p>
   
-  <p>After fixing the snafu that put set1.btr in a different directory, set_read_file.cpp 
+  <p>After fixing the problem of set1.btr being in a different directory, set_read_file.cpp 
   ran fine:</p>
   
   <blockquote>
@@ -197,9 +197,10 @@ upper_bound(3) is 5</pre>
   <code>T</code>, for maps), since these requirements will cause endless problems if you 
   don&#39;t understand them. Read on...</p>
   
-  <h2>String example</h2>
+  <h2>Flawed string set</h2>
   
-  <p>An obvious transformation of set1.cpp to handle strings instead of ints 
+  <p>An obvious transformation of set1.cpp to handle <code>std::string</code> instead of
+  <code>int</code> 
   looks like example set2_1st_try.cpp:</p>
   
   <blockquote>
@@ -240,21 +241,67 @@ Key=std::string
 ]
 ...</pre>
   </blockquote>
-  <h2>Corrected string example</h2>
+  <p><span style="font-weight: 400">The problem is that <code>std::string</code> 
+  does not conform to the
+  <a href="reference.html#Requirements-on-template-parameters">requirements for
+  <code>Key</code></a>, which require <code>Key</code> be fixed-length, 
+  memcpyable, and not container pointers or references. How can those 
+  requirements be met? Read on...</span></p>
+  
+  <h2>Working string set</h2>
+  
+  <p>Except when the elements are fixed-length and quite short relative to disk 
+  page size, the best use of a B-tree is as an index into a random access file. 
+  That was described in the introduction of Bayer&#39;s original paper, <i><a href=
+  "http://www.minet.uni-jena.de/dbis/lehre/ws2005/dbs1/Bayer_hist.pdf">
+  Organization and Maintenance of Large Ordered Indexes</a></i>.</p>
+  
+  <p>This is implemented as two files, a btree_set (or btree_multiset) 
+  file used as an index pointing into a random-access flat file which contains 
+  the actual data. Databases and other software often use a similar approach, 
+  but may hide the index file from end-user view. The benefits of this two file 
+  approach include:</p>
+  
+  <ul>
+    <li>
+  <p>The elements in the flat file can be variable length.</li>
+  <li>
+  <p>The elements in the flat file can be far larger than would be 
+  practical for elements in a B-tree file.</li>
+  <li>
+  <p>Multiple B-tree index files can exist for a single flat file.</li>
+<li>
+  <p>Off-the-shelf or custom-written software can also access the flat 
+  file.</li>
+</ul>
+  <p>This two layer approach uses some additional components to create 
+  a seamless interface:</p>
+  
+  <ul>
+    <li>A Boost implementation of the new standard library <code>
+    <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3685.html">
+    string_view</a></code> class to act as the container&#39;s <code>
+    <span style="font-weight: 400">Key</span></code> type, so that the familiar
+    <code><span style="font-weight: 400">std::string</span></code> operations 
+    are available to users.</li>
+    <li>An adapter index traits class to copy data into and out of the 
+    flat file.</li>
+    <li>Class btree_set_index to glue the pieces together into a 
+    seamless interface.</li>
+</ul>
+  <p>Here is the final version of set2.cpp:</p>
   
   <blockquote>
-    <pre><del>#include &lt;boost/btree/btree_set.hpp&gt;</del>
-<ins>#include &lt;boost/btree/btree_set_index.hpp&gt;</ins>
+    <pre><ins>#include &lt;boost/btree/btree_set_index.hpp&gt;</ins>
+#include &lt;boost/detail/lightweight_main.hpp&gt; 
 #include &lt;string&gt;
 #include &lt;iostream&gt;
 using std::cout;
 using namespace boost::btree;
 
-int main()
+int cpp_main(int, char *[])
 {
-  <del>typedef btree_set&lt;std::string&gt; set_type;</del>
   <ins>typedef btree_set_index&lt;boost::string_view&gt; set_type;</ins>
-  <del>set_type set(&quot;set2.btr&quot;, flags::truncate);</del>
   <ins>set_type set(&quot;set2.ndx&quot;, &quot;set2.dat&quot;, flags::truncate);</ins>
 
   set.insert(&quot;eat&quot;);
@@ -270,7 +317,7 @@ int main()
   </blockquote>
   
   
-  <p>Finally, let&#39;s look at the output of running set2:</p>
+  <p>Here is the output:</p>
   
   <blockquote>
     <pre>be merry
@@ -278,9 +325,24 @@ drink
 eat
 </pre>
   </blockquote>
-  <p>No surprises there! Let&#39;s move on to maps...</p>
-  <h2 dir="ltr">A simple map</h2>
-  <p>...</p>
+  <p>And a dump of the flat file:</p>
+  <blockquote>
+    <pre>set2.dat:
+00000000  <span style="background-color: #E8FFE8">03</span>65 6174 <span style="background-color: #E8FFE8">05</span>64 7269 6e6b <span style="background-color: #E8FFE8">08</span>62 6520 6d65 .eat.drink.be me
+00000010  7272 79                                 rry</pre>
+  </blockquote>
+  <p>Notice that each element begins with a count. That&#39;s more efficient than 
+  null termination when processing long strings, and allows strings to contain 
+  embedded nulls. The count is itself variable length, and will use however many 
+  count bytes is required by the size of the string. The 0x80 bit will be set 
+  for count bytes except the last (i.e. low-order).</p>
+  <h2>User define type</h2>
+  <p>To Be Supplied.</p>
+  <h2>Multiple indexes</h2>
+  <p>To Be Supplied.</p>
+  <p>&nbsp;</p>
+  <h2>Maps</h2>
+  <p>To Be Supplied.</p>
   <p>...</p>
   <hr>
 
