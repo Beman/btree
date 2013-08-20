@@ -1,4 +1,4 @@
-//  boost/btree/btree_index.hpp  -------------------------------------------------------//
+//  boost/btree/btree_set_index.hpp.hpp  -----------------------------------------------//
 
 //  Copyright Beman Dawes 2000, 2006, 2010, 2013
 
@@ -27,14 +27,14 @@ namespace btree
 {
 
 //--------------------------------------------------------------------------------------//
-//                                class btree_index                                     //
+//                             class btree_set_index                                    //
 //--------------------------------------------------------------------------------------//
 
 template <class Key,    // requires memcpyable type without pointers or references
           class BtreeTraits = btree::default_traits,
           class Compare = btree::less,
           class IndexTraits = btree::default_index_traits<Key> >
-class btree_index
+class btree_set_index
   : public index_base<index_set_base<Key,BtreeTraits,Compare,IndexTraits> >
 {
 private:
@@ -63,9 +63,9 @@ public:
   typedef typename base::file_position   file_position;
 
 
-  btree_index() : base() {}
+  btree_set_index() : base() {}
 
-  btree_index(const path& index_pth,
+  btree_set_index(const path& index_pth,
             const path& file_pth,
             flags::bitmask flgs = flags::read_only,
             uint64_t sig = -1,  // for existing files, must match creation signature
@@ -75,7 +75,7 @@ public:
     base::open(index_pth, file_pth, flgs, sig, comp, node_sz);
   }
 
-  btree_index(const path& index_pth,
+  btree_set_index(const path& index_pth,
             file_ptr_type flat_file,            
             flags::bitmask flgs = flags::read_only,
             uint64_t sig = -1,  // for existing files, must match creation signature

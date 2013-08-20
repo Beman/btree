@@ -5,7 +5,7 @@
 //  Distributed under the Boost Software License, Version 1.0.
 //  See http://www.boost.org/LICENSE_1_0.txt
 
-#include <boost/btree/btree_index.hpp>
+#include <boost/btree/btree_set_index.hpp>
 #include <string>
 #include <iostream>
 using std::cout;
@@ -13,7 +13,7 @@ using namespace boost::btree;
 
 int main()
 {
-  typedef btree_index<boost::string_view> set_type;
+  typedef btree_set_index<boost::string_view> set_type;
   set_type set("set2.ndx", "set2.dat", flags::truncate);
 
   set.insert("eat");

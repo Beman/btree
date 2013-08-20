@@ -16,7 +16,7 @@
 
 #include <iostream>
 #include <iomanip>
-#include <boost/btree/btree_index.hpp>
+#include <boost/btree/btree_set_index.hpp>
 #include <boost/detail/lightweight_main.hpp>
 #include <boost/detail/lightweight_test.hpp>
 
@@ -80,7 +80,7 @@ void instantiate_test()
 
   // set
   {
-    btree::btree_index<int> x;
+    btree::btree_set_index<int> x;
     BOOST_TEST(!x.is_open());
     BOOST_TEST(x.index_size() == 0U);
     BOOST_TEST(x.index_empty());
@@ -98,7 +98,7 @@ void  open_all_new_test()
 
   {
     cout << "      default construct, then open..." << endl;
-    btree::btree_index<int> idx;
+    btree::btree_set_index<int> idx;
     idx.open(idx1_path, file_path, btree::flags::truncate, -1,
       btree::less(), 128);
     BOOST_TEST(idx.is_open());
@@ -110,7 +110,7 @@ void  open_all_new_test()
 
   {
     cout << "      open via constructor..." << endl;
-    btree::btree_index<int> idx(idx1_path, file_path,
+    btree::btree_set_index<int> idx(idx1_path, file_path,
       btree::flags::truncate, -1, btree::less(), 128);
     BOOST_TEST(idx.is_open());
     BOOST_TEST_EQ(idx.file_path(), file_path);
@@ -129,10 +129,10 @@ void  push_back_insert_pos_test()
   cout << "  push_back_insert_pos_test..." << endl;
 
   {
-    btree::btree_index<stuff> idx(idx1_path, file_path, 
+    btree::btree_set_index<stuff> idx(idx1_path, file_path, 
                                 btree::flags::truncate, -1, btree::less(), 128);
     stuff x(2,2);
-    btree::btree_index<stuff>::file_position pos = idx.push_back(x);
+    btree::btree_set_index<stuff>::file_position pos = idx.push_back(x);
     BOOST_TEST_EQ(pos, 0u);
     BOOST_TEST_EQ(idx.file_size(), sizeof(stuff));
     idx.insert_file_position(pos);
@@ -163,7 +163,7 @@ void  iterator_test()
 {
   cout << "  iterator_test..." << endl;
 
-  typedef btree::btree_index<stuff> index_type;
+  typedef btree::btree_set_index<stuff> index_type;
   index_type idx(idx1_path, file_path);
 
   index_type::iterator itr = idx.begin();
@@ -202,7 +202,7 @@ void  lower_bound_test()
 {
   cout << "  lower_bound_test..." << endl;
 
-  typedef btree::btree_index<stuff> index_type;
+  typedef btree::btree_set_index<stuff> index_type;
   index_type idx(idx1_path, file_path);
 
   index_type::iterator itr1 = idx.begin();
@@ -236,7 +236,7 @@ void  find_test()
 {
   cout << "  find_test..." << endl;
 
-  typedef btree::btree_index<stuff> index_type;
+  typedef btree::btree_set_index<stuff> index_type;
   index_type idx(idx1_path, file_path);
 
   index_type::iterator itr1 = idx.begin();
@@ -270,7 +270,7 @@ void  insert_test()
 {
   cout << "  insert_test..." << endl;
 
-  typedef btree::btree_index<stuff> index_type;
+  typedef btree::btree_set_index<stuff> index_type;
   index_type idx(idx1_path, file_path, btree::flags::read_write);
 
   stuff s00 (0,0);
@@ -338,14 +338,14 @@ void  two_index_test()
   cout << "  two_index_test..." << endl;
 
   {
-    btree::btree_index<stuff> idx1(idx1_path, file_path, btree::flags::truncate, -1,
+    btree::btree_set_index<stuff> idx1(idx1_path, file_path, btree::flags::truncate, -1,
       btree::less(), 128);
-    btree::btree_index<stuff, btree::default_traits, stuff_reverse_order>
+    btree::btree_set_index<stuff, btree::default_traits, stuff_reverse_order>
       idx2(idx2_path, idx1.file(), btree::flags::truncate, -1,
            stuff_reverse_order(), 128);
 
     stuff x(2,2);
-    btree::btree_index<stuff>::file_position pos = idx1.push_back(x);
+    btree::btree_set_index<stuff>::file_position pos = idx1.push_back(x);
     idx1.insert_file_position(pos);
     idx2.insert_file_position(pos);
 
@@ -376,7 +376,7 @@ void  two_index_iterator_test()
   {
     cout << "       idx1..." << endl;
 
-    typedef btree::btree_index<stuff> index_type;
+    typedef btree::btree_set_index<stuff> index_type;
     index_type idx(idx1_path, file_path);
 
     index_type::iterator itr = idx.begin();
@@ -408,7 +408,7 @@ void  two_index_iterator_test()
   {
     cout << "       idx2..." << endl;
 
-    typedef btree::btree_index<stuff,
+    typedef btree::btree_set_index<stuff,
       btree::default_traits, stuff_reverse_order> index_type;
     index_type idx(idx2_path, file_path);
 
@@ -456,7 +456,7 @@ void  c_string_test()
 {
   cout << "  c_string_test..." << endl;
 
-  typedef btree::btree_index<const char*, btree::default_traits, c_str_less> index;
+  typedef btree::btree_set_index<const char*, btree::default_traits, c_str_less> index;
   index idx(idx1_path, file_path.string() + ".c_string", btree::flags::truncate);
 
   const char* s1 = "aa";
@@ -539,7 +539,7 @@ void  string_view_test()
 {
   cout << "  string_view_test..." << endl;
 
-  typedef btree::btree_index<string_view> index;
+  typedef btree::btree_set_index<string_view> index;
   index idx(idx1_path, file_path.string() + ".string_view", btree::flags::truncate);
 
   const char* s1 = "aa";
