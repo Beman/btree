@@ -8,6 +8,11 @@
 #ifndef BOOST_BTREE_INDEX_SET_HPP
 #define BOOST_BTREE_INDEX_SET_HPP
 
+#ifdef _MSC_VER
+# pragma warning(push)
+# pragma warning(disable : 4996)   // equivalent to -D_SCL_SECURE_NO_WARNINGS
+#endif
+
 #include <boost/filesystem.hpp>
 #include <boost/btree/index_helpers.hpp>
 #include <boost/btree/btree_set.hpp>
@@ -247,5 +252,9 @@ public:
 
   } // namespace btree
 } // namespace boost
+
+#ifdef _MSC_VER
+#  pragma warning(pop) 
+#endif
 
 #endif  // BOOST_BTREE_INDEX_SET_HPP

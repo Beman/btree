@@ -10,7 +10,10 @@
 #ifndef BOOST_BTREE_HELPERS_HPP
 #define BOOST_BTREE_HELPERS_HPP
 
-#include <boost/config/warning_disable.hpp>
+#ifdef _MSC_VER
+# pragma warning(push)
+# pragma warning(disable : 4996)   // equivalent to -D_SCL_SECURE_NO_WARNINGS
+#endif
 
 #include <boost/btree/detail/config.hpp>
 #include <boost/cstdint.hpp>
@@ -223,5 +226,9 @@ struct less
 
 }  // namespace btree
 }  // namespace boost
+
+#ifdef _MSC_VER
+#  pragma warning(pop) 
+#endif
 
 #endif // BOOST_BTREE_HELPERS_HPP

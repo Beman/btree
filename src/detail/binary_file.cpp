@@ -5,9 +5,9 @@
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-//  See library home page at http://www.boost.org/libs/filesystem
-
 //--------------------------------------------------------------------------------------// 
+
+#include <boost/config/warning_disable.hpp>
 
 // define BOOST_BTREE_SOURCE so that <boost/btree/detail/config.hpp> knows
 // the library is being built (possibly exporting rather than importing code)
@@ -33,10 +33,6 @@ using boost::system::system_category;
 #   include "sys/stat.h"
 #   include "fcntl.h"
 #   include "io.h"
-
-#   ifdef BOOST_MSVC
-#     pragma warning(disable: 4996)  //The POSIX name for this item is deprecated
-#   endif
 
 # else // BOOST_POSIX_API
 #   include<boost/iostreams/detail/config/rtl.hpp>  // for BOOST_IOSTREAMS_FD_SEEK,

@@ -15,6 +15,11 @@
 //                                                                                      //
 //--------------------------------------------------------------------------------------//
 
+#ifdef _MSC_VER
+# pragma warning(push)
+# pragma warning(disable : 4996)   // equivalent to -D_SCL_SECURE_NO_WARNINGS
+#endif
+
 #include <string>
 #include <cstring>
 #include <boost/assert.hpp>
@@ -82,5 +87,9 @@ std::ostream& operator<<(std::ostream& os, const fixstr<MaxSize>& x)
   }
 }
 }
+
+#ifdef _MSC_VER
+#  pragma warning(pop) 
+#endif
 
 #endif  // BOOST_BTREE_FIXSTR_HPP

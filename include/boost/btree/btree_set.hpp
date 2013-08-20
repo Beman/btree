@@ -10,6 +10,11 @@
 #ifndef BOOST_BTREE_SET_HPP
 #define BOOST_BTREE_SET_HPP
 
+#ifdef _MSC_VER
+# pragma warning(push)
+# pragma warning(disable : 4996)   // equivalent to -D_SCL_SECURE_NO_WARNINGS
+#endif
+
 #include <boost/config.hpp>
 #include <boost/cstdint.hpp>
 #include <boost/btree/header.hpp>
@@ -331,5 +336,9 @@ namespace boost
 
   } // namespace btree
 } // namespace boost
+
+#ifdef _MSC_VER
+#  pragma warning(pop) 
+#endif
 
 #endif  // BOOST_BTREE_SET_HPP
