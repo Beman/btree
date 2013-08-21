@@ -35,15 +35,41 @@
 
   <h2>B-tree associative containers</h2>
 
-  <p>Associative containers provide fast retrieval of data based on keys. The 
-  library provides four basic kinds of associative containers: <code>btree_set</code>,
-  <code>btree_multiset</code>, <code>btree_map</code> and <code>btree_multimap</code>.
+  <p>The B-tree associative containers provided by the library are:</p>
+
+  <ul>
+    <li><code>btree_set</code>.</li>
+    <li><code>btree_multiset</code>.</li>
+    <li><code>btree_set_index</code>.</li>
+    <li><code>btree_multiset_index</code>.</li>
+    <li><code>btree_map</code>.</li>
+    <li><code>btree_multimap</code>.</li>
+    <li><code>btree_map_index</code>. (Under development)</li>
+    <li><code>btree_multimap_index</code>. (Under development)</li>
+    <li><code>btree_key_index</code>. (Under development)</li>
+    <li><code>btree_multikey_index</code>. (Under development)</li>
+  </ul>
+
+  <p>Associative containers provide fast retrieval of data based on keys. 
   </p>
+  <ul>
+    <li>The 
+  library provides several kinds of standalone B-tree associative containers: <code>btree_set</code>,
+  <code>btree_multiset</code>, <code>btree_map</code> and <code>btree_multimap</code>. 
+    These are collectively called <b><i>trees</i></b>.</li>
+    <li>The library  provides several kinds of B-tree associative containers 
+    that act as indexes to random-access files: <code>btree_set_index</code>,
+  <code>btree_multiset_index</code>, <code>btree_map_index</code>, <code>btree_multimap_index</code>,
+    <code>btree_key_index</code>, and <code>btree_multikey_index</code>. These 
+    are collectively called <b><i>indexes</i></b>. </li>
+  </ul>
   <p dir="ltr">Each associative container is parameterized on <code>Key</code> 
   and an ordering relation <code>Compare</code> that induces a strict weak 
-  ordering on elements of <code>Key</code>. In addition, <code>btree_map</code> 
-  and <code>btree_multimap</code> associate a mapped type <code>T</code> 
-  with the <code>Key</code>. The object of type <code>Compare</code> is called 
+  ordering on elements of <code>Key</code>. In addition, the associative 
+  container classes with <code>map</code> in their name associate a mapped type <code>T</code> 
+  with the <code>Key</code>, and are collectively called <i><b>maps</b></i>. The 
+  associative container classes with <code>set</code> in their name do not associate a mapped type with the <code>Key</code>, 
+  and are collectively called <i><b>sets</b></i>. The object of type <code>Compare</code> is called 
   the comparison object of a container. </p>
   <p>The phrase “equivalence of keys” means the equivalence relation imposed by 
   the comparison and <i>not</i> the <code>operator==</code> on keys. That is, 
@@ -52,15 +78,17 @@
   comp(k2, k1) == false</code>. For any two keys<code> k1</code> and <code>k2</code> 
   in the same container, calling <code>comp(k1, k2)</code> shall always return 
   the same value. </p>
-  <p>An associative container supports unique keys if it may contain at most one 
-  element for each key. Otherwise, it supports equivalent keys. The <code>btree_set</code> 
-  and <code>btree_map</code> classes support unique keys; the <code>btree_multiset</code> and 
-  <code>btree_multimap</code> classes support equivalent keys. For <code>btree_multiset</code> and 
-  <code>btree_multimap</code>, <code>insert</code>, <code>emplace</code>, and 
+  <p dir="ltr">An associative container supports unique keys if it may contain at most one 
+  element for each key. Otherwise, it supports equivalent keys. The associative 
+  container classes without <code>multi</code> in their name support unique keys and are collectively 
+  called <i><b>unique</b></i> containers. The associative container classes
+  <code>multi</code> in their name support equivalent keys and are 
+  collectively called <i><b>equivalent</b></i> containers. For equivalent 
+  containers, <code>insert</code>, <code>emplace</code>, and 
   <code>erase</code> preserve the relative ordering of 
   equivalent elements. </p>
-  <p>For <code>btree_set</code> and <code>btree_multiset</code> the value type is the same as the key 
-  type. For <code>btree_map</code> and <code>btree_multimap</code> it is equal to 
+  <p>For sets the value type is the same as the key 
+  type. For maps the value type is equal to 
   <code>std::pair&lt;const Key, T&gt;</code>.
   </p>
   <h3 dir="ltr"><a name="Requirements-on-template-parameters">Requirements on 
@@ -91,10 +119,8 @@
   <h3>Iterators</h3>
 
   <p>Iterators of  associative containers are bidirectional 
-  iterators. For <code>btree_set</code> 
-  and <code>btree_multiset</code>, iterator types <code>iterator</code> and <code>const_iterator</code> are the 
-  same type and is a constant iterator. For <code>btree_map</code> 
-  and <code>btree_multimap</code>, iterator types <code>iterator</code> and <code>const_iterator</code> are 
+  iterators. For sets, iterator types <code>iterator</code> and <code>const_iterator</code> are the 
+  same type and it is a constant iterator. For maps, iterator types <code>iterator</code> and <code>const_iterator</code> are 
   different types and <code>const_iterator</code> is a constant iterator.</p>
 
   <p>Functions <code>insert()</code>,&nbsp; <code>emplace()</code>, and <code>erase()</code> 
@@ -106,7 +132,7 @@
 
   <h2><a name="Common-interface">Interface</a> and functionality</h2>
 
-  <p>The interfaces and functionality for the four B-tree associative containers 
+  <p>All associative containers 
   share the same description. Material which is specific to particular container 
   types uses <i><b>bold italic font</b></i> to indicate the applicable type or 
   types.</p>
@@ -115,10 +141,10 @@
   <pre>namespace boost { namespace btree
 {
   template &lt;class Key,
-            <i><b>class T,  // btree_map and btree_multimap only</b></i>
+            <i><b>class T,  // maps only</b></i>
             class Traits = default_traits,
             class Compare = btree::less&gt;
-  class <b><i>class-name    // btree_set, btree_multiset, btree_map, or btree_multimap</i></b>
+  class <b><i>class-name    // see below</i></b>
   {
   public:
     // types:
@@ -261,7 +287,7 @@
 
   // non-member functions
 
-  <i><b>// Template parameter T is only present for btree_map and btree_multimap</b></i>
+  <i><b>// Template parameter T is only present for maps</b></i>
     
   template &lt;class Key, class T, class Traits, class Compare&gt;
     bool operator==(const <b><i>class-name</i></b>&lt;Key,T,Traits,Compare&gt;&amp; x,
@@ -851,7 +877,7 @@ const_iterator_range  equal_range(const Key&amp; k) const;</pre>
   <hr>
 
   <p>Revised 
-  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->20 August 2013<!--webbot bot="Timestamp" endspan i-checksum="31350" --></p>
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->21 August 2013<!--webbot bot="Timestamp" endspan i-checksum="31352" --></p>
 
   <p>© Copyright Beman Dawes, 2013</p>
 
