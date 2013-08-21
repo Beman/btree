@@ -35,35 +35,72 @@
 
   <h2>B-tree associative containers</h2>
 
-  <p>The B-tree associative containers provided by the library are:</p>
-
-  <ul>
-    <li><code>btree_set</code>.</li>
-    <li><code>btree_multiset</code>.</li>
-    <li><code>btree_set_index</code>.</li>
-    <li><code>btree_multiset_index</code>.</li>
-    <li><code>btree_map</code>.</li>
-    <li><code>btree_multimap</code>.</li>
-    <li><code>btree_map_index</code>. (Under development)</li>
-    <li><code>btree_multimap_index</code>. (Under development)</li>
-    <li><code>btree_key_index</code>. (Under development)</li>
-    <li><code>btree_multikey_index</code>. (Under development)</li>
-  </ul>
-
   <p>Associative containers provide fast retrieval of data based on keys. 
   </p>
   <ul>
     <li>The 
   library provides several kinds of standalone B-tree associative containers: <code>btree_set</code>,
   <code>btree_multiset</code>, <code>btree_map</code> and <code>btree_multimap</code>. 
-    These are collectively called <b><i>trees</i></b>.</li>
+    These are collectively called <b><i>trees</i></b>.<br>
+&nbsp;</li>
     <li>The library  provides several kinds of B-tree associative containers 
     that act as indexes to random-access files: <code>btree_set_index</code>,
   <code>btree_multiset_index</code>, <code>btree_map_index</code>, <code>btree_multimap_index</code>,
     <code>btree_key_index</code>, and <code>btree_multikey_index</code>. These 
     are collectively called <b><i>indexes</i></b>. </li>
   </ul>
-  <p dir="ltr">Each associative container is parameterized on <code>Key</code> 
+  
+  
+<table align="center" border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111">
+  <tr>
+  <td align="center">
+  <i><b>Class</b></i></td>
+  <td align="center">
+  <i><b>Header</b></i></td>
+  </tr>
+  <tr>
+  <td><code>btree_set</code></td>
+  <td><code>boost/btree/btree_set.hpp</code></td>
+  </tr>
+  <tr>
+  <td><code>btree_multiset</code></td>
+  <td><code>boost/btree/btree_set.hpp</code></td>
+  </tr>
+  <tr>
+  <td><code>btree_set_index</code></td>
+  <td><code>boost/btree/btree_set_index.hpp</code></td>
+  </tr>
+  <tr>
+  <td><code>btree_multiset_index</code></td>
+  <td><code>boost/btree/btree_set_index.hpp</code></td>
+  </tr>
+  <tr>
+  <td><code>btree_map</code></td>
+  <td><code>boost/btree/btree_map.hpp</code></td>
+  </tr>
+  <tr>
+  <td><code>btree_multimap</code></td>
+  <td><code>boost/btree/btree_map.hpp</code></td>
+  </tr>
+  <tr>
+  <td><code>btree_map_index</code></td>
+  <td align="center">Under development</td>
+  </tr>
+  <tr>
+  <td><code>btree_multimap_index</code></td>
+  <td align="center">Under development</td>
+  </tr>
+  <tr>
+  <td><code>btree_key_index</code></td>
+  <td align="center">Under development</td>
+  </tr>
+  <tr>
+  <td><code>btree_multikey_index</code></td>
+  <td align="center">Under development</td>
+  </tr>
+</table>
+
+  <p>Each associative container is parameterized on <code>Key</code> 
   and an ordering relation <code>Compare</code> that induces a strict weak 
   ordering on elements of <code>Key</code>. In addition, the associative 
   container classes with <code>map</code> in their name associate a mapped type <code>T</code> 
@@ -78,7 +115,7 @@
   comp(k2, k1) == false</code>. For any two keys<code> k1</code> and <code>k2</code> 
   in the same container, calling <code>comp(k1, k2)</code> shall always return 
   the same value. </p>
-  <p dir="ltr">An associative container supports unique keys if it may contain at most one 
+  <p>An associative container supports unique keys if it may contain at most one 
   element for each key. Otherwise, it supports equivalent keys. The associative 
   container classes without <code>multi</code> in their name support unique keys and are collectively 
   called <i><b>unique</b></i> containers. The associative container classes
@@ -91,29 +128,29 @@
   type. For maps the value type is equal to 
   <code>std::pair&lt;const Key, T&gt;</code>.
   </p>
-  <h3 dir="ltr"><a name="Requirements-on-template-parameters">Requirements on 
+  <h3><a name="Requirements-on-template-parameters">Requirements on 
   template parameters</a></h3>
 
-  <p dir="ltr">Types supplied by the <code>Key</code> and <code>T</code> 
+  <p>Types supplied by the <code>Key</code> and <code>T</code> 
   template parameters are required to:</p>
 
   <ul>
     <li>Be fixed-length, determinable by <code>sizeof</code>.</li>
-    <li dir="ltr">
+    <li>
 
-  <p dir="ltr">Still be valid after copy via <code>std::memcpy</code> to a 
+  <p>Still be valid after copy via <code>std::memcpy</code> to a 
   different memory location.</p>
 
     </li>
-    <li dir="ltr">
+    <li>
 
-  <p dir="ltr">Not 
+  <p>Not 
   contain pointers or references.</p>
 
     </li>
   </ul>
 
-  <p dir="ltr">None of the standard library container or container-like types 
+  <p>None of the standard library container or container-like types 
   meet these requirements. </p>
 
   <h3>Iterators</h3>
@@ -368,22 +405,22 @@ catch (...) {}</pre>
       <tr>
         <td width="50%"><code>is_open() == true</code></td>
         <td width="50%">
-        <p dir="ltr"><code>is_open() == true</code></td>
+        <p><code>is_open() == true</code></td>
       </tr>
       <tr>
         <td width="50%"><code>key_comp() == comp</code></td>
         <td width="50%">
-        <p dir="ltr"><code>key_comp() == comp</code></td>
+        <p><code>key_comp() == comp</code></td>
       </tr>
       <tr>
         <td width="50%"><code>value_comp() == comp</code></td>
         <td width="50%">
-        <p dir="ltr"><code>value_comp() == comp</code></td>
+        <p><code>value_comp() == comp</code></td>
       </tr>
       <tr>
         <td width="50%"><code>node_size() == node_sz</code></td>
         <td width="50%">
-        <p dir="ltr"><code>node_size() == node_sz</code></td>
+        <p><code>node_size() == node_sz</code></td>
       </tr>
       <tr>
         <td width="50%"><code>empty() == true</code></td>
@@ -455,10 +492,10 @@ const_reverse_iterator  crend() const;</pre>
   </blockquote>
   <pre>flags::bitmask  flags() const;</pre>
   <blockquote>
-    <p dir="ltr"><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
-    <p dir="ltr"><i>Returns:</i> The effective value of <code>flgs</code> from 
+    <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
+    <p><i>Returns:</i> The effective value of <code>flgs</code> from 
     the constructor or <code>open</code> function that opened the file.</p>
-    <p dir="ltr"><i>Remarks:</i> The effective value is the actual value 
+    <p><i>Remarks:</i> The effective value is the actual value 
     adjusted to reflect possible presence of <code>unique</code> and <code>
     key_only</code> flags, and application of hints.</p>
   </blockquote>
@@ -503,8 +540,8 @@ const_reverse_iterator  crend() const;</pre>
   </blockquote>
   <pre>size_type  max_size() const;</pre>
   <blockquote>
-    <p dir="ltr"><i>Returns:</i> <code>-1</code>.</p>
-    <p dir="ltr">[<i>Note:</i> This function is effectively useless, and is 
+    <p><i>Returns:</i> <code>-1</code>.</p>
+    <p>[<i>Note:</i> This function is effectively useless, and is 
     provided only because the standard library provides a similar useless 
     function! <i>-- end note</i>]</p>
   </blockquote>
@@ -576,7 +613,7 @@ const_reverse_iterator  crend() const;</pre>
   <pre>std::pair&lt;const_iterator, bool&gt; insert(const value_type&amp; x);  <b><i>// btree_set and btree_map only</i></b></pre>
   <blockquote>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
-    <p dir="ltr"><i>Effects:</i> Inserts <code>x</code> if and only if there is no 
+    <p><i>Effects:</i> Inserts <code>x</code> if and only if there is no 
     element in the container with key equivalent to the key of <code>x</code>. 
     The <code>bool</code> component of the returned pair is <code>true</code> if 
     and only if the insertion takes place, and the iterator component of the 
@@ -687,14 +724,14 @@ const_iterator_range  equal_range(const Key&amp; k) const;</pre>
     upper_bound(k)</code>).</p>
   </blockquote>
 
-  <h2 dir="ltr">Helpers</h2>
+  <h2>Helpers</h2>
 
-  <h3 dir="ltr">Header &lt;boost/btree/helpers.hpp&gt;Synopsis</h3>
+  <h3>Header &lt;boost/btree/helpers.hpp&gt;Synopsis</h3>
 
-  <p dir="ltr">The components in this header are included by the other boost/btree 
+  <p>The components in this header are included by the other boost/btree 
   headers. </p>
 
-  <div dir="ltr">
+  <div>
 
   <pre>namespace boost { namespace btree
 {
@@ -741,24 +778,24 @@ const_iterator_range  equal_range(const Key&amp; k) const;</pre>
   
 }}  // namespaces</pre>
   </div>
-  <h3 dir="ltr"><a name="Traits">Traits</a></h3>
-  <p dir="ltr">Traits provide the types for management objects on B-tree disk nodes. Nodes 
+  <h3><a name="Traits">Traits</a></h3>
+  <p>Traits provide the types for management objects on B-tree disk nodes. Nodes 
   are usually 4096 bytes in length for current hard disk hardware, and every 
   byte wasted in overhead causes a measurable reduction in speed as the tree 
   adds levels. That may favor unaligned traits, particularly if the user&#39;s key 
   and mapped types are also unaligned.</p>
-  <p dir="ltr">On the other hand, aligned types are in theory more efficient and generate 
+  <p>On the other hand, aligned types are in theory more efficient and generate 
   less code.</p>
-  <p dir="ltr">Actual timing tests on typical 2012 desktop hardware and operating systems, 
+  <p>Actual timing tests on typical 2012 desktop hardware and operating systems, 
   show virtually no real-world speed differences between aligned and unaligned 
   traits, or native and non-native endian traits. Other factors, such as maximum 
   cache size, size of mapped data, portability, and so on, determine B-tree 
   performance.</p>
-  <p dir="ltr">The <code>big_endian_traits</code> are chosen as the default because file 
+  <p>The <code>big_endian_traits</code> are chosen as the default because file 
   dumps are easier to read, files are portable, and none of the other traits 
   show any measurable effect on performance.</p>
 
-  <div dir="ltr">
+  <div>
 
   <pre>namespace boost { namespace btree
 {
@@ -846,27 +883,27 @@ const_iterator_range  equal_range(const Key&amp; k) const;</pre>
 
   </div>
 
-  <h3 dir="ltr"><a name="Constants">Constants</a></h3>
+  <h3><a name="Constants">Constants</a></h3>
 
-  <p dir="ltr">These constants are handy multipliers for specifying the large values 
+  <p>These constants are handy multipliers for specifying the large values 
   sometimes needed for size related function arguments. </p>
 
-  <h3 dir="ltr"><a name="Hint-based-defaults">Hint based defaults</a></h3>
+  <h3><a name="Hint-based-defaults">Hint based defaults</a></h3>
 
-  <p dir="ltr">Internally, the optimization hint flags are translated into default values 
+  <p>Internally, the optimization hint flags are translated into default values 
   by these functions. These values are unspecified to allow implementations to 
   make refinements as experience develops and hardware evolves. The functions 
   are exposed so that users can monitor the defaults if desired.</p>
 
-  <h3 dir="ltr"><a name="Function-object-less">Function object <code>btree::less</code></a></h3>
+  <h3><a name="Function-object-less">Function object <code>btree::less</code></a></h3>
 
-  <p dir="ltr">Provides heterogeneous comparisons as required to implement indexes and 
+  <p>Provides heterogeneous comparisons as required to implement indexes and 
   other indirect references. Also generally useful; see 
   <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3657.htm">N3657</a>,
   <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2012/n3421.htm">N3421</a>. 
   Heterogeneous comparisons will be provided in the C++14 standard library, but 
   until then <code>btree::less</code> provides the functionality.</p>
-  <p dir="ltr">Note: Allowing <code>less::operator()</code> to accept arguments of two 
+  <p>Note: Allowing <code>less::operator()</code> to accept arguments of two 
   different types does not eliminate the requirement that objects of the two 
   types be themselves <code>&lt;</code> comparable. For example, type <code>fat</code> 
   in <a href="../test/btree_unit_test.cpp">test/btree_unit_test.cpp</a> 
