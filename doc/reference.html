@@ -225,22 +225,48 @@
     // <a href="#btree_set-constructors-and-destructor">construction and destruction</a>
     explicit <b><i>class-name</i></b>();
 
-    explicit <b><i>class-name</i></b>(const boost::filesystem::path&amp; pth,
-      flags::bitmask flgs = flags::read_only, uint64_t sig = -1,
-      const Compare&amp; comp = Compare(), std::size_t node_sz = default_node_size); 
+    <b><i>// trees:</i></b>
+        explicit <b><i>class-name</i></b>(const path_type&amp; pth,
+          flags::bitmask flgs = flags::read_only, uint64_t sig = -1,
+          const Compare&amp; comp = Compare(), std::size_t node_sz = default_node_size); 
 
-    template &lt;class InputIterator&gt;
-    <b><i>class-name</i></b>(InputIterator begin, InputIterator end,
-      const boost::filesystem::path&amp; pth,
-      flags::bitmask flgs = flags::read_only, uint64_t sig = -1,
-      const Compare&amp; comp = Compare(), std::size_t node_sz = default_node_size); 
+        template &lt;class InputIterator&gt;
+      <b><i>  class-name</i></b>(InputIterator begin, InputIterator end,
+          const path_type&amp; pth,
+          flags::bitmask flgs = flags::read_only, uint64_t sig = -1,
+          const Compare&amp; comp = Compare(), std::size_t node_sz = default_node_size);
+
+    <b><i>// indexes:</i></b> 
+        <b><i>class-name</i></b>(const path_type&amp; index_pth,
+          const path_type&amp; file_pth,
+          flags::bitmask flgs = flags::read_only, uint64_t sig = -1,
+          const Compare&amp; comp = Compare(), std::size_t node_sz = default_node_size); 
+
+        <b><i>class-name</i></b>(const path_type&amp; index_pth,
+          file_ptr_type file_ptr,
+          flags::bitmask flgs = flags::read_only, uint64_t sig = -1,
+          const Compare&amp; comp = Compare(), std::size_t node_sz = default_node_size); 
 
    ~<b><i>class-name</i></b>();
 
     // <a href="#btree_set-file-operations">file operations</a>
-    void open(const boost::filesystem::path&amp; pth,
-      flags::bitmask flgs = flags::read_only, uint64_t sig = -1, 
-      const Compare&amp; comp = Compare(), std::size_t node_sz = default_node_size); 
+
+    <i><b>// trees:</b></i>
+        void open(const path_type&amp; pth,
+          flags::bitmask flgs = flags::read_only, uint64_t sig = -1, 
+          const Compare&amp; comp = Compare(), std::size_t node_sz = default_node_size);
+ 
+    <i><b>// indexes:</b></i>
+        void open(const path_type&amp; index_pth,
+          const path_type&amp; file_pth,
+          flags::bitmask flgs = flags::read_only, uint64_t sig = -1, 
+          const Compare&amp; comp = Compare(), std::size_t node_sz = default_node_size);
+ 
+        void open(const path_type&amp; pth,
+          file_ptr_type file_ptr,
+          flags::bitmask flgs = flags::read_only, uint64_t sig = -1, 
+          const Compare&amp; comp = Compare(), std::size_t node_sz = default_node_size);
+ 
     void                    flush();
     void                    close();
 
