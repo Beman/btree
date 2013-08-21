@@ -56,17 +56,18 @@ public:
   typedef typename base::const_iterator  const_iterator;
   typedef typename base::index_key       index_key;
 
-  typedef boost::filesystem::path        path;
   typedef typename base::file_type       file_type;
   typedef typename base::file_ptr_type   file_ptr_type;
   typedef typename base::file_size_type  file_size_type;
   typedef typename base::file_position   file_position;
 
+  typedef boost::filesystem::path        path_type;
+
 
   btree_set_index() : base() {}
 
-  btree_set_index(const path& index_pth,
-            const path& file_pth,
+  btree_set_index(const path_type& index_pth,
+            const path_type& file_pth,
             flags::bitmask flgs = flags::read_only,
             uint64_t sig = -1,  // for existing files, must match creation signature
             const Compare& comp = Compare(),
@@ -75,7 +76,7 @@ public:
     base::open(index_pth, file_pth, flgs, sig, comp, node_sz);
   }
 
-  btree_set_index(const path& index_pth,
+  btree_set_index(const path_type& index_pth,
             file_ptr_type flat_file,            
             flags::bitmask flgs = flags::read_only,
             uint64_t sig = -1,  // for existing files, must match creation signature
@@ -85,8 +86,8 @@ public:
     base::open(index_pth, flat_file,flgs, sig, comp, node_sz);
   }
 
-  void open(const path& index_pth,
-            const path& file_pth,
+  void open(const path_type& index_pth,
+            const path_type& file_pth,
             flags::bitmask flgs = flags::read_only,
             uint64_t sig = -1,  // for existing files, must match creation signature
             const Compare& comp = Compare(),
@@ -95,7 +96,7 @@ public:
     base::open(index_pth, file_pth, flgs, sig, comp, node_sz);
   }
 
-  void open(const path& index_pth,
+  void open(const path_type& index_pth,
             file_ptr_type flat_file,            
             flags::bitmask flgs = flags::read_only,
             uint64_t sig = -1,  // for existing files, must match creation signature

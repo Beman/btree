@@ -273,36 +273,47 @@ public:
     return iterator(m_index_btree.erase(first.m_index_iterator, last.m_index_iterator),
       m_file);
   }
+  void              clear()                 {m_index_btree.clear();}
 
-  //  iterators
+  // iterators
 
   iterator begin()              {return iterator(m_index_btree.begin(), file());}
   const_iterator begin() const  {return const_iterator(m_index_btree.begin(), file());}
   iterator end()                {return iterator(m_index_btree.end(), file());}
   const_iterator end() const    {return const_iterator(m_index_btree.end(), file());}
 
-  //  observers
-  bool              is_open() const       {BOOST_ASSERT(!m_index_btree.is_open()
-                                             || m_file->is_open());
-                                           return m_index_btree.is_open();}
-  flags::bitmask    flags() const         {return m_index_btree.flags();}
-  bool              index_empty() const   {return m_index_btree.empty();}
-  path_type         index_path() const    {return m_index_btree.path();}
-  index_size_type   index_size() const    {return m_index_btree.size();}
+  // observers
+  bool              is_open() const         {BOOST_ASSERT(!m_index_btree.is_open()
+                                               || m_file->is_open());
+                                             return m_index_btree.is_open();}
+  path_type         path() const            {return m_index_btree.path();}
+  flags::bitmask    flags() const           {return m_index_btree.flags();}
+                                            
+  // capacity                               
+  bool              empty() const           {return m_index_btree.empty();}
+  size_type         size() const            {return m_index_btree.size();}
+  size_type         max_size() const        {return m_index_btree.max_size();}
+  std::size_t       node_size() const       {return m_index_btree.node_size();}
+  std::size_t       max_cache_size() const  {return m_index_btree.max_cache_size();}
 
-  file_ptr_type     file() const          {return m_file;}
-  path_type         file_path() const     {BOOST_ASSERT(m_file);
-                                           return m_file->path();}
-  file_size_type    file_size() const     {BOOST_ASSERT(m_file);
-                                           return m_file->file_size();}
-  file_size_type    file_reserve() const  {BOOST_ASSERT(m_file);
-                                           return m_file->reserve();}
+  // tuning
+  void              max_cache_size(std::size_t m)  // -1 indicates unlimited
+                                            {m_index_btree.max_cache_size(m);}
+  void              max_cache_megabytes(std::size_t mb)
+                                            {m_index_btree.max_cache_megabytes(mb);}
+
+  // flat file
+  file_ptr_type     file() const            {return m_file;}
+  path_type         file_path() const       {BOOST_ASSERT(m_file);
+                                             return m_file->path();}
+  file_size_type    file_size() const       {BOOST_ASSERT(m_file);
+                                             return m_file->file_size();}
+  file_size_type    file_reserve() const    {BOOST_ASSERT(m_file);
+                                             return m_file->reserve();}
 
   // operations
-
-  file_position     position(iterator itr) const;
-  //  Returns: The offset in the flat file of the element pointed to by itr
-
+  file_position     position(iterator itr) const; // Returns: The offset in the flat file
+                                                  // of the element pointed to by itr
   const_iterator    find(const key_type& k) const 
                                            {return const_iterator(m_index_btree.find(k),
                                               m_file);}

@@ -82,8 +82,8 @@ void instantiate_test()
   {
     btree::btree_set_index<int> x;
     BOOST_TEST(!x.is_open());
-    BOOST_TEST(x.index_size() == 0U);
-    BOOST_TEST(x.index_empty());
+    BOOST_TEST(x.size() == 0U);
+    BOOST_TEST(x.empty());
   }
  
   cout << "    instantiate_test complete" << endl;
@@ -104,8 +104,8 @@ void  open_all_new_test()
     BOOST_TEST(idx.is_open());
     BOOST_TEST_EQ(idx.file_path(), file_path);
     BOOST_TEST_EQ(idx.file_size(), 0u);
-    BOOST_TEST_EQ(idx.index_path(), idx1_path);
-    BOOST_TEST_EQ(idx.index_size(), 0u);
+    BOOST_TEST_EQ(idx.path(), idx1_path);
+    BOOST_TEST_EQ(idx.size(), 0u);
   }
 
   {
@@ -115,8 +115,8 @@ void  open_all_new_test()
     BOOST_TEST(idx.is_open());
     BOOST_TEST_EQ(idx.file_path(), file_path);
     BOOST_TEST_EQ(idx.file_size(), 0u);
-    BOOST_TEST_EQ(idx.index_path(), idx1_path);
-    BOOST_TEST_EQ(idx.index_size(), 0u);
+    BOOST_TEST_EQ(idx.path(), idx1_path);
+    BOOST_TEST_EQ(idx.size(), 0u);
   }
 
   cout << "    open_all_new_test complete" << endl;
@@ -136,21 +136,21 @@ void  push_back_insert_pos_test()
     BOOST_TEST_EQ(pos, 0u);
     BOOST_TEST_EQ(idx.file_size(), sizeof(stuff));
     idx.insert_file_position(pos);
-    BOOST_TEST_EQ(idx.index_size(), 1u);
+    BOOST_TEST_EQ(idx.size(), 1u);
 
     x.assign(3,1);
     pos = idx.push_back(x);
     BOOST_TEST_EQ(pos, sizeof(stuff));
     BOOST_TEST_EQ(idx.file_size(), 2*sizeof(stuff));
     idx.insert_file_position(pos);
-    BOOST_TEST_EQ(idx.index_size(), 2u);
+    BOOST_TEST_EQ(idx.size(), 2u);
 
     x.assign(1,3);
     pos = idx.push_back(x);
     BOOST_TEST_EQ(pos, 2*sizeof(stuff));
     BOOST_TEST_EQ(idx.file_size(), 3*sizeof(stuff));
     idx.insert_file_position(pos);
-    BOOST_TEST_EQ(idx.index_size(), 3u);
+    BOOST_TEST_EQ(idx.size(), 3u);
   }
   BOOST_TEST_EQ(boost::filesystem::file_size(file_path), 3*sizeof(stuff));
 
@@ -302,7 +302,7 @@ void  insert_test()
   BOOST_TEST(result.second);
   BOOST_TEST_EQ(*result.first, s32);
 
-  BOOST_TEST(idx.index_size() == 7);
+  BOOST_TEST(idx.size() == 7);
 
   BOOST_TEST(idx.find(s00) != idx.end());
   BOOST_TEST_EQ(*idx.find(s00), s00);
@@ -359,8 +359,8 @@ void  two_index_test()
     idx1.insert_file_position(pos);
     idx2.insert_file_position(pos);
 
-    BOOST_TEST_EQ(idx1.index_size(), 3u);
-    BOOST_TEST_EQ(idx2.index_size(), 3u);
+    BOOST_TEST_EQ(idx1.size(), 3u);
+    BOOST_TEST_EQ(idx2.size(), 3u);
   }
   BOOST_TEST_EQ(boost::filesystem::file_size(file_path), 3*sizeof(stuff));
 
@@ -479,7 +479,7 @@ void  c_string_test()
   BOOST_TEST(result.second);
   BOOST_TEST(std::strcmp(*result.first, s4) == 0);
  
-  BOOST_TEST(idx.index_size() == 4);
+  BOOST_TEST(idx.size() == 4);
 
   index::iterator itr = idx.begin();
   index::iterator end = idx.end();
@@ -527,7 +527,7 @@ void  c_string_test()
   result = idx.insert(s4);
   BOOST_TEST(!result.second);
  
-  BOOST_TEST(idx.index_size() == 4);
+  BOOST_TEST(idx.size() == 4);
 
   cout << "     c_string_test complete" << endl;
 }
@@ -574,7 +574,7 @@ void  string_view_test()
   BOOST_TEST(*result.first == sv4);
   //cout << '"' << *result.first << '"' << endl;
  
-  BOOST_TEST(idx.index_size() == 4);
+  BOOST_TEST(idx.size() == 4);
  //cout << "*********************" << endl;
 
   index::iterator itr = idx.begin();
@@ -629,7 +629,7 @@ void  string_view_test()
   result = idx.insert(s4);
   BOOST_TEST(!result.second);
  
-  BOOST_TEST(idx.index_size() == 4);
+  BOOST_TEST(idx.size() == 4);
 
   BOOST_TEST(idx.find("a") == idx.end());
   BOOST_TEST(idx.find("ccca") == idx.end());
@@ -698,7 +698,7 @@ void  string_view_multiset_test()
   result = idx.insert(sv4);
   BOOST_TEST(*result == sv4);
  
-  BOOST_TEST(idx.index_size() == 4);
+  BOOST_TEST(idx.size() == 4);
 
   index::iterator itr = idx.begin();
   index::iterator end = idx.end();
@@ -744,10 +744,10 @@ void  string_view_multiset_test()
   idx.insert(s2);
   idx.insert(s1);
  
-  BOOST_TEST(idx.index_size() == 8);
+  BOOST_TEST(idx.size() == 8);
 
   BOOST_TEST_EQ(idx.erase(string_view("aa")), 2u);
-  BOOST_TEST(idx.index_size() == 6);
+  BOOST_TEST(idx.size() == 6);
 
   BOOST_TEST(idx.find("a") == idx.end());
   BOOST_TEST(idx.find("aa") == idx.end());
@@ -776,7 +776,7 @@ void  string_view_multiset_test()
   itr = idx.erase(idx.begin(), idx.find("b"));
   index::iterator itr2 = idx.find("b");
   BOOST_TEST(itr == itr2);
-  BOOST_TEST_EQ(idx.index_size(), 4);
+  BOOST_TEST_EQ(idx.size(), 4);
   BOOST_TEST_EQ(idx.count("b"), 2);
   BOOST_TEST_EQ(idx.count("ccc"), 2);
 
@@ -847,6 +847,49 @@ void  size_t_codec_test()
   cout << "     size_t_codec_test complete" << endl;
 }
 
+////-----------------------------  heterogeneous_key_test  -------------------------------//
+//struct simple
+//{
+//  int x;
+//  int y;
+//
+//  simple(){}
+//  simple(int x_, int y_) : x(x_), y(y_) {}
+//
+//  bool operator<(const simple& rhs) const  {return x < rhs.x;}
+//  bool operator==(const simple& rhs) const {return x == rhs.x;}
+//  bool operator!=(const simple& rhs) const {return x != rhs.x;}
+//};
+//
+//bool operator<(const simple& lhs, int rhs) {return lhs.x < rhs;}
+//bool operator<(int lhs, const simple& rhs) {return lhs < rhs.x;}
+//
+//void  heterogeneous_key_test()
+//{
+//  cout << "  heterogeneous_key_test..." << endl;
+//
+//  typedef btree::btree_set_index<simple> set;
+//  set idx(idx1_path, file_path, btree::flags::truncate);
+//
+//  idx.insert(simple(2, 0));
+//  idx.insert(simple(1, 0));
+//  idx.insert(simple(3, 0));
+//
+//  BOOST_TEST_EQ(idx.size(), 3u);
+//
+//  set::const_iterator result;
+//  result = idx.find(simple(2,0));
+//  BOOST_TEST(result != idx.end());
+//  BOOST_TEST_EQ(result->x, 2);
+//
+//  result = idx.find(2);
+//  BOOST_TEST(result != idx.end());
+//  BOOST_TEST_EQ(result->x, 2);
+//
+//  cout << "     heterogeneous_key_test complete" << endl;
+//}
+
+
 //-------------------------------------  _test  ----------------------------------------//
 
 void  _test()
@@ -904,6 +947,7 @@ int cpp_main(int argc, char* argv[])
   lower_bound_test();
   find_test();
   insert_test();
+  //heterogeneous_key_test();
   two_index_test();
   two_index_iterator_test();
   c_string_test();
