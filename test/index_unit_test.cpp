@@ -302,7 +302,7 @@ void  insert_test()
   BOOST_TEST(result.second);
   BOOST_TEST_EQ(*result.first, s32);
 
-  BOOST_TEST(idx.size() == 7);
+  BOOST_TEST(idx.size() == 7u);
 
   BOOST_TEST(idx.find(s00) != idx.end());
   BOOST_TEST_EQ(*idx.find(s00), s00);
@@ -479,7 +479,7 @@ void  c_string_test()
   BOOST_TEST(result.second);
   BOOST_TEST(std::strcmp(*result.first, s4) == 0);
  
-  BOOST_TEST(idx.size() == 4);
+  BOOST_TEST(idx.size() == 4u);
 
   index::iterator itr = idx.begin();
   index::iterator end = idx.end();
@@ -527,7 +527,7 @@ void  c_string_test()
   result = idx.insert(s4);
   BOOST_TEST(!result.second);
  
-  BOOST_TEST(idx.size() == 4);
+  BOOST_TEST(idx.size() == 4u);
 
   cout << "     c_string_test complete" << endl;
 }
@@ -574,7 +574,7 @@ void  string_view_test()
   BOOST_TEST(*result.first == sv4);
   //cout << '"' << *result.first << '"' << endl;
  
-  BOOST_TEST(idx.size() == 4);
+  BOOST_TEST(idx.size() == 4u);
  //cout << "*********************" << endl;
 
   index::iterator itr = idx.begin();
@@ -629,7 +629,7 @@ void  string_view_test()
   result = idx.insert(s4);
   BOOST_TEST(!result.second);
  
-  BOOST_TEST(idx.size() == 4);
+  BOOST_TEST(idx.size() == 4u);
 
   BOOST_TEST(idx.find("a") == idx.end());
   BOOST_TEST(idx.find("ccca") == idx.end());
@@ -659,7 +659,8 @@ void  string_view_test()
 
   idx.file()->close();
 
-  BOOST_TEST_EQ(fs::file_size(file_path.string() + ".string_view"), 4 + 6 + 1000003); 
+  BOOST_TEST_EQ(fs::file_size(file_path.string() + ".string_view"),
+    static_cast<uintmax_t>(4 + 6 + 1000003)); 
 
 
   cout << "     string_view_test complete" << endl;
@@ -698,7 +699,7 @@ void  string_view_multiset_test()
   result = idx.insert(sv4);
   BOOST_TEST(*result == sv4);
  
-  BOOST_TEST(idx.size() == 4);
+  BOOST_TEST(idx.size() == 4u);
 
   index::iterator itr = idx.begin();
   index::iterator end = idx.end();
@@ -744,10 +745,10 @@ void  string_view_multiset_test()
   idx.insert(s2);
   idx.insert(s1);
  
-  BOOST_TEST(idx.size() == 8);
+  BOOST_TEST(idx.size() == 8u);
 
   BOOST_TEST_EQ(idx.erase(string_view("aa")), 2u);
-  BOOST_TEST(idx.size() == 6);
+  BOOST_TEST(idx.size() == 6u);
 
   BOOST_TEST(idx.find("a") == idx.end());
   BOOST_TEST(idx.find("aa") == idx.end());
@@ -766,19 +767,19 @@ void  string_view_multiset_test()
   BOOST_TEST(idx.upper_bound("ccc") == idx.end());
   BOOST_TEST(idx.upper_bound("ccca") == idx.end());
 
-  BOOST_TEST_EQ(idx.count(""), 2);
-  BOOST_TEST_EQ(idx.count("a"), 0);
-  BOOST_TEST_EQ(idx.count("b"), 2);
-  BOOST_TEST_EQ(idx.count("ba"), 0);
-  BOOST_TEST_EQ(idx.count("ccc"), 2);
-  BOOST_TEST_EQ(idx.count("ccca"), 0);
+  BOOST_TEST_EQ(idx.count(""), 2u);
+  BOOST_TEST_EQ(idx.count("a"), 0u);
+  BOOST_TEST_EQ(idx.count("b"), 2u);
+  BOOST_TEST_EQ(idx.count("ba"), 0u);
+  BOOST_TEST_EQ(idx.count("ccc"), 2u);
+  BOOST_TEST_EQ(idx.count("ccca"), 0u);
 
   itr = idx.erase(idx.begin(), idx.find("b"));
   index::iterator itr2 = idx.find("b");
   BOOST_TEST(itr == itr2);
-  BOOST_TEST_EQ(idx.size(), 4);
-  BOOST_TEST_EQ(idx.count("b"), 2);
-  BOOST_TEST_EQ(idx.count("ccc"), 2);
+  BOOST_TEST_EQ(idx.size(), 4u);
+  BOOST_TEST_EQ(idx.count("b"), 2u);
+  BOOST_TEST_EQ(idx.count("ccc"), 2u);
 
   cout << "     string_view_multiset_test complete" << endl;
 }
@@ -801,41 +802,41 @@ void  size_t_codec_test()
   std::size_t encoded_sz;
 
   encoded_sz = codec::encoded_size(0);
-  BOOST_TEST_EQ(encoded_sz, 1);
+  BOOST_TEST_EQ(encoded_sz, 1u);
   codec::encode(0, buf, encoded_sz);
   r_decode = codec::decode(buf);
   BOOST_TEST_EQ(r_decode.first, 0u);
   BOOST_TEST_EQ(r_decode.second, encoded_sz);
 
   encoded_sz = codec::encoded_size(1);
-  BOOST_TEST_EQ(encoded_sz, 1);
+  BOOST_TEST_EQ(encoded_sz, 1u);
   codec::encode(1, buf, encoded_sz);
   r_decode = codec::decode(buf);
   BOOST_TEST_EQ(r_decode.first, 1u);
   BOOST_TEST_EQ(r_decode.second, encoded_sz);
 
   encoded_sz = codec::encoded_size(127);
-  BOOST_TEST_EQ(encoded_sz, 1);
+  BOOST_TEST_EQ(encoded_sz, 1u);
   codec::encode(127, buf, encoded_sz);
   r_decode = codec::decode(buf);
   BOOST_TEST_EQ(r_decode.first, 127u);
   BOOST_TEST_EQ(r_decode.second, encoded_sz);
 
   encoded_sz = codec::encoded_size(128);
-  BOOST_TEST_EQ(encoded_sz, 2);
+  BOOST_TEST_EQ(encoded_sz, 2u);
   codec::encode(128u, buf, encoded_sz);
   r_decode = codec::decode(buf);
   BOOST_TEST_EQ(r_decode.first, 128u);
   BOOST_TEST_EQ(r_decode.second, encoded_sz);
 
   encoded_sz = codec::encoded_size(16384u);
-  BOOST_TEST_EQ(encoded_sz, 3);
+  BOOST_TEST_EQ(encoded_sz, 3u);
   codec::encode(16384u, buf, encoded_sz);
   r_decode = codec::decode(buf);
   BOOST_TEST_EQ(r_decode.first, 16384u);
   BOOST_TEST_EQ(r_decode.second, encoded_sz);
 
-  for (std::size_t x = 0; x < 25000000; ++x)
+  for (std::size_t x = 0; x < 25000000u; ++x)
   {
     encoded_sz = codec::encoded_size(x);
     codec::encode(x, buf, encoded_sz);

@@ -1035,8 +1035,8 @@ void find_and_bounds_tests(BTree& bt)
   if (!(bt.header().flags() & btree::flags::unique))
   {
     cout << "     testing multi-count erase" << endl;
-    BOOST_TEST_EQ(bt.erase(typename BTree::key_type(3)), 2);
-    BOOST_TEST_EQ(bt.erase(typename BTree::key_type(7)), 3);
+    BOOST_TEST_EQ(bt.erase(typename BTree::key_type(3)), 2u);
+    BOOST_TEST_EQ(bt.erase(typename BTree::key_type(7)), 3u);
   }
 
 

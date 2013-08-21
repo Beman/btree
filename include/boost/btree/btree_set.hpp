@@ -150,14 +150,13 @@ namespace boost
       {
         for (; begin != end; ++begin)
         {
-          btree_base<Key,btree_set_base<Key,Traits,Compare> >::m_insert_unique(
-            *begin, *begin);
+          this->m_insert_unique(*begin, *begin);
         }
       }
 
      ~btree_set()
       {
-        try {btree_base<Key, btree_set_base<Key,Traits,Compare> >::close();}
+        try {this->close();}
         catch (...) {}
       }
 
@@ -168,8 +167,7 @@ namespace boost
         const Compare& comp = Compare(),
         std::size_t node_sz = default_node_size)  // node_sz ignored if existing file
       {
-        btree_base<Key,btree_set_base<Key,Traits,Compare> >::m_open(p,
-          flags::user_flags(flgs) | flags::key_only | flags::unique, sig,
+        this->m_open(p, flags::user_flags(flgs) | flags::key_only | flags::unique, sig,
           comp, node_sz);
       }
 
@@ -177,15 +175,13 @@ namespace boost
       std::pair<const_iterator, bool>
       emplace(const value_type& value)
       {
-        return btree_base<Key,btree_set_base<Key,Traits,Compare> >::m_insert_unique(
-          value);
+        return this->m_insert_unique(value);
       }
 
       std::pair<const_iterator, bool>
       insert(const value_type& value)
       {
-        return btree_base<Key,btree_set_base<Key,Traits,Compare> >::m_insert_unique(
-          value);
+        return this->m_insert_unique(value);
       }
 
       template <class InputIterator>
@@ -193,8 +189,7 @@ namespace boost
       {
         for (; begin != end; ++begin)
         {
-          btree_base<Key,btree_set_base<Key,Traits,Compare> >::m_insert_unique(
-            *begin);
+          this->m_insert_unique(*begin);
         }
       }
     };
@@ -266,14 +261,13 @@ namespace boost
       {
         for (; begin != end; ++begin)
         {
-          btree_base<Key,btree_set_base<Key,Traits,Compare> >::m_insert_non_unique(
-            *begin, *begin);
+          this->m_insert_non_unique(*begin, *begin);
         }
       }
 
      ~btree_multiset()
       {
-        try {btree_base<Key, btree_set_base<Key,Traits,Compare> >::close();}
+        try {this->close();}
         catch (...) {}
       }
 
@@ -283,23 +277,19 @@ namespace boost
         const Compare& comp = Compare(), 
         std::size_t node_sz = default_node_size)  // node_sz ignored if existing file
       {
-         btree_base<Key,btree_set_base<Key,Traits,Compare> >::m_open(p,
+         this->m_open(p,
           flags::user_flags(flgs) | flags::key_only, sig, comp, node_sz);
       }
 
       //  emplace(const Key&) special case not requiring c++0x support
       const_iterator emplace(const value_type& value)
       {
-        return
-          btree_base<Key,btree_set_base<Key,Traits,Compare> >::m_insert_non_unique(
-            value);
+        return this->m_insert_non_unique(value);
       }
 
       const_iterator insert(const value_type& value)
       {
-        return 
-          btree_base<Key,btree_set_base<Key,Traits,Compare> >::m_insert_non_unique(
-            value);
+        return this->m_insert_non_unique(value);
       }
 
       template <class InputIterator>
@@ -307,8 +297,7 @@ namespace boost
       {
         for (; begin != end; ++begin) 
         {
-          btree_base<Key,btree_set_base<Key,Traits,Compare> >::m_insert_non_unique(
-            *begin);
+          this->m_insert_non_unique(*begin);
         }
       }
     };

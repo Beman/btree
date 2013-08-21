@@ -860,8 +860,7 @@ private:
 
     public:
     //  TODO: make these protected? AFAICR, only special test and debug code needs them
-    typedef typename btree_base::btree_node_ptr  btree_node_ptr;
-    const btree_node_ptr&  node() const {return m_node;}
+    const typename btree_base::btree_node_ptr&  node() const {return m_node;}
   };
 
 //--------------------------------------------------------------------------------------//

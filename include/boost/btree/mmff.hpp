@@ -90,7 +90,7 @@ namespace btree
         boost::filesystem::resize_file(p, 0);
         flgs |= flags::read_write;
       }
-      m_file_size = boost::filesystem::file_size(p);
+      m_file_size = static_cast<size_type>(boost::filesystem::file_size(p));
 
       //  memory-mapped files can't grow beyond the actual size of the file,
       //  and furthermore can't even be opened if zero length. So increase the

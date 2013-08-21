@@ -17,7 +17,7 @@ project
     
    test-suite "btree" :
        [ run binary_file_test.cpp :  :  :  : ]                  
-       [ run ../tools/bt_time.cpp : 100 -stl -p :  :  : ]                  
+       [ run ../tools/bt_time.cpp : 100 -stl -pack :  :  : ]                  
        [ run ../tools/bt_str_time.cpp : 100 -stl -p :  :  : ]                  
        [ run btree_unit_test.cpp :  :  :  : ]                  
        [ run index_unit_test.cpp :  :  :  : ]                  

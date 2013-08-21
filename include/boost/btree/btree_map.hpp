@@ -95,14 +95,13 @@ namespace boost
       {
         for (; begin != end; ++begin)
         {
-          btree_base<Key,btree_map_base<Key,T,Traits,Compare> >::m_insert_unique(
-            begin->key(), begin->mapped_value());
+          this->m_insert_unique(begin->key(), begin->mapped_value());
         }
       }
 
      ~btree_map()
       {
-        try {btree_base<Key, btree_map_base<Key,T,Traits,Compare> >::close();}
+        try {this->close();}
         catch (...) {}
       }
  
@@ -112,16 +111,14 @@ namespace boost
         const Compare& comp = Compare(),
         std::size_t node_sz = default_node_size)  // node_sz ignored if existing file
       {
-        btree_base<Key,btree_map_base<Key,T,Traits,Compare> >::m_open(p,
+        this->m_open(p,
           flags::user_flags(flgs) | flags::unique, sig, comp, node_sz);
       }
 
       //  emplace(const Key&, const T&) special case not requiring c++0x support
       std::pair<const_iterator, bool> emplace(const Key& key, const T& mapped_value)
       {
-        std::pair<const_iterator, bool> result(
-          btree_base<Key,btree_map_base<Key,T,Traits,Compare> >::m_insert_unique(
-            key));
+        std::pair<const_iterator, bool> result(this->m_insert_unique(key));
         if (result.second)
           std::memcpy(const_cast<T*>(&result.first->second),
             &mapped_value, sizeof(T));
@@ -130,9 +127,7 @@ namespace boost
 
       std::pair<const_iterator, bool> insert(const value_type& value)
       {
-        std::pair<const_iterator, bool> result(
-          btree_base<Key,btree_map_base<Key,T,Traits,Compare> >::m_insert_unique(
-            key(value)));
+        std::pair<const_iterator, bool> result(this->m_insert_unique(key(value)));
         if (result.second)
           std::memcpy(const_cast<T*>(&result.first->second), &mapped(value), sizeof(T));
         return result;
@@ -143,16 +138,14 @@ namespace boost
       { 
         for (; begin != end; ++begin) 
         {
-           std::pair<const_iterator, bool> result(
-            btree_base<Key,btree_map_base<Key,T,Traits,Compare> >::m_insert_unique(
-              key(*begin)));
+           std::pair<const_iterator, bool> result(this->m_insert_unique(key(*begin)));
           if (result.second)
             std::memcpy(const_cast<T*>(&mapped(result.first->second)),
               &mapped(*begin), sizeof(T));
         }
       }
 
-      iterator writable(const_iterator itr)  {return m_write_cast(itr);}
+      iterator writable(const_iterator itr)  {return this->m_write_cast(itr);}
 
     };
 
@@ -228,14 +221,13 @@ namespace boost
       {
         for (; begin != end; ++begin)
         {
-          btree_base<Key,btree_map_base<Key,T,Traits,Compare> >::m_insert_non_unique(
-            begin->key(), begin->mapped_value());
+          this->m_insert_non_unique(begin->key(), begin->mapped_value());
         }
       }
 
      ~btree_multimap()
       {
-        try {btree_base<Key, btree_map_base<Key,T,Traits,Compare> >::close();}
+        try {this->close();}
         catch (...) {}
       }
 
@@ -252,18 +244,14 @@ namespace boost
       //  emplace(const Key&, const T&) special case not requiring c++0x support
       const_iterator emplace(const Key& key, const T& mapped_value)
       {
-        const_iterator result(
-          btree_base<Key,btree_map_base<Key,T,Traits,Compare> >::m_insert_non_unique(
-            key));
+        const_iterator result(this->m_insert_non_unique(key));
         std::memcpy(const_cast<T*>(&result->second), &mapped_value, sizeof(T));
         return result;          
       }
 
       const_iterator insert(const value_type& value)
       {
-        const_iterator result(
-          btree_base<Key,btree_map_base<Key,T,Traits,Compare> >::m_insert_non_unique(
-            key(value)));
+        const_iterator result(this->m_insert_non_unique(key(value)));
         std::memcpy(const_cast<T*>(&result->second), &mapped(value), sizeof(T));
         return result;          
       }
@@ -273,9 +261,7 @@ namespace boost
       {
         for (; begin != end; ++begin)
         {
-          const_iterator result(
-            btree_base<Key,btree_map_base<Key,T,Traits,Compare> >::m_insert_non_unique(
-              key(*begin)));
+          const_iterator result(this->m_insert_non_unique(key(*begin)));
           std::memcpy(const_cast<T*>(&result->second), &mapped(*begin), sizeof(T));
         }
       }
