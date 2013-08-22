@@ -8,6 +8,8 @@
 //  See http://www.boost.org/libs/btree for documentation.
 
 #include <boost/btree/btree_map.hpp>
+#include <boost/btree/btree_set.hpp>
+#include <boost/btree/btree_set_index.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/random.hpp>
 #include <boost/timer/timer.hpp>
@@ -15,8 +17,10 @@
 
 #include <iostream>
 #include <locale>
+#include <utility>
 #include <string>
 #include <map>
+#include <set>
 #include <cstring>
 #include <cstdlib>  // for atoll() or Microsoft equivalent
 #include <cctype>   // for isdigit()
@@ -38,6 +42,7 @@ namespace
 {
   std::string command_args;
   int64_t n;        // number of test cases
+  std::string bt_class ("btree_map");
   int64_t seed = 1; // random number generator seed
   int64_t lg = 0;   // if != 0, log every lg iterations
   std::size_t cache_sz = -2;
@@ -67,10 +72,11 @@ namespace
   timer::cpu_times erase_tm;
   const double sec = 1000000000.0;
 
-  struct thousands_separator : std::numpunct<char> { 
+  struct thousands_separator : std::numpunct<char>
+  { 
    char do_thousands_sep() const { return thou_separator; } 
    std::string do_grouping() const { return "\3"; }
-};
+  };
 
   template <class BT>
   void log(timer::auto_cpu_timer& t, timer::cpu_times& then, int64_t i, const BT& bt)
@@ -85,14 +91,71 @@ namespace
     t.resume();
   }
 
-  template <class BT>
+  //------------------------------------------------------------------------------------//
+  //     abstract away differences in value_type and random value generation            //
+  //------------------------------------------------------------------------------------//
+
+  class map_64_64_generator
+  {
+    mt19937_64  m_rng;
+    uniform_int<int64_t>  m_dist;
+    variate_generator<mt19937_64&, uniform_int<int64_t> >  m_key;
+  public:
+    typedef std::map<int64_t, int64_t>  stl_type;
+
+    map_64_64_generator(int64_t n) : m_dist(0, n-1), m_key(m_rng, m_dist) {}
+
+    void     seed(int64_t seed_)           {m_rng.seed(seed_);}
+    int64_t  key()                         {return m_key();}
+    std::pair<const int64_t, int64_t>
+      value(int64_t mapped_value)          {return std::make_pair(m_key(), mapped_value);}
+
+    static int64_t stl_key(const std::pair<const int64_t, int64_t>& vt) {return vt.first;}
+  };
+
+  class set_64_generator
+  {
+    mt19937_64  m_rng;
+    uniform_int<int64_t>  m_dist;
+    variate_generator<mt19937_64&, uniform_int<int64_t> >  m_key;
+  public:
+    typedef std::set<int64_t>  stl_type;
+
+    set_64_generator(int64_t n) : m_dist(0, n-1), m_key(m_rng, m_dist) {}
+
+    void     seed(int64_t seed_)           {m_rng.seed(seed_);}
+    int64_t  key()                         {return m_key();}
+    int64_t  value(int64_t)                {return m_key();}
+
+    static int64_t stl_key(int64_t vt)     {return vt;}
+  };
+
+  class set_index_64_generator
+  {
+    mt19937_64  m_rng;
+    uniform_int<int64_t>  m_dist;
+    variate_generator<mt19937_64&, uniform_int<int64_t> >  m_key;
+  public:
+    typedef std::set<int64_t>  stl_type;
+
+    set_index_64_generator(int64_t n) : m_dist(0, n-1), m_key(m_rng, m_dist) {}
+
+    void     seed(int64_t seed_)           {m_rng.seed(seed_);}
+    int64_t  key()                         {return m_key();}
+    int64_t  value(int64_t)                {return m_key();}
+
+    static int64_t stl_key(int64_t vt)     {return vt;}
+  };
+
+  //------------------------------------------------------------------------------------//
+  //                                  test harness                                      //
+  //------------------------------------------------------------------------------------//
+
+  template <class BT, class Generator>
   void test()
   {
     timer::auto_cpu_timer t(3);
-    mt19937_64  rng;
-    uniform_int<int64_t> n_dist(0, n-1);
-    variate_generator<mt19937_64&, uniform_int<int64_t> > key(rng, n_dist);
-
+    Generator generator(n); 
     {
       btree::flags::bitmask flgs =
         do_create ? btree::flags::truncate
@@ -112,14 +175,14 @@ namespace
       if (do_insert)
       {
         cout << "\ninserting " << n << " btree elements..." << endl;
-        rng.seed(seed);
+        generator.seed(seed);
         t.start();
         timer::cpu_times then = t.elapsed();
         for (int64_t i = 1; i <= n; ++i)
         {
           if (lg && i % lg == 0)
             log(t, then, i, bt);
-          bt.emplace(key(), i);
+          bt.insert(generator.value(i));
         }
         bt.flush();
         t.stop();
@@ -146,7 +209,7 @@ namespace
         bt_new.max_cache_size(cache_sz);
         for (typename BT::const_iterator it = bt_old.begin(); it != bt_old.end(); ++it)
         {
-          bt_new.emplace(bt_old.key(*it), bt_old.mapped(*it));
+          bt_new.insert(*it);
         }
         bt_new.flush();
         cout << "  bt_old.size() " << bt_old.size() << std::endl;
@@ -175,7 +238,7 @@ namespace
       {
         cout << "\nfinding " << n << " btree elements..." << endl;
         bt.manager().clear_statistics();
-        rng.seed(seed);
+        generator.seed(seed);
         typename BT::const_iterator itr;
         int64_t k;
         t.start();
@@ -184,7 +247,7 @@ namespace
         {
           if (lg && i % lg == 0)
             log(t, then, i, bt);
-          k = key();
+          k = generator.key();
           itr = bt.find(k);
 #       if !defined(NDEBUG)
           if (itr == bt.end())
@@ -215,9 +278,9 @@ namespace
           ++itr)
         {
           ++count;
-          if (itr->first <= prior_key)
+          if (bt.key(*itr) <= prior_key)
             throw std::runtime_error("btree iteration sequence error");
-          prior_key = itr->first;
+          prior_key = bt.key(*itr);
         }
         t.stop();
         iterate_tm = t.elapsed();
@@ -241,7 +304,7 @@ namespace
       {
         cout << "\nerasing " << n << " btree elements..." << endl;
         bt.manager().clear_statistics();
-        rng.seed(seed);
+        generator.seed(seed);
         t.start();
         timer::cpu_times then = t.elapsed();
         for (int64_t i = 1; i <= n; ++i)
@@ -257,7 +320,7 @@ namespace
           //}
           //else
           //  bt.erase(k);
-          bt.erase(key());
+          bt.erase(generator.key());
         }
         t.stop();
         bt.flush();
@@ -281,18 +344,18 @@ namespace
       bt.close();
     }
 
-    typedef std::map<int64_t, int64_t>  stl_type;
+    typedef typename Generator::stl_type  stl_type;
     stl_type stl;
 
     if (stl_tests)
     {
-      cout << "\ninserting " << n << " std::map elements..." << endl;
-      rng.seed(seed);
+      cout << "\ninserting " << n << " standard library associative container elements..." << endl;
+      generator.seed(seed);
       timer::cpu_times this_tm;
       t.start();
       for (int64_t i = 1; i <= n; ++i)
       {
-        stl_type::value_type element(key(), i);
+        stl_type::value_type element(generator.value(i));
         stl.insert(element);
       }
       t.stop();
@@ -329,18 +392,18 @@ namespace
       cout << "\nfinding " << n << " std::map elements..." << endl;
       stl_type::const_iterator itr;
       int64_t k;
-      rng.seed(seed);
+      generator.seed(seed);
       t.start();
       for (int64_t i = 1; i <= n; ++i)
       {
         if (lg && i % lg == 0)
           std::cout << i << std::endl; 
-          k = key();
+          k = generator.key();
           itr = stl.find(k);
 #       if !defined(NDEBUG)
           if (itr == stl.end())
             throw std::runtime_error("stl find() returned end()");
-          if (itr->first != k)
+          if (Generator::stl_key(*itr) != k)
             throw std::runtime_error("stl find() returned wrong iterator");
 #       endif
       }
@@ -381,9 +444,9 @@ namespace
         ++itr)
       {
         ++count;
-        if (itr->first <= prior_key)
+        if (Generator::stl_key(*itr) <= prior_key)
           throw std::runtime_error("stl iteration sequence error");
-        prior_key = itr->first;
+        prior_key = Generator::stl_key(*itr);
       }
       t.stop();
       this_tm = t.elapsed();
@@ -416,13 +479,13 @@ namespace
         throw std::runtime_error("stl iteration count error");
 
       cout << "\nerasing " << n << " std::map elements..." << endl;
-      rng.seed(seed);
+      generator.seed(seed);
       t.start();
       for (int64_t i = 1; i <= n; ++i)
       {
         if (lg && i % lg == 0)
           std::cout << i << std::endl; 
-        stl.erase(key());
+        stl.erase(generator.key());
       }
       t.stop();
       this_tm = t.elapsed();
@@ -524,6 +587,12 @@ int cpp_main(int argc, char * argv[])
         do_preload = true;
       else if ( strcmp( argv[2]+1, "v" )==0 )
         verbose = true;
+      else if ( strcmp( argv[2]+1, "class=btree_map" )==0 )
+        bt_class = "btree_map";
+      else if ( strcmp( argv[2]+1, "class=btree_set" )==0 )
+        bt_class = "btree_set";
+      else if ( strcmp( argv[2]+1, "class=btree_set_index" )==0 )
+        bt_class = "btree_set_index";
       else if ( strcmp( argv[2]+1, "hint=least-memory" )==0 )
         common_flags |= btree::flags::least_memory;
       else if ( strcmp( argv[2]+1, "hint=low-memory" )==0 )
@@ -549,6 +618,7 @@ int cpp_main(int argc, char * argv[])
       " The argument n specifies the number of test cases to run\n"
       " Options:\n"
       "   path         Specifies the test file path; default test.btree\n"
+      "   -class=btree_map|btree_set|btree_set_index; default -type=btree_map\n"
       "   -seed=#      Seed for random number generator; default -seed1\n"
       "   -node-size=# Node size (>=128); default -node-size"
                           << btree::default_node_size << "\n"
@@ -588,20 +658,43 @@ int cpp_main(int argc, char * argv[])
        << "starting tests with node size " << node_sz
        << ", maximum cache nodes " << cache_sz << ",\n";
 
-  switch (whichaway)
+  if (bt_class == "btree_set")
   {
-  case endian::order::big:
-    cout << "and big endian traits\n";
-    test< btree::btree_map<int64_t, int64_t, btree::big_endian_traits> >();
-    break;
-  case endian::order::little:
-    cout << "and little endian traits\n";
-    test< btree::btree_map<int64_t, int64_t, btree::little_endian_traits> >();
-    break;
-  case endian::order::native:
-    cout << "and native endian traits\n";
-    test< btree::btree_map<int64_t, int64_t, btree::native_endian_traits> >();
-    break;
+    cout << "and class btree_set" << endl;
+    test< btree::btree_set<int64_t>, set_64_generator >();
+    return 0;
+  }
+  else if (bt_class == "btree_set_index")
+  {
+    cout << "and class btree_set_index" << endl;
+    test< btree::btree_set<int64_t>, set_64_generator >();
+    return 0;
+  }
+  else if (bt_class == "btree_map")
+  {
+    switch (whichaway)
+    {
+    case endian::order::big:
+      cout << "and big endian traits\n";
+      test< btree::btree_map<int64_t, int64_t, btree::big_endian_traits>,
+        map_64_64_generator>();
+      break;
+    case endian::order::little:
+      cout << "and little endian traits\n";
+      test< btree::btree_map<int64_t, int64_t, btree::little_endian_traits>,
+        map_64_64_generator >();
+      break;
+    case endian::order::native:
+      cout << "and native endian traits\n";
+      test< btree::btree_map<int64_t, int64_t, btree::native_endian_traits>,
+        map_64_64_generator >();
+      break;
+    }
+  }
+  else
+  {
+    cout << "Error, unknown class: -class=" << bt_class << endl;
+    return 1;
   }
 
   return 0;

@@ -114,7 +114,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PostBuildEvent>
-      <Command>"$(TargetDir)\$(TargetName).exe" 100 -seed=10 -node-sz=128 -cache-sz=64 -sep= -noiterate -cache-branches -stl -hint=low-memory -native -nostats</Command>
+      <Command>"$(TargetDir)\$(TargetName).exe" 100 -class=btree_set_index -seed=10 -node-sz=128 -cache-sz=64 -sep= -noiterate -cache-branches -stl -hint=low-memory -native -nostats</Command>
       <Message>Executing test $(TargetName).exe...</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
