@@ -86,6 +86,15 @@ public:
     base::open(index_pth, flat_file,flgs, sig, comp, node_sz);
   }
 
+  btree_set_index(const path_type& base_path,
+            flags::bitmask flgs = flags::read_only,
+            uint64_t sig = -1,  // for existing files, must match creation signature
+            const Compare& comp = Compare(),
+            std::size_t node_sz = default_node_size)  // node_sz ignored if existing file
+  {
+    base::open(base_path,flgs, sig, comp, node_sz);
+  }
+
   void open(const path_type& index_pth,
             const path_type& file_pth,
             flags::bitmask flgs = flags::read_only,
@@ -104,6 +113,19 @@ public:
             std::size_t node_sz = default_node_size)  // node_sz ignored if existing file
   {
     base::open(index_pth, flat_file, flgs, sig, comp, node_sz);
+  }
+
+  void open(const path_type& base_path,
+            flags::bitmask flgs = flags::read_only,
+            uint64_t sig = -1,  // for existing files, must match creation signature
+            const Compare& comp = Compare(),
+            std::size_t node_sz = default_node_size)  // node_sz ignored if existing file
+  {
+    path_type index_pth(base_path);
+    index_pth += ".ndx";
+    path_type file_pth(base_path);
+    file_pth += ".dat";
+    base::open(index_pth, file_pth, flgs, sig, comp, node_sz);
   }
 
   //  modifiers
