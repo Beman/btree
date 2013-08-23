@@ -10,6 +10,7 @@
 #include <boost/btree/btree_map.hpp>
 #include <boost/btree/btree_set.hpp>
 #include <boost/btree/btree_set_index.hpp>
+#include <boost/btree/support/random_string.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/random.hpp>
 #include <boost/timer/timer.hpp>
@@ -48,6 +49,8 @@ namespace
   std::size_t cache_sz = -2;
   std::size_t node_sz = btree::default_node_size;
   char thou_separator = ',';
+  int min_string_len = 0;
+  int max_string_len = 512;
   bool do_create (true);
   bool do_preload (false);
   bool do_insert (true);
@@ -65,6 +68,7 @@ namespace
   std::string path("bt_time.btree");
   std::string path_old("bt_time.btree.old");
   BOOST_SCOPED_ENUM(endian::order) whichaway = endian::order::big;
+  
 
   timer::cpu_times insert_tm;
   timer::cpu_times find_tm;
@@ -111,6 +115,8 @@ namespace
       value(int64_t mapped_value)          {return std::make_pair(m_key(), mapped_value);}
 
     static int64_t stl_key(const std::pair<const int64_t, int64_t>& vt) {return vt.first;}
+    static stl_type::value_type
+      stl_value(const std::pair<const int64_t, int64_t>& vt) {return vt;}
   };
 
   class set_64_generator
@@ -127,7 +133,8 @@ namespace
     int64_t  key()                         {return m_key();}
     int64_t  value(int64_t)                {return m_key();}
 
-    static int64_t stl_key(int64_t vt)     {return vt;}
+    static int64_t stl_key(int64_t vt)                 {return vt;}
+    static stl_type::value_type stl_value(int64_t vt)  {return vt;}
   };
 
   class set_index_64_generator
@@ -144,7 +151,32 @@ namespace
     int64_t  key()                         {return m_key();}
     int64_t  value(int64_t)                {return m_key();}
 
-    static int64_t stl_key(int64_t vt)     {return vt;}
+    static int64_t stl_key(int64_t vt)                 {return vt;}
+    static stl_type::value_type stl_value(int64_t vt)  {return vt;}
+  };
+
+  class set_index_string_view_generator
+  {
+    boost::random_string m_rsg;
+    std::string m_string;
+  public:
+    typedef std::set<std::string>  stl_type;
+
+    set_index_string_view_generator(int64_t) 
+      : m_rsg(min_string_len, max_string_len) {}
+
+    void     seed(int64_t seed_)           {m_rsg.seed(static_cast<int>(seed_));}
+    boost::string_view  key()
+    {
+      m_string = m_rsg();
+      return boost::string_view(m_string);
+    }
+    boost::string_view  value(int64_t)     {return key();}
+
+    static std::string stl_key(const boost::string_view& vt)
+                                           {return std::string(vt.data(), vt.size());}
+    static stl_type::value_type stl_value(const boost::string_view& vt)
+                                           {return std::string(vt.data(), vt.size());}
   };
 
   //------------------------------------------------------------------------------------//
@@ -240,7 +272,7 @@ namespace
         bt.manager().clear_statistics();
         generator.seed(seed);
         typename BT::const_iterator itr;
-        int64_t k;
+        typename BT::key_type k;
         t.start();
         timer::cpu_times then = t.elapsed();
         for (int64_t i = 1; i <= n; ++i)
@@ -271,14 +303,14 @@ namespace
         cout << "\niterating over " << bt.size() << " btree elements..." << endl;
         bt.manager().clear_statistics();
         uint64_t count = 0;
-        int64_t prior_key = -1L;
+        typename BT::key_type prior_key = typename BT::key_type();
         t.start();
         for (typename BT::const_iterator itr = bt.begin();
           itr != bt.end();
           ++itr)
         {
           ++count;
-          if (bt.key(*itr) <= prior_key)
+          if (bt.key(*itr) < prior_key)
             throw std::runtime_error("btree iteration sequence error");
           prior_key = bt.key(*itr);
         }
@@ -349,14 +381,13 @@ namespace
 
     if (stl_tests)
     {
-      cout << "\ninserting " << n << " standard library associative container elements..." << endl;
+      cout << "\ninserting " << n << " stl elements..." << endl;
       generator.seed(seed);
       timer::cpu_times this_tm;
       t.start();
       for (int64_t i = 1; i <= n; ++i)
       {
-        stl_type::value_type element(generator.value(i));
-        stl.insert(element);
+       stl.insert(Generator::stl_value(generator.value(i)));
       }
       t.stop();
       this_tm = t.elapsed();
@@ -389,16 +420,16 @@ namespace
              << ((insert_tm.system + insert_tm.user) * 1.0)
                 / (this_tm.system + this_tm.user) << '\n';
 
-      cout << "\nfinding " << n << " std::map elements..." << endl;
+      cout << "\nfinding " << n << " stl elements..." << endl;
       stl_type::const_iterator itr;
-      int64_t k;
+      stl_type::key_type k;
       generator.seed(seed);
       t.start();
       for (int64_t i = 1; i <= n; ++i)
       {
         if (lg && i % lg == 0)
           std::cout << i << std::endl; 
-          k = generator.key();
+          k = Generator::stl_key(generator.value(i));
           itr = stl.find(k);
 #       if !defined(NDEBUG)
           if (itr == stl.end())
@@ -437,14 +468,14 @@ namespace
 
       cout << "\niterating over " << stl.size() << " stl elements..." << endl;
       uint64_t count = 0;
-      int64_t prior_key = -1L;
+      stl_type::key_type prior_key;
       t.start();
       for (stl_type::const_iterator itr = stl.begin();
         itr != stl.end();
         ++itr)
       {
         ++count;
-        if (Generator::stl_key(*itr) <= prior_key)
+        if (itr != stl.begin() && Generator::stl_key(*itr) <= prior_key)
           throw std::runtime_error("stl iteration sequence error");
         prior_key = Generator::stl_key(*itr);
       }
@@ -485,7 +516,7 @@ namespace
       {
         if (lg && i % lg == 0)
           std::cout << i << std::endl; 
-        stl.erase(generator.key());
+        stl.erase(Generator::stl_key(generator.value(i)));
       }
       t.stop();
       this_tm = t.elapsed();
@@ -593,6 +624,8 @@ int cpp_main(int argc, char * argv[])
         bt_class = "btree_set";
       else if ( strcmp( argv[2]+1, "class=btree_set_index" )==0 )
         bt_class = "btree_set_index";
+      else if ( strcmp( argv[2]+1, "class=btree_set_index-string_view" )==0 )
+        bt_class = "btree_set_index-string_view";
       else if ( strcmp( argv[2]+1, "hint=least-memory" )==0 )
         common_flags |= btree::flags::least_memory;
       else if ( strcmp( argv[2]+1, "hint=low-memory" )==0 )
@@ -618,7 +651,8 @@ int cpp_main(int argc, char * argv[])
       " The argument n specifies the number of test cases to run\n"
       " Options:\n"
       "   path         Specifies the test file path; default test.btree\n"
-      "   -class=btree_map|btree_set|btree_set_index; default -type=btree_map\n"
+      "   -class=btree_map|btree_set|btree_set_index|btree_set_index-string_view;\n"
+      "                default -class=btree_map\n"
       "   -seed=#      Seed for random number generator; default -seed1\n"
       "   -node-size=# Node size (>=128); default -node-size"
                           << btree::default_node_size << "\n"
@@ -667,7 +701,13 @@ int cpp_main(int argc, char * argv[])
   else if (bt_class == "btree_set_index")
   {
     cout << "and class btree_set_index" << endl;
-    test< btree::btree_set<int64_t>, set_64_generator >();
+    test< btree::btree_set_index<int64_t>, set_index_64_generator >();
+    return 0;
+  }
+  else if (bt_class == "btree_set_index-string_view")
+  {
+    cout << "and class btree_set_index<boost::string_view>" << endl;
+    test< btree::btree_set_index<boost::string_view>, set_index_string_view_generator >();
     return 0;
   }
   else if (bt_class == "btree_map")

@@ -78,6 +78,12 @@ public:
   typedef typename
     btree::btree_set<index_key, btree_traits,
       index_compare_type>                        index_type;
+
+  // TODO: why aren't these static?
+  const Key&          key(const value_type& v) const   // really handy, so expose
+    {return v;}
+  const mapped_type&  mapped(const value_type& v) const
+    {return v;}
 };
 
 //--------------------------------------------------------------------------------------//
@@ -108,6 +114,11 @@ public:
   typedef typename
     btree::btree_multiset<index_key, btree_traits,
       index_compare_type>                        index_type;
+  // TODO: why aren't these static?
+  const Key&          key(const value_type& v) const   // really handy, so expose
+    {return v;}
+  const mapped_type&  mapped(const value_type& v) const
+    {return v;}
 };
 
 ////--------------------------------------------------------------------------------------//
@@ -288,6 +299,10 @@ public:
                                              return m_index_btree.is_open();}
   path_type         path() const            {return m_index_btree.path();}
   flags::bitmask    flags() const           {return m_index_btree.flags();}
+  const buffer_manager&
+                    manager() const         {return m_index_btree.manager();} 
+  const header_page& header() const         {return m_index_btree.header();}
+  bool              ok_to_pack() const      {return m_index_btree.ok_to_pack();}
                                             
   // capacity                               
   bool              empty() const           {return m_index_btree.empty();}
@@ -301,6 +316,10 @@ public:
                                             {m_index_btree.max_cache_size(m);}
   void              max_cache_megabytes(std::size_t mb)
                                             {m_index_btree.max_cache_megabytes(mb);}
+  // file operations
+  // TODO: what about flat file flush/close?
+  void              flush()                 {m_index_btree.flush();}
+  void              close()                 {m_index_btree.close();}
 
   // flat file
   file_ptr_type     file() const            {return m_file;}
@@ -411,6 +430,33 @@ namespace detail
   };
 
 }  // namespace detail
+
+//--------------------------------------------------------------------------------------//
+//                              non-member operator <<                                  //
+//--------------------------------------------------------------------------------------//
+
+template <class Base>   
+std::ostream& operator<<(std::ostream& os,
+  const index_base<Base>& bt)
+{
+  BOOST_ASSERT(bt.is_open());
+  os << "  element count ------------: " << bt.header().element_count() << "\n" 
+     << "  node size ----------------: " << bt.header().node_size() << "\n"
+     << "  levels in tree -----------: " << bt.header().root_level()+1 << "\n"
+     << "  node count, inc free list-: " << bt.header().node_count() << "\n"
+     << "  leaf node count ----------: " << bt.header().leaf_node_count() << "\n"
+     << "  branch node count --------: " << bt.header().branch_node_count() << "\n"
+     << "  node count, without free -: " << bt.header().leaf_node_count()
+                                            + bt.header().branch_node_count() << "\n"
+     << "  root node id -------------: " << bt.header().root_node_id() << "\n"
+     << "  free node list head id ---: " << bt.header().free_node_list_head_id() << "\n"
+     << "  User supplied string -----: \"" << bt.header().user_c_str() << "\"\n"
+     << "  OK to pack ---------------: " << bt.ok_to_pack() << "\n"
+  ;
+  return os;
+}
+
+
 }  // namespace btree
 }  // namespace boost
 

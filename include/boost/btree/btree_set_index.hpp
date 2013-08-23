@@ -92,7 +92,7 @@ public:
             const Compare& comp = Compare(),
             std::size_t node_sz = default_node_size)  // node_sz ignored if existing file
   {
-    base::open(base_path,flgs, sig, comp, node_sz);
+    open(base_path, flgs, sig, comp, node_sz);
   }
 
   void open(const path_type& index_pth,

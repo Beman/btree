@@ -1923,29 +1923,6 @@ void   dump_dot(std::ostream& os, const Btree& bt);
 
 ///  TODO: non-member functions not implemented yet
 /*
-template <typename Key, typename T, typename Compare>
-bool operator==(const common_base<Key,T,GetKey>& x,
-              const common_base<Key,T,GetKey>& y);
-
-template <typename Key, typename T, typename Compare>
-bool operator< (const common_base<Key,T,GetKey>& x,
-              const common_base<Key,T,GetKey>& y);
-
-template <typename Key, typename T, typename Compare>
-bool operator!=(const common_base<Key,T,GetKey>& x,
-              const common_base<Key,T,GetKey>& y);
-
-template <typename Key, typename T, typename Compare>
-bool operator> (const common_base<Key,T,GetKey>& x,
-              const common_base<Key,T,GetKey>& y);
-
-template <typename Key, typename T, typename Compare>
-bool operator>=(const common_base<Key,T,GetKey>& x,
-              const common_base<Key,T,GetKey>& y);
-
-template <typename Key, typename T, typename Compare>
-bool operator<=(const common_base<Key,T,GetKey>& x,
-              const common_base<Key,T,GetKey>& y);
 
 template <typename Key, typename T, typename Compare>
 void swap(common_base<Key,T,GetKey>& x,

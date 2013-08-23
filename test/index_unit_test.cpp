@@ -17,6 +17,7 @@
 #include <iostream>
 #include <iomanip>
 #include <boost/btree/btree_set_index.hpp>
+#include <boost/btree/support/random_string.hpp>
 #include <boost/detail/lightweight_main.hpp>
 #include <boost/detail/lightweight_test.hpp>
 
@@ -35,6 +36,7 @@ using std::make_pair;
 namespace
 {
 bool dump_dot(false);
+int n_volume = 1000;
 
 filesystem::path file_path("test.file");
 filesystem::path idx1_path("test.1.idx");
@@ -666,6 +668,56 @@ void  string_view_test()
   cout << "     string_view_test complete" << endl;
 }
 
+//--------------------------------- string_view_volume_test  ----------------------------------//
+
+void  string_view_volume_test()
+{
+  cout << "  string_view_volume_test..." << endl;
+//n_volume = 10;
+  boost::random_string rsg(0, 10, 'a', 'z');
+  std::string s;
+  
+  typedef btree::btree_set_index<string_view> index;
+  index idx(idx1_path, btree::flags::truncate, -1, btree::less(), 128);
+
+  // insert
+  rsg.seed(1);
+  index::size_type insert_count = 0;
+  for (int i = 1; i <= n_volume; ++i)
+  {
+    s = rsg();
+//    cout << "insert \"" << s << "\"\n";
+    auto result = idx.insert(s);
+    if (result.second)
+      ++insert_count;
+  }
+  BOOST_TEST_EQ(idx.size(), insert_count);
+  cout << idx << endl;
+
+  // iterate
+  std::string prior;
+  for (auto itr = idx.begin(); itr != idx.end(); ++itr)
+  {
+//    cout << '"' << *itr << "\"\n";
+    s.assign(itr->data(), itr->size());
+    BOOST_TEST(itr == idx.begin() || s > prior);
+    prior = s;
+  }
+  cout << endl;
+
+  // find
+  rsg.seed(1);
+  for (int i = 1; i <= n_volume; ++i)
+  {
+    s = rsg();
+    auto result = idx.find(s);
+    BOOST_TEST(result != idx.end());
+    BOOST_TEST(*result == s);
+  }
+
+  cout << "     string_view_volume_test complete" << endl;
+}
+
 //---------------------------- string_view_multiset_test  ------------------------------//
 
 void  string_view_multiset_test()
@@ -919,7 +971,7 @@ int cpp_main(int argc, char* argv[])
 
   for (; argc > 1; ++argv, --argc) 
   {
-    if ( std::strcmp( argv[1]+1, "b" )==0 )
+    if ( std::strcmp( argv[1]+1, "d" )==0 )
       dump_dot = true;
     else
     {
@@ -931,7 +983,7 @@ int cpp_main(int argc, char* argv[])
 
   if (argc < 1) 
   {
-    cout << "Usage: index_test [Options]\n"
+    cout << "Usage: index_unit_test [Options]\n"
 //      " The argument n specifies the number of test cases to run\n"
       " Options:\n"
 //      "   path     Specifies the test file path; default test.btree\n"
@@ -954,6 +1006,7 @@ int cpp_main(int argc, char* argv[])
   c_string_test();
   size_t_codec_test();  // do this before string_view, as string_view depends on it
   string_view_test();
+  string_view_volume_test();
   string_view_multiset_test();
   cout << "all tests complete" << endl;
 
