@@ -100,8 +100,10 @@ namespace boost { namespace btree { namespace detail {
                                            
     typedef btree_type::key_type            btree_key_type;
     typedef btree_type::value_type          btree_value_type;
+    typedef btree_type::value_type          btree_mapped_type;
     typedef stl_type::key_type              stl_key_type;
     typedef stl_type::value_type            stl_value_type;
+    typedef stl_type::value_type            stl_mapped_type;
 
     set_index_string_view(int64_t) 
       : m_rsg(0, 512, 'a', 'z') {}
@@ -114,11 +116,15 @@ namespace boost { namespace btree { namespace detail {
 
     btree_key_type    btree_key(const btree_value_type& v) const
                                            {return v;}
+    btree_key_type    btree_mapped(const btree_value_type& v) const
+                                           {return v;}
 
-    stl_key_type      stl_key(const btree_value_type& v) const
-                                           {return stl_key_type(v.data(), v.size());}
     stl_value_type    stl_value(const btree_value_type& v) const
                                            {return stl_value_type(v.data(), v.size());}
+    stl_key_type      stl_key(const stl_value_type& v) const
+                                           {return v;}
+    stl_mapped_type   stl_mapped(const stl_value_type& v) const
+                                           {return v;}
   };
 
 }}}  // namespaces

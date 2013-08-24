@@ -19,6 +19,8 @@
 #include <fstream>
 #include <cstring>  // for strcmp(), strncmp()
 #include <stdexcept>
+#include <locale>
+#include <cctype>   // for ispunct()
 
 using std::atol;
 using std::strcmp;
@@ -36,6 +38,7 @@ namespace
   string command_args;
   string path_prefix("stl_test");
   string path_str;
+  char thou_separator = ',';
   boost::int32_t max = 10000;
   boost::int32_t min = 10;
   boost::int32_t low = 0;
@@ -66,16 +69,11 @@ namespace
   boost::uint64_t upper_bound_may_exist_count = 0;
   boost::uint32_t cycles_complete = 0;
 
-  //typedef boost::btree::btree_map<boost::int32_t, boost::int32_t> bt_type;
-  //bt_type bt;
-
-  //typedef std::map<boost::int32_t, boost::int32_t>  stl_type;
-  //stl_type stl;
-
-  //typedef stl_type::value_type value_type;
-
-  //typedef boost::variate_generator<boost::rand48&,
-  //  boost::uniform_int<boost::int32_t> > keygen_t;
+  struct thousands_separator : std::numpunct<char>
+  { 
+   char do_thousands_sep() const { return thou_separator; } 
+   std::string do_grouping() const { return "\3"; }
+  };
 
   ////  dump_state  ----------------------------------------------------------------------//
 
@@ -214,8 +212,10 @@ public:
   typedef typename Traits::btree_type        btree_type;
   typedef typename Traits::stl_type          stl_type;
   typedef typename Traits::btree_key_type    btree_key_type;
+  typedef typename Traits::btree_mapped_type btree_mapped_type;
   typedef typename Traits::btree_value_type  btree_value_type;
   typedef typename Traits::stl_key_type      stl_key_type;
+  typedef typename Traits::stl_mapped_type   stl_mapped_type;
   typedef typename Traits::stl_value_type    stl_value_type;
 
 private:
@@ -244,6 +244,9 @@ public:
   template <class Traits> void tester<Traits>::insert_test()
   {
     cout << "insert test..." << endl;
+
+    this->seed(rng_seed);
+
     if (verbose)
       cout << "insert: ";
     
@@ -254,14 +257,14 @@ public:
       stl_value_type stl_val = this->stl_value(bt_val);
 
       if (verbose)
-        cout << i << ", key: " << this->stl_key(bt_val) << ", ";
+        cout << i << ", key: " << this->stl_key(stl_val) << ", ";
 
       pair<stl_type::iterator, bool> stl_result = stl.insert(stl_val);
       pair<btree_type::const_iterator, bool> bt_result = bt.insert(bt_val);
 
       if (stl_result.second != bt_result.second)
       {
-        cout << "failure inserting key: " << this->stl_key(bt_val) << endl;
+        cout << "failure inserting key: " << this->stl_key(stl_val) << endl;
         throw runtime_error("insert: stl_result.second != bt_result.second");
       }
 
@@ -292,19 +295,19 @@ public:
     for (; stl_itr != stl.end() && bt_itr != bt.end(); ++stl_itr, ++bt_itr)
     {
       if (verbose)
-        cout << this->stl_key(*bt_itr) << ',';
+        cout << this->stl_key(*stl_itr) << ',';
 
-      if (this->stl_key(*bt_itr) != this->btree_key(*bt_itr))
+      if (this->stl_key(*stl_itr) != this->btree_key(*bt_itr))
       {
-        cout << "this->stl_key(*bt_itr) " << this->stl_key(*bt_itr) << " != "
+        cout << "this->stl_key(*stl_itr) " << this->stl_key(*stl_itr) << " != "
               << "this->btree_key(*bt_itr) " << this->btree_key(*bt_itr) << endl;
-        throw runtime_error("iteration: first check failure");
+        throw runtime_error("iteration: key check failure");
       }
-      if (stl_itr->second != bt_itr->second)
+      if (this->stl_mapped(*stl_itr) != this->btree_mapped(*bt_itr))
       {
-        cout << "stl_itr->second " << stl_itr->second << " != "
-              << "bt_itr->second " << bt_itr->second << endl;
-        throw runtime_error("iteration: second check failure");
+        cout << "this->stl_mapped(*stl_itr) " << this->stl_mapped(*stl_itr) << " != "
+              << "this->btree_mapped(*bt_itr) " << this->btree_mapped(*bt_itr) << endl;
+        throw runtime_error("iteration: mapped check failure");
       }
       ++iterate_forward_count;
     }
@@ -328,16 +331,16 @@ public:
     {
       --stl_itr;
       --bt_itr;
-      if (this->stl_key(*bt_itr) != this->btree_key(*bt_itr))
+      if (this->stl_key(*stl_itr) != this->btree_key(*bt_itr))
       {
-        cout << "this->stl_key(*bt_itr) " << this->stl_key(*bt_itr) << " != "
+        cout << "this->stl_key(*stl_itr) " << this->stl_key(*stl_itr) << " != "
               << "this->btree_key(*bt_itr) " << this->btree_key(*bt_itr) << endl;
         throw runtime_error("backward iteration: first check failure");
       }
-      if (stl_itr->second != bt_itr->second)
+      if (this->stl_mapped(*stl_itr) != this->btree_mapped(*bt_itr))
       {
-        cout << "stl_itr->second " << stl_itr->second << " != "
-              << "bt_itr->second " << bt_itr->second << endl;
+        cout << "this->stl_mapped(*stl_itr) " << this->stl_mapped(*stl_itr) << " != "
+              << "this->btree_mapped(*bt_itr) " << this->btree_mapped(*bt_itr) << endl;
         throw runtime_error("backward iteration: second check failure");
       }
       ++iterate_backward_count;
@@ -355,17 +358,25 @@ public:
   template <class Traits> void tester<Traits>::erase_test()
   {
     cout << "erase test..." << endl;
+
+    this->seed(rng_seed);
+
     if (verbose)
       cout << "erasing: ";
+
     while (stl.size() > static_cast<stl_type::size_type>(min))
     {
-      boost::int32_t k = erase_key();
+      btree_value_type bt_val = this->generate_btree_value(0);
+      stl_value_type stl_val = this->stl_value(bt_val);
+      
+      btree_key_type bt_key = this->btree_key(bt_val);
+      stl_key_type stl_key = this->stl_key(stl_val);
 
       if (verbose)
-        cout << k << ',';
+        cout << stl_key << ',';
 
-      stl_type::size_type stl_result = stl.erase(k);
-      btree_type::size_type bt_result = bt.erase(k);
+      stl_type::size_type stl_result = stl.erase(stl_key);
+      btree_type::size_type bt_result = bt.erase(bt_key);
 
       if (stl_result != bt_result)
       {
@@ -392,65 +403,81 @@ public:
   {
     cout << "find test..." << endl;
 
-    boost::minstd_rand find_rng;
-    boost::uniform_int<boost::int32_t> n_dist(low, high);
-    boost::variate_generator<boost::minstd_rand&, boost::uniform_int<boost::int32_t> >
-      find_key(find_rng, n_dist);
-
     stl_type::const_iterator stl_itr, stl_result;
     btree_type::const_iterator bt_result;
 
     for (stl_itr = stl.begin(); stl_itr != stl.end(); ++stl_itr)
     {
       //  test with key that exists
-      stl_result = stl.find(this->stl_key(*bt_itr));
-      bt_result = bt.find(this->stl_key(*bt_itr));
+      stl_result = stl.find(this->stl_key(*stl_itr));
+      bt_result = bt.find(this->stl_key(*stl_itr));
 
       if (bt_result == bt.end())
       {
-        cout << "for key " << this->stl_key(*bt_itr) << ", bt.find() return bt.end()" << endl;
+        cout << "for key " << this->stl_key(*stl_itr) << ", bt.find() return bt.end()" << endl;
         throw runtime_error("find: failed to find key");
       }
 
-      if (stl_result->first != bt_result->first)
+      if (this->stl_key(*stl_result) != this->btree_key(*bt_result))
       {
-        cout << "stl_result->first " << stl_result->first << " != "
-              << "bt_result->first " << bt_result->first << endl;
+        cout << "this->stl_key(*stl_result) " << this->stl_key(*stl_result) << " != "
+              << "this->btree_key(*bt_result) " << this->btree_key(*bt_result) << endl;
         throw runtime_error("find: first check failure");
       }
-      if (stl_result->second != bt_result->second)
+      if (this->stl_mapped(*stl_result) != this->btree_mapped(*bt_result))
       {
-        cout << "stl_result->second " << stl_result->second << " != "
-              << "bt_result->second " << bt_result->second << endl;
+        cout << "this->stl_mapped(*stl_result) " << this->stl_mapped(*stl_result) << " != "
+              << "this->btree_mapped(*bt_result) " << this->btree_mapped(*bt_result) << endl;
         throw runtime_error("find: second check failure");
       }
       ++find_success_count;
+    }
 
-      //  test with key that may or may not exist  
-      find_rng.seed(stl_result->first);
-      boost::int32_t k = find_key();
+    //  test with key that may or may not exist
 
-      stl_result = stl.find(k);
-      bt_result = bt.find(k);
+    this->seed(rng_seed);
 
-      if (stl_result == stl.end() && bt_result != bt.end())
+    for (stl_type::size_type i = 0; i < stl.size() * 2; ++i)  // multiply to ensure misses
+    {
+
+      btree_value_type bt_val = this->generate_btree_value(0);
+      stl_value_type stl_val = this->stl_value(bt_val);
+      
+      btree_key_type bt_key = this->btree_key(bt_val);
+      stl_key_type stl_key = this->stl_key(stl_val);
+
+      stl_result = stl.find(stl_key);
+      bt_result = bt.find(bt_key);
+
+      if (stl_result == stl.end() || bt_result == bt.end())
       {
-        cout << "stl find()==end(), but bt finds " << k << endl;
-        throw runtime_error("find: results inconsistent");
-      }
-      if (stl_result != stl.end() && bt_result == bt.end())
-      {
-        cout << "bt find()==end(), but stl finds " << k << endl;
-        throw runtime_error("find: results inconsistent");
-      }
-      if (stl_result == stl.end())
+        if (bt_result != bt.end())
+        {
+          cout << "stl find()==end(), but bt finds " << bt_key << endl;
+          throw runtime_error("find: results inconsistent");
+        }
+        if (stl_result != stl.end())
+        {
+          cout << "bt find()==end(), but stl finds " << stl_key << endl;
+          throw runtime_error("find: results inconsistent");
+        }
         ++find_fail_count;
-      else if (bt_result->first == k)
-        ++find_success_count;
+      }
       else
       {
-        cout << "bt finds " << bt_result->first << ", but should be " << k << endl;
-        throw runtime_error("find: wrong iterator");
+        ++find_success_count;
+        if (this->btree_key(*bt_result) != bt_key)
+        {
+          cout << "bt finds " << this->btree_key(*bt_result)
+               << ", but should be " <<  bt_key << endl;
+          throw runtime_error("btree find: wrong result iterator");
+        }
+        if (this->btree_key(*bt_result) != bt_key)
+        {
+          cout << "stl finds " << this->stl_key(*stl_result)
+               << ", but should be " <<  stl_key << endl;
+          throw runtime_error("stl find: wrong result iterator");
+        }
       }
     }
 
@@ -474,68 +501,68 @@ public:
     for (stl_itr = stl.begin(); stl_itr != stl.end(); ++stl_itr)
     {
       //  test with key that exists
-      stl_result = stl.lower_bound(this->stl_key(*bt_itr));
-      bt_result = bt.lower_bound(this->stl_key(*bt_itr));
+      stl_result = stl.lower_bound(this->stl_key(*stl_itr));
+      bt_result = bt.lower_bound(this->stl_key(*stl_itr));
 
       if (stl_result == stl.end())
       {
-        cout << "for key " << this->stl_key(*bt_itr) << ", stl.lower_bound() return stl.end()" << endl;
+        cout << "for key " << this->stl_key(*stl_itr) << ", stl.lower_bound() return stl.end()" << endl;
         throw runtime_error("lower_bound: unexpected stl.end()");
       }
 
       if (bt_result == bt.end())
       {
-        cout << "for key " << this->stl_key(*bt_itr) << ", bt.lower_bound() return bt.end()" << endl;
+        cout << "for key " << this->stl_key(*stl_itr) << ", bt.lower_bound() return bt.end()" << endl;
         throw runtime_error("lower_bound: unexpected bt.end()");
       }
 
-      if (stl_result->first != bt_result->first)
+      if (this->stl_key(*stl_result) != this->btree_key(*bt_result))
       {
-        cout << "stl_result->first " << stl_result->first << " != "
-              << "bt_result->first " << bt_result->first << endl;
+        cout << "this->stl_key(*stl_result) " << this->stl_key(*stl_result) << " != "
+              << "this->btree_key(*bt_result) " << this->btree_key(*bt_result) << endl;
         throw runtime_error("lower_bound: first check failure");
       }
-      if (stl_result->second != bt_result->second)
+      if (this->stl_mapped(*stl_result) != this->btree_mapped(*bt_result))
       {
-        cout << "stl_result->second " << stl_result->second << " != "
-              << "bt_result->second " << bt_result->second << endl;
+        cout << "this->stl_mapped(*stl_result) " << this->stl_mapped(*stl_result) << " != "
+              << "this->btree_mapped(*bt_result) " << this->btree_mapped(*bt_result) << endl;
         throw runtime_error("lower_bound: second check failure");
       }
       ++lower_bound_exist_count;
 
-      //  test with key that may or may not exist  
-      lower_bound_rng.seed(stl_result->first);
-      boost::int32_t k = lower_bound_key();
+    //  //  test with key that may or may not exist  
+    //  lower_bound_rng.seed(this->stl_key(*stl_result));
+    //  boost::int32_t k = lower_bound_key();
 
-      stl_result = stl.lower_bound(k);
-      bt_result = bt.lower_bound(k);
+    //  stl_result = stl.lower_bound(k);
+    //  bt_result = bt.lower_bound(k);
 
-      if (stl_result == stl.end() && bt_result != bt.end())
-      {
-        cout << "stl lower_bound()==end(), but bt lower_bounds " << k << endl;
-        throw runtime_error("lower_bound: results inconsistent");
-      }
-      if (stl_result != stl.end() && bt_result == bt.end())
-      {
-        cout << "bt lower_bound()==end(), but stl lower_bounds " << k << endl;
-        throw runtime_error("lower_bound: results inconsistent");
-      }
-      if (stl_result != stl.end() && bt_result != bt.end())
-      {
-        if (stl_result->first != bt_result->first)
-        {
-          cout << "stl_result->first " << stl_result->first << " != "
-                << "bt_result->first " << bt_result->first << endl;
-          throw runtime_error("lower_bound may exist: first check failure");
-        }
-        if (stl_result->second != bt_result->second)
-        {
-          cout << "stl_result->second " << stl_result->second << " != "
-                << "bt_result->second " << bt_result->second << endl;
-          throw runtime_error("lower_bound may exist: second check failure");
-        }
-      }
-      ++lower_bound_may_exist_count;
+    //  if (stl_result == stl.end() && bt_result != bt.end())
+    //  {
+    //    cout << "stl lower_bound()==end(), but bt lower_bounds " << k << endl;
+    //    throw runtime_error("lower_bound: results inconsistent");
+    //  }
+    //  if (stl_result != stl.end() && bt_result == bt.end())
+    //  {
+    //    cout << "bt lower_bound()==end(), but stl lower_bounds " << k << endl;
+    //    throw runtime_error("lower_bound: results inconsistent");
+    //  }
+    //  if (stl_result != stl.end() && bt_result != bt.end())
+    //  {
+    //    if (this->stl_key(*stl_result) != this->btree_key(*bt_result))
+    //    {
+    //      cout << "this->stl_key(*stl_result) " << this->stl_key(*stl_result) << " != "
+    //            << "this->btree_key(*bt_result) " << this->btree_key(*bt_result) << endl;
+    //      throw runtime_error("lower_bound may exist: first check failure");
+    //    }
+    //    if (this->stl_mapped(*stl_result) != this->btree_mapped(*bt_result))
+    //    {
+    //      cout << "this->stl_mapped(*stl_result) " << this->stl_mapped(*stl_result) << " != "
+    //            << "this->btree_mapped(*bt_result) " << this->btree_mapped(*bt_result) << endl;
+    //      throw runtime_error("lower_bound may exist: second check failure");
+    //    }
+    //  }
+    //  ++lower_bound_may_exist_count;
     }
 
     cout << "  lower_bound test complete" << endl;
@@ -558,33 +585,33 @@ public:
     for (stl_itr = stl.begin(); stl_itr != stl.end(); ++stl_itr)
     {
       //  test with key that exists
-      stl_result = stl.upper_bound(this->stl_key(*bt_itr));
-      bt_result = bt.upper_bound(this->stl_key(*bt_itr));
+      stl_result = stl.upper_bound(this->stl_key(*stl_itr));
+      bt_result = bt.upper_bound(this->stl_key(*stl_itr));
 
       if (stl_result == stl.end() && bt_result != bt.end())
       {
-        cout << "stl upper_bound()==end(), but bt upper_bounds " << bt_result->first
-             << " for key " << this->stl_key(*bt_itr) << endl;
+        cout << "stl upper_bound()==end(), but bt upper_bounds " << this->btree_key(*bt_result)
+             << " for key " << this->stl_key(*stl_itr) << endl;
         throw runtime_error("upper_bound: results inconsistent");
       }
       if (stl_result != stl.end() && bt_result == bt.end())
       {
-        cout << "bt upper_bound()==end(), but stl upper_bounds " << stl_result->first
-             << " for key " << this->stl_key(*bt_itr) << endl;
+        cout << "bt upper_bound()==end(), but stl upper_bounds " << this->stl_key(*stl_result)
+             << " for key " << this->stl_key(*stl_itr) << endl;
         throw runtime_error("upper_bound: results inconsistent");
       }
       if (stl_result != stl.end() && bt_result != bt.end())
       {
-        if (stl_result->first != bt_result->first)
+        if (this->stl_key(*stl_result) != this->btree_key(*bt_result))
         {
-          cout << "stl_result->first " << stl_result->first << " != "
-                << "bt_result->first " << bt_result->first << endl;
+          cout << "this->stl_key(*stl_result) " << this->stl_key(*stl_result) << " != "
+                << "this->btree_key(*bt_result) " << this->btree_key(*bt_result) << endl;
           throw runtime_error("upper_bound key exists: first check failure");
         }
-        if (stl_result->second != bt_result->second)
+        if (this->stl_mapped(*stl_result) != this->btree_mapped(*bt_result))
         {
-          cout << "stl_result->second " << stl_result->second << " != "
-                << "bt_result->second " << bt_result->second << endl;
+          cout << "this->stl_mapped(*stl_result) " << this->stl_mapped(*stl_result) << " != "
+                << "this->btree_mapped(*bt_result) " << this->btree_mapped(*bt_result) << endl;
           throw runtime_error("upper_bound key exists: second check failure");
         }
       }
@@ -593,41 +620,41 @@ public:
       if (stl_result == stl.end())  // upper_bound of last element is end()
         continue;
 
-      //  test with key that may or may not exist  
-      upper_bound_rng.seed(stl_result->first);
-      boost::int32_t k = upper_bound_key();
+      ////  test with key that may or may not exist  
+      //upper_bound_rng.seed(this->stl_key(*stl_result));
+      //boost::int32_t k = upper_bound_key();
 
-      stl_result = stl.upper_bound(k);
-      bt_result = bt.upper_bound(k);
+      //stl_result = stl.upper_bound(k);
+      //bt_result = bt.upper_bound(k);
 
-      if (stl_result == stl.end() && bt_result != bt.end())
-      {
-        cout << "stl upper_bound()==end(), but bt upper_bounds " << bt_result->first
-             << " for k " << k << endl;
-        throw runtime_error("upper_bound: results inconsistent");
-      }
-      if (stl_result != stl.end() && bt_result == bt.end())
-      {
-        cout << "bt upper_bound()==end(), but stl upper_bounds " << stl_result->first
-             << " for k " << k << endl;
-        throw runtime_error("upper_bound: results inconsistent");
-      }
-      if (stl_result != stl.end() && bt_result != bt.end())
-      {
-        if (stl_result->first != bt_result->first)
-        {
-          cout << "stl_result->first " << stl_result->first << " != "
-                << "bt_result->first " << bt_result->first << endl;
-          throw runtime_error("upper_bound may exist: first check failure");
-        }
-        if (stl_result->second != bt_result->second)
-        {
-          cout << "stl_result->second " << stl_result->second << " != "
-                << "bt_result->second " << bt_result->second << endl;
-          throw runtime_error("upper_bound may exist: second check failure");
-        }
-      }
-      ++upper_bound_may_exist_count;
+      //if (stl_result == stl.end() && bt_result != bt.end())
+      //{
+      //  cout << "stl upper_bound()==end(), but bt upper_bounds " << this->btree_key(*bt_result)
+      //       << " for k " << k << endl;
+      //  throw runtime_error("upper_bound: results inconsistent");
+      //}
+      //if (stl_result != stl.end() && bt_result == bt.end())
+      //{
+      //  cout << "bt upper_bound()==end(), but stl upper_bounds " << this->stl_key(*stl_result)
+      //       << " for k " << k << endl;
+      //  throw runtime_error("upper_bound: results inconsistent");
+      //}
+      //if (stl_result != stl.end() && bt_result != bt.end())
+      //{
+      //  if (this->stl_key(*stl_result) != this->btree_key(*bt_result))
+      //  {
+      //    cout << "this->stl_key(*stl_result) " << this->stl_key(*stl_result) << " != "
+      //          << "this->btree_key(*bt_result) " << this->btree_key(*bt_result) << endl;
+      //    throw runtime_error("upper_bound may exist: first check failure");
+      //  }
+      //  if (this->stl_mapped(*stl_result) != this->btree_mapped(*bt_result))
+      //  {
+      //    cout << "this->stl_mapped(*stl_result) " << this->stl_mapped(*stl_result) << " != "
+      //          << "this->btree_mapped(*bt_result) " << this->btree_mapped(*bt_result) << endl;
+      //    throw runtime_error("upper_bound may exist: second check failure");
+      //  }
+      //}
+      //++upper_bound_may_exist_count;
     }
 
     cout << "  upper_bound test complete" << endl;
@@ -681,27 +708,17 @@ public:
          ;
   }
 
-
   //  run test cycles  -----------------------------------------------------------------//
 
   template <class Traits>
   void tester<Traits>::run_tests()
   {
-    this->seed(rng_seed);
-
-    //insert_rng.seed(seed);   // on restart seed will get overwritten by load_state()
-    //erase_rng.seed(seed);    // ditto
 
     path_str = path_prefix + ".btr";
 
     //if (restart)
     //  load_state();  // this has the effect of reloading rng and distribution state,
     //                 // as well as bt, stl, and some additional program state.
-
-    //static boost::uniform_int<boost::int32_t> n_dist(low, high);
-
-    //keygen_t insert_keygen(insert_rng, n_dist);
-    //keygen_t erase_keygen(erase_rng, n_dist);
 
     bt.open(path_str,
       restart ? boost::btree::flags::read_write
@@ -801,6 +818,9 @@ int cpp_main(int argc, char *argv[])
         restart = true;
       else if (strcmp(argv[1]+1, "v") == 0)
         verbose = true;
+      else if ( memcmp( argv[2]+1, "sep=", 4 )==0
+          && (std::ispunct(*(argv[2]+5)) || *(argv[2]+5)== '\0') )
+        thou_separator = *(argv[2]+5) ? *(argv[2]+5) : ' ';
       else
       {
         cout << "Error - unknown option: " << argv[1] << "\n\n";
@@ -833,6 +853,7 @@ int cpp_main(int argc, char *argv[])
       "                default " << dump << "\n"
       "   -restart     Restart using restart files from previous run\n"
       "   -v           Verbose output statistics\n"
+      "   -sep=[punct] cout thousands separator; space if punct omitted, default -sep,\n"
       "\n    Each test cycle inserts the same random values into both a btree_map\n"
       "and a std::map until the maximum number of elements is reached.\n"
       "The same sequence of random elements will then be erased, until the minimum\n"
@@ -858,6 +879,8 @@ int cpp_main(int argc, char *argv[])
     cout << "Error: (high-low) must be greater than max\n";
     return 1;
   }
+
+  cout.imbue(std::locale(std::locale(), new thousands_separator));
 
   tester<boost::btree::detail::set_index_string_view> testr;
   testr.run_tests();
