@@ -108,9 +108,12 @@ namespace boost { namespace btree { namespace detail {
 
     void              seed(int64_t seed_)  {m_rsg.seed(static_cast<int>(seed_));}
 
-    btree_key_type    btree_key()          {m_string = m_rsg();
-                                               return boost::string_view(m_string);}
-    btree_value_type  btree_value(int64_t) {return btree_key();}
+    btree_key_type    generate_btree_key() {m_string = m_rsg();
+                                            return boost::string_view(m_string);}
+    btree_value_type  generate_btree_value(int64_t) {return generate_btree_key();}
+
+    btree_key_type    btree_key(const btree_value_type& v) const
+                                           {return v;}
 
     stl_key_type      stl_key(const btree_value_type& v) const
                                            {return stl_key_type(v.data(), v.size());}

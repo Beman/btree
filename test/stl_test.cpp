@@ -224,8 +224,16 @@ private:
 
 public:
   tester() : Traits(max) {}
-  void  insert_test();
 
+  void  insert_test();
+  void  iteration_test();
+  void  backward_iteration_test();
+  void  find_test();
+  void  lower_bound_test();
+  void  upper_bound_test();
+  void  erase_test();
+
+  void  verify_restart() const;
   void  report_counts() const;
   void  run_tests();
 
@@ -233,8 +241,7 @@ public:
 
   //  insert test  ---------------------------------------------------------------------//
 
-  template <class Traits>
-  void tester<Traits>::insert_test()
+  template <class Traits> void tester<Traits>::insert_test()
   {
     cout << "insert test..." << endl;
     if (verbose)
@@ -243,7 +250,7 @@ public:
     for (boost::uint64_t i = 1;
          stl.size() < static_cast<stl_type::size_type>(max); ++i)
     {
-      btree_value_type bt_val = this->btree_value(insert_success_count);
+      btree_value_type bt_val = this->generate_btree_value(insert_success_count);
       stl_value_type stl_val = this->stl_value(bt_val);
 
       if (verbose)
@@ -270,377 +277,381 @@ public:
     }
     cout << "  insert test complete, size() = " << stl.size() << endl;
   }
-  ////  iteration test  ------------------------------------------------------------------//
 
-  //void iteration_test()
-  //{
-  //  cout << "iteration test..." << endl;
-  //  if (verbose)
-  //    cout << "  keys: ";
-  //  stl_type::const_iterator stl_itr = stl.begin();
-  //  bt_type::const_iterator bt_itr = bt.begin();
+  //  iteration test  ------------------------------------------------------------------//
 
-  //  for (; stl_itr != stl.end() && bt_itr != bt.end(); ++stl_itr, ++bt_itr)
-  //  {
-  //    if (verbose)
-  //      cout << stl_itr->first << ',';
+  template <class Traits> void tester<Traits>::iteration_test()
+  {
+    cout << "iteration test..." << endl;
+    if (verbose)
+      cout << "  keys: ";
 
-  //    if (stl_itr->first != bt_itr->first)
-  //    {
-  //      cout << "stl_itr->first " << stl_itr->first << " != "
-  //            << "bt_itr->first " << bt_itr->first << endl;
-  //      throw runtime_error("iteration: first check failure");
-  //    }
-  //    if (stl_itr->second != bt_itr->second)
-  //    {
-  //      cout << "stl_itr->second " << stl_itr->second << " != "
-  //            << "bt_itr->second " << bt_itr->second << endl;
-  //      throw runtime_error("iteration: second check failure");
-  //    }
-  //    ++iterate_forward_count;
-  //  }
+    stl_type::const_iterator stl_itr = stl.begin();
+    btree_type::const_iterator bt_itr = bt.begin();
 
-  //  if (stl_itr != stl.end())
-  //    throw runtime_error("iteration: bt at end() but stl not at end()");
-  //  if (bt_itr != bt.end())
-  //    throw runtime_error("iteration: stl at end() but bt not at end()");
-  //  cout << "  iteration test complete" << endl;
-  //}
+    for (; stl_itr != stl.end() && bt_itr != bt.end(); ++stl_itr, ++bt_itr)
+    {
+      if (verbose)
+        cout << this->stl_key(*bt_itr) << ',';
 
-  ////  backward iteration test  ---------------------------------------------------------//
+      if (this->stl_key(*bt_itr) != this->btree_key(*bt_itr))
+      {
+        cout << "this->stl_key(*bt_itr) " << this->stl_key(*bt_itr) << " != "
+              << "this->btree_key(*bt_itr) " << this->btree_key(*bt_itr) << endl;
+        throw runtime_error("iteration: first check failure");
+      }
+      if (stl_itr->second != bt_itr->second)
+      {
+        cout << "stl_itr->second " << stl_itr->second << " != "
+              << "bt_itr->second " << bt_itr->second << endl;
+        throw runtime_error("iteration: second check failure");
+      }
+      ++iterate_forward_count;
+    }
 
-  //void backward_iteration_test()
-  //{
-  //  cout << "backward iteration test..." << endl;
-  //  stl_type::const_iterator stl_itr = stl.end();
-  //  bt_type::const_iterator bt_itr = bt.end();
+    if (stl_itr != stl.end())
+      throw runtime_error("iteration: bt at end() but stl not at end()");
+    if (bt_itr != bt.end())
+      throw runtime_error("iteration: stl at end() but bt not at end()");
+    cout << "  iteration test complete" << endl;
+  }
 
-  //  do
-  //  {
-  //    --stl_itr;
-  //    --bt_itr;
-  //    if (stl_itr->first != bt_itr->first)
-  //    {
-  //      cout << "stl_itr->first " << stl_itr->first << " != "
-  //            << "bt_itr->first " << bt_itr->first << endl;
-  //      throw runtime_error("backward iteration: first check failure");
-  //    }
-  //    if (stl_itr->second != bt_itr->second)
-  //    {
-  //      cout << "stl_itr->second " << stl_itr->second << " != "
-  //            << "bt_itr->second " << bt_itr->second << endl;
-  //      throw runtime_error("backward iteration: second check failure");
-  //    }
-  //    ++iterate_backward_count;
-  //  } while (stl_itr != stl.begin() && bt_itr != bt.begin());
+  //  backward iteration test  ---------------------------------------------------------//
 
-  //  if (stl_itr != stl.begin())
-  //    throw runtime_error("iteration: bt at begin() but stl not at begin()");
-  //  if (bt_itr != bt.begin())
-  //    throw runtime_error("iteration: stl at begin() but bt not at begin()");
-  //  cout << "  backward iteration complete" << endl;
-  //}
+  template <class Traits> void tester<Traits>::backward_iteration_test()
+  {
+    cout << "backward iteration test..." << endl;
+    stl_type::const_iterator stl_itr = stl.end();
+    btree_type::const_iterator bt_itr = bt.end();
 
-  ////  erase test  ----------------------------------------------------------------------//
+    do
+    {
+      --stl_itr;
+      --bt_itr;
+      if (this->stl_key(*bt_itr) != this->btree_key(*bt_itr))
+      {
+        cout << "this->stl_key(*bt_itr) " << this->stl_key(*bt_itr) << " != "
+              << "this->btree_key(*bt_itr) " << this->btree_key(*bt_itr) << endl;
+        throw runtime_error("backward iteration: first check failure");
+      }
+      if (stl_itr->second != bt_itr->second)
+      {
+        cout << "stl_itr->second " << stl_itr->second << " != "
+              << "bt_itr->second " << bt_itr->second << endl;
+        throw runtime_error("backward iteration: second check failure");
+      }
+      ++iterate_backward_count;
+    } while (stl_itr != stl.begin() && bt_itr != bt.begin());
 
-  //void erase_test(keygen_t& erase_key)
-  //{
-  //  cout << "erase test..." << endl;
-  //  if (verbose)
-  //    cout << "erasing: ";
-  //  while (stl.size() > static_cast<stl_type::size_type>(min))
-  //  {
-  //    boost::int32_t k = erase_key();
+    if (stl_itr != stl.begin())
+      throw runtime_error("iteration: bt at begin() but stl not at begin()");
+    if (bt_itr != bt.begin())
+      throw runtime_error("iteration: stl at begin() but bt not at begin()");
+    cout << "  backward iteration complete" << endl;
+  }
 
-  //    if (verbose)
-  //      cout << k << ',';
+  //  erase test  ----------------------------------------------------------------------//
 
-  //    stl_type::size_type stl_result = stl.erase(k);
-  //    bt_type::size_type bt_result = bt.erase(k);
+  template <class Traits> void tester<Traits>::erase_test()
+  {
+    cout << "erase test..." << endl;
+    if (verbose)
+      cout << "erasing: ";
+    while (stl.size() > static_cast<stl_type::size_type>(min))
+    {
+      boost::int32_t k = erase_key();
 
-  //    if (stl_result != bt_result)
-  //    {
-  //      cout << "stl_result " << stl_result << " != bt_result " << bt_result << endl;
-  //      throw runtime_error("erase: result failure");
-  //    }
+      if (verbose)
+        cout << k << ',';
 
-  //    if (stl_result)
-  //      ++erase_success_count;
-  //    else
-  //      ++erase_fail_count;
-  //  }
-  //  if (stl.size() != bt.size())
-  //  {
-  //    cout << "stl.size() " << stl.size() << " != bt.size() " << bt.size() << endl;
-  //    throw runtime_error("erase: size check failure");
-  //  }
-  //  cout << "  erase test complete, size() = " << stl.size() << endl;
-  //}
+      stl_type::size_type stl_result = stl.erase(k);
+      btree_type::size_type bt_result = bt.erase(k);
 
-  ////  find test  -----------------------------------------------------------------------//
+      if (stl_result != bt_result)
+      {
+        cout << "stl_result " << stl_result << " != bt_result " << bt_result << endl;
+        throw runtime_error("erase: result failure");
+      }
 
-  //void find_test()
-  //{
-  //  cout << "find test..." << endl;
+      if (stl_result)
+        ++erase_success_count;
+      else
+        ++erase_fail_count;
+    }
+    if (stl.size() != bt.size())
+    {
+      cout << "stl.size() " << stl.size() << " != bt.size() " << bt.size() << endl;
+      throw runtime_error("erase: size check failure");
+    }
+    cout << "  erase test complete, size() = " << stl.size() << endl;
+  }
 
-  //  boost::minstd_rand find_rng;
-  //  boost::uniform_int<boost::int32_t> n_dist(low, high);
-  //  boost::variate_generator<boost::minstd_rand&, boost::uniform_int<boost::int32_t> >
-  //    find_key(find_rng, n_dist);
+  //  find test  -----------------------------------------------------------------------//
 
-  //  stl_type::const_iterator stl_itr, stl_result;
-  //  bt_type::const_iterator bt_result;
+  template <class Traits> void tester<Traits>::find_test()
+  {
+    cout << "find test..." << endl;
 
-  //  for (stl_itr = stl.begin(); stl_itr != stl.end(); ++stl_itr)
-  //  {
-  //    //  test with key that exists
-  //    stl_result = stl.find(stl_itr->first);
-  //    bt_result = bt.find(stl_itr->first);
+    boost::minstd_rand find_rng;
+    boost::uniform_int<boost::int32_t> n_dist(low, high);
+    boost::variate_generator<boost::minstd_rand&, boost::uniform_int<boost::int32_t> >
+      find_key(find_rng, n_dist);
 
-  //    if (bt_result == bt.end())
-  //    {
-  //      cout << "for key " << stl_itr->first << ", bt.find() return bt.end()" << endl;
-  //      throw runtime_error("find: failed to find key");
-  //    }
+    stl_type::const_iterator stl_itr, stl_result;
+    btree_type::const_iterator bt_result;
 
-  //    if (stl_result->first != bt_result->first)
-  //    {
-  //      cout << "stl_result->first " << stl_result->first << " != "
-  //            << "bt_result->first " << bt_result->first << endl;
-  //      throw runtime_error("find: first check failure");
-  //    }
-  //    if (stl_result->second != bt_result->second)
-  //    {
-  //      cout << "stl_result->second " << stl_result->second << " != "
-  //            << "bt_result->second " << bt_result->second << endl;
-  //      throw runtime_error("find: second check failure");
-  //    }
-  //    ++find_success_count;
+    for (stl_itr = stl.begin(); stl_itr != stl.end(); ++stl_itr)
+    {
+      //  test with key that exists
+      stl_result = stl.find(this->stl_key(*bt_itr));
+      bt_result = bt.find(this->stl_key(*bt_itr));
 
-  //    //  test with key that may or may not exist  
-  //    find_rng.seed(stl_result->first);
-  //    boost::int32_t k = find_key();
+      if (bt_result == bt.end())
+      {
+        cout << "for key " << this->stl_key(*bt_itr) << ", bt.find() return bt.end()" << endl;
+        throw runtime_error("find: failed to find key");
+      }
 
-  //    stl_result = stl.find(k);
-  //    bt_result = bt.find(k);
+      if (stl_result->first != bt_result->first)
+      {
+        cout << "stl_result->first " << stl_result->first << " != "
+              << "bt_result->first " << bt_result->first << endl;
+        throw runtime_error("find: first check failure");
+      }
+      if (stl_result->second != bt_result->second)
+      {
+        cout << "stl_result->second " << stl_result->second << " != "
+              << "bt_result->second " << bt_result->second << endl;
+        throw runtime_error("find: second check failure");
+      }
+      ++find_success_count;
 
-  //    if (stl_result == stl.end() && bt_result != bt.end())
-  //    {
-  //      cout << "stl find()==end(), but bt finds " << k << endl;
-  //      throw runtime_error("find: results inconsistent");
-  //    }
-  //    if (stl_result != stl.end() && bt_result == bt.end())
-  //    {
-  //      cout << "bt find()==end(), but stl finds " << k << endl;
-  //      throw runtime_error("find: results inconsistent");
-  //    }
-  //    if (stl_result == stl.end())
-  //      ++find_fail_count;
-  //    else if (bt_result->first == k)
-  //      ++find_success_count;
-  //    else
-  //    {
-  //      cout << "bt finds " << bt_result->first << ", but should be " << k << endl;
-  //      throw runtime_error("find: wrong iterator");
-  //    }
-  //  }
+      //  test with key that may or may not exist  
+      find_rng.seed(stl_result->first);
+      boost::int32_t k = find_key();
 
-  //  cout << "  find test complete" << endl;
-  //}
+      stl_result = stl.find(k);
+      bt_result = bt.find(k);
 
-  ////  lower_bound test  ----------------------------------------------------------------//
+      if (stl_result == stl.end() && bt_result != bt.end())
+      {
+        cout << "stl find()==end(), but bt finds " << k << endl;
+        throw runtime_error("find: results inconsistent");
+      }
+      if (stl_result != stl.end() && bt_result == bt.end())
+      {
+        cout << "bt find()==end(), but stl finds " << k << endl;
+        throw runtime_error("find: results inconsistent");
+      }
+      if (stl_result == stl.end())
+        ++find_fail_count;
+      else if (bt_result->first == k)
+        ++find_success_count;
+      else
+      {
+        cout << "bt finds " << bt_result->first << ", but should be " << k << endl;
+        throw runtime_error("find: wrong iterator");
+      }
+    }
 
-  //void lower_bound_test()
-  //{
-  //  cout << "lower_bound test..." << endl;
+    cout << "  find test complete" << endl;
+  }
 
-  //  boost::minstd_rand lower_bound_rng;
-  //  boost::uniform_int<boost::int32_t> n_dist(low, high);
-  //  boost::variate_generator<boost::minstd_rand&, boost::uniform_int<boost::int32_t> >
-  //    lower_bound_key(lower_bound_rng, n_dist);
+  //  lower_bound test  ----------------------------------------------------------------//
 
-  //  stl_type::const_iterator stl_itr, stl_result;
-  //  bt_type::const_iterator bt_result;
+  template <class Traits> void tester<Traits>::lower_bound_test()
+  {
+    cout << "lower_bound test..." << endl;
 
-  //  for (stl_itr = stl.begin(); stl_itr != stl.end(); ++stl_itr)
-  //  {
-  //    //  test with key that exists
-  //    stl_result = stl.lower_bound(stl_itr->first);
-  //    bt_result = bt.lower_bound(stl_itr->first);
+    boost::minstd_rand lower_bound_rng;
+    boost::uniform_int<boost::int32_t> n_dist(low, high);
+    boost::variate_generator<boost::minstd_rand&, boost::uniform_int<boost::int32_t> >
+      lower_bound_key(lower_bound_rng, n_dist);
 
-  //    if (stl_result == stl.end())
-  //    {
-  //      cout << "for key " << stl_itr->first << ", stl.lower_bound() return stl.end()" << endl;
-  //      throw runtime_error("lower_bound: unexpected stl.end()");
-  //    }
+    stl_type::const_iterator stl_itr, stl_result;
+    btree_type::const_iterator bt_result;
 
-  //    if (bt_result == bt.end())
-  //    {
-  //      cout << "for key " << stl_itr->first << ", bt.lower_bound() return bt.end()" << endl;
-  //      throw runtime_error("lower_bound: unexpected bt.end()");
-  //    }
+    for (stl_itr = stl.begin(); stl_itr != stl.end(); ++stl_itr)
+    {
+      //  test with key that exists
+      stl_result = stl.lower_bound(this->stl_key(*bt_itr));
+      bt_result = bt.lower_bound(this->stl_key(*bt_itr));
 
-  //    if (stl_result->first != bt_result->first)
-  //    {
-  //      cout << "stl_result->first " << stl_result->first << " != "
-  //            << "bt_result->first " << bt_result->first << endl;
-  //      throw runtime_error("lower_bound: first check failure");
-  //    }
-  //    if (stl_result->second != bt_result->second)
-  //    {
-  //      cout << "stl_result->second " << stl_result->second << " != "
-  //            << "bt_result->second " << bt_result->second << endl;
-  //      throw runtime_error("lower_bound: second check failure");
-  //    }
-  //    ++lower_bound_exist_count;
+      if (stl_result == stl.end())
+      {
+        cout << "for key " << this->stl_key(*bt_itr) << ", stl.lower_bound() return stl.end()" << endl;
+        throw runtime_error("lower_bound: unexpected stl.end()");
+      }
 
-  //    //  test with key that may or may not exist  
-  //    lower_bound_rng.seed(stl_result->first);
-  //    boost::int32_t k = lower_bound_key();
+      if (bt_result == bt.end())
+      {
+        cout << "for key " << this->stl_key(*bt_itr) << ", bt.lower_bound() return bt.end()" << endl;
+        throw runtime_error("lower_bound: unexpected bt.end()");
+      }
 
-  //    stl_result = stl.lower_bound(k);
-  //    bt_result = bt.lower_bound(k);
+      if (stl_result->first != bt_result->first)
+      {
+        cout << "stl_result->first " << stl_result->first << " != "
+              << "bt_result->first " << bt_result->first << endl;
+        throw runtime_error("lower_bound: first check failure");
+      }
+      if (stl_result->second != bt_result->second)
+      {
+        cout << "stl_result->second " << stl_result->second << " != "
+              << "bt_result->second " << bt_result->second << endl;
+        throw runtime_error("lower_bound: second check failure");
+      }
+      ++lower_bound_exist_count;
 
-  //    if (stl_result == stl.end() && bt_result != bt.end())
-  //    {
-  //      cout << "stl lower_bound()==end(), but bt lower_bounds " << k << endl;
-  //      throw runtime_error("lower_bound: results inconsistent");
-  //    }
-  //    if (stl_result != stl.end() && bt_result == bt.end())
-  //    {
-  //      cout << "bt lower_bound()==end(), but stl lower_bounds " << k << endl;
-  //      throw runtime_error("lower_bound: results inconsistent");
-  //    }
-  //    if (stl_result != stl.end() && bt_result != bt.end())
-  //    {
-  //      if (stl_result->first != bt_result->first)
-  //      {
-  //        cout << "stl_result->first " << stl_result->first << " != "
-  //              << "bt_result->first " << bt_result->first << endl;
-  //        throw runtime_error("lower_bound may exist: first check failure");
-  //      }
-  //      if (stl_result->second != bt_result->second)
-  //      {
-  //        cout << "stl_result->second " << stl_result->second << " != "
-  //              << "bt_result->second " << bt_result->second << endl;
-  //        throw runtime_error("lower_bound may exist: second check failure");
-  //      }
-  //    }
-  //    ++lower_bound_may_exist_count;
-  //  }
+      //  test with key that may or may not exist  
+      lower_bound_rng.seed(stl_result->first);
+      boost::int32_t k = lower_bound_key();
 
-  //  cout << "  lower_bound test complete" << endl;
-  //}
-  //
-  ////  upper_bound test  ----------------------------------------------------------------//
+      stl_result = stl.lower_bound(k);
+      bt_result = bt.lower_bound(k);
 
-  //void upper_bound_test()
-  //{
-  //  cout << "upper_bound test..." << endl;
+      if (stl_result == stl.end() && bt_result != bt.end())
+      {
+        cout << "stl lower_bound()==end(), but bt lower_bounds " << k << endl;
+        throw runtime_error("lower_bound: results inconsistent");
+      }
+      if (stl_result != stl.end() && bt_result == bt.end())
+      {
+        cout << "bt lower_bound()==end(), but stl lower_bounds " << k << endl;
+        throw runtime_error("lower_bound: results inconsistent");
+      }
+      if (stl_result != stl.end() && bt_result != bt.end())
+      {
+        if (stl_result->first != bt_result->first)
+        {
+          cout << "stl_result->first " << stl_result->first << " != "
+                << "bt_result->first " << bt_result->first << endl;
+          throw runtime_error("lower_bound may exist: first check failure");
+        }
+        if (stl_result->second != bt_result->second)
+        {
+          cout << "stl_result->second " << stl_result->second << " != "
+                << "bt_result->second " << bt_result->second << endl;
+          throw runtime_error("lower_bound may exist: second check failure");
+        }
+      }
+      ++lower_bound_may_exist_count;
+    }
 
-  //  boost::minstd_rand upper_bound_rng;
-  //  boost::uniform_int<boost::int32_t> n_dist(low, high);
-  //  boost::variate_generator<boost::minstd_rand&, boost::uniform_int<boost::int32_t> >
-  //    upper_bound_key(upper_bound_rng, n_dist);
+    cout << "  lower_bound test complete" << endl;
+  }
+  
+  //  upper_bound test  ----------------------------------------------------------------//
 
-  //  stl_type::const_iterator stl_itr, stl_result;
-  //  bt_type::const_iterator bt_result;
+  template <class Traits> void tester<Traits>::upper_bound_test()
+  {
+    cout << "upper_bound test..." << endl;
 
-  //  for (stl_itr = stl.begin(); stl_itr != stl.end(); ++stl_itr)
-  //  {
-  //    //  test with key that exists
-  //    stl_result = stl.upper_bound(stl_itr->first);
-  //    bt_result = bt.upper_bound(stl_itr->first);
+    boost::minstd_rand upper_bound_rng;
+    boost::uniform_int<boost::int32_t> n_dist(low, high);
+    boost::variate_generator<boost::minstd_rand&, boost::uniform_int<boost::int32_t> >
+      upper_bound_key(upper_bound_rng, n_dist);
 
-  //    if (stl_result == stl.end() && bt_result != bt.end())
-  //    {
-  //      cout << "stl upper_bound()==end(), but bt upper_bounds " << bt_result->first
-  //           << " for key " << stl_itr->first << endl;
-  //      throw runtime_error("upper_bound: results inconsistent");
-  //    }
-  //    if (stl_result != stl.end() && bt_result == bt.end())
-  //    {
-  //      cout << "bt upper_bound()==end(), but stl upper_bounds " << stl_result->first
-  //           << " for key " << stl_itr->first << endl;
-  //      throw runtime_error("upper_bound: results inconsistent");
-  //    }
-  //    if (stl_result != stl.end() && bt_result != bt.end())
-  //    {
-  //      if (stl_result->first != bt_result->first)
-  //      {
-  //        cout << "stl_result->first " << stl_result->first << " != "
-  //              << "bt_result->first " << bt_result->first << endl;
-  //        throw runtime_error("upper_bound key exists: first check failure");
-  //      }
-  //      if (stl_result->second != bt_result->second)
-  //      {
-  //        cout << "stl_result->second " << stl_result->second << " != "
-  //              << "bt_result->second " << bt_result->second << endl;
-  //        throw runtime_error("upper_bound key exists: second check failure");
-  //      }
-  //    }
-  //    ++upper_bound_exist_count;
+    stl_type::const_iterator stl_itr, stl_result;
+    btree_type::const_iterator bt_result;
 
-  //    if (stl_result == stl.end())  // upper_bound of last element is end()
-  //      continue;
+    for (stl_itr = stl.begin(); stl_itr != stl.end(); ++stl_itr)
+    {
+      //  test with key that exists
+      stl_result = stl.upper_bound(this->stl_key(*bt_itr));
+      bt_result = bt.upper_bound(this->stl_key(*bt_itr));
 
-  //    //  test with key that may or may not exist  
-  //    upper_bound_rng.seed(stl_result->first);
-  //    boost::int32_t k = upper_bound_key();
+      if (stl_result == stl.end() && bt_result != bt.end())
+      {
+        cout << "stl upper_bound()==end(), but bt upper_bounds " << bt_result->first
+             << " for key " << this->stl_key(*bt_itr) << endl;
+        throw runtime_error("upper_bound: results inconsistent");
+      }
+      if (stl_result != stl.end() && bt_result == bt.end())
+      {
+        cout << "bt upper_bound()==end(), but stl upper_bounds " << stl_result->first
+             << " for key " << this->stl_key(*bt_itr) << endl;
+        throw runtime_error("upper_bound: results inconsistent");
+      }
+      if (stl_result != stl.end() && bt_result != bt.end())
+      {
+        if (stl_result->first != bt_result->first)
+        {
+          cout << "stl_result->first " << stl_result->first << " != "
+                << "bt_result->first " << bt_result->first << endl;
+          throw runtime_error("upper_bound key exists: first check failure");
+        }
+        if (stl_result->second != bt_result->second)
+        {
+          cout << "stl_result->second " << stl_result->second << " != "
+                << "bt_result->second " << bt_result->second << endl;
+          throw runtime_error("upper_bound key exists: second check failure");
+        }
+      }
+      ++upper_bound_exist_count;
 
-  //    stl_result = stl.upper_bound(k);
-  //    bt_result = bt.upper_bound(k);
+      if (stl_result == stl.end())  // upper_bound of last element is end()
+        continue;
 
-  //    if (stl_result == stl.end() && bt_result != bt.end())
-  //    {
-  //      cout << "stl upper_bound()==end(), but bt upper_bounds " << bt_result->first
-  //           << " for k " << k << endl;
-  //      throw runtime_error("upper_bound: results inconsistent");
-  //    }
-  //    if (stl_result != stl.end() && bt_result == bt.end())
-  //    {
-  //      cout << "bt upper_bound()==end(), but stl upper_bounds " << stl_result->first
-  //           << " for k " << k << endl;
-  //      throw runtime_error("upper_bound: results inconsistent");
-  //    }
-  //    if (stl_result != stl.end() && bt_result != bt.end())
-  //    {
-  //      if (stl_result->first != bt_result->first)
-  //      {
-  //        cout << "stl_result->first " << stl_result->first << " != "
-  //              << "bt_result->first " << bt_result->first << endl;
-  //        throw runtime_error("upper_bound may exist: first check failure");
-  //      }
-  //      if (stl_result->second != bt_result->second)
-  //      {
-  //        cout << "stl_result->second " << stl_result->second << " != "
-  //              << "bt_result->second " << bt_result->second << endl;
-  //        throw runtime_error("upper_bound may exist: second check failure");
-  //      }
-  //    }
-  //    ++upper_bound_may_exist_count;
-  //  }
+      //  test with key that may or may not exist  
+      upper_bound_rng.seed(stl_result->first);
+      boost::int32_t k = upper_bound_key();
 
-  //  cout << "  upper_bound test complete" << endl;
-  //}
+      stl_result = stl.upper_bound(k);
+      bt_result = bt.upper_bound(k);
 
-  ////  verify_restart  ------------------------------------------------------------------//
+      if (stl_result == stl.end() && bt_result != bt.end())
+      {
+        cout << "stl upper_bound()==end(), but bt upper_bounds " << bt_result->first
+             << " for k " << k << endl;
+        throw runtime_error("upper_bound: results inconsistent");
+      }
+      if (stl_result != stl.end() && bt_result == bt.end())
+      {
+        cout << "bt upper_bound()==end(), but stl upper_bounds " << stl_result->first
+             << " for k " << k << endl;
+        throw runtime_error("upper_bound: results inconsistent");
+      }
+      if (stl_result != stl.end() && bt_result != bt.end())
+      {
+        if (stl_result->first != bt_result->first)
+        {
+          cout << "stl_result->first " << stl_result->first << " != "
+                << "bt_result->first " << bt_result->first << endl;
+          throw runtime_error("upper_bound may exist: first check failure");
+        }
+        if (stl_result->second != bt_result->second)
+        {
+          cout << "stl_result->second " << stl_result->second << " != "
+                << "bt_result->second " << bt_result->second << endl;
+          throw runtime_error("upper_bound may exist: second check failure");
+        }
+      }
+      ++upper_bound_may_exist_count;
+    }
 
-  //void verify_restart()
-  //{
-  //  cout << "Verifying restart integrity..." << endl;
+    cout << "  upper_bound test complete" << endl;
+  }
 
-  //  if (stl.size() != bt.size())
-  //  {
-  //    cout << "stl.size() " << stl.size() << " != bt.size() " << bt.size() << endl;
-  //    throw runtime_error("restart: size check failure");
-  //  }
+  //  verify_restart  ------------------------------------------------------------------//
 
-  //  iteration_test();
-  //  backward_iteration_test();
+  template <class Traits> void tester<Traits>::verify_restart() const
+  {
+    cout << "Verifying restart integrity..." << endl;
 
-  //  cout << "  verifying restart integrity complete\n";
-  //}
+    if (stl.size() != bt.size())
+    {
+      cout << "stl.size() " << stl.size() << " != bt.size() " << bt.size() << endl;
+      throw runtime_error("restart: size check failure");
+    }
+
+    iteration_test();
+    backward_iteration_test();
+
+    cout << "  verifying restart integrity complete\n";
+  }
+
+  //  report_counts  -------------------------------------------------------------------//
 
   template <class Traits>
   void tester<Traits>::report_counts() const
@@ -721,17 +732,18 @@ public:
       cycle_times.start();
 
       insert_test();
-      //iteration_test();
-      //backward_iteration_test();
-      //find_test();
-      //lower_bound_test();
-      //upper_bound_test();
-      //erase_test(erase_keygen);
-      //iteration_test();
-      //backward_iteration_test();
-      //find_test();
-      //lower_bound_test();
-      //upper_bound_test();
+      iteration_test();
+      backward_iteration_test();
+      find_test();
+      lower_bound_test();
+      upper_bound_test();
+      erase_test();
+      // rerun tests to verify containers still in sync after erase_test()
+      iteration_test();
+      backward_iteration_test();
+      find_test();
+      lower_bound_test();
+      upper_bound_test();
 
       ++cycles_complete;
       report_counts();
