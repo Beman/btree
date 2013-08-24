@@ -75,136 +75,6 @@ namespace
    std::string do_grouping() const { return "\3"; }
   };
 
-  ////  dump_state  ----------------------------------------------------------------------//
-
-  //void dump_state()
-  //{
-  //  if (dump == 0
-  //    || (dump < 0 && cycle != cycles)
-  //    || cycle % dump != 0)
-  //    return;
-
-  //  cout << "\nwriting state files...\n";
-
-  //  //  program state
-  //  string p = "restart.state";
-  //  cout << "  dumping program state to " << p << '\n';
-  //  std::ofstream stateout(p.c_str());
-  //  if (!stateout)
-  //    throw runtime_error(string("Could not open ") + p);
-
-  //  stateout << (cycle != cycles) << ' '  // copying btree file?
-  //           << min << ' '
-  //           << max << ' '
-  //           << low << ' '
-  //           << high << ' '
-  //           << cache_sz << ' '
-  //           << insert_rng << ' '
-  //           << erase_rng << ' '
-  //           << insert_success_count << ' '
-  //           << insert_fail_count << ' '
-  //           << erase_success_count << ' '
-  //           << erase_fail_count << ' '
-  //           << iterate_forward_count << ' '
-  //           << iterate_backward_count << ' '
-  //           << find_success_count << ' '
-  //           << find_fail_count << ' '
-  //           << lower_bound_exist_count << ' '
-  //           << lower_bound_may_exist_count << ' '
-  //           << upper_bound_exist_count << ' '
-  //           << upper_bound_may_exist_count << ' '
-  //           << cycles_complete << ' '
-  //           ;
-  //  stateout.close();
-
-  //  //  bt state
-  //  if (cycle != cycles)
-  //  {
-  //    p = "restart.btr";
-  //    bt.flush();
-  //    cout << "  copying " << path_str << " to " << p << '\n';
-  //    fs::copy_file(path_str, p, fs::copy_option::overwrite_if_exists);
-  //  }
-
-  //  //  stl state
-  //  p = "restart.stl";
-  //  cout << "  dumping stl::map data to " << p << '\n';
-  //  std::ofstream stlout(p.c_str());
-  //  if (!stlout)
-  //    throw runtime_error(string("Could not open ") + p);
-  //  for (stl_type::const_iterator it = stl.begin(); it != stl.end(); ++it)
-  //    stlout << it->first << '\n';
-  //  stlout.close();
-
-  //  cout << "  writing state files complete\n";
-  //}
-
-  ////  load_state  ----------------------------------------------------------------------//
-
-  //void load_state()
-  //{
-  //  cout << "\nreading state files...\n";
-
-  //  //  program state
-  //  string p = "restart.state";
-  //  cout << "  loading program state from " << p << '\n';
-  //  std::ifstream statein(p.c_str());
-  //  if (!statein)
-  //    throw runtime_error(string("Could not open ") + p);
-
-  //  bool copy_btree_file;
-
-  //  statein >> std::ws >> copy_btree_file 
-  //          >> std::ws >> min
-  //          >> std::ws >> max
-  //          >> std::ws >> low
-  //          >> std::ws >> high
-  //          >> std::ws >> cache_sz
-  //          >> std::ws >> insert_rng
-  //          >> std::ws >> erase_rng
-  //          >> std::ws >> insert_success_count
-  //          >> std::ws >> insert_fail_count
-  //          >> std::ws >> erase_success_count
-  //          >> std::ws >> erase_fail_count
-  //          >> std::ws >> iterate_forward_count
-  //          >> std::ws >> iterate_backward_count
-  //          >> std::ws >> find_success_count
-  //          >> std::ws >> find_fail_count
-  //          >> std::ws >> lower_bound_exist_count
-  //          >> std::ws >> lower_bound_may_exist_count
-  //          >> std::ws >> upper_bound_exist_count
-  //          >> std::ws >> upper_bound_may_exist_count
-  //          >> std::ws >> cycles_complete
-  //          ;
-  //  statein.close();
-
-  //  //  bt state
-  //  if (copy_btree_file)
-  //  {
-  //    p = "restart.btr"; 
-  //    cout << "  copying " << p << " to " << path_str << '\n';
-  //    fs::copy_file(p, path_str, fs::copy_option::overwrite_if_exists);
-  //  }
-
-  //  //  stl state
-  //  p = "restart.stl";
-  //  cout << "  loading stl::map data from " << p << '\n';
-  //  std::ifstream stlin(p.c_str());
-  //  if (!stlin)
-  //    throw runtime_error(string("Could not open ") + p);
-
-  //  while (!stlin.eof())
-  //  {
-  //    stl_type::key_type key;
-  //    stlin >> key;
-  //    stl.insert(std::make_pair(key, key));
-  //  }
-
-  //  stlin.close();
-
-  //  cout << "  reading state files complete\n";
-  //}
-
 template <class Traits>
 class tester : public Traits
 {
@@ -233,7 +103,9 @@ public:
   void  upper_bound_test();
   void  erase_test();
 
-  void  verify_restart() const;
+  void  dump_state();
+  void  load_state();
+  void  verify_restart();
   void  report_counts() const;
   void  run_tests();
 
@@ -472,11 +344,18 @@ public:
                << ", but should be " <<  bt_key << endl;
           throw runtime_error("btree find: wrong result iterator");
         }
-        if (this->btree_key(*bt_result) != bt_key)
+        if (this->stl_key(*stl_result) != stl_key)
         {
           cout << "stl finds " << this->stl_key(*stl_result)
                << ", but should be " <<  stl_key << endl;
           throw runtime_error("stl find: wrong result iterator");
+        }
+        stl_value_type vb = this->stl_value(*bt_result);
+        if (this->stl_key(*stl_result) != this->stl_key(vb))
+        {
+          cout << "stl key is " << this->stl_key(*stl_result)
+               << ", but bt key is " <<  this->stl_key(vb) << endl;
+          throw runtime_error("find: iterator's derefferenced keys not equal");
         }
       }
     }
@@ -490,16 +369,12 @@ public:
   {
     cout << "lower_bound test..." << endl;
 
-    boost::minstd_rand lower_bound_rng;
-    boost::uniform_int<boost::int32_t> n_dist(low, high);
-    boost::variate_generator<boost::minstd_rand&, boost::uniform_int<boost::int32_t> >
-      lower_bound_key(lower_bound_rng, n_dist);
-
     stl_type::const_iterator stl_itr, stl_result;
     btree_type::const_iterator bt_result;
 
     for (stl_itr = stl.begin(); stl_itr != stl.end(); ++stl_itr)
     {
+      ++lower_bound_exist_count;
       //  test with key that exists
       stl_result = stl.lower_bound(this->stl_key(*stl_itr));
       bt_result = bt.lower_bound(this->stl_key(*stl_itr));
@@ -528,41 +403,47 @@ public:
               << "this->btree_mapped(*bt_result) " << this->btree_mapped(*bt_result) << endl;
         throw runtime_error("lower_bound: second check failure");
       }
-      ++lower_bound_exist_count;
+    }
 
-    //  //  test with key that may or may not exist  
-    //  lower_bound_rng.seed(this->stl_key(*stl_result));
-    //  boost::int32_t k = lower_bound_key();
+    //  test with key that may or may not exist
 
-    //  stl_result = stl.lower_bound(k);
-    //  bt_result = bt.lower_bound(k);
+    this->seed(rng_seed);
 
-    //  if (stl_result == stl.end() && bt_result != bt.end())
-    //  {
-    //    cout << "stl lower_bound()==end(), but bt lower_bounds " << k << endl;
-    //    throw runtime_error("lower_bound: results inconsistent");
-    //  }
-    //  if (stl_result != stl.end() && bt_result == bt.end())
-    //  {
-    //    cout << "bt lower_bound()==end(), but stl lower_bounds " << k << endl;
-    //    throw runtime_error("lower_bound: results inconsistent");
-    //  }
-    //  if (stl_result != stl.end() && bt_result != bt.end())
-    //  {
-    //    if (this->stl_key(*stl_result) != this->btree_key(*bt_result))
-    //    {
-    //      cout << "this->stl_key(*stl_result) " << this->stl_key(*stl_result) << " != "
-    //            << "this->btree_key(*bt_result) " << this->btree_key(*bt_result) << endl;
-    //      throw runtime_error("lower_bound may exist: first check failure");
-    //    }
-    //    if (this->stl_mapped(*stl_result) != this->btree_mapped(*bt_result))
-    //    {
-    //      cout << "this->stl_mapped(*stl_result) " << this->stl_mapped(*stl_result) << " != "
-    //            << "this->btree_mapped(*bt_result) " << this->btree_mapped(*bt_result) << endl;
-    //      throw runtime_error("lower_bound may exist: second check failure");
-    //    }
-    //  }
-    //  ++lower_bound_may_exist_count;
+    for (stl_type::size_type i = 0; i < stl.size() * 2; ++i)  // multiply to ensure misses
+    {
+      ++lower_bound_may_exist_count;
+      btree_value_type bt_val = this->generate_btree_value(0);
+      stl_value_type stl_val = this->stl_value(bt_val);
+      
+      btree_key_type bt_key = this->btree_key(bt_val);
+      stl_key_type stl_key = this->stl_key(stl_val);
+
+      stl_result = stl.lower_bound(stl_key);
+      bt_result = bt.lower_bound(bt_key);
+
+      if (stl_result == stl.end() || bt_result == bt.end())
+      {
+        if (bt_result != bt.end())
+        {
+          cout << "stl lower_bound()==end(), but bt lower_bound is " << bt_key << endl;
+          throw runtime_error("lower_bound: results inconsistent");
+        }
+        if (stl_result != stl.end())
+        {
+          cout << "bt lower_bound()==end(), but stl lower_bound is " << stl_key << endl;
+          throw runtime_error("lower_bound: results inconsistent");
+        }
+      }
+      else
+      {
+        stl_value_type vb = this->stl_value(*bt_result);
+        if (this->stl_key(*stl_result) != this->stl_key(vb))
+        {
+          cout << "stl key is " << this->stl_key(*stl_result)
+               << ", but bt key is " <<  this->stl_key(vb) << endl;
+          throw runtime_error("lower_bound: keys for *iterator not equal");
+        }
+      }
     }
 
     cout << "  lower_bound test complete" << endl;
@@ -616,53 +497,185 @@ public:
         }
       }
       ++upper_bound_exist_count;
+    }
 
-      if (stl_result == stl.end())  // upper_bound of last element is end()
-        continue;
+    //  test with key that may or may not exist
 
-      ////  test with key that may or may not exist  
-      //upper_bound_rng.seed(this->stl_key(*stl_result));
-      //boost::int32_t k = upper_bound_key();
+    this->seed(rng_seed);
 
-      //stl_result = stl.upper_bound(k);
-      //bt_result = bt.upper_bound(k);
+    for (stl_type::size_type i = 0; i < stl.size() * 2; ++i)  // multiply to ensure misses
+    {
+      ++upper_bound_may_exist_count;
+      btree_value_type bt_val = this->generate_btree_value(0);
+      stl_value_type stl_val = this->stl_value(bt_val);
+      
+      btree_key_type bt_key = this->btree_key(bt_val);
+      stl_key_type stl_key = this->stl_key(stl_val);
 
-      //if (stl_result == stl.end() && bt_result != bt.end())
-      //{
-      //  cout << "stl upper_bound()==end(), but bt upper_bounds " << this->btree_key(*bt_result)
-      //       << " for k " << k << endl;
-      //  throw runtime_error("upper_bound: results inconsistent");
-      //}
-      //if (stl_result != stl.end() && bt_result == bt.end())
-      //{
-      //  cout << "bt upper_bound()==end(), but stl upper_bounds " << this->stl_key(*stl_result)
-      //       << " for k " << k << endl;
-      //  throw runtime_error("upper_bound: results inconsistent");
-      //}
-      //if (stl_result != stl.end() && bt_result != bt.end())
-      //{
-      //  if (this->stl_key(*stl_result) != this->btree_key(*bt_result))
-      //  {
-      //    cout << "this->stl_key(*stl_result) " << this->stl_key(*stl_result) << " != "
-      //          << "this->btree_key(*bt_result) " << this->btree_key(*bt_result) << endl;
-      //    throw runtime_error("upper_bound may exist: first check failure");
-      //  }
-      //  if (this->stl_mapped(*stl_result) != this->btree_mapped(*bt_result))
-      //  {
-      //    cout << "this->stl_mapped(*stl_result) " << this->stl_mapped(*stl_result) << " != "
-      //          << "this->btree_mapped(*bt_result) " << this->btree_mapped(*bt_result) << endl;
-      //    throw runtime_error("upper_bound may exist: second check failure");
-      //  }
-      //}
-      //++upper_bound_may_exist_count;
+      stl_result = stl.upper_bound(stl_key);
+      bt_result = bt.upper_bound(bt_key);
+
+      if (stl_result == stl.end() || bt_result == bt.end())
+      {
+        if (bt_result != bt.end())
+        {
+          cout << "stl upper_bound()==end(), but bt upper_bound is " << bt_key << endl;
+          throw runtime_error("upper_bound: results inconsistent");
+        }
+        if (stl_result != stl.end())
+        {
+          cout << "bt upper_bound()==end(), but stl upper_bound is " << stl_key << endl;
+          throw runtime_error("upper_bound: results inconsistent");
+        }
+      }
+      else
+      {
+        stl_value_type vb = this->stl_value(*bt_result);
+        if (this->stl_key(*stl_result) != this->stl_key(vb))
+        {
+          cout << "stl key is " << this->stl_key(*stl_result)
+               << ", but bt key is " <<  this->stl_key(vb) << endl;
+          throw runtime_error("upper_bound: keys for *iterator not equal");
+        }
+      }
     }
 
     cout << "  upper_bound test complete" << endl;
   }
 
+  //  dump_state  ----------------------------------------------------------------------//
+
+  template <class Traits> void tester<Traits>::dump_state()
+  {
+    if (dump == 0
+      || (dump < 0 && cycle != cycles)
+      || cycle % dump != 0)
+      return;
+
+    cout << "\nwriting state files...\n";
+
+    //  program state
+    string p = "restart.state";
+    cout << "  dumping program state to " << p << '\n';
+    std::ofstream stateout(p.c_str());
+    if (!stateout)
+      throw runtime_error(string("Could not open ") + p);
+
+    stateout << (cycle != cycles) << ' '  // copying btree file?
+             << min << ' '
+             << max << ' '
+             << low << ' '
+             << high << ' '
+             << cache_sz << ' '
+//             << insert_rng << ' '
+//             << erase_rng << ' '
+             << insert_success_count << ' '
+             << insert_fail_count << ' '
+             << erase_success_count << ' '
+             << erase_fail_count << ' '
+             << iterate_forward_count << ' '
+             << iterate_backward_count << ' '
+             << find_success_count << ' '
+             << find_fail_count << ' '
+             << lower_bound_exist_count << ' '
+             << lower_bound_may_exist_count << ' '
+             << upper_bound_exist_count << ' '
+             << upper_bound_may_exist_count << ' '
+             << cycles_complete << ' '
+             ;
+    stateout.close();
+
+    //  bt state
+    if (cycle != cycles)
+    {
+      p = "restart.btr";
+      bt.flush();
+      cout << "  copying " << path_str << " to " << p << '\n';
+      fs::copy_file(path_str, p, fs::copy_option::overwrite_if_exists);
+    }
+
+    //  stl state
+    p = "restart.stl";
+    cout << "  dumping stl::map data to " << p << '\n';
+    std::ofstream stlout(p.c_str());
+    if (!stlout)
+      throw runtime_error(string("Could not open ") + p);
+    for (stl_type::const_iterator it = stl.begin(); it != stl.end(); ++it)
+      stlout << this->stl_key(*it) << '\n';
+    stlout.close();
+
+    cout << "  writing state files complete\n";
+  }
+
+  //  load_state  ----------------------------------------------------------------------//
+
+  template <class Traits> void tester<Traits>::load_state()
+  {
+    cout << "\nreading state files...\n";
+
+    //  program state
+    string p = "restart.state";
+    cout << "  loading program state from " << p << '\n';
+    std::ifstream statein(p.c_str());
+    if (!statein)
+      throw runtime_error(string("Could not open ") + p);
+
+    bool copy_btree_file;
+
+    statein >> std::ws >> copy_btree_file 
+            >> std::ws >> min
+            >> std::ws >> max
+            >> std::ws >> low
+            >> std::ws >> high
+            >> std::ws >> cache_sz
+//            >> std::ws >> insert_rng
+//            >> std::ws >> erase_rng
+            >> std::ws >> insert_success_count
+            >> std::ws >> insert_fail_count
+            >> std::ws >> erase_success_count
+            >> std::ws >> erase_fail_count
+            >> std::ws >> iterate_forward_count
+            >> std::ws >> iterate_backward_count
+            >> std::ws >> find_success_count
+            >> std::ws >> find_fail_count
+            >> std::ws >> lower_bound_exist_count
+            >> std::ws >> lower_bound_may_exist_count
+            >> std::ws >> upper_bound_exist_count
+            >> std::ws >> upper_bound_may_exist_count
+            >> std::ws >> cycles_complete
+            ;
+    statein.close();
+
+    //  bt state
+    if (copy_btree_file)
+    {
+      p = "restart.btr"; 
+      cout << "  copying " << p << " to " << path_str << '\n';
+      fs::copy_file(p, path_str, fs::copy_option::overwrite_if_exists);
+    }
+
+    //  stl state
+    p = "restart.stl";
+    cout << "  loading stl::map data from " << p << '\n';
+    std::ifstream stlin(p.c_str());
+    if (!stlin)
+      throw runtime_error(string("Could not open ") + p);
+
+    while (!stlin.eof())
+    {
+      stl_type::key_type key;
+      stlin >> key;
+//      stl.insert(std::make_pair(key, key));
+    }
+
+    stlin.close();
+
+    cout << "  reading state files complete\n";
+  }
+
   //  verify_restart  ------------------------------------------------------------------//
 
-  template <class Traits> void tester<Traits>::verify_restart() const
+  template <class Traits> void tester<Traits>::verify_restart()
   {
     cout << "Verifying restart integrity..." << endl;
 
@@ -716,17 +729,17 @@ public:
 
     path_str = path_prefix + ".btr";
 
-    //if (restart)
-    //  load_state();  // this has the effect of reloading rng and distribution state,
-    //                 // as well as bt, stl, and some additional program state.
+    if (restart)
+      load_state();  // this has the effect of reloading rng and distribution state,
+                     // as well as bt, stl, and some additional program state.
 
     bt.open(path_str,
       restart ? boost::btree::flags::read_write
               : boost::btree::flags::truncate, -1, boost::btree::less(), node_sz);
     bt.max_cache_size(cache_sz);
 
-    //if (restart)
-    //  verify_restart();
+    if (restart)
+      verify_restart();
 
     cout << "\nStarting tests with:\n"
          << "  path_prefix = " << path_prefix << '\n'
@@ -764,7 +777,7 @@ public:
 
       ++cycles_complete;
       report_counts();
-      //dump_state();
+      dump_state();
       cout << "cycle " << cycle << " complete" << endl;
       cout << " ";
       cycle_times.stop();
@@ -788,7 +801,13 @@ int cpp_main(int argc, char *argv[])
       command_args += ' ';
   }
 
-  cout << "command line arguments: " << command_args << '\n';;
+  cout << "command line arguments: " << command_args << '\n';
+
+  cout << "*******************************************************************\n"
+          "*  WARNING: DUMPING AND RELOADING STATE FOR RESTART NOT WORKING;  *\n"
+          "*  COMMENTED OUT CODE NEEDS TO BE FIXED TO RESTART RNG AND        *\n"
+          "*  DUMP AND RESTORE mapped_type DATA IF PRESENT.                  *\n"
+          "*******************************************************************\n\n";
 
   for (; argc > 1; ++argv, --argc) 
   {
