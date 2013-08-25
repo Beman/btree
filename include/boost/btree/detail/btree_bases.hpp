@@ -296,8 +296,9 @@ public:
   // TODO: operator unspecified-bool-type, operator!
   
   // iterators:
-    //   Non-const overloads are not provided because of the need to explicitly know
-    //   when an update, if allowed, will occur. See map and multimap update() function.
+    //   Overloads returning iterator are not provided because of the need to explicitly know
+    //   when an update, if allowed, will occur. See maps writeable() function, which is the
+    //   only way to get a non-constant iterator.
 
   const_iterator     begin() const;
   const_iterator     end() const            { return m_end_iterator; }
@@ -306,7 +307,6 @@ public:
                      rbegin() const         { return reverse_iterator(cend()); }     
   const_reverse_iterator
                      rend() const           { return reverse_iterator(cbegin()); }
-
   const_iterator     cbegin() const         { return begin(); }
   const_iterator     cend() const           { return end(); }
   const_reverse_iterator

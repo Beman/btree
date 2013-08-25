@@ -900,47 +900,56 @@ void  size_t_codec_test()
   cout << "     size_t_codec_test complete" << endl;
 }
 
-////-----------------------------  heterogeneous_key_test  -------------------------------//
-//struct simple
-//{
-//  int x;
-//  int y;
-//
-//  simple(){}
-//  simple(int x_, int y_) : x(x_), y(y_) {}
-//
-//  bool operator<(const simple& rhs) const  {return x < rhs.x;}
-//  bool operator==(const simple& rhs) const {return x == rhs.x;}
-//  bool operator!=(const simple& rhs) const {return x != rhs.x;}
-//};
-//
-//bool operator<(const simple& lhs, int rhs) {return lhs.x < rhs;}
-//bool operator<(int lhs, const simple& rhs) {return lhs < rhs.x;}
-//
-//void  heterogeneous_key_test()
-//{
-//  cout << "  heterogeneous_key_test..." << endl;
-//
-//  typedef btree::btree_set_index<simple> set;
-//  set idx(idx1_path, file_path, btree::flags::truncate);
-//
-//  idx.insert(simple(2, 0));
-//  idx.insert(simple(1, 0));
-//  idx.insert(simple(3, 0));
-//
-//  BOOST_TEST_EQ(idx.size(), 3u);
-//
-//  set::const_iterator result;
-//  result = idx.find(simple(2,0));
-//  BOOST_TEST(result != idx.end());
-//  BOOST_TEST_EQ(result->x, 2);
-//
-//  result = idx.find(2);
-//  BOOST_TEST(result != idx.end());
-//  BOOST_TEST_EQ(result->x, 2);
-//
-//  cout << "     heterogeneous_key_test complete" << endl;
-//}
+//-----------------------------  heterogeneous_key_test  -------------------------------//
+struct simple
+{
+  int x;
+  int y;
+
+  simple(){}
+  simple(int x_, int y_) : x(x_), y(y_) {}
+
+  bool operator<(const simple& rhs) const  {return x < rhs.x;}
+};
+
+bool operator<(const simple& lhs, int rhs) {return lhs.x < rhs;}
+bool operator<(int lhs, const simple& rhs) {return lhs < rhs.x;}
+
+void  heterogeneous_key_test()
+{
+  cout << "  heterogeneous_key_test..." << endl;
+
+  typedef btree::btree_set_index<simple> set;
+  set idx(idx1_path, file_path, btree::flags::truncate);
+
+  idx.insert(simple(2, 0));
+  idx.insert(simple(1, 0));
+  idx.insert(simple(3, 0));
+
+  BOOST_TEST_EQ(idx.size(), 3u);
+
+  set::const_iterator result;
+  simple key(2,0);
+  result = idx.lower_bound(key);
+  BOOST_TEST(result != idx.end());
+  BOOST_TEST_EQ(result->x, 2);
+
+  result = idx.lower_bound(2);
+  BOOST_TEST(result != idx.end());
+  BOOST_TEST_EQ(result->x, 2);
+
+  BOOST_TEST(idx.find(key) == idx.find(2));
+  BOOST_TEST(idx.count(key) == idx.count(2));
+  BOOST_TEST(idx.lower_bound(key) == idx.lower_bound(2));
+  BOOST_TEST(idx.upper_bound(key) == idx.upper_bound(2));
+  set::const_iterator_range r1, r2;
+  r1 = idx.equal_range(key);
+  r2 = idx.equal_range(2);
+  BOOST_TEST(r1.first == r2.first);
+  BOOST_TEST(r1.second == r2.second);
+
+  cout << "     heterogeneous_key_test complete" << endl;
+}
 
 
 //-------------------------------------  _test  ----------------------------------------//
@@ -1000,7 +1009,7 @@ int cpp_main(int argc, char* argv[])
   lower_bound_test();
   find_test();
   insert_test();
-  //heterogeneous_key_test();
+  heterogeneous_key_test();
   two_index_test();
   two_index_iterator_test();
   c_string_test();

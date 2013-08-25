@@ -661,7 +661,7 @@ void insert_tests(BTree& bt)
   end = bt.end();
   BOOST_TEST(begin == end);
   BOOST_TEST(bt.find(fat(0)) == bt.end());
-  BOOST_TEST(bt.find(0) == bt.end());
+  BOOST_TEST(bt.find(0) == bt.end());   // heterogeneous key compare test
 
   typename BTree::key_type key(0x0C);
   typename BTree::mapped_type mapped_value(0xCCCCCCCC);
@@ -676,7 +676,7 @@ void insert_tests(BTree& bt)
   BOOST_TEST(!bt.empty());
   BOOST_TEST(bt.begin() != bt.end());
   cur = bt.find(key);
-  cur2 = bt.find(key.x);
+  cur2 = bt.find(key.x);   // heterogeneous key compare test
   BOOST_TEST(cur == cur2);
   BOOST_TEST(cur != bt.end());
   BOOST_TEST(cur->first == key);

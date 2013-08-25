@@ -27,8 +27,6 @@
 
   *  Add emplace()
 
-  *  template <class K> operations fuctions per C++14.
-
   *  verify dereferencing the end iterator assert fires correctly.
 
   *  sets, maps, missing close(). Might need an argument that says what to close. The index?
@@ -36,7 +34,9 @@
 
   *  Rename in index_helpers.hpp to index_traits.hpp?
 
-  *  Reserve should round up to memory map page size boundary.
+  *  Shouldn't there be a file_reserve setter?
+  *  file_eserve setter should round up to memory map page size boundary.
+  *  Open should call the file_reserve setter;
 
 */
 
@@ -221,10 +221,10 @@ public:
 
 
 protected:
-  index_type      m_index_btree;
-  file_ptr_type   m_file;          // shared_ptr to flat file; shared with other indexes
-  compare_type    m_comp;
-
+  index_type         m_index_btree;
+  file_ptr_type      m_file;       // shared_ptr to flat file; shared with other indexes
+  key_compare        m_comp;
+  value_compare      m_value_comp;
 public:
   index_base() {} 
 
@@ -288,10 +288,18 @@ public:
 
   // iterators
 
-  iterator begin()              {return iterator(m_index_btree.begin(), file());}
   const_iterator begin() const  {return const_iterator(m_index_btree.begin(), file());}
-  iterator end()                {return iterator(m_index_btree.end(), file());}
   const_iterator end() const    {return const_iterator(m_index_btree.end(), file());}
+  const_reverse_iterator
+                     rbegin() const         { return reverse_iterator(cend()); }     
+  const_reverse_iterator
+                     rend() const           { return reverse_iterator(cbegin()); }
+  const_iterator     cbegin() const         { return begin(); }
+  const_iterator     cend() const           { return end(); }
+  const_reverse_iterator
+                     crbegin() const        { return reverse_iterator(cend()); }     
+  const_reverse_iterator                    
+                     crend() const          { return reverse_iterator(cbegin()); }
 
   // observers
   bool              is_open() const         {BOOST_ASSERT(!m_index_btree.is_open()
@@ -299,10 +307,12 @@ public:
                                              return m_index_btree.is_open();}
   path_type         path() const            {return m_index_btree.path();}
   flags::bitmask    flags() const           {return m_index_btree.flags();}
+  key_compare       key_comp() const        {return m_comp;}
+  value_compare     value_comp() const      {return m_value_comp;}
+  bool              ok_to_pack() const      {return m_index_btree.ok_to_pack();}
   const buffer_manager&
                     manager() const         {return m_index_btree.manager();} 
   const header_page& header() const         {return m_index_btree.header();}
-  bool              ok_to_pack() const      {return m_index_btree.ok_to_pack();}
                                             
   // capacity                               
   bool              empty() const           {return m_index_btree.empty();}
@@ -333,22 +343,32 @@ public:
   // operations
   file_position     position(iterator itr) const; // Returns: The offset in the flat file
                                                   // of the element pointed to by itr
-  const_iterator    find(const key_type& k) const 
-                                           {return const_iterator(m_index_btree.find(k),
-                                              m_file);}
+  template <class K>
+  const_iterator    find(const K& k) const          {return const_iterator(
+                                                          m_index_btree.find(k), m_file);}
+  const_iterator    find(const key_type& k) const   {return find<key_type>(k);}
  
-  size_type         count(const key_type& k) const  {return m_index_btree.count(k);}
+  template <class K>
+  size_type         count(const K& k) const         {return m_index_btree.count(k);}
+  size_type         count(const key_type& k) const  {return count<key_type>(k);}
 
-  const_iterator    lower_bound(const key_type& k) const
-                                    {return const_iterator(m_index_btree.lower_bound(k),
-                                      m_file);}
+  template <class K>
+  const_iterator    lower_bound(const K& k) const   {return const_iterator(
+                                                   m_index_btree.lower_bound(k), m_file);}
+  const_iterator    lower_bound(const key_type& k) const{return lower_bound<key_type>(k);}
 
-  const_iterator    upper_bound(const key_type& k) const
-                                    {return const_iterator(m_index_btree.upper_bound(k),
-                                      m_file);}
+  template <class K>
+  const_iterator    upper_bound(const K& k) const   {return const_iterator(
+                                                   m_index_btree.upper_bound(k), m_file);}
+  const_iterator    upper_bound(const key_type& k) const{return upper_bound<key_type>(k);}
+
+  template <class K>
+  const_iterator_range
+                    equal_range(const K& k) const
+                                  {return std::make_pair(lower_bound(k), upper_bound(k));}
   const_iterator_range
                     equal_range(const key_type& k) const
-                                  {return std::make_pair(lower_bound(k), upper_bound(k));}
+    {return std::make_pair(lower_bound<key_type>(k), upper_bound<key_type>(k));}
 
   //------------------------------------------------------------------------------------//
   //                                  iterator_type                                     //
@@ -417,7 +437,18 @@ namespace detail
       return m_comp(lhs,
         IndexTraits::make_reference(m_file->const_data<char>()+rhs));
     }
+    template <class K>
+    bool operator()(const K& lhs, Pos rhs) const
+    {
+      return m_comp(lhs,
+        IndexTraits::make_reference(m_file->const_data<char>()+rhs));
+    }
     bool operator()(Pos lhs, const Key& rhs) const
+    {
+      return m_comp(IndexTraits::make_reference(m_file->const_data<char>()+lhs), rhs);
+    }
+    template <class K>
+    bool operator()(Pos lhs, const K& rhs) const
     {
       return m_comp(IndexTraits::make_reference(m_file->const_data<char>()+lhs), rhs);
     }

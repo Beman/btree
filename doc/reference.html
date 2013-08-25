@@ -273,10 +273,8 @@
     // <a href="#btree_set-iterators">iterators</a>
     const_iterator          begin() const;
     const_iterator          end() const;
-    const_iterator          last() const;
     const_reverse_iterator  rbegin() const;     
     const_reverse_iterator  rend() const;
-
     const_iterator          cbegin() const;
     const_iterator          cend() const;
     const_reverse_iterator  crbegin() const;     
@@ -305,18 +303,26 @@
     void                    max_cache_size(std::size_t m);  // -1 indicates unlimited
     void                    max_cache_megabytes(std::size_t mb);
 
+    // <b><i>indexes only
+
+    </i></b>file_ptr_type           file() const;
+    const filesystem::path&amp; file_path() const;
+    file_size_type          file_size() const;
+    file_size_type          file_reserve() const;
+    file_position           position(const_iterator itr) const;
+
     // <a href="#btree_set-modifiers">modifiers</a>    
 
     std::pair&lt;const_iterator, bool&gt;
-                   emplace(const value_type&amp; x);  <i><b>// btree_set only</b></i>
-    const_iterator emplace(const value_type&amp; x);  <i><b>// btree_multiset only</b></i>
+                   emplace(const value_type&amp; x);  <i><b>// unique sets only</b></i>
+    const_iterator emplace(const value_type&amp; x);  <i><b>// equivalent sets only</b></i>
     std::pair&lt;const_iterator, bool&gt;
-                   emplace(const key_type&amp; k, const mapped_type&amp; x); <i><b>// btree_map only</b></i>
-    const_iterator emplace(const key_type&amp; k, const mapped_type&amp; x); <i><b>// btree_multimap only</b></i>
+                   emplace(const key_type&amp; k, const mapped_type&amp; x); <i><b>// unique maps only</b></i>
+    const_iterator emplace(const key_type&amp; k, const mapped_type&amp; x); <i><b>// equivalent sets only</b></i>
 
     std::pair&lt;const_iterator, bool&gt;
-                   insert(const value_type&amp; x);  <i><b>// btree_set and btree_map only</b></i>
-    const_iterator insert(const value_type&amp; x);  <i><b>// btree_multiset and btree_multimap only</b></i>
+                   insert(const value_type&amp; x);  <i><b>// unique containers only</b></i>
+    const_iterator insert(const value_type&amp; x);  <i><b>// equivalent containers only</b></i>
 
     template &lt;class InputIterator&gt;
       void                  insert(InputIterator begin, InputIterator end);
@@ -940,7 +946,7 @@ const_iterator_range  equal_range(const Key&amp; k) const;</pre>
   <hr>
 
   <p>Revised 
-  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->21 August 2013<!--webbot bot="Timestamp" endspan i-checksum="31352" --></p>
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->25 August 2013<!--webbot bot="Timestamp" endspan i-checksum="31360" --></p>
 
   <p>© Copyright Beman Dawes, 2013</p>
 
