@@ -725,7 +725,7 @@ void  string_view_multiset_test()
 {
   cout << "  string_view_multiset_test..." << endl;
 
-  typedef btree::btree_multiindex<string_view> index;
+  typedef btree::btree_multiset_index<string_view> index;
   index idx(idx1_path, file_path.string() + ".string_view", btree::flags::truncate);
 
   const char* s1 = "aa";
