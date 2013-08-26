@@ -1,12 +1,12 @@
-//  boost/btree/btree_set_index.hpp.hpp  -----------------------------------------------//
+//  boost/btree/btree_map_index.hpp.hpp  -----------------------------------------------//
 
 //  Copyright Beman Dawes 2000, 2006, 2010, 2013
 
 //  Distributed under the Boost Software License, Version 1.0.
 //  http://www.boost.org/LICENSE_1_0.txt
 
-#ifndef BOOST_BTREE_INDEX_SET_HPP
-#define BOOST_BTREE_INDEX_SET_HPP
+#ifndef BOOST_BTREE_INDEX_MAP_HPP
+#define BOOST_BTREE_INDEX_MAP_HPP
 
 #ifdef _MSC_VER
 # pragma warning(push)
@@ -27,14 +27,14 @@ namespace btree
 {
 
 //--------------------------------------------------------------------------------------//
-//                             class btree_set_index                                    //
+//                             class btree_map_index                                    //
 //--------------------------------------------------------------------------------------//
 
 template <class Key,    // requires memcpyable type without pointers or references
           class BtreeTraits = btree::default_traits,
           class Compare = btree::less,
           class IndexTraits = btree::default_index_traits<Key> >
-class btree_set_index
+class btree_map_index
   : public index_base<index_set_base<Key,BtreeTraits,Compare,IndexTraits> >
 {
 private:
@@ -64,9 +64,9 @@ public:
   typedef boost::filesystem::path        path_type;
 
 
-  btree_set_index() : base() {}
+  btree_map_index() : base() {}
 
-  btree_set_index(const path_type& index_pth,
+  btree_map_index(const path_type& index_pth,
             const path_type& file_pth,
             flags::bitmask flgs = flags::read_only,
             uint64_t sig = -1,  // for existing files, must match creation signature
@@ -76,7 +76,7 @@ public:
     base::open(index_pth, file_pth, flgs, sig, comp, node_sz);
   }
 
-  btree_set_index(const path_type& index_pth,
+  btree_map_index(const path_type& index_pth,
             file_ptr_type flat_file,            
             flags::bitmask flgs = flags::read_only,
             uint64_t sig = -1,  // for existing files, must match creation signature
@@ -86,7 +86,7 @@ public:
     base::open(index_pth, flat_file,flgs, sig, comp, node_sz);
   }
 
-  btree_set_index(const path_type& base_path,
+  btree_map_index(const path_type& base_path,
             flags::bitmask flgs = flags::read_only,
             uint64_t sig = -1,  // for existing files, must match creation signature
             const Compare& comp = Compare(),
@@ -280,4 +280,4 @@ public:
 #  pragma warning(pop) 
 #endif
 
-#endif  // BOOST_BTREE_INDEX_SET_HPP
+#endif  // BOOST_BTREE_INDEX_MAP_HPP

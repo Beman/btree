@@ -17,6 +17,7 @@
 #include <iostream>
 #include <iomanip>
 #include <boost/btree/btree_set_index.hpp>
+#include <boost/btree/btree_map_index.hpp>
 #include <boost/btree/support/random_string.hpp>
 #include <boost/detail/lightweight_main.hpp>
 #include <boost/detail/lightweight_test.hpp>
