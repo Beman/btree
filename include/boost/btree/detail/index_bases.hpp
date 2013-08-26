@@ -21,8 +21,6 @@
 
   TODO:
 
-  *  Implement maps.
-
   *  Get map_example2 working. Depends on index_map.
 
   *  Add emplace()
@@ -36,7 +34,10 @@
 
   *  Shouldn't there be a file_reserve setter?
   *  file_eserve setter should round up to memory map page size boundary.
-  *  Open should call the file_reserve setter;
+  *  Open should call the file_reserve setter.
+
+  *  Abstract away the difference between index_set_base and index_multiset_base,
+     index_map_base and index_multimap_base.
 
 */
 
@@ -76,8 +77,8 @@ public:
 
   //  the following is the only difference between index_set_base and index_multiset_base
   typedef typename
-    btree::btree_set<index_key, btree_traits,
-      index_compare_type>                        index_type;
+    btree::btree_set<index_key,
+      btree_traits, index_compare_type>          index_type;
 
   // TODO: why aren't these static?
   const Key&          key(const value_type& v) const   // really handy, so expose
@@ -112,8 +113,8 @@ public:
 
   //  the following is the only difference between index_set_base and index_multiset_base
   typedef typename
-    btree::btree_multiset<index_key, btree_traits,
-      index_compare_type>                        index_type;
+    btree::btree_multiset<index_key,
+      btree_traits, index_compare_type>          index_type;
   // TODO: why aren't these static?
   const Key&          key(const value_type& v) const   // really handy, so expose
     {return v;}
@@ -121,45 +122,109 @@ public:
     {return v;}
 };
 
-////--------------------------------------------------------------------------------------//
-////                               class index_map_base                                   //
-////--------------------------------------------------------------------------------------//
-//
-//template <class Key, class T, class BtreeTraits>
-//class index_map_base
-//{
-//public:
-//  typedef typename BtreeTraits::node_id_type     node_id_type;
-//  typedef typename BtreeTraits::node_size_type   node_size_type;
-//  typedef typename BtreeTraits::node_level_type  node_level_type;
-//  typedef std::pair<const Key, T>           value_type;
-//  typedef T                                 mapped_type;
-//  typedef BtreeTraits                            btree_traits;
-//  typedef typename BtreeTraits::compare_type     compare_type;
-//
-//  const Key&  key(const value_type& v) const  // really handy, so expose
-//    {return v.first;}
-//  const T&    mapped(const value_type& v) const
-//    {return v.second;}
-//
-//  class value_compare
-//  {
-//  public:
-//    value_compare() {}
-//    value_compare(compare_type comp) : m_comp(comp) {}
-//    bool operator()(const value_type& x, const value_type& y) const
-//      { return m_comp(x.first, y.first); }
-//    template <class K>
-//    bool operator()(const value_type& x, const K& y) const
-//      { return m_comp(x.first, y); }
-//    template <class K>
-//    bool operator()(const K& x, const value_type& y) const
-//      { return m_comp(x, y.first); }
-//  private:
-//    compare_type    m_comp;
-//  };
-//
-//};
+//--------------------------------------------------------------------------------------//
+//                               class index_map_base                                   //
+//--------------------------------------------------------------------------------------//
+
+template <class Key, class T, class BtreeTraits, class Compare, class IndexTraits>
+class index_map_base
+{
+public:
+  typedef Key                                    key_type;
+  typedef T                                      mapped_type;
+  typedef std::pair<const Key, T>                value_type;
+  typedef BtreeTraits                            btree_traits;
+  typedef Compare                                compare_type;
+  typedef typename BtreeTraits::node_id_type     node_id_type;
+  typedef typename BtreeTraits::node_size_type   node_size_type;
+  typedef typename BtreeTraits::node_level_type  node_level_type;
+  typedef typename IndexTraits::reference        reference;                
+
+  typedef IndexTraits                            index_traits;
+  typedef typename index_traits::index_key       index_key;  // i.e. position in flat file
+  typedef detail::indirect_compare<key_type,
+    index_key, compare_type, index_traits>       index_compare_type;
+
+  //  the following is the only difference between index_map_base and index_multimap_base
+  typedef typename
+    btree::btree_set<index_key, btree_traits,
+      index_compare_type>                        index_type;
+
+  const Key&  key(const value_type& v) const  // really handy, so expose
+    {return v.first;}
+  const T&    mapped(const value_type& v) const
+    {return v.second;}
+
+  class value_compare
+  {
+  public:
+    value_compare() {}
+    value_compare(compare_type comp) : m_comp(comp) {}
+    bool operator()(const value_type& x, const value_type& y) const
+      { return m_comp(x.first, y.first); }
+    template <class K>
+    bool operator()(const value_type& x, const K& y) const
+      { return m_comp(x.first, y); }
+    template <class K>
+    bool operator()(const K& x, const value_type& y) const
+      { return m_comp(x, y.first); }
+  private:
+    compare_type    m_comp;
+  };
+
+};
+
+//--------------------------------------------------------------------------------------//
+//                            class index_multimap_base                                 //
+//--------------------------------------------------------------------------------------//
+
+template <class Key, class T, class BtreeTraits, class Compare, class IndexTraits>
+class index_multimap_base
+{
+public:
+  typedef Key                                    key_type;
+  typedef T                                      mapped_type;
+  typedef std::pair<const Key, T>                value_type;
+  typedef BtreeTraits                            btree_traits;
+  typedef Compare                                compare_type;
+  typedef typename BtreeTraits::node_id_type     node_id_type;
+  typedef typename BtreeTraits::node_size_type   node_size_type;
+  typedef typename BtreeTraits::node_level_type  node_level_type;
+  typedef typename IndexTraits::reference        reference;                
+
+  typedef IndexTraits                            index_traits;
+  typedef typename index_traits::index_key       index_key;  // i.e. position in flat file
+  typedef detail::indirect_compare<key_type,
+    index_key, compare_type, index_traits>       index_compare_type;
+
+  //  the following is the only difference between index_map_base and index_multimap_base
+  typedef typename
+    btree::btree_set<index_key, btree_traits,
+      index_compare_type>                        index_type;
+
+  const Key&  key(const value_type& v) const  // really handy, so expose
+    {return v.first;}
+  const T&    mapped(const value_type& v) const
+    {return v.second;}
+
+  class value_compare
+  {
+  public:
+    value_compare() {}
+    value_compare(compare_type comp) : m_comp(comp) {}
+    bool operator()(const value_type& x, const value_type& y) const
+      { return m_comp(x.first, y.first); }
+    template <class K>
+    bool operator()(const value_type& x, const K& y) const
+      { return m_comp(x.first, y); }
+    template <class K>
+    bool operator()(const K& x, const value_type& y) const
+      { return m_comp(x, y.first); }
+  private:
+    compare_type    m_comp;
+  };
+
+};
 
 //--------------------------------------------------------------------------------------//
 //                                                                                      //
@@ -168,7 +233,7 @@ public:
 //--------------------------------------------------------------------------------------//
 
 
-template <class Base>  // index_map_base or index_set_base
+template <class Base>  // index_[multi]map_base or index_[multi]set_base
 class index_base : public Base, private noncopyable
 {
 public:

@@ -31,18 +31,20 @@ namespace btree
 //--------------------------------------------------------------------------------------//
 
 template <class Key,    // requires memcpyable type without pointers or references
+          class T,      // requires memcpyable type without pointers or references
           class BtreeTraits = btree::default_traits,
           class Compare = btree::less,
           class IndexTraits = btree::default_index_traits<Key> >
 class btree_map_index
-  : public index_base<index_set_base<Key,BtreeTraits,Compare,IndexTraits> >
+  : public index_base<index_map_base<Key,T,BtreeTraits,Compare,IndexTraits> >
 {
 private:
   typedef typename
-    btree::index_base<index_set_base<Key,BtreeTraits,Compare,IndexTraits> >  base;
+    btree::index_base<index_map_base<Key,T,BtreeTraits,Compare,IndexTraits> >  base;
 public:
   typedef Key                            key_type;
-  typedef Key                            value_type;
+  typedef T                              mapped_type;
+  typedef std::pair<const Key, T>        value_type;
 
   typedef BtreeTraits                    btree_traits;
   typedef IndexTraits                    index_traits;
@@ -130,14 +132,17 @@ public:
 
   //  modifiers
 
-  file_position push_back(const key_type& x)
+  file_position push_back(const value_type& x)
   // Effects: unconditional push_back into file(); index unaffected
   {
     file_position pos = base::file()->file_size();
-    std::size_t element_sz = index_traits::flat_size(x);
-    base::file()->increment_file_size(element_sz);
-    index_traits::build_flat_element(x, base::file()->template data<char>() + pos,
-      element_sz);
+    std::size_t key_sz = index_traits::flat_size(x.first);
+    std::size_t mapped_sz = index_traits::flat_size(x.second);
+    base::file()->increment_file_size(key_sz + mapped_sz);
+    index_traits::build_flat_element(x.first,
+      base::file()->template data<char>() + pos, key_sz);
+    index_traits::build_flat_element(x.second,
+      base::file()->template data<char>() + pos + key_sz, mapped_sz);
     return pos;
   }
 
@@ -156,7 +161,7 @@ public:
   //  Effects: if !find(k) then insert_file_position(push_back(value));
   {
     BOOST_ASSERT((base::flags() & flags::read_only) == 0);
-    if (base::find(value) == base::end())
+    if (base::find(value.first) == base::end())
     {
       std::pair<const_iterator, bool> result(insert_file_position(push_back(value)));
       BOOST_ASSERT(result.second);
@@ -167,22 +172,24 @@ public:
 };
 
 //--------------------------------------------------------------------------------------//
-//                               class btree_multiindex                                   //
+//                            class btree_multimap_index                                //
 //--------------------------------------------------------------------------------------//
 
 template <class Key,    // requires memcpyable type without pointers or references
+          class T,      // requires memcpyable type without pointers or references
           class BtreeTraits = btree::default_traits,
           class Compare = btree::less,
           class IndexTraits = btree::default_index_traits<Key> >
-class btree_multiindex
-  : public index_base<index_multiset_base<Key,BtreeTraits,Compare,IndexTraits> >
+class btree_multimap_index
+  : public index_base<index_multimap_base<Key,T,BtreeTraits,Compare,IndexTraits> >
 {
 private:
   typedef typename
-    btree::index_base<index_multiset_base<Key,BtreeTraits,Compare,IndexTraits> >  base;
+    btree::index_base<index_multimap_base<Key,T,BtreeTraits,Compare,IndexTraits> >  base;
 public:
   typedef Key                            key_type;
-  typedef Key                            value_type;
+  typedef T                              mapped_type;
+  typedef std::pair<const Key, T>        value_type;
 
   typedef BtreeTraits                    btree_traits;
   typedef IndexTraits                    index_traits;
@@ -203,9 +210,9 @@ public:
   typedef typename base::file_position   file_position;
 
 
-  btree_multiindex() : base() {}
+  btree_multimap_index() : base() {}
 
-  btree_multiindex(const path& index_pth,
+  btree_multimap_index(const path& index_pth,
             const path& file_pth,
             flags::bitmask flgs = flags::read_only,
             uint64_t sig = -1,  // for existing files, must match creation signature
@@ -215,7 +222,7 @@ public:
     base::open(index_pth, file_pth, flgs, sig, comp, node_sz);
   }
 
-  btree_multiindex(const path& index_pth,
+  btree_multimap_index(const path& index_pth,
             file_ptr_type flat_file,            
             flags::bitmask flgs = flags::read_only,
             uint64_t sig = -1,  // for existing files, must match creation signature
@@ -247,14 +254,17 @@ public:
 
   //  modifiers
 
-  file_position push_back(const key_type& x)
+  file_position push_back(const value_type& x)
   // Effects: unconditional push_back into file(); index unaffected
   {
     file_position pos = base::file()->file_size();
-    std::size_t element_sz = index_traits::flat_size(x);
-    base::file()->increment_file_size(element_sz);
-    index_traits::build_flat_element(x, base::file()->template data<char>() + pos,
-      element_sz);
+    std::size_t key_sz = index_traits::flat_size(x.first);
+    std::size_t mapped_sz = index_traits::flat_size(x.second);
+    base::file()->increment_file_size(key_sz + mapped_sz);
+    index_traits::build_flat_element(x.first,
+      base::file()->template data<char>() + pos, key_sz);
+    index_traits::build_flat_element(x.second,
+      base::file()->template data<char>() + pos + key_sz, mapped_sz);
     return pos;
   }
 

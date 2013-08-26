@@ -952,6 +952,23 @@ void  heterogeneous_key_test()
   cout << "     heterogeneous_key_test complete" << endl;
 }
 
+//-------------------------------------  map_test  ----------------------------------------//
+
+void  map_test()
+{
+  cout << "  map_test..." << endl;
+
+  {
+    btree::btree_map_index<int, long> idx 
+      ("map_test.ndx", "map_test.dat", btree::flags::truncate, -1, btree::less(), 128);
+
+    idx.insert(make_pair<int, long>(1,2));
+    BOOST_TEST_EQ(idx.size(), 1u);
+  }
+
+  cout << "     map_test complete" << endl;
+}
+
 
 //-------------------------------------  _test  ----------------------------------------//
 
@@ -1001,6 +1018,8 @@ int cpp_main(int argc, char* argv[])
       ;
     return 1;
   }
+
+  map_test();
 
   instantiate_test();
   open_all_new_test();
