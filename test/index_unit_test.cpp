@@ -959,11 +959,71 @@ void  map_test()
   cout << "  map_test..." << endl;
 
   {
+    cout << "      btree_map_index<int, long>..." << endl;
     btree::btree_map_index<int, long> idx 
       ("map_test.ndx", "map_test.dat", btree::flags::truncate, -1, btree::less(), 128);
 
     idx.insert(make_pair<int, long>(1,2));
     BOOST_TEST_EQ(idx.size(), 1u);
+    BOOST_TEST_EQ(idx.count(1), 1u);
+    idx.insert(make_pair<int, long>(1,4));
+    BOOST_TEST_EQ(idx.size(), 1u);
+    BOOST_TEST_EQ(idx.count(1), 1u);
+    idx.insert(make_pair<int, long>(0,5));
+    BOOST_TEST_EQ(idx.size(), 2u);
+    BOOST_TEST_EQ(idx.count(1), 1u);
+    BOOST_TEST_EQ(idx.count(0), 1u);
+
+    for (btree::btree_map_index<int, long>::const_iterator itr = idx.begin();
+      itr != idx.end(); ++itr)
+      cout << (*itr) << /*"," << itr->second <<*/ std::endl;
+ }
+
+  {
+    cout << "      btree_multimap_index<int, long>..." << endl;
+    btree::btree_multimap_index<int, long> idx 
+      ("multimap_test.ndx", "multimap_test.dat",
+       btree::flags::truncate, -1, btree::less(), 128);
+
+    idx.insert(make_pair<int, long>(1,2));
+    BOOST_TEST_EQ(idx.count(1), 1u);
+    BOOST_TEST_EQ(idx.size(), 1u);
+    idx.insert(make_pair<int, long>(1,4));
+    BOOST_TEST_EQ(idx.size(), 2u);
+    BOOST_TEST_EQ(idx.count(1), 2u);
+    idx.insert(make_pair<int, long>(0,5));
+    BOOST_TEST_EQ(idx.size(), 3u);
+    BOOST_TEST_EQ(idx.count(1), 2u);
+    BOOST_TEST_EQ(idx.count(0), 1u);
+  }
+
+  {
+    cout << "      btree_map_index<string_view, string_view>..." << endl;
+    btree::btree_map_index<string_view, string_view> idx 
+      ("map_test_sv.ndx", "map_test_sv.dat",
+       btree::flags::truncate, -1, btree::less(), 128);
+
+    idx.insert(make_pair(string_view("abc"), string_view("xyz")));
+    BOOST_TEST_EQ(idx.size(), 1u);
+    idx.insert(make_pair(string_view("abc"), string_view("12345")));
+    BOOST_TEST_EQ(idx.size(), 1u);
+    idx.insert(make_pair(string_view("ab"), string_view("1")));
+    BOOST_TEST_EQ(idx.size(), 2u);
+    BOOST_TEST_EQ(idx.size(), 2u);
+  }
+
+  {
+    cout << "      btree_multimap_index<string_view, string_view>..." << endl;
+    btree::btree_multimap_index<string_view, string_view> idx 
+      ("multimap_test_sv.ndx", "multimap_test_sv.dat",
+       btree::flags::truncate, -1, btree::less(), 128);
+
+    idx.insert(make_pair(string_view("abc"), string_view("xyz")));
+    BOOST_TEST_EQ(idx.size(), 1u);
+    idx.insert(make_pair(string_view("abc"), string_view("12345")));
+    BOOST_TEST_EQ(idx.size(), 2u);
+    idx.insert(make_pair(string_view("ab"), string_view("1")));
+    BOOST_TEST_EQ(idx.size(), 3u);
   }
 
   cout << "     map_test complete" << endl;

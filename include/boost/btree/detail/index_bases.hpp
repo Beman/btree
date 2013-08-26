@@ -199,7 +199,7 @@ public:
 
   //  the following is the only difference between index_map_base and index_multimap_base
   typedef typename
-    btree::btree_set<index_key, btree_traits,
+    btree::btree_multiset<index_key, btree_traits,
       index_compare_type>                        index_type;
 
   const Key&  key(const value_type& v) const  // really handy, so expose
