@@ -34,13 +34,15 @@ template <class Key,    // requires memcpyable type without pointers or referenc
           class T,      // requires memcpyable type without pointers or references
           class BtreeTraits = btree::default_traits,
           class Compare = btree::less,
-          class IndexTraits = btree::default_index_traits<Key> >
+          template<class> class IndexTraits = btree::default_index_traits>
 class btree_map_index
   : public index_base<index_map_base<Key,T,BtreeTraits,Compare,IndexTraits> >
 {
 private:
   typedef typename
     btree::index_base<index_map_base<Key,T,BtreeTraits,Compare,IndexTraits> >  base;
+  typedef
+    typename base::index_position_type   index_position_type;
 public:
   typedef Key                            key_type;
   typedef T                              mapped_type;
@@ -56,7 +58,6 @@ public:
   typedef typename base::reference       reference;
   typedef typename base::iterator        iterator;
   typedef typename base::const_iterator  const_iterator;
-  typedef typename base::index_key       index_key;
 
   typedef typename base::file_type       file_type;
   typedef typename base::file_ptr_type   file_ptr_type;
@@ -151,7 +152,7 @@ public:
   {
     BOOST_ASSERT((base::flags() & flags::read_only) == 0);
     std::pair<typename base::index_type::const_iterator, bool>
-      result(base::m_index_btree.insert(index_key(pos)));
+      result(base::m_index_btree.insert(index_position_type(pos)));
     return std::pair<const_iterator, bool>(
       const_iterator(result.first, base::file()), result.second);
   }
@@ -179,13 +180,15 @@ template <class Key,    // requires memcpyable type without pointers or referenc
           class T,      // requires memcpyable type without pointers or references
           class BtreeTraits = btree::default_traits,
           class Compare = btree::less,
-          class IndexTraits = btree::default_index_traits<Key> >
+          template<class> class IndexTraits = btree::default_index_traits>
 class btree_multimap_index
   : public index_base<index_multimap_base<Key,T,BtreeTraits,Compare,IndexTraits> >
 {
 private:
   typedef typename
     btree::index_base<index_multimap_base<Key,T,BtreeTraits,Compare,IndexTraits> >  base;
+  typedef
+    typename base::index_position_type   index_position_type;
 public:
   typedef Key                            key_type;
   typedef T                              mapped_type;
@@ -201,7 +204,6 @@ public:
   typedef typename base::reference       reference;
   typedef typename base::iterator        iterator;
   typedef typename base::const_iterator  const_iterator;
-  typedef typename base::index_key       index_key;
 
   typedef boost::filesystem::path        path;
   typedef typename base::file_type       file_type;
@@ -272,7 +274,7 @@ public:
   {
     BOOST_ASSERT((base::flags() & flags::read_only) == 0);
     typename base::index_type::const_iterator
-      result(base::m_index_btree.insert(index_key(pos)));
+      result(base::m_index_btree.insert(index_position_type(pos)));
     return const_iterator(result, base::file());
   }
 

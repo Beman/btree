@@ -33,19 +33,22 @@ namespace btree
 template <class Key,    // requires memcpyable type without pointers or references
           class BtreeTraits = btree::default_traits,
           class Compare = btree::less,
-          class IndexTraits = btree::default_index_traits<Key> >
+          template<class> class IndexTraits = btree::default_index_traits>
 class btree_set_index
   : public index_base<index_set_base<Key,BtreeTraits,Compare,IndexTraits> >
 {
 private:
   typedef typename
     btree::index_base<index_set_base<Key,BtreeTraits,Compare,IndexTraits> >  base;
+protected:
+  typedef
+    typename base::index_position_type   index_position_type;
 public:
   typedef Key                            key_type;
   typedef Key                            value_type;
 
   typedef BtreeTraits                    btree_traits;
-  typedef IndexTraits                    index_traits;
+  //typedef IndexTraits                    index_traits;
 
   typedef Compare                        key_compare;
   typedef Compare                        value_compare;
@@ -54,7 +57,6 @@ public:
   typedef typename base::reference       reference;
   typedef typename base::iterator        iterator;
   typedef typename base::const_iterator  const_iterator;
-  typedef typename base::index_key       index_key;
 
   typedef typename base::file_type       file_type;
   typedef typename base::file_ptr_type   file_ptr_type;
@@ -134,9 +136,9 @@ public:
   // Effects: unconditional push_back into file(); index unaffected
   {
     file_position pos = base::file()->file_size();
-    std::size_t element_sz = index_traits::flat_size(x);
+    std::size_t element_sz = IndexTraits<Key>::flat_size(x);
     base::file()->increment_file_size(element_sz);
-    index_traits::build_flat_element(x, base::file()->template data<char>() + pos,
+    IndexTraits<Key>::build_flat_element(x, base::file()->template data<char>() + pos,
       element_sz);
     return pos;
   }
@@ -146,7 +148,7 @@ public:
   {
     BOOST_ASSERT((base::flags() & flags::read_only) == 0);
     std::pair<typename base::index_type::const_iterator, bool>
-      result(base::m_index_btree.insert(index_key(pos)));
+      result(base::m_index_btree.insert(index_position_type(pos)));
     return std::pair<const_iterator, bool>(
       const_iterator(result.first, base::file()), result.second);
   }
@@ -173,7 +175,7 @@ public:
 template <class Key,    // requires memcpyable type without pointers or references
           class BtreeTraits = btree::default_traits,
           class Compare = btree::less,
-          class IndexTraits = btree::default_index_traits<Key> >
+          template<class> class IndexTraits = btree::default_index_traits>
 class btree_multiset_index
   : public index_base<index_multiset_base<Key,BtreeTraits,Compare,IndexTraits> >
 {
@@ -185,7 +187,7 @@ public:
   typedef Key                            value_type;
 
   typedef BtreeTraits                    btree_traits;
-  typedef IndexTraits                    index_traits;
+  //typedef IndexTraits                    index_traits;
 
   typedef Compare                        key_compare;
   typedef Compare                        value_compare;
@@ -194,7 +196,7 @@ public:
   typedef typename base::reference       reference;
   typedef typename base::iterator        iterator;
   typedef typename base::const_iterator  const_iterator;
-  typedef typename base::index_key       index_key;
+  typedef typename base::index_position_type       index_position_type;
 
   typedef boost::filesystem::path        path;
   typedef typename base::file_type       file_type;
@@ -251,9 +253,9 @@ public:
   // Effects: unconditional push_back into file(); index unaffected
   {
     file_position pos = base::file()->file_size();
-    std::size_t element_sz = index_traits::flat_size(x);
+    std::size_t element_sz = IndexTraits<Key>::flat_size(x);
     base::file()->increment_file_size(element_sz);
-    index_traits::build_flat_element(x, base::file()->template data<char>() + pos,
+    IndexTraits<Key>::build_flat_element(x, base::file()->template data<char>() + pos,
       element_sz);
     return pos;
   }
@@ -262,7 +264,7 @@ public:
   {
     BOOST_ASSERT((base::flags() & flags::read_only) == 0);
     typename base::index_type::const_iterator
-      result(base::m_index_btree.insert(index_key(pos)));
+      result(base::m_index_btree.insert(index_position_type(pos)));
     return const_iterator(result, base::file());
   }
 

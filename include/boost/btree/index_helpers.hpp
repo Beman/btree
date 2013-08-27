@@ -48,7 +48,7 @@ namespace btree
   public:
     typedef const T&  reference;
 
-    typedef endian::big_uint48un_t  index_key;  // position in the flat file
+    typedef endian::big_uint48un_t  index_position_type;  // position in the flat file
 
     static std::size_t flat_size(const T&)    {return sizeof(T);}
 
@@ -60,7 +60,7 @@ namespace btree
       std::memcpy(dest, reinterpret_cast<const char*>(&x), sz);
     }
 
-    static reference  make_reference(const char* x)
+    static reference  dereference(const char* x)
     {
       BOOST_ASSERT(x);
       return *reinterpret_cast<const T*>(x);
@@ -76,7 +76,7 @@ namespace btree
   public:
     typedef const char*  reference;
 
-    typedef endian::big_uint48un_t  index_key;  // position in the flat file
+    typedef endian::big_uint48un_t  index_position_type;  // position in the flat file
 
     static std::size_t flat_size(const char* x)          {BOOST_ASSERT(x);
                                                           return std::strlen(x) + 1;}
@@ -88,7 +88,7 @@ namespace btree
       std::strcpy(dest, x);
     }
 
-    static reference make_reference(const char* x)       {BOOST_ASSERT(x);
+    static reference dereference(const char* x)       {BOOST_ASSERT(x);
                                                           return x;}
   };
 
@@ -101,7 +101,7 @@ namespace btree
 
   public:
     typedef boost::string_view         reference;
-    typedef endian::big_uint48un_t     index_key;  // position in the flat file
+    typedef endian::big_uint48un_t     index_position_type;  // position in the flat file
 
     static std::size_t flat_size(const boost::string_view& x)
     {
@@ -119,7 +119,7 @@ namespace btree
       std::memcpy(dest + size_size, x.data(), x.size());
     }
 
-    static reference make_reference(const char* x)
+    static reference dereference(const char* x)
     {
       std::pair<std::size_t, std::size_t> dec = codec::decode(x);
       return boost::string_view(x + dec.second, dec.first);
