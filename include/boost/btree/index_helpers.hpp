@@ -98,6 +98,7 @@ namespace btree
   class default_index_traits<boost::string_view>
   {
     typedef btree::support::size_t_codec codec;
+
   public:
     typedef boost::string_view         reference;
     typedef endian::big_uint48un_t     index_key;  // position in the flat file

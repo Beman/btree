@@ -61,6 +61,7 @@ class index_set_base
 public:
   typedef Key                                    key_type;
   typedef Key                                    value_type;
+  typedef Key const                              iterator_value_type;
   typedef Key                                    mapped_type;
   typedef BtreeTraits                            btree_traits;
   typedef Compare                                compare_type;
@@ -97,10 +98,12 @@ class index_multiset_base
 public:
   typedef Key                                    key_type;
   typedef Key                                    value_type;
+  typedef Key const                              iterator_value_type;
   typedef Key                                    mapped_type;
   typedef BtreeTraits                            btree_traits;
   typedef Compare                                compare_type;
   typedef compare_type                           value_compare;
+
   typedef typename BtreeTraits::node_id_type     node_id_type;
   typedef typename BtreeTraits::node_size_type   node_size_type;
   typedef typename BtreeTraits::node_level_type  node_level_type;
@@ -133,12 +136,13 @@ public:
   typedef Key                                    key_type;
   typedef T                                      mapped_type;
   typedef std::pair<const Key, T>                value_type;
-  typedef BtreeTraits                            btree_traits;
+  typedef std::pair<const Key, T>                iterator_value_type;
   typedef Compare                                compare_type;
+  typedef BtreeTraits                            btree_traits;
   typedef typename BtreeTraits::node_id_type     node_id_type;
   typedef typename BtreeTraits::node_size_type   node_size_type;
   typedef typename BtreeTraits::node_level_type  node_level_type;
-  typedef typename IndexTraits::reference        reference;                
+  typedef typename IndexTraits::reference        reference;
 
   typedef IndexTraits                            index_traits;
   typedef typename index_traits::index_key       index_key;  // i.e. position in flat file
@@ -185,6 +189,7 @@ public:
   typedef Key                                    key_type;
   typedef T                                      mapped_type;
   typedef std::pair<const Key, T>                value_type;
+  typedef std::pair<const Key, T>                iterator_value_type;
   typedef BtreeTraits                            btree_traits;
   typedef Compare                                compare_type;
   typedef typename BtreeTraits::node_id_type     node_id_type;
@@ -254,9 +259,19 @@ public:
   typedef typename Base::value_compare          value_compare; 
   typedef boost::uint64_t                       size_type;
 
-  typedef typename Base::reference              reference;
-  typedef iterator_type<value_type, reference>  iterator;
-  typedef iterator                              const_iterator;
+//  typedef typename Base::reference              reference;
+  typedef value_type&                           reference;
+  typedef const value_type&                     const_reference;
+  typedef value_type*                           pointer;
+  typedef const value_type*                     const_pointer;
+
+//  typedef iterator_type<value_type, reference>  iterator;
+//  typedef iterator                              const_iterator;
+
+  // for sets, these are the same type; for maps they are different types
+  typedef iterator_type<
+    typename Base::iterator_value_type>         iterator;
+  typedef iterator_type<value_type const>       const_iterator;
 
   typedef std::reverse_iterator<iterator>       reverse_iterator;
   typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
