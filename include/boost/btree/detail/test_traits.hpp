@@ -10,7 +10,7 @@
 
 #include <boost/btree/btree_map.hpp>
 #include <boost/btree/btree_set.hpp>
-#include <boost/btree/btree_set_index.hpp>
+#include <boost/btree/btree_index_set.hpp>
 #include <boost/random.hpp>
 #include <boost/btree/support/random_string.hpp>
 #include <cstdint>
@@ -95,7 +95,7 @@ namespace boost { namespace btree { namespace detail {
     std::string m_string;
   public:
     typedef boost::btree::
-       btree_set_index<boost::string_view>  btree_type;
+       btree_index_set<boost::string_view>  btree_type;
     typedef std::set<std::string>           stl_type;
                                            
     typedef btree_type::key_type            btree_key_type;

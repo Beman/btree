@@ -286,13 +286,13 @@ Key=std::string
     are available to users.</li>
     <li>An adapter index traits class to copy data into and out of the 
     flat file.</li>
-    <li>Class btree_set_index to glue the pieces together into a 
+    <li>Class btree_index_set to glue the pieces together into a 
     seamless interface.</li>
 </ul>
   <p>Here is the final version of set2.cpp:</p>
   
   <blockquote>
-    <pre><ins>#include &lt;boost/btree/btree_set_index.hpp&gt;</ins>
+    <pre><ins>#include &lt;boost/btree/btree_index_set.hpp&gt;</ins>
 #include &lt;boost/detail/lightweight_main.hpp&gt; 
 #include &lt;string&gt;
 #include &lt;iostream&gt;
@@ -301,7 +301,7 @@ using namespace boost::btree;
 
 int cpp_main(int, char *[])
 {
-  <ins>typedef btree_set_index&lt;boost::string_view&gt; set_type;</ins>
+  <ins>typedef btree_index_set&lt;boost::string_view&gt; set_type;</ins>
   <ins>set_type set(&quot;set2.ndx&quot;, &quot;set2.dat&quot;, flags::truncate);</ins>
 
   set.insert(&quot;eat&quot;);
@@ -347,7 +347,7 @@ eat
   <hr>
 
   <p>Revised 
-  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->20 August 2013<!--webbot bot="Timestamp" endspan i-checksum="31350" --></p>
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->28 August 2013<!--webbot bot="Timestamp" endspan i-checksum="31366" --></p>
 
   <p>© Copyright Beman Dawes, 2013</p>
 

@@ -35,19 +35,23 @@
 
   <h2>B-tree associative containers</h2>
 
-  <p>Associative containers provide fast retrieval of data based on keys. 
-  </p>
+  <p>B-tree associative containers provide fast retrieval of external data based on keys. 
+  The external data may be resident on hard disks, floppy disks, memory cards, 
+  USB-sticks, or any other form of random-access external memory.</p>
   <ul>
     <li>The 
-  library provides several kinds of standalone B-tree associative containers: <code>btree_set</code>,
+  library provides several kinds of  B-tree ordered associative containers: <code>btree_set</code>,
   <code>btree_multiset</code>, <code>btree_map</code> and <code>btree_multimap</code>. 
-    These are collectively called <b><i>trees</i></b>.<br>
+    These are collectively called <b><i>trees</i></b>, and are directly 
+    analogous to <code>std::set</code>, <code>std::multiset</code>, <code>
+    std::map</code>, and <code>std::multimap</code>.<br>
 &nbsp;</li>
-    <li>The library  provides several kinds of B-tree associative containers 
-    that act as indexes to random-access files: <code>btree_set_index</code>,
-  <code>btree_multiset_index</code>, <code>btree_map_index</code>, <code>btree_multimap_index</code>,
-    <code>btree_key_index</code>, and <code>btree_multikey_index</code>. These 
-    are collectively called <b><i>indexes</i></b>. </li>
+    <li>The library  provides several kinds of B-tree ordered associative containers 
+    that act as indexes to random-access files: <code>btree_index_set</code>,
+  <code>btree_index_multiset</code>, <code>btree_index_map</code>, and <code>btree_index_multimap</code>. These 
+    are collectively called <b><i>indexes</i></b>. The standard library analogy 
+    would be to use a standard library associative container of pointers to 
+    index a vector holding the actual data.</li>
   </ul>
   
   
@@ -67,12 +71,12 @@
   <td><code>boost/btree/btree_set.hpp</code></td>
   </tr>
   <tr>
-  <td><code>btree_set_index</code></td>
-  <td><code>boost/btree/btree_set_index.hpp</code></td>
+  <td><code>btree_index_set</code></td>
+  <td><code>boost/btree/btree_index_set.hpp</code></td>
   </tr>
   <tr>
-  <td><code>btree_multiset_index</code></td>
-  <td><code>boost/btree/btree_set_index.hpp</code></td>
+  <td><code>btree_index_multiset</code></td>
+  <td><code>boost/btree/btree_index_set.hpp</code></td>
   </tr>
   <tr>
   <td><code>btree_map</code></td>
@@ -83,22 +87,14 @@
   <td><code>boost/btree/btree_map.hpp</code></td>
   </tr>
   <tr>
-  <td><code>btree_map_index</code></td>
-  <td align="center">Under development</td>
+  <td><code>btree_index_map</code></td>
+  <td align="center"><code>boost/btree/btree_index_map.hpp</code></td>
   </tr>
   <tr>
-  <td><code>btree_multimap_index</code></td>
-  <td align="center">Under development</td>
+  <td><code>btree_index_multimap</code></td>
+  <td align="center"><code>boost/btree/btree_index_map.hpp</code></td>
   </tr>
-  <tr>
-  <td><code>btree_key_index</code></td>
-  <td align="center">Under development</td>
-  </tr>
-  <tr>
-  <td><code>btree_multikey_index</code></td>
-  <td align="center">Under development</td>
-  </tr>
-</table>
+  </table>
 
   <p>Each associative container is parameterized on <code>Key</code> 
   and an ordering relation <code>Compare</code> that induces a strict weak 
@@ -946,7 +942,7 @@ const_iterator_range  equal_range(const Key&amp; k) const;</pre>
   <hr>
 
   <p>Revised 
-  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->25 August 2013<!--webbot bot="Timestamp" endspan i-checksum="31360" --></p>
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->28 August 2013<!--webbot bot="Timestamp" endspan i-checksum="31366" --></p>
 
   <p>© Copyright Beman Dawes, 2013</p>
 

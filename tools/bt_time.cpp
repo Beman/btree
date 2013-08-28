@@ -9,7 +9,7 @@
 
 #include <boost/btree/btree_map.hpp>
 #include <boost/btree/btree_set.hpp>
-#include <boost/btree/btree_set_index.hpp>
+#include <boost/btree/btree_index_set.hpp>
 #include <boost/btree/support/random_string.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/random.hpp>
@@ -622,10 +622,10 @@ int cpp_main(int argc, char * argv[])
         bt_class = "btree_map";
       else if ( strcmp( argv[2]+1, "class=btree_set" )==0 )
         bt_class = "btree_set";
-      else if ( strcmp( argv[2]+1, "class=btree_set_index" )==0 )
-        bt_class = "btree_set_index";
-      else if ( strcmp( argv[2]+1, "class=btree_set_index-string_view" )==0 )
-        bt_class = "btree_set_index-string_view";
+      else if ( strcmp( argv[2]+1, "class=btree_index_set" )==0 )
+        bt_class = "btree_index_set";
+      else if ( strcmp( argv[2]+1, "class=btree_index_set-string_view" )==0 )
+        bt_class = "btree_index_set-string_view";
       else if ( strcmp( argv[2]+1, "hint=least-memory" )==0 )
         common_flags |= btree::flags::least_memory;
       else if ( strcmp( argv[2]+1, "hint=low-memory" )==0 )
@@ -651,7 +651,7 @@ int cpp_main(int argc, char * argv[])
       " The argument n specifies the number of test cases to run\n"
       " Options:\n"
       "   path         Specifies the test file path; default test.btree\n"
-      "   -class=btree_map|btree_set|btree_set_index|btree_set_index-string_view;\n"
+      "   -class=btree_map|btree_set|btree_index_set|btree_index_set-string_view;\n"
       "                default -class=btree_map\n"
       "   -seed=#      Seed for random number generator; default -seed1\n"
       "   -node-size=# Node size (>=128); default -node-size"
@@ -698,16 +698,16 @@ int cpp_main(int argc, char * argv[])
     test< btree::btree_set<int64_t>, set_64_generator >();
     return 0;
   }
-  else if (bt_class == "btree_set_index")
+  else if (bt_class == "btree_index_set")
   {
-    cout << "and class btree_set_index" << endl;
-    test< btree::btree_set_index<int64_t>, set_index_64_generator >();
+    cout << "and class btree_index_set" << endl;
+    test< btree::btree_index_set<int64_t>, set_index_64_generator >();
     return 0;
   }
-  else if (bt_class == "btree_set_index-string_view")
+  else if (bt_class == "btree_index_set-string_view")
   {
-    cout << "and class btree_set_index<boost::string_view>" << endl;
-    test< btree::btree_set_index<boost::string_view>, set_index_string_view_generator >();
+    cout << "and class btree_index_set<boost::string_view>" << endl;
+    test< btree::btree_index_set<boost::string_view>, set_index_string_view_generator >();
     return 0;
   }
   else if (bt_class == "btree_map")

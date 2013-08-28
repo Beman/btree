@@ -1,4 +1,4 @@
-//  boost/btree/btree_set_index.hpp.hpp  -----------------------------------------------//
+//  boost/btree/btree_index_set.hpp.hpp  -----------------------------------------------//
 
 //  Copyright Beman Dawes 2000, 2006, 2010, 2013
 
@@ -27,14 +27,14 @@ namespace btree
 {
 
 //--------------------------------------------------------------------------------------//
-//                             class btree_set_index                                    //
+//                             class btree_index_set                                    //
 //--------------------------------------------------------------------------------------//
 
 template <class Key,    // requires memcpyable type without pointers or references
           class BtreeTraits = btree::default_traits,
           class Compare = btree::less,
           template<class> class IndexTraits = btree::default_index_traits>
-class btree_set_index
+class btree_index_set
   : public index_base<index_set_base<Key,BtreeTraits,Compare,IndexTraits> >
 {
 private:
@@ -66,9 +66,9 @@ public:
   typedef boost::filesystem::path        path_type;
 
 
-  btree_set_index() : base() {}
+  btree_index_set() : base() {}
 
-  btree_set_index(const path_type& index_pth,
+  btree_index_set(const path_type& index_pth,
             const path_type& file_pth,
             flags::bitmask flgs = flags::read_only,
             uint64_t sig = -1,  // for existing files, must match creation signature
@@ -78,7 +78,7 @@ public:
     base::open(index_pth, file_pth, flgs, sig, comp, node_sz);
   }
 
-  btree_set_index(const path_type& index_pth,
+  btree_index_set(const path_type& index_pth,
             file_ptr_type flat_file,            
             flags::bitmask flgs = flags::read_only,
             uint64_t sig = -1,  // for existing files, must match creation signature
@@ -88,7 +88,7 @@ public:
     base::open(index_pth, flat_file,flgs, sig, comp, node_sz);
   }
 
-  btree_set_index(const path_type& base_path,
+  btree_index_set(const path_type& base_path,
             flags::bitmask flgs = flags::read_only,
             uint64_t sig = -1,  // for existing files, must match creation signature
             const Compare& comp = Compare(),
@@ -169,14 +169,14 @@ public:
 };
 
 //--------------------------------------------------------------------------------------//
-//                            class btree_multiset_index                                //
+//                            class btree_index_multiset                                //
 //--------------------------------------------------------------------------------------//
 
 template <class Key,    // requires memcpyable type without pointers or references
           class BtreeTraits = btree::default_traits,
           class Compare = btree::less,
           template<class> class IndexTraits = btree::default_index_traits>
-class btree_multiset_index
+class btree_index_multiset
   : public index_base<index_multiset_base<Key,BtreeTraits,Compare,IndexTraits> >
 {
 private:
@@ -205,9 +205,9 @@ public:
   typedef typename base::file_position   file_position;
 
 
-  btree_multiset_index() : base() {}
+  btree_index_multiset() : base() {}
 
-  btree_multiset_index(const path& index_pth,
+  btree_index_multiset(const path& index_pth,
             const path& file_pth,
             flags::bitmask flgs = flags::read_only,
             uint64_t sig = -1,  // for existing files, must match creation signature
@@ -217,7 +217,7 @@ public:
     base::open(index_pth, file_pth, flgs, sig, comp, node_sz);
   }
 
-  btree_multiset_index(const path& index_pth,
+  btree_index_multiset(const path& index_pth,
             file_ptr_type flat_file,            
             flags::bitmask flgs = flags::read_only,
             uint64_t sig = -1,  // for existing files, must match creation signature

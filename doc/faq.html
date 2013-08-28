@@ -33,7 +33,12 @@
     </tr>
   </table>
 
-  <p>&nbsp;</p>
+  <p><b>Why are there no <u>unordered</u> B-tree associative containers?</b> It 
+  wouldn&#39;t be a B-tree or any other kind of tree any more. A B-tree achieves its 
+  speed by grouping many ordered elements on nodes, and that minimizes disk 
+  access and maximizes the benefit of both hardware and software caches. A 
+  hashed approach would have particularly poor performance for traversals, while 
+  B-trees amortize the cost of traversal over the number of elements in a node.</p>
   <p><b>What is the difference between a node and a page?</b> In computer 
   science, <i><a href="http://en.wikipedia.org/wiki/Node">node</a></i> is the 
   name for the basic unit used to build data structures. <i>
@@ -44,10 +49,15 @@
   hard disk drive</a>. In a B-tree, performance is often optimal if node size is 
   the same as (or a small multiple of) the system&#39;s page size.</p>
 
+  <p><b>Where does the idea of an <a name="index-idea">index</a> come from?</b> 
+  Bayer and McCreight&#39;s original 1970 Boeing Labs paper:</p>
+
+  <p><img border="0" src="bayer_index.png" width="672" height="320"></p>
+
   <hr>
 
   <p>Revised 
-  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->14 August 2013<!--webbot bot="Timestamp" endspan i-checksum="31357" --></p>
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->28 August 2013<!--webbot bot="Timestamp" endspan i-checksum="31366" --></p>
 
   <p>© Copyright Beman Dawes, 2013</p>
 

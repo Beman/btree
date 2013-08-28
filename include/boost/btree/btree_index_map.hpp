@@ -1,4 +1,4 @@
-//  boost/btree/btree_map_index.hpp.hpp  -----------------------------------------------//
+//  boost/btree/btree_index_map.hpp.hpp  -----------------------------------------------//
 
 //  Copyright Beman Dawes 2000, 2006, 2010, 2013
 
@@ -27,7 +27,7 @@ namespace btree
 {
 
 //--------------------------------------------------------------------------------------//
-//                             class btree_map_index                                    //
+//                             class btree_index_map                                    //
 //--------------------------------------------------------------------------------------//
 
 template <class Key,    // requires memcpyable type without pointers or references
@@ -35,7 +35,7 @@ template <class Key,    // requires memcpyable type without pointers or referenc
           class BtreeTraits = btree::default_traits,
           class Compare = btree::less,
           template<class> class IndexTraits = btree::default_index_traits>
-class btree_map_index
+class btree_index_map
   : public index_base<index_map_base<Key,T,BtreeTraits,Compare,IndexTraits> >
 {
 private:
@@ -66,9 +66,9 @@ public:
   typedef boost::filesystem::path        path_type;
 
 
-  btree_map_index() : base() {}
+  btree_index_map() : base() {}
 
-  btree_map_index(const path_type& index_pth,
+  btree_index_map(const path_type& index_pth,
             const path_type& file_pth,
             flags::bitmask flgs = flags::read_only,
             uint64_t sig = -1,  // for existing files, must match creation signature
@@ -78,7 +78,7 @@ public:
     base::open(index_pth, file_pth, flgs, sig, comp, node_sz);
   }
 
-  btree_map_index(const path_type& index_pth,
+  btree_index_map(const path_type& index_pth,
             file_ptr_type flat_file,            
             flags::bitmask flgs = flags::read_only,
             uint64_t sig = -1,  // for existing files, must match creation signature
@@ -88,7 +88,7 @@ public:
     base::open(index_pth, flat_file,flgs, sig, comp, node_sz);
   }
 
-  btree_map_index(const path_type& base_path,
+  btree_index_map(const path_type& base_path,
             flags::bitmask flgs = flags::read_only,
             uint64_t sig = -1,  // for existing files, must match creation signature
             const Compare& comp = Compare(),
@@ -172,7 +172,7 @@ public:
 };
 
 //--------------------------------------------------------------------------------------//
-//                            class btree_multimap_index                                //
+//                            class btree_index_multimap                                //
 //--------------------------------------------------------------------------------------//
 
 template <class Key,    // requires memcpyable type without pointers or references
@@ -180,7 +180,7 @@ template <class Key,    // requires memcpyable type without pointers or referenc
           class BtreeTraits = btree::default_traits,
           class Compare = btree::less,
           template<class> class IndexTraits = btree::default_index_traits>
-class btree_multimap_index
+class btree_index_multimap
   : public index_base<index_multimap_base<Key,T,BtreeTraits,Compare,IndexTraits> >
 {
 private:
@@ -210,9 +210,9 @@ public:
   typedef typename base::file_position   file_position;
 
 
-  btree_multimap_index() : base() {}
+  btree_index_multimap() : base() {}
 
-  btree_multimap_index(const path& index_pth,
+  btree_index_multimap(const path& index_pth,
             const path& file_pth,
             flags::bitmask flgs = flags::read_only,
             uint64_t sig = -1,  // for existing files, must match creation signature
@@ -222,7 +222,7 @@ public:
     base::open(index_pth, file_pth, flgs, sig, comp, node_sz);
   }
 
-  btree_multimap_index(const path& index_pth,
+  btree_index_multimap(const path& index_pth,
             file_ptr_type flat_file,            
             flags::bitmask flgs = flags::read_only,
             uint64_t sig = -1,  // for existing files, must match creation signature
