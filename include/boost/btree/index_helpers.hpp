@@ -50,7 +50,8 @@ namespace btree
 
     typedef endian::big_uint48un_t  index_position_type;  // position in the flat file
 
-    static std::size_t flat_size(const T&)    {return sizeof(T);}
+    static std::size_t size(const T&)    {return sizeof(T);}
+    static std::size_t size(const char*) {return sizeof(T);}
 
     static void build_flat_element(const T& x, char* dest, std::size_t sz)
     { 
@@ -78,8 +79,7 @@ namespace btree
 
     typedef endian::big_uint48un_t  index_position_type;  // position in the flat file
 
-    static std::size_t flat_size(const char* x)          {BOOST_ASSERT(x);
-                                                          return std::strlen(x) + 1;}
+    static std::size_t size(const char* x)   {BOOST_ASSERT(x); return std::strlen(x) + 1;}
 
     static void build_flat_element(const char* x, char* dest, std::size_t)
     {
@@ -103,7 +103,7 @@ namespace btree
     typedef boost::string_view         reference;
     typedef endian::big_uint48un_t     index_position_type;  // position in the flat file
 
-    static std::size_t flat_size(const boost::string_view& x)
+    static std::size_t size(const boost::string_view& x)
     {
       return x.size() + codec::encoded_size(x.size());
     }
@@ -123,6 +123,11 @@ namespace btree
     {
       std::pair<std::size_t, std::size_t> dec = codec::decode(x);
       return boost::string_view(x + dec.second, dec.first);
+    }
+    static std::size_t size(const char* x)
+    {
+      std::pair<std::size_t, std::size_t> dec = codec::decode(x);
+      return dec.first + dec.second;
     }
   };
 

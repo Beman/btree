@@ -46,10 +46,9 @@ private:
 public:
   typedef Key                            key_type;
   typedef T                              mapped_type;
-  typedef std::pair<const Key, T>        value_type;
+  typedef typename base::value_type      value_type;
 
   typedef BtreeTraits                    btree_traits;
-  typedef IndexTraits                    index_traits;
 
   typedef Compare                        key_compare;
   typedef Compare                        value_compare;
@@ -137,12 +136,12 @@ public:
   // Effects: unconditional push_back into file(); index unaffected
   {
     file_position pos = base::file()->file_size();
-    std::size_t key_sz = index_traits::flat_size(x.first);
-    std::size_t mapped_sz = index_traits::flat_size(x.second);
+    std::size_t key_sz = IndexTraits<Key>::size(x.first);
+    std::size_t mapped_sz = IndexTraits<T>::size(x.second);
     base::file()->increment_file_size(key_sz + mapped_sz);
-    index_traits::build_flat_element(x.first,
+    IndexTraits<Key>::build_flat_element(x.first,
       base::file()->template data<char>() + pos, key_sz);
-    index_traits::build_flat_element(x.second,
+    IndexTraits<T>::build_flat_element(x.second,
       base::file()->template data<char>() + pos + key_sz, mapped_sz);
     return pos;
   }
@@ -195,7 +194,6 @@ public:
   typedef std::pair<const Key, T>        value_type;
 
   typedef BtreeTraits                    btree_traits;
-  typedef IndexTraits                    index_traits;
 
   typedef Compare                        key_compare;
   typedef Compare                        value_compare;
@@ -260,12 +258,12 @@ public:
   // Effects: unconditional push_back into file(); index unaffected
   {
     file_position pos = base::file()->file_size();
-    std::size_t key_sz = index_traits::flat_size(x.first);
-    std::size_t mapped_sz = index_traits::flat_size(x.second);
+    std::size_t key_sz = IndexTraits<Key>::size(x.first);
+    std::size_t mapped_sz = IndexTraits<T>::size(x.second);
     base::file()->increment_file_size(key_sz + mapped_sz);
-    index_traits::build_flat_element(x.first,
+    IndexTraits<Key>::build_flat_element(x.first,
       base::file()->template data<char>() + pos, key_sz);
-    index_traits::build_flat_element(x.second,
+    IndexTraits<T>::build_flat_element(x.second,
       base::file()->template data<char>() + pos + key_sz, mapped_sz);
     return pos;
   }

@@ -37,7 +37,7 @@
   *  Open should call the file_reserve setter.
 
   *  Abstract away the difference between index_set_base and index_multiset_base,
-     index_map_base and index_multimap_base.
+     index_map_base and index_multimap_base?
 
 */
 
@@ -69,11 +69,16 @@ public:
   typedef typename BtreeTraits::node_id_type     node_id_type;
   typedef typename BtreeTraits::node_size_type   node_size_type;
   typedef typename BtreeTraits::node_level_type  node_level_type;
+
+  //  reference is the type returned from dereferencing an iterator, so may be a Key&
+  //  or a Key value. The former occurs when the actual data stored in the flat file is
+  //  of type Key. The latter occurs when the Key object returned is a proxy pointing to
+  //  the actual data stored in the flat file; an example is string_view.
   typedef
     typename IndexTraits<value_type>::reference  reference;                
 
   typedef typename
-    IndexTraits<Key>::index_position_type        index_position_type;  // i.e. position in flat file
+    IndexTraits<Key>::index_position_type        index_position_type;  
 
   typedef detail::indirect_compare<key_type,
     index_position_type, compare_type,
@@ -91,7 +96,8 @@ public:
     {return v;}
 
 protected:
-  static reference dereference(const char* p)  {return IndexTraits<value_type>::dereference(p);}
+  static reference dereference(const char* p)
+    {return IndexTraits<value_type>::dereference(p);}
 };
 
 //--------------------------------------------------------------------------------------//
@@ -113,11 +119,13 @@ public:
   typedef typename BtreeTraits::node_id_type     node_id_type;
   typedef typename BtreeTraits::node_size_type   node_size_type;
   typedef typename BtreeTraits::node_level_type  node_level_type;
+
+  //  Comment for index_set_base::reference also applies here
   typedef
     typename IndexTraits<value_type>::reference  reference;                
 
   typedef typename
-    IndexTraits<Key>::index_position_type        index_position_type;  // i.e. position in flat file
+    IndexTraits<Key>::index_position_type        index_position_type;
 
   typedef detail::indirect_compare<key_type,
     index_position_type, compare_type, IndexTraits<Key> >  index_compare_type;
@@ -137,115 +145,144 @@ protected:
   static reference dereference(const char* p)  {return IndexTraits<value_type>::dereference(p);}
 };
 
-////--------------------------------------------------------------------------------------//
-////                               class index_map_base                                   //
-////--------------------------------------------------------------------------------------//
-//
-//template <class Key, class T, class BtreeTraits, class Compare, template<class> class IndexTraits>
-//class index_map_base
-//{
-//public:
-//  typedef Key                                    key_type;
-//  typedef T                                      mapped_type;
-//  typedef std::pair<const Key, T>                value_type;
-//  typedef std::pair<const Key, T>                iterator_value_type;
-//  typedef Compare                                compare_type;
-//  typedef BtreeTraits                            btree_traits;
-//  typedef typename BtreeTraits::node_id_type     node_id_type;
-//  typedef typename BtreeTraits::node_size_type   node_size_type;
-//  typedef typename BtreeTraits::node_level_type  node_level_type;
-//  typedef
-//    typename IndexTraits<value_type>::reference  reference;                
-//
-//  typedef typename
-//    IndexTraits<Key>::index_position_type        index_position_type;  // i.e. position in flat file
-//
-//  typedef detail::indirect_compare<key_type,
-//    index_position_type, compare_type, IndexTraits<Key> >  index_compare_type;
-//
-//  //  the following is the only difference between index_map_base and index_multimap_base
-//  typedef typename
-//    btree::btree_set<index_position_type,
-//      btree_traits, index_compare_type>          index_type;
-//
-//  const Key&  key(const value_type& v) const  // really handy, so expose
-//    {return v.first;}
-//  const T&    mapped(const value_type& v) const
-//    {return v.second;}
-//
-//  class value_compare
-//  {
-//  public:
-//    value_compare() {}
-//    value_compare(compare_type comp) : m_comp(comp) {}
-//    bool operator()(const value_type& x, const value_type& y) const
-//      { return m_comp(x.first, y.first); }
-//    template <class K>
-//    bool operator()(const value_type& x, const K& y) const
-//      { return m_comp(x.first, y); }
-//    template <class K>
-//    bool operator()(const K& x, const value_type& y) const
-//      { return m_comp(x, y.first); }
-//  private:
-//    compare_type    m_comp;
-//  };
-//
-//};
-//
-////--------------------------------------------------------------------------------------//
-////                            class index_multimap_base                                 //
-////--------------------------------------------------------------------------------------//
-//
-//template <class Key, class T, class BtreeTraits, class Compare, template<class> class IndexTraits>
-//class index_multimap_base
-//{
-//public:
-//  typedef Key                                    key_type;
-//  typedef T                                      mapped_type;
-//  typedef std::pair<const Key, T>                value_type;
-//  typedef std::pair<const Key, T>                iterator_value_type;
-//  typedef BtreeTraits                            btree_traits;
-//  typedef Compare                                compare_type;
-//  typedef typename BtreeTraits::node_id_type     node_id_type;
-//  typedef typename BtreeTraits::node_size_type   node_size_type;
-//  typedef typename BtreeTraits::node_level_type  node_level_type;
-//  typedef
-//    typename IndexTraits<value_type>::reference  reference;                
-//
-//  typedef typename
-//    IndexTraits<Key>::index_position_type        index_position_type;  // i.e. position in flat file
-//
-//  typedef detail::indirect_compare<key_type,
-//    index_position_type, compare_type, IndexTraits<Key> >  index_compare_type;
-//
-//  //  the following is the only difference between index_map_base and index_multimap_base
-//  typedef typename
-//    btree::btree_multiset<index_position_type,
-//      btree_traits, index_compare_type>          index_type;
-//
-//  const Key&  key(const value_type& v) const  // really handy, so expose
-//    {return v.first;}
-//  const T&    mapped(const value_type& v) const
-//    {return v.second;}
-//
-//  class value_compare
-//  {
-//  public:
-//    value_compare() {}
-//    value_compare(compare_type comp) : m_comp(comp) {}
-//    bool operator()(const value_type& x, const value_type& y) const
-//      { return m_comp(x.first, y.first); }
-//    template <class K>
-//    bool operator()(const value_type& x, const K& y) const
-//      { return m_comp(x.first, y); }
-//    template <class K>
-//    bool operator()(const K& x, const value_type& y) const
-//      { return m_comp(x, y.first); }
-//  private:
-//    compare_type    m_comp;
-//  };
-//
-//};
+//--------------------------------------------------------------------------------------//
+//                               class index_map_base                                   //
+//--------------------------------------------------------------------------------------//
+
+template <class Key, class T, class BtreeTraits, class Compare,
+  template<class> class IndexTraits>
+class index_map_base
+{
+public:
+  typedef Key                                    key_type;
+  typedef T                                      mapped_type;
+  typedef std::pair<
+    const typename IndexTraits<Key>::reference,
+    typename IndexTraits<T>::reference>          value_type;
+  typedef value_type                             iterator_value_type;
+  typedef Compare                                compare_type;
+  typedef BtreeTraits                            btree_traits;
+  typedef typename BtreeTraits::node_id_type     node_id_type;
+  typedef typename BtreeTraits::node_size_type   node_size_type;
+  typedef typename BtreeTraits::node_level_type  node_level_type;
+
+  //  reference is the type returned from dereferencing an iterator; it is currently
+  //  always of type value_type, NOT value_type&. This is because the value_type object
+  //  returned is a proxy whose first member will be of type Key& or Key, and whose
+  //  second member will be of type T& or T. Whether the member type is a reference or
+  //  value type is determined by IndexTraits<Key>::reference and
+  //  IndexTraits<T>::reference respectively. 
+  typedef value_type                             reference;                
+
+  typedef typename
+    IndexTraits<Key>::index_position_type        index_position_type;  
+
+  typedef detail::indirect_compare<key_type,
+    index_position_type, compare_type, IndexTraits<Key> >  index_compare_type;
+
+  //  the following is the only difference between index_map_base and index_multimap_base
+  typedef typename
+    btree::btree_set<index_position_type,
+      btree_traits, index_compare_type>          index_type;
+
+  const Key&  key(const value_type& v) const  // really handy, so expose
+    {return v.first;}
+  const T&    mapped(const value_type& v) const
+    {return v.second;}
+
+  class value_compare
+  {
+  public:
+    value_compare() {}
+    value_compare(compare_type comp) : m_comp(comp) {}
+    bool operator()(const value_type& x, const value_type& y) const
+      { return m_comp(x.first, y.first); }
+    template <class K>
+    bool operator()(const value_type& x, const K& y) const
+      { return m_comp(x.first, y); }
+    template <class K>
+    bool operator()(const K& x, const value_type& y) const
+      { return m_comp(x, y.first); }
+  private:
+    compare_type    m_comp;
+  };
+
+protected:
+  static reference dereference(const char* p)
+  {
+    return reference(
+       IndexTraits<key_type>::dereference(p),
+       IndexTraits<mapped_type>::dereference(p
+         + IndexTraits<key_type>::size(p)));
+  }
+};
+
+//--------------------------------------------------------------------------------------//
+//                            class index_multimap_base                                 //
+//--------------------------------------------------------------------------------------//
+
+template <class Key, class T, class BtreeTraits, class Compare,
+  template<class> class IndexTraits>
+class index_multimap_base
+{
+public:
+  typedef Key                                    key_type;
+  typedef T                                      mapped_type;
+  typedef std::pair<
+    const typename IndexTraits<Key>::reference,
+    typename IndexTraits<T>::reference>          value_type;
+  typedef value_type                             iterator_value_type;
+  typedef Compare                                compare_type;
+  typedef BtreeTraits                            btree_traits;
+  typedef typename BtreeTraits::node_id_type     node_id_type;
+  typedef typename BtreeTraits::node_size_type   node_size_type;
+  typedef typename BtreeTraits::node_level_type  node_level_type;
+
+  //  Comment for index_map_base::reference also applies here
+  typedef value_type                             reference;                
+
+  typedef typename
+    IndexTraits<Key>::index_position_type        index_position_type;  
+
+  typedef detail::indirect_compare<key_type,
+    index_position_type, compare_type, IndexTraits<Key> >  index_compare_type;
+
+  //  the following is the only difference between index_map_base and index_multimap_base
+  typedef typename
+    btree::btree_multiset<index_position_type,
+      btree_traits, index_compare_type>          index_type;
+
+  const Key&  key(const value_type& v) const  // really handy, so expose
+    {return v.first;}
+  const T&    mapped(const value_type& v) const
+    {return v.second;}
+
+  class value_compare
+  {
+  public:
+    value_compare() {}
+    value_compare(compare_type comp) : m_comp(comp) {}
+    bool operator()(const value_type& x, const value_type& y) const
+      { return m_comp(x.first, y.first); }
+    template <class K>
+    bool operator()(const value_type& x, const K& y) const
+      { return m_comp(x.first, y); }
+    template <class K>
+    bool operator()(const K& x, const value_type& y) const
+      { return m_comp(x, y.first); }
+  private:
+    compare_type    m_comp;
+  };
+
+protected:
+  static reference dereference(const char* p)
+  {
+    return reference(
+       IndexTraits<key_type>::dereference(p),
+       IndexTraits<mapped_type>::dereference(p
+         + IndexTraits<key_type>::size(p)));
+  }
+};
 
 //--------------------------------------------------------------------------------------//
 //                                                                                      //
@@ -279,9 +316,6 @@ public:
   typedef const reference                       const_reference;
   typedef value_type*                           pointer;
   typedef const value_type*                     const_pointer;
-
-//  typedef iterator_type<value_type, reference>  iterator;
-//  typedef iterator                              const_iterator;
 
   // for sets, these are the same type; for maps they are different types
   typedef iterator_type<typename 
