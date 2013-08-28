@@ -13,7 +13,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "binary_file_test", "binary_
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "buffer_manager_test", "buffer_manager_test\buffer_manager_test.vcxproj", "{1B1C18E5-6433-427D-A27D-A9471D640A5B}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "fixstr_test", "fixstr_test\fixstr_test.vcxproj", "{CEF69AC7-31D6-4E02-A2DC-DBEBB2960465}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "string_box_test", "string_box_test\string_box_test.vcxproj", "{CEF69AC7-31D6-4E02-A2DC-DBEBB2960465}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "large_file_test", "large_file_test\large_file_test.vcxproj", "{188F048F-5414-4D2C-81F4-2D6CBFC284DA}"
 	ProjectSection(ProjectDependencies) = postProject
