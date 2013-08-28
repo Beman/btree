@@ -82,7 +82,7 @@ public:
 
   typedef detail::indirect_compare<key_type,
     index_position_type, compare_type,
-    typename IndexTraits<Key> >                  index_compare_type;
+    IndexTraits<Key> >                           index_compare_type;
 
   //  the following is the only difference between index_set_base and index_multiset_base
   typedef typename
@@ -128,7 +128,8 @@ public:
     IndexTraits<Key>::index_position_type        index_position_type;
 
   typedef detail::indirect_compare<key_type,
-    index_position_type, compare_type, IndexTraits<Key> >  index_compare_type;
+    index_position_type, compare_type,
+    IndexTraits<Key> >                           index_compare_type;
 
   //  the following is the only difference between index_set_base and index_multiset_base
   typedef typename
@@ -178,7 +179,8 @@ public:
     IndexTraits<Key>::index_position_type        index_position_type;  
 
   typedef detail::indirect_compare<key_type,
-    index_position_type, compare_type, IndexTraits<Key> >  index_compare_type;
+    index_position_type, compare_type,
+    IndexTraits<Key> >                           index_compare_type;
 
   //  the following is the only difference between index_map_base and index_multimap_base
   typedef typename
@@ -245,7 +247,8 @@ public:
     IndexTraits<Key>::index_position_type        index_position_type;  
 
   typedef detail::indirect_compare<key_type,
-    index_position_type, compare_type, IndexTraits<Key> >  index_compare_type;
+    index_position_type, compare_type,
+    IndexTraits<Key> >                           index_compare_type;
 
   //  the following is the only difference between index_map_base and index_multimap_base
   typedef typename

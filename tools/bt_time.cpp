@@ -421,8 +421,8 @@ namespace
                 / (this_tm.system + this_tm.user) << '\n';
 
       cout << "\nfinding " << n << " stl elements..." << endl;
-      stl_type::const_iterator itr;
-      stl_type::key_type k;
+      typename stl_type::const_iterator itr;
+      typename stl_type::key_type k;
       generator.seed(seed);
       t.start();
       for (int64_t i = 1; i <= n; ++i)
@@ -468,9 +468,9 @@ namespace
 
       cout << "\niterating over " << stl.size() << " stl elements..." << endl;
       uint64_t count = 0;
-      stl_type::key_type prior_key;
+      typename stl_type::key_type prior_key;
       t.start();
-      for (stl_type::const_iterator itr = stl.begin();
+      for (typename stl_type::const_iterator itr = stl.begin();
         itr != stl.end();
         ++itr)
       {

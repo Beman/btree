@@ -123,7 +123,7 @@ public:
       cout << "insert: ";
     
     for (boost::uint64_t i = 1;
-         stl.size() < static_cast<stl_type::size_type>(max); ++i)
+         stl.size() < static_cast<typename stl_type::size_type>(max); ++i)
     {
       btree_value_type bt_val = this->generate_btree_value(insert_success_count);
       stl_value_type stl_val = this->stl_value(bt_val);
@@ -131,8 +131,8 @@ public:
       if (verbose)
         cout << i << ", key: " << this->stl_key(stl_val) << ", ";
 
-      pair<stl_type::iterator, bool> stl_result = stl.insert(stl_val);
-      pair<btree_type::const_iterator, bool> bt_result = bt.insert(bt_val);
+      pair<typename stl_type::iterator, bool> stl_result = stl.insert(stl_val);
+      pair<typename btree_type::const_iterator, bool> bt_result = bt.insert(bt_val);
 
       if (stl_result.second != bt_result.second)
       {
@@ -161,8 +161,8 @@ public:
     if (verbose)
       cout << "  keys: ";
 
-    stl_type::const_iterator stl_itr = stl.begin();
-    btree_type::const_iterator bt_itr = bt.begin();
+    typename stl_type::const_iterator stl_itr = stl.begin();
+    typename btree_type::const_iterator bt_itr = bt.begin();
 
     for (; stl_itr != stl.end() && bt_itr != bt.end(); ++stl_itr, ++bt_itr)
     {
@@ -196,8 +196,8 @@ public:
   template <class Traits> void tester<Traits>::backward_iteration_test()
   {
     cout << "backward iteration test..." << endl;
-    stl_type::const_iterator stl_itr = stl.end();
-    btree_type::const_iterator bt_itr = bt.end();
+    typename stl_type::const_iterator stl_itr = stl.end();
+    typename btree_type::const_iterator bt_itr = bt.end();
 
     do
     {
@@ -236,7 +236,7 @@ public:
     if (verbose)
       cout << "erasing: ";
 
-    while (stl.size() > static_cast<stl_type::size_type>(min))
+    while (stl.size() > static_cast<typename stl_type::size_type>(min))
     {
       btree_value_type bt_val = this->generate_btree_value(0);
       stl_value_type stl_val = this->stl_value(bt_val);
@@ -247,8 +247,8 @@ public:
       if (verbose)
         cout << stl_key << ',';
 
-      stl_type::size_type stl_result = stl.erase(stl_key);
-      btree_type::size_type bt_result = bt.erase(bt_key);
+      typename stl_type::size_type stl_result = stl.erase(stl_key);
+      typename btree_type::size_type bt_result = bt.erase(bt_key);
 
       if (stl_result != bt_result)
       {
@@ -275,8 +275,8 @@ public:
   {
     cout << "find test..." << endl;
 
-    stl_type::const_iterator stl_itr, stl_result;
-    btree_type::const_iterator bt_result;
+    typename stl_type::const_iterator stl_itr, stl_result;
+    typename btree_type::const_iterator bt_result;
 
     for (stl_itr = stl.begin(); stl_itr != stl.end(); ++stl_itr)
     {
@@ -309,7 +309,7 @@ public:
 
     this->seed(rng_seed);
 
-    for (stl_type::size_type i = 0; i < stl.size() * 2; ++i)  // multiply to ensure misses
+    for (typename stl_type::size_type i = 0; i < stl.size() * 2; ++i)  // multiply to ensure misses
     {
 
       btree_value_type bt_val = this->generate_btree_value(0);
@@ -369,8 +369,8 @@ public:
   {
     cout << "lower_bound test..." << endl;
 
-    stl_type::const_iterator stl_itr, stl_result;
-    btree_type::const_iterator bt_result;
+    typename stl_type::const_iterator stl_itr, stl_result;
+    typename btree_type::const_iterator bt_result;
 
     for (stl_itr = stl.begin(); stl_itr != stl.end(); ++stl_itr)
     {
@@ -409,7 +409,7 @@ public:
 
     this->seed(rng_seed);
 
-    for (stl_type::size_type i = 0; i < stl.size() * 2; ++i)  // multiply to ensure misses
+    for (typename stl_type::size_type i = 0; i < stl.size() * 2; ++i)  // multiply to ensure misses
     {
       ++lower_bound_may_exist_count;
       btree_value_type bt_val = this->generate_btree_value(0);
@@ -460,8 +460,8 @@ public:
     boost::variate_generator<boost::minstd_rand&, boost::uniform_int<boost::int32_t> >
       upper_bound_key(upper_bound_rng, n_dist);
 
-    stl_type::const_iterator stl_itr, stl_result;
-    btree_type::const_iterator bt_result;
+    typename stl_type::const_iterator stl_itr, stl_result;
+    typename btree_type::const_iterator bt_result;
 
     for (stl_itr = stl.begin(); stl_itr != stl.end(); ++stl_itr)
     {
@@ -503,7 +503,7 @@ public:
 
     this->seed(rng_seed);
 
-    for (stl_type::size_type i = 0; i < stl.size() * 2; ++i)  // multiply to ensure misses
+    for (typename stl_type::size_type i = 0; i < stl.size() * 2; ++i)  // multiply to ensure misses
     {
       ++upper_bound_may_exist_count;
       btree_value_type bt_val = this->generate_btree_value(0);
@@ -600,7 +600,7 @@ public:
     std::ofstream stlout(p.c_str());
     if (!stlout)
       throw runtime_error(string("Could not open ") + p);
-    for (stl_type::const_iterator it = stl.begin(); it != stl.end(); ++it)
+    for (typename stl_type::const_iterator it = stl.begin(); it != stl.end(); ++it)
       stlout << this->stl_key(*it) << '\n';
     stlout.close();
 
@@ -663,7 +663,7 @@ public:
 
     while (!stlin.eof())
     {
-      stl_type::key_type key;
+      typename stl_type::key_type key;
       stlin >> key;
 //      stl.insert(std::make_pair(key, key));
     }

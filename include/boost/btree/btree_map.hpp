@@ -127,9 +127,9 @@ namespace boost
 
       std::pair<const_iterator, bool> insert(const value_type& value)
       {
-        std::pair<const_iterator, bool> result(this->m_insert_unique(key(value)));
+        std::pair<const_iterator, bool> result(this->m_insert_unique(this->key(value)));
         if (result.second)
-          std::memcpy(const_cast<T*>(&result.first->second), &mapped(value), sizeof(T));
+          std::memcpy(const_cast<T*>(&result.first->second), &this->mapped(value), sizeof(T));
         return result;
       }
 
@@ -138,10 +138,10 @@ namespace boost
       { 
         for (; begin != end; ++begin) 
         {
-           std::pair<const_iterator, bool> result(this->m_insert_unique(key(*begin)));
+           std::pair<const_iterator, bool> result(this->m_insert_unique(this->key(*begin)));
           if (result.second)
-            std::memcpy(const_cast<T*>(&mapped(result.first->second)),
-              &mapped(*begin), sizeof(T));
+            std::memcpy(const_cast<T*>(&this->mapped(result.first->second)),
+              &this->mapped(*begin), sizeof(T));
         }
       }
 
