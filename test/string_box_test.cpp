@@ -134,12 +134,24 @@ namespace
 
   void operator_square_brackets_const()
   {
-    const boost::btree::string_box<5> x0("");
-    
     const boost::btree::string_box<5> x3("abc");
     BOOST_TEST_EQ(x3[0], 'a');
     BOOST_TEST_EQ(x3[1], 'b');
     BOOST_TEST_EQ(x3[2], 'c');
+  }
+
+  void several_flavors_of_find()
+  {
+    typedef boost::btree::string_box<20> T;
+    const T x("abcdefbca");
+    BOOST_TEST(x.find("xyz") == T::npos);
+    BOOST_TEST(x.find("def") == 3);
+    BOOST_TEST(x.find_first_of("xyz") == T::npos);
+    BOOST_TEST(x.find_first_of("xbz") == 1);
+    BOOST_TEST(x.find_first_not_of("fedcba") == T::npos);
+    BOOST_TEST(x.find_first_not_of("fdcba") == 4);
+    BOOST_TEST(x.find_last_of("xyz") == T::npos);
+    BOOST_TEST(x.find_last_of("xbz") == 6);
   }
 
   void string()
@@ -230,6 +242,7 @@ int cpp_main(int, char *[])
   copy_from_string();
   clear();
   operator_square_brackets_const();
+  several_flavors_of_find();
   string();
   relationals();
 
