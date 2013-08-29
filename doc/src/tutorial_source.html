@@ -1,0 +1,277 @@
+<html>
+<head>
+  <meta name="generator" content=
+  "Microsoft FrontPage 5.0">
+  <meta name="GENERATOR" content="Microsoft FrontPage 5.0">
+  <meta name="ProgId" content="FrontPage.Editor.Document">
+  <meta http-equiv="Content-Type" content=
+  "text/html; charset=utf-8">
+
+  <title>B-Tree Tutorial</title>
+  <link rel="stylesheet" type="text/css" href="minimal.css">
+</head>
+
+<body>
+  <table border="0" cellpadding="5" cellspacing="0" style=
+  "border-collapse: collapse" bordercolor="#111111">
+    <tr>
+      <td width="277"><a href="../../../../index.htm"><img src=
+      "../../../boost.png" alt="boost.png (6897 bytes)" align=
+      "middle" width="300" height="86" border="0"></a></td>
+
+      <td align="middle"><font size="7">B-Tree Library<br>
+      Tutorial</font></td>
+    </tr>
+  </table>
+
+  <table border="0" cellpadding="5" cellspacing="0" style=
+  "border-collapse: collapse" bordercolor="#111111" bgcolor=
+  "#D7EEFF" width="100%">
+    <tr>
+      <td><a href="../../../index.htm">Boost Home</a>
+      &nbsp;&nbsp; <a href="index.html">Library Home</a>
+      &nbsp;&nbsp; <a href="reference.html">Reference</a>
+      &nbsp;&nbsp; <a href="tutorial.html">Tutorial</a>
+      &nbsp;&nbsp; <a href="faq.html">FAQ</a> &nbsp;&nbsp; <a href=
+      "data_portability.html">Data Portability</a></td>
+    </tr>
+  </table>
+
+   <h2>A simple set</h2>
+   
+   <p>The library provides associative containers that are resident on some form 
+   of random access external memory, such as a hard-disk, solid-state disk, or 
+   USB memory-stick.&nbsp; Here is an example, <a href="../example/set1.cpp">set1.cpp</a>:</p>
+   
+  <blockquote>
+    <pre>$include "int_set.cpp.html"</pre>
+  </blockquote>
+
+   <p>This should be familiar to users of the C++ standard library 
+   associative container <code>std::set</code>. The only real difference, other 
+   than header and class names, is the constructor call. Because the 
+   container is disk-resident, an argument supplies a path for the file to be 
+   created. A second argument supplies <a href="reference.html#Flags">flags</a> 
+   that specify details for opening the file. </p>
+   
+   <p>Build and test set1.cpp like this (Windows):</p>
+   
+  <blockquote>
+    <pre>&gt;cd boost-root/libs/btree/example   <b><i>Works for both Windows and POSIX</i></b>
+&gt;b2 set1 install
+<i>... build output elided ...</i>
+&gt;bin\set1         <i><b>                  On POSIX: bin/set1</b></i>
+1
+3
+5
+lower_bound(3) is 3
+upper_bound(3) is 5</pre>
+  </blockquote>
+  
+  <p>Go ahead and try this yourself! Once you have built and tested set1.cpp as 
+  is, try experimenting with some of the other functions already familiar to you 
+  from <code>std::set</code>. Did they work as you expected? Hopefully your 
+  answer was &quot;yes&quot;!</p>
+  
+  <p>What is the point of using a <code>btree_set</code> instead of a <code>
+  std::set</code>? Let&#39;s look at another example...</p>
+  
+  <h2>Reading from a B-tree file</h2>
+  
+  <p>Here is the sample code for set_read_file.cpp, showing edits from set1.cpp:</p>
+  
+  <blockquote>
+    <pre>$include "int_set_read_first_try.cpp.html"
+</pre>
+  
+  </blockquote>
+  
+  <p>Since the &quot;set1.btr&quot; file already exists, we let the constructor flags 
+  default to <code>flags::read_only</code> and don&#39;t redo the inserts.</p>
+  <p>The first time this program ran, it crashed with one of those totally 
+  unhelpful Windows error messages. The code was changed to code to use 
+  an exception reporting wrapper:</p>
+  <blockquote>
+    <pre>$include "int_set_read_first.html"
+</pre>
+  </blockquote>
+  <p>That compiled and ran, with the wrapper reporting:</p>
+  <blockquote>
+  <pre>ERROR  ERROR  ERROR  ERROR  ERROR  ERROR  ERROR  ERROR  ERROR  ERROR  ERROR
+
+****************************** std::exception *****************************
+binary_file::open: The system cannot find the file specified: &quot;set1.btr&quot;
+***************************************************************************
+</pre>
+  </blockquote>
+  <p><b>Important point:</b> B-trees are disk resident, so errors are a 
+  commonplace. Your code should expect that exceptions will be thrown.</p>
+  
+  <p>After fixing the problem of set1.btr being in a different directory, set_read_file.cpp 
+  ran fine:</p>
+  
+  <blockquote>
+    <pre>1
+3
+5
+lower_bound(3) is 3
+upper_bound(3) is 5</pre>
+  </blockquote>
+  <p>That brings us back to the original point; <b>B-tree are disk resident</b>, 
+  and that makes them very different animals from standard library associative 
+  containers.</p>
+  
+  <p>What about the additional template parameters, constructor arguments, 
+  and member functions that are not present in <code>std::set</code>? You may have spotted 
+  these if you looked at the
+  <a href="reference.html">reference documentation</a>. Don&#39;t worry about them 
+  for now; the defaults will get you started, and most of the unfamiliar 
+  parameters, arguments, and functions are used only when 
+  tuning for ultimate performance.</p>
+  
+  <p>What you probably do want to learn about right away is how to cope with the 
+  very stringent <a href="reference.html#Requirements-on-template-parameters">requirements</a> the library places on template parameter <code>Key</code> (and 
+  <code>T</code>, for maps), since these requirements will cause endless problems if you 
+  don&#39;t understand them. Read on...</p>
+  
+  <h2>String set first try</h2>
+  
+  <p>An obvious transformation of set1.cpp to handle <code>std::string</code> instead of
+  <code>int</code> 
+  looks like example set2_1st_try.cpp:</p>
+  
+  <blockquote>
+    <pre>$include "string_set_first_try.cpp.html"
+</pre>
+  </blockquote>
+  
+  <p>But this code will not compile! The error message from Visual C++ 2012 
+  looks like this:</p>
+  
+  <blockquote>
+  
+  <pre>..\..\..\boost/btree/btree_set.hpp(120) : error C2338: btree Key must not be std::string
+set2_1st_try.cpp(16) : see reference to class template instantiation &#39;boost::btree
+::btree_set&lt;Key&gt;&#39; being compiled
+with
+[
+Key=std::string
+]
+...</pre>
+  </blockquote>
+  <p><span style="font-weight: 400">The problem is that <code>std::string</code> 
+  does not conform to the
+  <a href="reference.html#Requirements-on-template-parameters">requirement</a> 
+  that <code>Key</code> be fixed-length, 
+  memcpyable, and not container pointers or references except in a proxy class. How can those 
+  requirements be met? Read on...</span></p>
+  
+  <h2>Small strings</h2>
+  
+  <p>Many applications involve only small strings; some std::basic_string 
+  implementations acknowledge this by employing a small-string optimization 
+  under the covers. The class template <code><span style="font-weight: 400">
+  string_box</span></code> provides fixed length strings, with the maximum 
+  length supplied by a template parameter.</p>
+  
+  <blockquote>
+    <pre>$include "string_set.cpp.html"</pre>
+  </blockquote>
+  
+  
+  <p>Here is the output:</p>
+  
+  <blockquote>
+    <pre>be merry
+drink
+eat</pre>
+  </blockquote>
+  
+  <h2>Longer strings</h2>
+  
+  <p>Except when the elements are fixed-length and quite short relative to disk 
+  page size, the best use of a B-tree is as an index into a random access file. 
+  That was described in the introduction of Bayer&#39;s original paper, <i><a href=
+  "http://www.minet.uni-jena.de/dbis/lehre/ws2005/dbs1/Bayer_hist.pdf">
+  Organization and Maintenance of Large Ordered Indexes</a></i>.</p>
+  
+  <p>This is implemented as two files, a btree_set (or btree_multiset) 
+  file used as an index pointing into a random-access flat file which contains 
+  the actual data. Databases and other software often use a similar approach, 
+  but may hide the index file from end-user view. The benefits of this two file 
+  approach include:</p>
+  
+  <ul>
+    <li>
+  <p>The elements in the flat file can be variable length.</li>
+  <li>
+  <p>The elements in the flat file can be far larger than would be 
+  practical for elements in a B-tree file.</li>
+  <li>
+  <p>Multiple B-tree index files can exist for a single flat file.</li>
+<li>
+  <p>Off-the-shelf or custom-written software can also access the flat 
+  file.</li>
+</ul>
+  <p>This two layer approach uses some additional components to create 
+  a seamless interface:</p>
+  
+  <ul>
+    <li>A Boost implementation of the new standard library <code>
+    <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3685.html">
+    string_view</a></code> class to act as the container&#39;s <code>
+    <span style="font-weight: 400">Key</span></code> type, so that the familiar
+    <code><span style="font-weight: 400">std::string</span></code> operations 
+    are available to users.</li>
+    <li>An adapter index traits class to copy data into and out of the 
+    flat file.</li>
+    <li>Class btree_index_set to glue the pieces together into a 
+    seamless interface.</li>
+</ul>
+  <p>Here is the final version of set2.cpp:</p>
+  
+  <blockquote>
+    <pre>$include "string_index_set.cpp.html"</pre>
+  </blockquote>
+  
+  
+  <p>Here is the output:</p>
+  
+  <blockquote>
+    <pre>be merry
+drink
+eat
+</pre>
+  </blockquote>
+  <p>....And a dump of the flat file:</p>
+  <blockquote>
+    <pre>00000000  <span style="background-color: #E8FFE8">03</span>65 6174 <span style="background-color: #E8FFE8">05</span>64 7269 6e6b <span style="background-color: #E8FFE8">08</span>62 6520 6d65 .eat.drink.be me
+00000010  7272 79                                 rry</pre>
+  </blockquote>
+  <p>Notice that each element begins with a count. That&#39;s more efficient than 
+  null termination when processing long strings, and allows strings to contain 
+  embedded nulls. The count is itself variable length, and will use however many 
+  count bytes is required by the size of the string. The 0x80 bit will be set 
+  for count bytes except the last (i.e. low-order).</p>
+  <h2>Maps</h2>
+  <p>To Be Supplied.</p>
+  <h2>UDT index set</h2>
+  <blockquote>
+    <pre>$include "udt_3_index_set.cpp.html"</pre>
+  </blockquote>
+  <h2>UDT three index set</h2>
+  <blockquote>
+    <pre>$include "udt_3_index_set.cpp.html"</pre>
+  </blockquote>
+  <hr>
+
+  <p>Revised 
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->29 August 2013<!--webbot bot="Timestamp" endspan i-checksum="31368" --></p>
+
+  <p>© Copyright Beman Dawes, 2013</p>
+
+  <p>Distributed under the Boost Software License, Version 1.0. See
+  <a href=
+  "http://www.boost.org/LICENSE_1_0.txt">www.boost.org/LICENSE_1_0.txt</a></p>
+</body>
+</html>

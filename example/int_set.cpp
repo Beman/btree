@@ -5,7 +5,8 @@
 //  Distributed under the Boost Software License, Version 1.0.
 //  See http://www.boost.org/LICENSE_1_0.txt
 
-#include <boost/btree/btree_bt.hpp>
+///$id code=
+#include <boost/btree/btree_set.hpp>
 #include <iostream>
 
 using std::cout;
@@ -13,7 +14,8 @@ using namespace boost::btree;
 
 int main()
 {
-  btree_set<int> set("int_set.btr", flags::truncate);
+  typedef btree_set<int> BT; 
+  BT bt("int_set.btr", flags::truncate);
 
   bt.insert(5);
   bt.insert(3);
@@ -25,3 +27,5 @@ int main()
   cout << "lower_bound(3) is " << *bt.lower_bound(3) << '\n';
   cout << "upper_bound(3) is " << *bt.upper_bound(3) << '\n';
 }
+///$endid
+
