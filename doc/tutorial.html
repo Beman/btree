@@ -40,7 +40,7 @@
    <h2>A simple set</h2>
    
    <p>The library provides associative containers that are resident on some form 
-   of direct access external memory, such as a hard-disk, solid-state disk, or 
+   of random access external memory, such as a hard-disk, solid-state disk, or 
    USB memory-stick.&nbsp; Here is an example, <a href="../example/set1.cpp">set1.cpp</a>:</p>
    
   <blockquote>
@@ -70,7 +70,7 @@ int main()
 
    <p>This should be familiar to users of the C++ standard library 
    associative container <code>std::set</code>. The only real difference, other 
-   than names, is the high-lighted constructor call. Because the 
+   than header and class names, is the  constructor call. Because the 
    container is disk-resident, an argument supplies a path for the file to be 
    created. A second argument supplies <a href="reference.html#Flags">flags</a> 
    that specify details for opening the file. </p>
@@ -91,7 +91,7 @@ upper_bound(3) is 5</pre>
   
   <p>Go ahead and try this yourself! Once you have built and tested set1.cpp as 
   is, try experimenting with some of the other functions already familiar to you 
-  from <code>std::set</code>. Did they work as you expected? Hopefully you 
+  from <code>std::set</code>. Did they work as you expected? Hopefully your 
   answer was &quot;yes&quot;!</p>
   
   <p>What is the point of using a <code>btree_set</code> instead of a <code>
@@ -187,13 +187,13 @@ upper_bound(3) is 5</pre>
   <p>What about the additional template parameters, constructor arguments, 
   and member functions that are not present in <code>std::set</code>? You may have spotted 
   these if you looked at the
-  <a href="reference.html">referenced documentation</a>? Don&#39;t worry about them 
+  <a href="reference.html">reference documentation</a>. Don&#39;t worry about them 
   for now; the defaults will get you started, and most of the unfamiliar 
   parameters, arguments, and functions are used only when 
   tuning for ultimate performance.</p>
   
   <p>What you probably do want to learn about right away is how to cope with the 
-  very stringent requirements the library places on template parameter <code>Key</code> (and 
+  very stringent <a href="reference.html#Requirements-on-template-parameters">requirements</a> the library places on template parameter <code>Key</code> (and 
   <code>T</code>, for maps), since these requirements will cause endless problems if you 
   don&#39;t understand them. Read on...</p>
   
@@ -243,10 +243,18 @@ Key=std::string
   </blockquote>
   <p><span style="font-weight: 400">The problem is that <code>std::string</code> 
   does not conform to the
-  <a href="reference.html#Requirements-on-template-parameters">requirements for
-  <code>Key</code></a>, which require <code>Key</code> be fixed-length, 
-  memcpyable, and not container pointers or references. How can those 
+  <a href="reference.html#Requirements-on-template-parameters">requirement</a> 
+  that <code>Key</code> be fixed-length, 
+  memcpyable, and not container pointers or references except in a proxy class. How can those 
   requirements be met? Read on...</span></p>
+  
+  <h2>Small strings</h2>
+  
+  <p>Many applications involve only small strings; some std::basic_string 
+  implementations acknowledge this by employing a small-string optimization 
+  under the covers. The class template <code><span style="font-weight: 400">
+  string_box</span></code> provides fixed length strings, with the maximum 
+  length supplied by a template parameter.</p>
   
   <h2>Working string set</h2>
   
@@ -347,7 +355,7 @@ eat
   <hr>
 
   <p>Revised 
-  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->28 August 2013<!--webbot bot="Timestamp" endspan i-checksum="31366" --></p>
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->29 August 2013<!--webbot bot="Timestamp" endspan i-checksum="31368" --></p>
 
   <p>© Copyright Beman Dawes, 2013</p>
 

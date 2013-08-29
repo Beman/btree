@@ -120,44 +120,46 @@
   containers, <code>insert</code>, <code>emplace</code>, and 
   <code>erase</code> preserve the relative ordering of 
   equivalent elements. </p>
-  <p>For sets the value type is the same as the key 
-  type. For maps the value type is equal to 
-  <code>std::pair&lt;const Key, T&gt;</code>.
-  </p>
-  <h3><a name="Requirements-on-template-parameters">Requirements on 
-  template parameters</a></h3>
+  <p>For sets the value type is the same as the key type. For maps the value 
+  type is 
+  <code>std::pair&lt;const Key, T&gt;</code>, except that for indexes either of 
+  the two types in the pair may be references.</p>
+  <h3><a name="Requirements-on-template-parameters">Requirements on template 
+  parameters</a></h3>
 
-  <p>Types supplied by the <code>Key</code> and <code>T</code> 
-  template parameters are required to:</p>
+  <p>Types supplied by the <code>Key</code> and <code>T</code> template 
+  parameters are required to:</p>
 
   <ul>
     <li>Be fixed-length, determinable by <code>sizeof</code>.</li>
-    <li>
+    <li dir="ltr">
 
-  <p>Still be valid after copy via <code>std::memcpy</code> to a 
+  <p dir="ltr">Still be valid after copy via <code>std::memcpy</code> to a 
   different memory location.</p>
 
     </li>
     <li>
 
-  <p>Not 
-  contain pointers or references.</p>
+  <p dir="ltr">Not contain pointers or references, except in the case of 
+  indexes, where pointers and references are allowed in ephemeral proxy classes 
+  like <code>std::string_view</code>.</p>
 
     </li>
   </ul>
 
-  <p>None of the standard library container or container-like types 
-  meet these requirements. </p>
+  <p>[<i>Note:</i> None of the standard library container or container-like 
+  types meet these requirements. <i>--end note</i>]</p>
 
   <h3>Iterators</h3>
 
-  <p>Iterators of  associative containers are bidirectional 
-  iterators. For sets, iterator types <code>iterator</code> and <code>const_iterator</code> are the 
-  same type and it is a constant iterator. For maps, iterator types <code>iterator</code> and <code>const_iterator</code> are 
-  different types and <code>const_iterator</code> is a constant iterator.</p>
+  <p>Iterators of associative containers are bidirectional iterators. For sets, 
+  iterator types <code>iterator</code> and <code>const_iterator</code> are the 
+  same type and it is a constant iterator. For maps, iterator types <code>
+  iterator</code> and <code>const_iterator</code> are different types and <code>
+  const_iterator</code> is a constant iterator.</p>
 
-  <p>Functions <code>insert()</code>,&nbsp; <code>emplace()</code>, and <code>erase()</code> 
-  invalidate iterators.</p>
+  <p>Functions <code>insert()</code>,&nbsp; <code>emplace()</code>, and <code>
+  erase()</code> invalidate iterators.</p>
 
   <p>Interfaces traffic in <code>const_iterator</code>. Maps provide a <code>
   writable()</code> function that turns a <code>const_iterator</code> into an
@@ -942,7 +944,7 @@ const_iterator_range  equal_range(const Key&amp; k) const;</pre>
   <hr>
 
   <p>Revised 
-  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->28 August 2013<!--webbot bot="Timestamp" endspan i-checksum="31366" --></p>
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->29 August 2013<!--webbot bot="Timestamp" endspan i-checksum="31368" --></p>
 
   <p>© Copyright Beman Dawes, 2013</p>
 
