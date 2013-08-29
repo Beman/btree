@@ -19,20 +19,12 @@
 #include <boost/btree/helpers.hpp>
 #include <boost/utility/string_ref.hpp>
 #include <boost/btree/support/size_t_codec.hpp>
+#include <boost/btree/support/string_view.hpp>
 #include <boost/assert.hpp>
 #include <cstring>
 
 namespace boost
 {
-
-//--------------------------------------------------------------------------------------//
-//                                string_view_support                                   //
-//--------------------------------------------------------------------------------------//
-
-  //  Boost has an early version of string_view, named string_ref. So typedef the name.
-
-  typedef string_ref string_view;
-
 namespace btree
 {
 
