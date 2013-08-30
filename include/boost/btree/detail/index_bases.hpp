@@ -532,7 +532,8 @@ public:
     { 
       BOOST_ASSERT_MSG(m_file, "btree index attempt to dereference end iterator");
 //      std::cout << "**** " << *m_index_iterator << std::endl;
-      return Base::dereference(m_file->const_data<char>() + *m_index_iterator);
+      return Base::dereference(m_file->const_data<char>()
+        + static_cast<std::size_t>(*m_index_iterator));
     }
  
     bool equal(const iterator_type& rhs) const
@@ -568,27 +569,33 @@ namespace detail
     bool operator()(const Key& lhs, Pos rhs) const
     {
       return m_comp(lhs,
-        KeyTraits::dereference(m_file->const_data<char>()+rhs));
+        KeyTraits::dereference(m_file->const_data<char>()
+          + static_cast<std::size_t>(rhs)));
     }
     template <class K>
     bool operator()(const K& lhs, Pos rhs) const
     {
       return m_comp(lhs,
-        KeyTraits::dereference(m_file->const_data<char>()+rhs));
+        KeyTraits::dereference(m_file->const_data<char>()
+          + static_cast<std::size_t>(rhs)));
     }
     bool operator()(Pos lhs, const Key& rhs) const
     {
-      return m_comp(KeyTraits::dereference(m_file->const_data<char>()+lhs), rhs);
+      return m_comp(KeyTraits::dereference(m_file->const_data<char>()
+        + static_cast<std::size_t>(lhs)), rhs);
     }
     template <class K>
     bool operator()(Pos lhs, const K& rhs) const
     {
-      return m_comp(KeyTraits::dereference(m_file->const_data<char>()+lhs), rhs);
+      return m_comp(KeyTraits::dereference(m_file->const_data<char>()
+        + static_cast<std::size_t>(lhs)), rhs);
     }
     bool operator()(Pos lhs, Pos rhs) const
     {
-      return m_comp(KeyTraits::dereference(m_file->const_data<char>()+lhs),
-        KeyTraits::dereference(m_file->const_data<char>()+rhs));
+      return m_comp(KeyTraits::dereference(m_file->const_data<char>()
+          + static_cast<std::size_t>(lhs)),
+        KeyTraits::dereference(m_file->const_data<char>()
+          + static_cast<std::size_t>(rhs)));
     }
 
   };
