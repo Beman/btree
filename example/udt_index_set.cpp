@@ -5,6 +5,7 @@
 //  Distributed under the Boost Software License, Version 1.0.
 //  See http://www.boost.org/LICENSE_1_0.txt
 
+///$id code=
 #include <boost/btree/btree_index_set.hpp>
 #include <boost/btree/support/string_view.hpp>
 #include <iostream>
@@ -22,3 +23,4 @@ int cpp_main(int, char *[])
   for (BT::iterator itr = bt.begin(); itr != bt.end(); ++itr)
     cout << *itr << '\n';
 }
+///$endid

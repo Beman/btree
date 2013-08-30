@@ -5,7 +5,7 @@
 //  Distributed under the Boost Software License, Version 1.0.
 //  See http://www.boost.org/LICENSE_1_0.txt
 
-//  $id code=
+///$id code=
 #include <boost/btree/btree_set.hpp>
 #include <iostream>
 #include <boost/detail/lightweight_main.hpp> 
@@ -21,6 +21,5 @@ int cpp_main(int, char *[])
 
   for (BT::iterator itr = bt.begin(); itr != bt.end(); ++itr)
     cout << *itr << '\n';
-    cout << itr->first << ", " << itr->second << '\n';
 }
-//  $endid
+///$endid

@@ -28,4 +28,3 @@ int main()
   cout << "upper_bound(3) is " << *bt.upper_bound(3) << '\n';
 }
 ///$endid
-

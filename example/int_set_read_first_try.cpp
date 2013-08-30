@@ -5,6 +5,7 @@
 //  Distributed under the Boost Software License, Version 1.0.
 //  See http://www.boost.org/LICENSE_1_0.txt
 
+///$id code=
 #include <boost/btree/btree_set.hpp>
 #include <iostream>
 #include <boost/detail/lightweight_main.hpp> 
@@ -23,3 +24,4 @@ int cpp_main(int, char *[])
   cout << "lower_bound(3) is " << *bt.lower_bound(3) << '\n';
   cout << "upper_bound(3) is " << *bt.upper_bound(3) << '\n';
 }
+///$endid
