@@ -9,6 +9,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "int_set", "int_set\int_set.
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bulk_load_map", "bulk_load_map\bulk_load_map.vcxproj", "{784E9235-D752-4ABA-9D2D-D12C14BD1CFB}"
+	ProjectSection(ProjectDependencies) = postProject
+		{461DEAAB-1CD8-4CDB-8158-04AF110B32A9} = {461DEAAB-1CD8-4CDB-8158-04AF110B32A9}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "endian_map", "endian_map\endian_map.vcxproj", "{595805F6-9BBE-4AB1-9F7A-3B638FE372CD}"
 EndProject
