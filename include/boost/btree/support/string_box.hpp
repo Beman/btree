@@ -7,9 +7,15 @@
 
     For more information, see http://www.boost.org
 
+    Based on Marshall Clow's implementation of string_ref, which in turn was
     Based on the StringRef implementation in LLVM (http://llvm.org) and
     N3422 by Jeffrey Yasskin
         http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2012/n3442.html
+
+    TODO: Add non-const functions! (string_ref, AKA string_view, provided only a
+    const view, but that is not a requirement for string_box.
+
+    TODO: Review BOOST_CONSTEXPR uses for validity.
 
 */
 
@@ -28,6 +34,8 @@
 #include <cstring>
 #include <climits>
 #include <iosfwd>
+
+#define BOOST_STRING_BOX_THROW(x) throw (x)
 
 namespace boost {
 namespace btree {
@@ -141,10 +149,11 @@ namespace btree {
 
         // element access
         BOOST_CONSTEXPR const charT& operator[](size_type pos) const { return rep_[pos]; }
+                              charT& operator[](size_type pos)       { return rep_[pos]; }
 
         const charT& at(size_t pos) const {
             if ( pos >= len_ )
-                BOOST_THROW_EXCEPTION( std::out_of_range ( "boost::string_box::at" ) );
+                BOOST_STRING_BOX_THROW( std::out_of_range ( "boost::string_box::at" ) );
             return rep_[pos];
             }
 
@@ -154,12 +163,12 @@ namespace btree {
 
         // modifiers
         void clear() { len_ = 0; }
-        void remove_prefix(size_type n) {
-            if ( n > len_ )
-                n = len_;
-            rep_ += n;
-            len_ -= n;
-            }
+        //void remove_prefix(size_type n) {
+        //    if ( n > len_ )
+        //        n = len_;
+        //    rep_ += n;
+        //    len_ -= n;
+        //    }
 
         void remove_suffix(size_type n) {
             if ( n > len_ )
@@ -171,7 +180,7 @@ namespace btree {
         // string_box string operations
         string_box substr(size_type pos, size_type n=npos) const {
             if ( pos > size())
-                BOOST_THROW_EXCEPTION( std::out_of_range ( "string_box::substr" ) );
+                BOOST_STRING_BOX_THROW( std::out_of_range ( "string_box::substr" ) );
             if ( n == npos || pos + n > size())
                 n = size () - pos;
             return string_box ( data() + pos, n );
@@ -200,7 +209,7 @@ namespace btree {
 
         size_type find(charT c) const {
             const_iterator iter = std::find_if ( this->cbegin (), this->cend (),
-                                    detail::string_box_traits_eq<charT, traits> ( c ));
+                                    detail::string_box_traits_eq<MaxLen, charT, traits> ( c ));
             return iter == this->cend () ? npos : std::distance ( this->cbegin (), iter );
             }
 
@@ -212,7 +221,7 @@ namespace btree {
 
         size_type rfind(charT c) const {
             const_reverse_iterator iter = std::find_if ( this->crbegin (), this->crend (),
-                                    detail::string_box_traits_eq<charT, traits> ( c ));
+                                    detail::string_box_traits_eq<MaxLen, charT, traits> ( c ));
             return iter == this->crend () ? npos : reverse_distance ( this->crbegin (), iter );
             }
 
@@ -269,7 +278,6 @@ namespace btree {
             return last;
             }
       };
-
 
 //  Comparison operators
 //  Equality
@@ -448,54 +456,54 @@ namespace btree {
         return string_box<MaxLen, charT, traits>(x) >= y;
         }
 
-    //namespace detail {
+    namespace detail {
 
-    //    template<class charT, class traits>
-    //    inline void insert_fill_chars(std::ostream<charT, traits>& os, std::size_t n) {
-    //        enum { chunk_size = 8 };
-    //        charT fill_chars[chunk_size];
-    //        std::fill_n(fill_chars, static_cast< std::size_t >(chunk_size), os.fill());
-    //        for (; n >= chunk_size && os.good(); n -= chunk_size)
-    //            os.write(fill_chars, static_cast< std::size_t >(chunk_size));
-    //        if (n > 0 && os.good())
-    //            os.write(fill_chars, n);
-    //        }
+        template<class charT, class traits>
+        inline void insert_fill_chars(std::basic_ostream<charT, traits>& os, std::size_t n) {
+            enum { chunk_size = 8 };
+            charT fill_chars[chunk_size];
+            std::fill_n(fill_chars, static_cast< std::size_t >(chunk_size), os.fill());
+            for (; n >= chunk_size && os.good(); n -= chunk_size)
+                os.write(fill_chars, static_cast< std::size_t >(chunk_size));
+            if (n > 0 && os.good())
+                os.write(fill_chars, n);
+            }
 
-    //    template<unsigned MaxLen, class charT, class traits>
-    //    void insert_aligned(std::ostream<charT, traits>& os, const string_box<MaxLen,charT,traits>& str) {
-    //        const std::size_t size = str.size();
-    //        const std::size_t alignment_size = static_cast< std::size_t >(os.width()) - size;
-    //        const bool align_left = (os.flags()
-    //          & std::ostream<charT, traits>::adjustfield) == std::ostream<charT, traits>::left;
-    //        if (!align_left) {
-    //            detail::insert_fill_chars<charT, traits>(os, alignment_size);
-    //            if (os.good())
-    //                os.write(str.data(), size);
-    //            }
-    //        else {
-    //            os.write(str.data(), size);
-    //            if (os.good())
-    //                detail::insert_fill_chars<charT, traits>(os, alignment_size);
-    //            }
-    //        }
+        template<unsigned MaxLen, class charT, class traits>
+        void insert_aligned(std::basic_ostream<charT, traits>& os, const string_box<MaxLen,charT,traits>& str) {
+            const std::size_t size = str.size();
+            const std::size_t alignment_size = static_cast< std::size_t >(os.width()) - size;
+            const bool align_left = (os.flags()
+              & std::basic_ostream<charT, traits>::adjustfield) == std::basic_ostream<charT, traits>::left;
+            if (!align_left) {
+                detail::insert_fill_chars<charT, traits>(os, alignment_size);
+                if (os.good())
+                    os.write(str.data(), size);
+                }
+            else {
+                os.write(str.data(), size);
+                if (os.good())
+                    detail::insert_fill_chars<charT, traits>(os, alignment_size);
+                }
+            }
 
-    //    } // namespace detail
+        } // namespace detail
 
-    //// Inserter
-    //template<unsigned MaxLen, class charT, class traits>
-    //inline std::ostream<charT, traits>&
-    //operator<<(std::ostream<charT, traits>& os, const string_box<MaxLen,charT,traits>& str) {
-    //    if (os.good()) {
-    //        const std::size_t size = str.size();
-    //        const std::size_t w = static_cast< std::size_t >(os.width());
-    //        if (w <= size)
-    //            os.write(str.data(), size);
-    //        else
-    //            detail::insert_aligned<MaxLen,charT,traits>(os, str);
-    //        os.width(0);
-    //        }
-    //    return os;
-    //    }
+    // Inserter
+    template<unsigned MaxLen, class charT, class traits>
+    inline std::basic_ostream<charT, traits>&
+    operator<<(std::basic_ostream<charT, traits>& os, const string_box<MaxLen,charT,traits>& str) {
+        if (os.good()) {
+            const std::size_t size = str.size();
+            const std::size_t w = static_cast< std::size_t >(os.width());
+            if (w <= size)
+                os.write(str.data(), size);
+            else
+                detail::insert_aligned<MaxLen,charT,traits>(os, str);
+            os.width(0);
+            }
+        return os;
+        }
 
 }}  // namespaces
 

@@ -8,12 +8,13 @@
 ///$id code=
 #include <boost/btree/btree_set.hpp>
 #include <iostream>
-#include <boost/detail/lightweight_main.hpp> 
+#include <boost/detail/lightweight_main.hpp>  // supplies main, does try cpp_main,
+                                              // catches, reports any exceptions
 
 using std::cout;
 using namespace boost::btree;
 
-int cpp_main(int, char *[])
+int cpp_main(int, char *[])   // note the name and required formal parameters
 {
   typedef btree_set<int> BT;
   BT  bt("int_set.btr");
@@ -23,5 +24,7 @@ int cpp_main(int, char *[])
 
   cout << "lower_bound(3) is " << *bt.lower_bound(3) << '\n';
   cout << "upper_bound(3) is " << *bt.upper_bound(3) << '\n';
+
+  return 0;    // required
 }
 ///$endid

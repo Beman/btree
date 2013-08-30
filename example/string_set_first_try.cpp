@@ -25,5 +25,7 @@ int cpp_main(int, char *[])
 
   for (set_type::iterator it = set.begin(); it != set.end(); ++it)
     cout << *it << '\n';
+
+  return 0;    // required
 }
 ///$endid

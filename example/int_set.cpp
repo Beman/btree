@@ -15,7 +15,7 @@ using namespace boost::btree;
 int main()
 {
   typedef btree_set<int> BT; 
-  BT bt("int_set.btr", flags::truncate);
+  BT bt("int_set.btr", flags::truncate);    // ctor with path, open flags
 
   bt.insert(5);
   bt.insert(3);

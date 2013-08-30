@@ -8,12 +8,11 @@
 ///$id code=
 #include <boost/btree/btree_set.hpp>
 #include <iostream>
-#include <boost/detail/lightweight_main.hpp> 
 
 using std::cout;
 using namespace boost::btree;
 
-int cpp_main(int, char *[])
+int main()
 {
   typedef btree_set<int> BT;
   BT  bt("int_set.btr");

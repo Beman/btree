@@ -231,6 +231,12 @@ namespace
   }
 }
 
+void inserter_test()
+{
+   boost::btree::string_box<10> x("Bingo!");
+   std::cout << '"' << x << '"' << std::endl;
+}
+
 int cpp_main(int, char *[])
 {
   default_construct();
@@ -245,6 +251,8 @@ int cpp_main(int, char *[])
   several_flavors_of_find();
   string();
   relationals();
+
+  inserter_test();
 
   return ::boost::report_errors();
 }
