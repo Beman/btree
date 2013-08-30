@@ -16,5 +16,8 @@
     <Link>
       <AdditionalLibraryDirectories>$(BOOST_TRUNK)\stage\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
+    <PostBuildEvent>
+      <Command>"$(TargetDir)\$(TargetName).exe"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
 </Project>

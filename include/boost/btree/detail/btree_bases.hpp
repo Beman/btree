@@ -1520,7 +1520,7 @@ btree_base<Key,Base>::m_branch_insert(btree_node_ptr np,
     //std::cout << "audit node " << np->node_id()
     //          << ", size " << np->size() << std::endl;
     branch_value_type* cur = np->branch().begin();
-    const key_type* prev_key;
+    const key_type* prev_key = 0;   // avoid uninitialized warning|error from vc++ 2013
     for(; cur != np->branch().end(); ++cur)
     {
       //std::cout << "m_branch_insert audit key: " << cur->key << std::endl;
