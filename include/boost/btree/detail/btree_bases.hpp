@@ -111,25 +111,6 @@ namespace btree
 {
 
 //--------------------------------------------------------------------------------------//
-//                             general support functions                                //
-//--------------------------------------------------------------------------------------//
-
-//  append
-//
-//  important optimization side-effect: resulting tree will be packed; at each level, all
-//  nodes except the last will have as many elements as will fit on the node
-
-template <class Btree>
-void append(const Btree& from, const Btree& to)
-{
-  BOOST_ASSERT_MSG(from.is_open(), "append() requires 'from' btree be open");
-  BOOST_ASSERT_MSG(to.is_open(), "append() requires 'to' btree be open");
-  for (typename Btree::iterator it = from.begin(); it != from.end(); ++it)
-    to.insert(*it);
-}
-
-
-//--------------------------------------------------------------------------------------//
 //                                class btree_set_base                                  //
 //--------------------------------------------------------------------------------------//
 
