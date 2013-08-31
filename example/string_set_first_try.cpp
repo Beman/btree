@@ -16,15 +16,15 @@ using namespace boost::btree;
 
 int cpp_main(int, char *[])
 {
-  typedef btree_set<std::string> set_type;
-  set_type set("string_set.btr", flags::truncate);
+  typedef btree_set<std::string> BT;
+  BT bt("string_set.btr", flags::truncate);
 
-  set.insert("eat");
-  set.insert("drink");
-  set.insert("be merry");
+  bt.insert("eat");
+  bt.insert("drink");
+  bt.insert("be merry");
 
-  for (set_type::iterator it = set.begin(); it != set.end(); ++it)
-    cout << *it << '\n';
+  for (BT::iterator itr = bt.begin(); itr != bt.end(); ++itr)
+    cout << *itr << '\n';
 
   return 0;    // required
 }

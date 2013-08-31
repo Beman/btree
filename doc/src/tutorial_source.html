@@ -92,7 +92,7 @@ upper_bound(3) is 5</pre>
   unhelpful Windows error messages. The code was changed to code to use 
   an exception reporting wrapper:</p>
   <blockquote>
-    <pre>$include "int_set_read_first.html"
+    <pre>$include "int_set_read.cpp.html"
 </pre>
   </blockquote>
   <p>That compiled and ran, with the wrapper reporting:</p>
@@ -182,7 +182,8 @@ Key=std::string
   <p>Here is the output:</p>
   
   <blockquote>
-    <pre>be merry
+    <pre>be exceptionally
+be merry
 drink
 eat</pre>
   </blockquote>
@@ -238,15 +239,16 @@ eat</pre>
   <p>Here is the output:</p>
   
   <blockquote>
-    <pre>be merry
+    <pre>be exceptionally merry
+be merry
 drink
 eat
 </pre>
   </blockquote>
   <p>....And a dump of the flat file:</p>
   <blockquote>
-    <pre>00000000  <span style="background-color: #E8FFE8">03</span>65 6174 <span style="background-color: #E8FFE8">05</span>64 7269 6e6b <span style="background-color: #E8FFE8">08</span>62 6520 6d65 .eat.drink.be me
-00000010  7272 79                                 rry</pre>
+    <pre><span style="background-color: #FFFF00">00000000  0365 6174 0564 7269 6e6b 0862 6520 6d65 .</span><span style="background-color: #FFFF00">eat.drink.be</span><span style="background-color: #FFFF00"> me
+00000010  7272 79                                 </span><span style="background-color: #FFFF00">rry</span></pre>
   </blockquote>
   <p>Notice that each element begins with a count. That&#39;s more efficient than 
   null termination when processing long strings, and allows strings to contain 
@@ -257,7 +259,7 @@ eat
   <p>To Be Supplied.</p>
   <h2>UDT index set</h2>
   <blockquote>
-    <pre>$include "udt_3_index_set.cpp.html"</pre>
+    <pre>$include "udt_index_set.cpp.html"</pre>
   </blockquote>
   <h2>UDT three index set</h2>
   <blockquote>
@@ -266,7 +268,7 @@ eat
   <hr>
 
   <p>Revised 
-  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->29 August 2013<!--webbot bot="Timestamp" endspan i-checksum="31368" --></p>
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->30 August 2013<!--webbot bot="Timestamp" endspan i-checksum="31351" --></p>
 
   <p>© Copyright Beman Dawes, 2013</p>
 

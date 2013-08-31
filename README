@@ -53,7 +53,7 @@ Setup Windows to use the solution:
   path %path%;%BOOST_TRUNK%\stage\lib  
   cd %BOOST_TRUNK%
   .\bootstrap
-  .\b2 --with-system --with-chrono --with-timer --with-filesystem link=shared address-model=64 variant=debug
+  .\b2 --with-system --with-chrono --with-timer --with-filesystem --with-iostreams link=shared address-model=64 variant=debug toolset=msvc-11.0express
 To find out more about builds:
 
   cd boost-root

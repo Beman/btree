@@ -16,14 +16,17 @@ using namespace boost::btree;
 
 int cpp_main(int, char *[])
 {
-  typedef btree_index_set<string_view> BT;
-  BT bt("string_index_set", flags::truncate);
+  typedef btree_index_set<boost::string_view> BT;
+  BT bt("string_index_set", flags::truncate);   // creates .ndx and .dat files
 
-  set.insert("eat");
-  set.insert("drink");
-  set.insert("be merry");
+  bt.insert("eat");
+  bt.insert("drink");
+  bt.insert("be merry");
+  bt.insert("be exceptionally merry");
 
-  for (BT::iterator it = set.begin(); it != set.end(); ++it)
-    cout << *it << '\n';
+  for (BT::iterator itr = bt.begin(); itr != bt.end(); ++itr)
+    cout << *itr << '\n';
+
+  return 0;    // required
 }
 /// $endid

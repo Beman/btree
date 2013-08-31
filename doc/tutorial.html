@@ -54,7 +54,7 @@ using namespace boost::btree;
 int main()
 {
   typedef btree_set&lt;int&gt; BT; 
-  BT bt(&quot;int_set.btr&quot;, flags::truncate);
+  BT bt(&quot;int_set.btr&quot;, flags::truncate);    // ctor with path, open flags
 
   bt.insert(5);
   bt.insert(3);
@@ -105,12 +105,11 @@ upper_bound(3) is 5</pre>
     <pre>
 #include &lt;boost/btree/btree_set.hpp&gt;
 #include &lt;iostream&gt;
-#include &lt;boost/detail/lightweight_main.hpp&gt; 
 
 using std::cout;
 using namespace boost::btree;
 
-int cpp_main(int, char *[])
+int main()
 {
   typedef btree_set&lt;int&gt; BT;
   BT  bt(&quot;int_set.btr&quot;);
@@ -132,6 +131,27 @@ int cpp_main(int, char *[])
   an exception reporting wrapper:</p>
   <blockquote>
     <pre>
+#include &lt;boost/btree/btree_set.hpp&gt;
+#include &lt;iostream&gt;
+#include &lt;boost/detail/lightweight_main.hpp&gt;  // supplies main, does try cpp_main,
+                                              // catches, reports any exceptions
+
+using std::cout;
+using namespace boost::btree;
+
+int cpp_main(int, char *[])   // note the name and required formal parameters
+{
+  typedef btree_set&lt;int&gt; BT;
+  BT  bt(&quot;int_set.btr&quot;);
+
+  for (BT::iterator itr = bt.begin(); itr != bt.end(); ++itr)
+    cout &lt;&lt; *itr &lt;&lt; &#39;\n&#39;;
+
+  cout &lt;&lt; &quot;lower_bound(3) is &quot; &lt;&lt; *bt.lower_bound(3) &lt;&lt; &#39;\n&#39;;
+  cout &lt;&lt; &quot;upper_bound(3) is &quot; &lt;&lt; *bt.upper_bound(3) &lt;&lt; &#39;\n&#39;;
+
+  return 0;    // required
+}
 </pre>
   </blockquote>
   <p>That compiled and ran, with the wrapper reporting:</p>
@@ -200,6 +220,8 @@ int cpp_main(int, char *[])
 
   for (set_type::iterator it = set.begin(); it != set.end(); ++it)
     cout &lt;&lt; *it &lt;&lt; &#39;\n&#39;;
+
+  return 0;    // required
 }
 </pre>
   </blockquote>
@@ -236,7 +258,7 @@ Key=std::string
   <blockquote>
     <pre>
 #include &lt;boost/btree/btree_set.hpp&gt;
-#include &lt;boost/btree/support/string_box.hpp&gt;
+#include &lt;boost/btree/support/string_box.hpp&gt;     // fixed length string
 #include &lt;iostream&gt;
 #include &lt;boost/detail/lightweight_main.hpp&gt; 
 
@@ -245,15 +267,18 @@ using namespace boost::btree;
 
 int cpp_main(int, char *[])
 {
-  typedef btree_set&lt;string_box&lt;16&gt; &gt; set_type;
-  set_type set(&quot;string_set.btr&quot;, flags::truncate);
+  typedef btree_set&lt;string_box&lt;16&gt; &gt; BT;    // note maximum length
+  BT bt(&quot;string_set.btr&quot;, flags::truncate);
 
-  set.insert(&quot;eat&quot;);
-  set.insert(&quot;drink&quot;);
-  set.insert(&quot;be merry&quot;);
+  bt.insert(&quot;eat&quot;);
+  bt.insert(&quot;drink&quot;);
+  bt.insert(&quot;be merry&quot;);
+  bt.insert(&quot;be exceptionally merry&quot;);      // will truncate
 
-  for (set_type::iterator it = set.begin(); it != set.end(); ++it)
+  for (BT::iterator it = bt.begin(); it != bt.end(); ++it)
     cout &lt;&lt; *it &lt;&lt; &#39;\n&#39;;
+
+  return 0;    // required
 }</pre>
   </blockquote>
   
@@ -261,7 +286,8 @@ int cpp_main(int, char *[])
   <p>Here is the output:</p>
   
   <blockquote>
-    <pre>be merry
+    <pre>be exceptionally
+be merry
 drink
 eat</pre>
   </blockquote>
@@ -321,15 +347,18 @@ using namespace boost::btree;
 
 int cpp_main(int, char *[])
 {
-  typedef btree_index_set&lt;string_view&gt; BT;
-  BT bt(&quot;string_index_set&quot;, flags::truncate);
+  typedef btree_index_set&lt;boost::string_view&gt; BT;
+  BT bt(&quot;string_index_set&quot;, flags::truncate);   // creates .ndx and .dat files
 
-  set.insert(&quot;eat&quot;);
-  set.insert(&quot;drink&quot;);
-  set.insert(&quot;be merry&quot;);
+  bt.insert(&quot;eat&quot;);
+  bt.insert(&quot;drink&quot;);
+  bt.insert(&quot;be merry&quot;);
+  bt.insert(&quot;be exceptionally merry&quot;);
 
-  for (BT::iterator it = set.begin(); it != set.end(); ++it)
-    cout &lt;&lt; *it &lt;&lt; &#39;\n&#39;;
+  for (BT::iterator itr = bt.begin(); itr != bt.end(); ++itr)
+    cout &lt;&lt; *itr &lt;&lt; &#39;\n&#39;;
+
+  return 0;    // required
 } </pre>
   </blockquote>
   
@@ -399,7 +428,7 @@ int cpp_main(int, char *[])
   <hr>
 
   <p>Revised 
-  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->29 August 2013<!--webbot bot="Timestamp" endspan i-checksum="31368" --></p>
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->30 August 2013<!--webbot bot="Timestamp" endspan i-checksum="31351" --></p>
 
   <p>© Copyright Beman Dawes, 2013</p>
 

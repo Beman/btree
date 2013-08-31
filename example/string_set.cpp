@@ -1,4 +1,4 @@
-//  example/string_set_first_try.cpp  --------------------------------------------------//
+//  example/string_set
 
 //  Copyright Beman Dawes 2013
 
@@ -16,15 +16,15 @@ using namespace boost::btree;
 
 int cpp_main(int, char *[])
 {
-  typedef btree_set<string_box<16> > set_type;    // note maximum length
-  set_type set("string_set.btr", flags::truncate);
+  typedef btree_set<string_box<16> > BT;    // note maximum length
+  BT bt("string_set.btr", flags::truncate);
 
-  set.insert("eat");
-  set.insert("drink");
-  set.insert("be merry");
-  set.insert("be exceptionally merry");           // will truncate
+  bt.insert("eat");
+  bt.insert("drink");
+  bt.insert("be merry");
+  bt.insert("be exceptionally merry");      // will truncate
 
-  for (set_type::iterator it = set.begin(); it != set.end(); ++it)
+  for (BT::iterator it = bt.begin(); it != bt.end(); ++it)
     cout << *it << '\n';
 
   return 0;    // required
