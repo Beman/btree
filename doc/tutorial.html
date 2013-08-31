@@ -208,10 +208,35 @@ int cpp_main(int, char *[])
   bt.emplace(1, 111);
   bt.emplace(3, 333);
 
-  for (BT::iterator itr = bt.begin(); itr != bt.end(); ++itr)
+  for (BT::iterator itr = bt.begin();   // Error!
+       itr != bt.end(); ++itr)
     cout &lt;&lt; itr-&gt;first &lt;&lt; &quot;, &quot; &lt;&lt; itr-&gt;second &lt;&lt; &#39;\n&#39;;
+
+  return 0;
 }</pre>
   </blockquote>
+  
+  <p>Oops! The compile failed with the error message:</p>
+  
+  <blockquote>
+    <pre>error C2440: &#39;initializing&#39; : cannot convert from
+  &#39;const std::pair&lt;const Key,T&gt; *const &#39; to &#39;std::pair&lt;const Key,T&gt; *&#39;</pre>
+  </blockquote>
+  
+  <p>That&#39;s from trying to convert the <code>const_iterator</code> returned by
+  <code>begin()</code> to an <code>iterator</code>. With sets, <code>iterator</code> 
+  and <code>const_iterator</code> are both constant iterators, and may well be 
+  the same type, so are interchangeable. But with maps, const-ness must be 
+  observed.</p>
+  
+  <p><span style="background-color: #FFFF00">Add </span>
+  <span style="background-color: #FFFF00">faq</span><span style="background-color: #FFFF00"> 
+  entry why do functions return </span><span style="background-color: #FFFF00">
+  const_iterator</span><span style="background-color: #FFFF00"> instead of
+  </span><span style="background-color: #FFFF00">interator</span><span style="background-color: #FFFF00">? 
+  and link to it.</span></p>
+  
+  <p>Let&#39;s correct the code and try again...</p>
   
   <h2>Integer map</h2>
   
@@ -239,6 +264,12 @@ int cpp_main(int, char *[])
 
   return 0;
 }</pre>
+  </blockquote>
+  <p>Here is the output:</p>
+  <blockquote>
+    <pre>1, 111
+2, 222
+3, 333</pre>
   </blockquote>
   
   <h2>String set first try</h2>
@@ -274,7 +305,7 @@ int cpp_main(int, char *[])
   for (BT::iterator itr = bt.begin(); itr != bt.end(); ++itr)
     cout &lt;&lt; *itr &lt;&lt; &#39;\n&#39;;
 
-  return 0;    // required
+  return 0
 }
 </pre>
   </blockquote>
@@ -302,11 +333,13 @@ Key=std::string
   
   <h2>Small strings</h2>
   
-  <p>Many applications involve only small strings; some std::basic_string 
+  <p>Many applications involve only small strings; some <code>
+  <span style="font-weight: 400">std::basic_string</span></code> 
   implementations acknowledge this by employing a small-string optimization 
   under the covers. The class template <code><span style="font-weight: 400">
-  string_box</span></code> provides fixed length strings, with the maximum 
-  length supplied by a template parameter.</p>
+  string_box</span></code> provides a <code><span style="font-weight: 400">
+  std::string</span></code>-like interface, but with a maximum 
+  length supplied by a template parameter. </p>
   
   <blockquote>
     <pre>
@@ -344,6 +377,9 @@ be merry
 drink
 eat</pre>
   </blockquote>
+  
+  <p><span style="background-color: #FFFF00">FAQ Where to draw line between 
+  small and large strings?</span></p>
   
   <h2>Longer strings</h2>
   
@@ -435,8 +471,71 @@ eat
   embedded nulls. The count is itself variable length, and will use however many 
   count bytes is required by the size of the string. The 0x80 bit will be set 
   for count bytes except the last (i.e. low-order).</p>
-  <h2>Maps</h2>
-  <p>To Be Supplied.</p>
+  <h2>Packing</h2>
+  <p>Class B-trees disk pages are only 75% full on average because the classic 
+  B-tree insertion algorithm splits a page in half when it overflows.&nbsp; This 
+  implementation supplies an optimization:</p>
+  <blockquote>
+  <p>If this and all prior insert operations are at the end of the tree and 
+  there have been no erase operations, then an insert that would overflow the 
+  current last page is done on a new (i.e empty) last page.</p>
+  </blockquote>
+  <p>For large, deep, trees this results in a major saving in both space and 
+  speed. Pages except the last are 100% full. The depth of the tree, which 
+  affects search times, is at an absolute minimum.</p>
+  <p>Here is how to pack an existing tree:</p>
+  <blockquote>
+    <pre>
+#include &lt;boost/btree/btree_map.hpp&gt;
+#include &lt;iostream&gt;
+#include &lt;boost/detail/lightweight_main.hpp&gt;
+#include &lt;boost/assert.hpp&gt;
+
+using std::cout;
+using namespace boost::btree;
+
+int cpp_main(int, char *[])
+{
+  typedef btree_map&lt;int, int&gt; BT;
+
+  BT old_bt(&quot;int_map.btr&quot;, flags::read_only);
+  BT new_bt(old_bt.begin(), old_bt.end(), &quot;packed_int_map.btr&quot;, flags::truncate);
+
+  BOOST_ASSERT(old_bt == new_bt);
+
+  return 0;
+}</pre>
+  </blockquote>
+  <h2>Data portability</h2>
+  <blockquote>
+    <pre>
+#include &lt;boost/btree/btree_map.hpp&gt;
+#include &lt;boost/endian/types.hpp&gt;
+#include &lt;iostream&gt;
+#include &lt;boost/detail/lightweight_main.hpp&gt; 
+
+using std::cout;
+using namespace boost::btree;
+using namespace boost::endian;
+
+int cpp_main(int, char *[])
+{
+  typedef btree_map&lt;big_int56un_t, big_int24un_t&gt; BT;
+  BT bt(&quot;endian_map.btr&quot;, flags::truncate);
+
+  bt.emplace(big_int56un_t(38759234875LL), big_int24un_t(1));
+  bt.emplace(big_int56un_t(82352345), big_int24un_t(2));
+  bt.emplace(big_int56un_t(1242423462), big_int24un_t(3));
+
+  cout &lt;&lt; &quot;sizeof(BT::value_type) is &quot; &lt;&lt; sizeof(BT::value_type) &lt;&lt; &#39;\n&#39;;
+
+  for (BT::const_iterator itr = bt.begin();   // note well: const_iterator
+    itr != bt.end(); ++itr)
+    cout &lt;&lt; itr-&gt;first &lt;&lt; &quot;, &quot; &lt;&lt; itr-&gt;second &lt;&lt; &#39;\n&#39;;
+
+  return 0;
+}</pre>
+  </blockquote>
   <h2>UDT index set</h2>
   <blockquote>
     <pre>
@@ -461,7 +560,7 @@ int cpp_main(int, char *[])
   for (BT::iterator itr = bt.begin(); itr != bt.end(); ++itr)
     cout &lt;&lt; *itr &lt;&lt; &#39;\n&#39;;
 
-  return 0;    // required
+  return 0;
 }</pre>
   </blockquote>
   <h2>UDT three index set</h2>
@@ -483,8 +582,71 @@ int cpp_main(int, char *[])
 
   for (BT::iterator itr = bt.begin(); itr != bt.end(); ++itr)
     cout &lt;&lt; *itr &lt;&lt; &#39;\n&#39;;
+
+  return 0;
 }</pre>
   </blockquote>
+    <h2>Heterogeneous compares</h2>
+    <p>Consider the following code, noting that <code>find(2)</code> 
+    has an argument type of <code>int</code>, not <code>UDT</code>, and that
+    <code>UDT</code> does not supply a conversion from <code>int</code>.</p>
+  <blockquote>
+    <pre>
+#include &lt;boost/btree/btree_set.hpp&gt;
+#include &lt;iostream&gt;
+#include &lt;boost/detail/lightweight_main.hpp&gt; 
+
+using std::cout;
+using namespace boost::btree;
+
+namespace
+{
+  struct UDT
+  {
+    int x;
+    int y;
+
+    UDT() {}
+    UDT(int x_, int y_) : x(x_), y(y_) {}
+    bool operator&lt;(const UDT& rhs) const { return x &lt; rhs.x; }
+    bool operator&lt;(int rhs) const { return x &lt; rhs; }              // note rhs type
+  };
+  bool operator&lt;(int lhs, const UDT& rhs) { return lhs &lt; rhs.x; }  // note lhs type
+}
+
+
+int cpp_main(int, char *[])
+{
+  typedef btree_set&lt;UDT&gt; BT;
+  BT bt(&quot;hetero_set.btr&quot;, flags::truncate);
+
+  bt.insert(UDT(2, 222));
+  bt.insert(UDT(1, 111));
+  bt.insert(UDT(3, 333));
+
+  for (BT::iterator itr = bt.begin(); itr != bt.end(); ++itr)
+    cout &lt;&lt; itr-&gt;x &lt;&lt; &#39;,&#39; &lt;&lt; itr-&gt;y &lt;&lt; &#39;\n&#39;;
+
+  BT::iterator itr = bt.find(2);  // note find(2) argument type
+  cout &lt;&lt; &quot;find(2) found &quot; &lt;&lt; itr-&gt;x &lt;&lt; &#39;,&#39; &lt;&lt; itr-&gt;y &lt;&lt; &#39;\n&#39;;
+
+  return 0;
+}</pre>
+  </blockquote>
+    <p>The B-tree associative container classes have member templates for the
+    <code>find</code>, <code>count</code>, <code>lower_bound</code>, <code>
+    upper_bound</code> , and <code>equal_range</code> functions. These allow 
+    heterogeneous compares, if the <code>Key</code> type supports comparison for 
+    the heterogeneous type (i.e <code>int</code> in this example).</p>
+  <p>So, yes, the code does compile and run. The output is:</p>
+  <blockquote>
+    <pre>1,111
+2,222
+3,333
+find(2) found 2,222</pre>
+  </blockquote>
+    <p>Incidentally, the C++14 standard library will support 
+    heterogeneous comparison, too.</p>
   <hr>
 
   <p>Revised 

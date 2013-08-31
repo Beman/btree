@@ -102,7 +102,8 @@
 
   * operator unspecified-bool-type, operator!
 
-
+  * Currently both sets and maps require the value_type be default constructible. Is that
+    OK and documented?
 */
 
 namespace boost
@@ -128,6 +129,7 @@ public:
   typedef Compare                           compare_type;
   typedef compare_type                      value_compare;
 
+  // TODO: why aren't these static?
   const Key&          key(const value_type& v) const   // really handy, so expose
     {return v;}
   const mapped_type&  mapped(const value_type& v) const
@@ -151,6 +153,7 @@ public:
   typedef Traits                            traits_type;
   typedef Compare                           compare_type;
 
+  // TODO: why aren't these static?
   const Key&  key(const value_type& v) const  // really handy, so expose
     {return v.first;}
   const T&    mapped(const value_type& v) const

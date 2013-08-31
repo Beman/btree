@@ -6,7 +6,8 @@
 //  See http://www.boost.org/LICENSE_1_0.txt
 
 ///$id code=
-#include <boost/btree/btree_map.hpp>
+#include <boost/btree/btree_set.hpp>
+#include <boost/btree/bulk_load.hpp>
 #include <iostream>
 #include <boost/detail/lightweight_main.hpp> 
 
@@ -15,12 +16,12 @@ using namespace boost::btree;
 
 int cpp_main(int, char *[])
 {
-  typedef btree_set<std::string> BT;
+  typedef btree_set<int> BT;
   BT bt("bulk_load_map.btr", flags::truncate);
 
 
   for (BT::iterator itr = bt.begin(); itr != bt.end(); ++itr)
-    cout << itr->first << ", " << itr->second << '\n';
+    cout << *itr << '\n';
 
   return 0;
 }

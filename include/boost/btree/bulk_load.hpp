@@ -8,8 +8,8 @@
 #ifndef BOOST_BTREE_BULK_LOADER_HPP
 #define BOOST_BTREE_BULK_LOADER_HPP
 
-#include <boost/btree/map.hpp>
-#include <boost/btree/set.hpp>
+#include <boost/btree/btree_map.hpp>
+#include <boost/btree/btree_set.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <boost/btree/detail/binary_file.hpp>
 #include <boost/scoped_array.hpp>
