@@ -210,9 +210,7 @@ namespace boost
             flags::user_flags(flgs), sig, comp, node_sz)
       {
         for (; begin != end; ++begin)
-        {
-          this->m_insert_non_unique(begin->key(), begin->mapped_value());
-        }
+          insert(*begin);
       }
 
      ~btree_multimap()
@@ -250,10 +248,7 @@ namespace boost
       void insert(InputIterator begin, InputIterator end)
       {
         for (; begin != end; ++begin)
-        {
-          const_iterator result(this->m_insert_non_unique(key(*begin)));
-          std::memcpy(const_cast<T*>(&result->second), &mapped(*begin), sizeof(T));
-        }
+          insert(*begin);
       }
 
       iterator writable(const_iterator itr)  {return m_write_cast(itr);}

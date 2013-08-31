@@ -148,10 +148,7 @@ namespace boost
           flags::user_flags(flgs) | flags::key_only | flags::unique,
           sig, comp, node_sz)
       {
-        for (; begin != end; ++begin)
-        {
-          this->m_insert_unique(*begin, *begin);
-        }
+        insert(begin, end);
       }
 
      ~btree_set()
@@ -188,9 +185,7 @@ namespace boost
       void insert(InputIterator begin, InputIterator end)
       {
         for (; begin != end; ++begin)
-        {
-          this->m_insert_unique(*begin);
-        }
+          insert(*begin);
       }
     };
 
@@ -260,9 +255,7 @@ namespace boost
           flags::user_flags(flgs) | flags::key_only, sig, comp, node_sz)
       {
         for (; begin != end; ++begin)
-        {
-          this->m_insert_non_unique(*begin, *begin);
-        }
+          insert(*begin);
       }
 
      ~btree_multiset()
