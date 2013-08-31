@@ -19,7 +19,7 @@
 #include <iostream>
 #include <boost/btree/btree_map.hpp>
 #include <boost/btree/btree_set.hpp>
-#include <boost/btree/support/fixstr.hpp>
+#include <boost/btree/support/string_holder.hpp>
 #include <boost/detail/lightweight_main.hpp>
 #include <boost/detail/lightweight_test.hpp>
 #include <boost/cstdint.hpp>
@@ -388,7 +388,7 @@ void small_variable_set()
 {
   cout << "  small_variable_set..." << endl;
 
-  typedef btree::fixstr<16> data_type;
+  typedef btree::string_holder<16> data_type;
 
   fs::path p("btree_set.btree");
   fs::remove(p);
@@ -402,8 +402,7 @@ void small_variable_set()
   result = bt.insert(stuff);
   BOOST_TEST_EQ(bt.size(), 1U);
   BOOST_TEST(result.second);
-  BOOST_TEST(std::strcmp(result.first->c_str(), "now") == 0 );
-  BOOST_TEST(std::strcmp(bt.key(*result.first).c_str(), "now") == 0 );
+  BOOST_TEST(*result.first == "now");
   stuff = "is";
   bt.insert(stuff);
   stuff = "the";
@@ -440,7 +439,7 @@ void small_variable_map()
 {
   cout << "  small_variable_map..." << endl;
 
-  typedef btree::fixstr<16> data_type;
+  typedef btree::string_holder<16> data_type;
 
   fs::path p("btree_map.btree");
   fs::remove(p);

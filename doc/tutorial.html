@@ -337,14 +337,14 @@ Key=std::string
   <span style="font-weight: 400">std::basic_string</span></code> 
   implementations acknowledge this by employing a small-string optimization 
   under the covers. The class template <code><span style="font-weight: 400">
-  string_box</span></code> provides a <code><span style="font-weight: 400">
+  string_holder</span></code> provides a <code><span style="font-weight: 400">
   std::string</span></code>-like interface, but with a maximum 
   length supplied by a template parameter. </p>
   
   <blockquote>
     <pre>
 #include &lt;boost/btree/btree_set.hpp&gt;
-#include &lt;boost/btree/support/string_box.hpp&gt;     // fixed length string
+#include &lt;boost/btree/support/string_holder.hpp&gt;     // fixed length string
 #include &lt;iostream&gt;
 #include &lt;boost/detail/lightweight_main.hpp&gt; 
 
@@ -353,7 +353,7 @@ using namespace boost::btree;
 
 int cpp_main(int, char *[])
 {
-  typedef btree_set&lt;string_box&lt;16&gt; &gt; BT;    // note maximum length
+  typedef btree_set&lt;string_holder&lt;16&gt; &gt; BT;    // note maximum length
   BT bt(&quot;string_set.btr&quot;, flags::truncate);
 
   bt.insert(&quot;eat&quot;);

@@ -9,7 +9,6 @@
 
 #include <boost/btree/detail/test_traits.hpp>  // includes all header dependencies
 #include <boost/timer/timer.hpp>
-#include <boost/btree/support/fixstr.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/detail/lightweight_main.hpp>

@@ -7,7 +7,7 @@
 
 ///$id code=
 #include <boost/btree/btree_set.hpp>
-#include <boost/btree/support/string_box.hpp>     // fixed length string
+#include <boost/btree/support/string_holder.hpp>     // fixed length string
 #include <iostream>
 #include <boost/detail/lightweight_main.hpp> 
 
@@ -16,7 +16,7 @@ using namespace boost::btree;
 
 int cpp_main(int, char *[])
 {
-  typedef btree_set<string_box<16> > BT;    // note maximum length
+  typedef btree_set<string_holder<16> > BT;    // note maximum length
   BT bt("string_set.btr", flags::truncate);
 
   bt.insert("eat");

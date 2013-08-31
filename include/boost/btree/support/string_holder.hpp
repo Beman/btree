@@ -1,3 +1,5 @@
+//  btree/support/string_holder.hpp  ---------------------------------------------------//
+
 /*
    Copyright Beman Dawes 2013
    Copyright (c) Marshall Clow 2012-2012.
@@ -13,14 +15,14 @@
         http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2012/n3442.html
 
     TODO: Add non-const functions! (string_ref, AKA string_view, provided only a
-    const view, but that is not a requirement for string_box.
+    const view, but that is not a requirement for string_holder.
 
     TODO: Review BOOST_CONSTEXPR uses for validity.
 
 */
 
-#ifndef BOOST_STRING_BOX_HPP
-#define BOOST_STRING_BOX_HPP
+#ifndef BOOST_STRING_HOLDER_HPP
+#define BOOST_STRING_HOLDER_HPP
 
 #include <boost/config.hpp>
 #include <boost/detail/workaround.hpp>
@@ -35,29 +37,29 @@
 #include <climits>
 #include <iosfwd>
 
-#define BOOST_STRING_BOX_THROW(x) throw (x)
+#define BOOST_STRING_HOLDER_THROW(x) throw (x)
 
 namespace boost {
 namespace btree {
 
     template<unsigned MaxLen, typename charT = char,
-      typename traits = std::char_traits<charT> > class string_box;
+      typename traits = std::char_traits<charT> > class string_holder;
 
     namespace detail {
     //  A helper functor because sometimes we don't have lambdas
         template <unsigned MaxLen, typename charT, typename traits>
-        class string_box_traits_eq {
+        class string_holder_traits_eq {
         public:
-            string_box_traits_eq ( charT ch ) : ch_(ch) {}
+            string_holder_traits_eq ( charT ch ) : ch_(ch) {}
             bool operator () ( charT val ) const { return traits::eq ( ch_, val ); }
             charT ch_;
             };
         }
 
     template<unsigned MaxLen, typename charT, typename traits>
-    class string_box {
+    class string_holder {
       BOOST_STATIC_ASSERT_MSG(MaxLen <= UCHAR_MAX,         // draw the line, arbitrarily for
-        "string_box MaxLen too large; max is UCHAR_MAX");  // charT other than char itself
+        "string_holder MaxLen too large; max is UCHAR_MAX");  // charT other than char itself
         
         typedef unsigned char  rep_len_type;
 
@@ -79,15 +81,15 @@ namespace btree {
         static BOOST_CONSTEXPR_OR_CONST size_type npos = size_type(-1);
 
         // construct/copy
-        BOOST_CONSTEXPR string_box ()
+        BOOST_CONSTEXPR string_holder ()
             : len_(0) {}
 
-        BOOST_CONSTEXPR string_box (const string_box &rhs) {
+        BOOST_CONSTEXPR string_holder (const string_holder &rhs) {
             std::memcpy(&rep_, &rhs.rep_, rhs.len_);
             len_ = rhs.len_;
             }
 
-        string_box& operator=(const string_box &rhs) {
+        string_holder& operator=(const string_holder &rhs) {
             if (rep_ != rhs.rep_) { // memcpy may fail if bytes overlap, so test self asgn
                 std::memcpy(&rep_, &rhs.rep_, rhs.len_);
                 len_ = rhs.len_;
@@ -95,7 +97,7 @@ namespace btree {
             return *this;
             }
 
-        string_box(const charT* str) {
+        string_holder(const charT* str) {
             size_type sz = traits::length(str);
             if (sz > MaxLen)
               sz = MaxLen;
@@ -104,7 +106,7 @@ namespace btree {
             }
 
         template<typename Allocator>
-        string_box(const std::basic_string<charT, traits, Allocator>& str) {
+        string_holder(const std::basic_string<charT, traits, Allocator>& str) {
             size_type sz = str.length();
             if (sz > MaxLen)
               sz = MaxLen;
@@ -113,7 +115,7 @@ namespace btree {
             }
 
 
-        BOOST_CONSTEXPR string_box(const charT* str, size_type len) {
+        BOOST_CONSTEXPR string_holder(const charT* str, size_type len) {
             if (len > MaxLen)
               len = MaxLen;
             std::memcpy(rep_, str, len);
@@ -153,7 +155,7 @@ namespace btree {
 
         const charT& at(size_t pos) const {
             if ( pos >= len_ )
-                BOOST_STRING_BOX_THROW( std::out_of_range ( "boost::string_box::at" ) );
+                BOOST_STRING_HOLDER_THROW( std::out_of_range ( "boost::string_holder::at" ) );
             return rep_[pos];
             }
 
@@ -177,31 +179,31 @@ namespace btree {
             }
 
 
-        // string_box string operations
-        string_box substr(size_type pos, size_type n=npos) const {
+        // string_holder string operations
+        string_holder substr(size_type pos, size_type n=npos) const {
             if ( pos > size())
-                BOOST_STRING_BOX_THROW( std::out_of_range ( "string_box::substr" ) );
+                BOOST_STRING_HOLDER_THROW( std::out_of_range ( "string_holder::substr" ) );
             if ( n == npos || pos + n > size())
                 n = size () - pos;
-            return string_box ( data() + pos, n );
+            return string_holder ( data() + pos, n );
             }
 
-        int compare(const string_box& x) const {
+        int compare(const string_holder& x) const {
             const int cmp = traits::compare ( rep_, x.rep_, (std::min)(len_, x.len_));
             return cmp != 0 ? cmp : ( len_ == x.len_ ? 0 : len_ < x.len_ ? -1 : 1 );
             }
 
         bool starts_with(charT c) const { return !empty() && traits::eq ( c, front()); }
-        bool starts_with(const string_box& x) const {
+        bool starts_with(const string_holder& x) const {
             return len_ >= x.len_ && traits::compare ( rep_, x.rep_, x.len_ ) == 0;
             }
 
         bool ends_with(charT c) const { return !empty() && traits::eq ( c, back()); }
-        bool ends_with(const string_box& x) const {
+        bool ends_with(const string_holder& x) const {
             return len_ >= x.len_ && traits::compare ( rep_ + len_ - x.len_, x.rep_, x.len_ ) == 0;
             }
 
-        size_type find(const string_box& s) const {
+        size_type find(const string_holder& s) const {
             const_iterator iter = std::search ( this->cbegin (), this->cend (),
                                                 s.cbegin (), s.cend (), traits::eq );
             return iter == this->cend () ? npos : std::distance ( this->cbegin (), iter );
@@ -209,11 +211,11 @@ namespace btree {
 
         size_type find(charT c) const {
             const_iterator iter = std::find_if ( this->cbegin (), this->cend (),
-                                    detail::string_box_traits_eq<MaxLen, charT, traits> ( c ));
+                                    detail::string_holder_traits_eq<MaxLen, charT, traits> ( c ));
             return iter == this->cend () ? npos : std::distance ( this->cbegin (), iter );
             }
 
-        size_type rfind(const string_box& s) const {
+        size_type rfind(const string_holder& s) const {
             const_reverse_iterator iter = std::search ( this->crbegin (), this->crend (),
                                                 s.crbegin (), s.crend (), traits::eq );
             return iter == this->crend () ? npos : reverse_distance ( this->crbegin (), iter );
@@ -221,26 +223,26 @@ namespace btree {
 
         size_type rfind(charT c) const {
             const_reverse_iterator iter = std::find_if ( this->crbegin (), this->crend (),
-                                    detail::string_box_traits_eq<MaxLen, charT, traits> ( c ));
+                                    detail::string_holder_traits_eq<MaxLen, charT, traits> ( c ));
             return iter == this->crend () ? npos : reverse_distance ( this->crbegin (), iter );
             }
 
         size_type find_first_of(charT c) const { return  find (c); }
         size_type find_last_of (charT c) const { return rfind (c); }
 
-        size_type find_first_of(const string_box& s) const {
+        size_type find_first_of(const string_holder& s) const {
             const_iterator iter = std::find_first_of
                 ( this->cbegin (), this->cend (), s.cbegin (), s.cend (), traits::eq );
             return iter == this->cend () ? npos : std::distance ( this->cbegin (), iter );
             }
 
-        size_type find_last_of(const string_box& s) const {
+        size_type find_last_of(const string_holder& s) const {
             const_reverse_iterator iter = std::find_first_of
                 ( this->crbegin (), this->crend (), s.cbegin (), s.cend (), traits::eq );
             return iter == this->crend () ? npos : reverse_distance ( this->crbegin (), iter);
             }
 
-        size_type find_first_not_of(const string_box& s) const {
+        size_type find_first_not_of(const string_holder& s) const {
             const_iterator iter = find_not_of ( this->cbegin (), this->cend (), s );
             return iter == this->cend () ? npos : std::distance ( this->cbegin (), iter );
             }
@@ -252,7 +254,7 @@ namespace btree {
             return npos;
             }
 
-        size_type find_last_not_of(const string_box& s) const {
+        size_type find_last_not_of(const string_holder& s) const {
             const_reverse_iterator iter = find_not_of ( this->crbegin (), this->crend (), s );
             return iter == this->crend () ? npos : reverse_distance ( this->crbegin (), iter );
             }
@@ -271,7 +273,7 @@ namespace btree {
             }
 
         template <typename Iterator>
-        Iterator find_not_of ( Iterator first, Iterator last, const string_box& s ) const {
+        Iterator find_not_of ( Iterator first, Iterator last, const string_holder& s ) const {
             for ( ; first != last ; ++first )
                 if ( 0 == traits::find ( s.rep_, s.len_, *first ))
                     return first;
@@ -282,178 +284,178 @@ namespace btree {
 //  Comparison operators
 //  Equality
     template<unsigned MaxLen, typename charT, typename traits>
-    inline bool operator==(const string_box<MaxLen, charT, traits>& x,
-      const string_box<MaxLen, charT, traits>& y) {
+    inline bool operator==(const string_holder<MaxLen, charT, traits>& x,
+      const string_holder<MaxLen, charT, traits>& y) {
         if ( x.size () != y.size ()) return false;
         return x.compare(y) == 0;
         }
 
     template<unsigned MaxLen, typename charT, typename traits, typename Allocator>
-    inline bool operator==(const string_box<MaxLen, charT, traits>& x,
+    inline bool operator==(const string_holder<MaxLen, charT, traits>& x,
       const std::basic_string<charT, traits, Allocator>& y) {
-        return x == string_box<MaxLen, charT, traits>(y);
+        return x == string_holder<MaxLen, charT, traits>(y);
         }
 
     template<unsigned MaxLen, typename charT, typename traits, typename Allocator>
     inline bool operator==(const std::basic_string<charT, traits, Allocator>& x,
-      const string_box<MaxLen, charT, traits>& y) {
-        return string_box<MaxLen, charT, traits>(x) == y;
+      const string_holder<MaxLen, charT, traits>& y) {
+        return string_holder<MaxLen, charT, traits>(x) == y;
         }
 
     template<unsigned MaxLen, typename charT, typename traits>
-    inline bool operator==(const string_box<MaxLen, charT, traits>& x, const charT * y) {
-        return x == string_box<MaxLen, charT, traits>(y);
+    inline bool operator==(const string_holder<MaxLen, charT, traits>& x, const charT * y) {
+        return x == string_holder<MaxLen, charT, traits>(y);
         }
 
     template<unsigned MaxLen, typename charT, typename traits>
-    inline bool operator==(const charT * x, const string_box<MaxLen, charT, traits>& y) {
-        return string_box<MaxLen, charT, traits>(x) == y;
+    inline bool operator==(const charT * x, const string_holder<MaxLen, charT, traits>& y) {
+        return string_holder<MaxLen, charT, traits>(x) == y;
         }
 
 //  Inequality
     template<unsigned MaxLen, typename charT, typename traits>
-    inline bool operator!=(const string_box<MaxLen, charT, traits>& x,
-      const string_box<MaxLen, charT, traits>& y) {
+    inline bool operator!=(const string_holder<MaxLen, charT, traits>& x,
+      const string_holder<MaxLen, charT, traits>& y) {
         if ( x.size () != y.size ()) return true;
         return x.compare(y) != 0;
         }
 
     template<unsigned MaxLen, typename charT, typename traits, typename Allocator>
-    inline bool operator!=(const string_box<MaxLen, charT, traits>& x,
+    inline bool operator!=(const string_holder<MaxLen, charT, traits>& x,
       const std::basic_string<charT, traits, Allocator>& y) {
-        return x != string_box<MaxLen, charT, traits>(y);
+        return x != string_holder<MaxLen, charT, traits>(y);
         }
 
     template<unsigned MaxLen, typename charT, typename traits, typename Allocator>
     inline bool operator!=(const std::basic_string<charT, traits, Allocator>& x,
-      const string_box<MaxLen, charT, traits>& y) {
-        return string_box<MaxLen, charT, traits>(x) != y;
+      const string_holder<MaxLen, charT, traits>& y) {
+        return string_holder<MaxLen, charT, traits>(x) != y;
         }
 
     template<unsigned MaxLen, typename charT, typename traits>
-    inline bool operator!=(const string_box<MaxLen, charT, traits>& x, const charT * y) {
-        return x != string_box<MaxLen, charT, traits>(y);
+    inline bool operator!=(const string_holder<MaxLen, charT, traits>& x, const charT * y) {
+        return x != string_holder<MaxLen, charT, traits>(y);
         }
 
     template<unsigned MaxLen, typename charT, typename traits>
-    inline bool operator!=(const charT * x, const string_box<MaxLen, charT, traits>& y) {
-        return string_box<MaxLen, charT, traits>(x) != y;
+    inline bool operator!=(const charT * x, const string_holder<MaxLen, charT, traits>& y) {
+        return string_holder<MaxLen, charT, traits>(x) != y;
         }
 
 //  Less than
     template<unsigned MaxLen, typename charT, typename traits>
-    inline bool operator<(const string_box<MaxLen, charT, traits>& x,
-      const string_box<MaxLen, charT, traits>& y) {
+    inline bool operator<(const string_holder<MaxLen, charT, traits>& x,
+      const string_holder<MaxLen, charT, traits>& y) {
         return x.compare(y) < 0;
         }
 
     template<unsigned MaxLen, typename charT, typename traits, typename Allocator>
-    inline bool operator<(const string_box<MaxLen, charT, traits>& x,
+    inline bool operator<(const string_holder<MaxLen, charT, traits>& x,
       const std::basic_string<charT, traits, Allocator> & y) {
-        return x < string_box<MaxLen, charT, traits>(y);
+        return x < string_holder<MaxLen, charT, traits>(y);
         }
 
     template<unsigned MaxLen, typename charT, typename traits, typename Allocator>
     inline bool operator<(const std::basic_string<charT, traits, Allocator> & x,
-      const string_box<MaxLen, charT, traits>& y) {
-        return string_box<MaxLen, charT, traits>(x) < y;
+      const string_holder<MaxLen, charT, traits>& y) {
+        return string_holder<MaxLen, charT, traits>(x) < y;
         }
 
     template<unsigned MaxLen, typename charT, typename traits>
-    inline bool operator<(const string_box<MaxLen, charT, traits>& x, const charT * y) {
-        return x < string_box<MaxLen, charT, traits>(y);
+    inline bool operator<(const string_holder<MaxLen, charT, traits>& x, const charT * y) {
+        return x < string_holder<MaxLen, charT, traits>(y);
         }
 
     template<unsigned MaxLen, typename charT, typename traits>
-    inline bool operator<(const charT * x, const string_box<MaxLen, charT, traits>& y) {
-        return string_box<MaxLen, charT, traits>(x) < y;
+    inline bool operator<(const charT * x, const string_holder<MaxLen, charT, traits>& y) {
+        return string_holder<MaxLen, charT, traits>(x) < y;
         }
 
 //  Greater than
     template<unsigned MaxLen, typename charT, typename traits>
-    inline bool operator>(const string_box<MaxLen, charT, traits>& x,
-      const string_box<MaxLen, charT, traits>& y) {
+    inline bool operator>(const string_holder<MaxLen, charT, traits>& x,
+      const string_holder<MaxLen, charT, traits>& y) {
         return x.compare(y) > 0;
         }
 
     template<unsigned MaxLen, typename charT, typename traits, typename Allocator>
-    inline bool operator>(const string_box<MaxLen, charT, traits>& x,
+    inline bool operator>(const string_holder<MaxLen, charT, traits>& x,
       const std::basic_string<charT, traits, Allocator> & y) {
-        return x > string_box<MaxLen, charT, traits>(y);
+        return x > string_holder<MaxLen, charT, traits>(y);
         }
 
     template<unsigned MaxLen, typename charT, typename traits, typename Allocator>
     inline bool operator>(const std::basic_string<charT, traits, Allocator> & x,
-      const string_box<MaxLen, charT, traits>& y) {
-        return string_box<MaxLen, charT, traits>(x) > y;
+      const string_holder<MaxLen, charT, traits>& y) {
+        return string_holder<MaxLen, charT, traits>(x) > y;
         }
 
     template<unsigned MaxLen, typename charT, typename traits>
-    inline bool operator>(const string_box<MaxLen, charT, traits>& x, const charT * y) {
-        return x > string_box<MaxLen, charT, traits>(y);
+    inline bool operator>(const string_holder<MaxLen, charT, traits>& x, const charT * y) {
+        return x > string_holder<MaxLen, charT, traits>(y);
         }
 
     template<unsigned MaxLen, typename charT, typename traits>
-    inline bool operator>(const charT * x, const string_box<MaxLen, charT, traits>& y) {
-        return string_box<MaxLen, charT, traits>(x) > y;
+    inline bool operator>(const charT * x, const string_holder<MaxLen, charT, traits>& y) {
+        return string_holder<MaxLen, charT, traits>(x) > y;
         }
 
 //  Less than or equal to
     template<unsigned MaxLen, typename charT, typename traits>
-    inline bool operator<=(const string_box<MaxLen, charT, traits>& x,
-      const string_box<MaxLen, charT, traits>& y) {
+    inline bool operator<=(const string_holder<MaxLen, charT, traits>& x,
+      const string_holder<MaxLen, charT, traits>& y) {
         return x.compare(y) <= 0;
         }
 
     template<unsigned MaxLen, typename charT, typename traits, typename Allocator>
-    inline bool operator<=(const string_box<MaxLen, charT, traits>& x,
+    inline bool operator<=(const string_holder<MaxLen, charT, traits>& x,
       const std::basic_string<charT, traits, Allocator>& y) {
-        return x <= string_box<MaxLen, charT, traits>(y);
+        return x <= string_holder<MaxLen, charT, traits>(y);
         }
 
     template<unsigned MaxLen, typename charT, typename traits, typename Allocator>
     inline bool operator<=(const std::basic_string<charT, traits, Allocator>& x,
-      const string_box<MaxLen, charT, traits>& y) {
-        return string_box<MaxLen, charT, traits>(x) <= y;
+      const string_holder<MaxLen, charT, traits>& y) {
+        return string_holder<MaxLen, charT, traits>(x) <= y;
         }
 
     template<unsigned MaxLen, typename charT, typename traits>
-    inline bool operator<=(const string_box<MaxLen, charT, traits>& x, const charT * y) {
-        return x <= string_box<MaxLen, charT, traits>(y);
+    inline bool operator<=(const string_holder<MaxLen, charT, traits>& x, const charT * y) {
+        return x <= string_holder<MaxLen, charT, traits>(y);
         }
 
     template<unsigned MaxLen, typename charT, typename traits>
-    inline bool operator<=(const charT * x, const string_box<MaxLen, charT, traits>& y) {
-        return string_box<MaxLen, charT, traits>(x) <= y;
+    inline bool operator<=(const charT * x, const string_holder<MaxLen, charT, traits>& y) {
+        return string_holder<MaxLen, charT, traits>(x) <= y;
         }
 
 //  Greater than or equal to
     template<unsigned MaxLen, typename charT, typename traits>
-    inline bool operator>=(const string_box<MaxLen, charT, traits>& x,
-      const string_box<MaxLen, charT, traits>& y) {
+    inline bool operator>=(const string_holder<MaxLen, charT, traits>& x,
+      const string_holder<MaxLen, charT, traits>& y) {
         return x.compare(y) >= 0;
         }
 
     template<unsigned MaxLen, typename charT, typename traits, typename Allocator>
-    inline bool operator>=(const string_box<MaxLen, charT, traits>& x,
+    inline bool operator>=(const string_holder<MaxLen, charT, traits>& x,
       const std::basic_string<charT, traits, Allocator> & y) {
-        return x >= string_box<MaxLen, charT, traits>(y);
+        return x >= string_holder<MaxLen, charT, traits>(y);
         }
 
     template<unsigned MaxLen, typename charT, typename traits, typename Allocator>
     inline bool operator>=(const std::basic_string<charT, traits, Allocator> & x,
-      const string_box<MaxLen, charT, traits>& y) {
-        return string_box<MaxLen, charT, traits>(x) >= y;
+      const string_holder<MaxLen, charT, traits>& y) {
+        return string_holder<MaxLen, charT, traits>(x) >= y;
         }
 
     template<unsigned MaxLen, typename charT, typename traits>
-    inline bool operator>=(const string_box<MaxLen, charT, traits>& x, const charT * y) {
-        return x >= string_box<MaxLen, charT, traits>(y);
+    inline bool operator>=(const string_holder<MaxLen, charT, traits>& x, const charT * y) {
+        return x >= string_holder<MaxLen, charT, traits>(y);
         }
 
     template<unsigned MaxLen, typename charT, typename traits>
-    inline bool operator>=(const charT * x, const string_box<MaxLen, charT, traits>& y) {
-        return string_box<MaxLen, charT, traits>(x) >= y;
+    inline bool operator>=(const charT * x, const string_holder<MaxLen, charT, traits>& y) {
+        return string_holder<MaxLen, charT, traits>(x) >= y;
         }
 
     namespace detail {
@@ -470,7 +472,7 @@ namespace btree {
             }
 
         template<unsigned MaxLen, class charT, class traits>
-        void insert_aligned(std::basic_ostream<charT, traits>& os, const string_box<MaxLen,charT,traits>& str) {
+        void insert_aligned(std::basic_ostream<charT, traits>& os, const string_holder<MaxLen,charT,traits>& str) {
             const std::size_t size = str.size();
             const std::size_t alignment_size = static_cast< std::size_t >(os.width()) - size;
             const bool align_left = (os.flags()
@@ -492,7 +494,7 @@ namespace btree {
     // Inserter
     template<unsigned MaxLen, class charT, class traits>
     inline std::basic_ostream<charT, traits>&
-    operator<<(std::basic_ostream<charT, traits>& os, const string_box<MaxLen,charT,traits>& str) {
+    operator<<(std::basic_ostream<charT, traits>& os, const string_holder<MaxLen,charT,traits>& str) {
         if (os.good()) {
             const std::size_t size = str.size();
             const std::size_t w = static_cast< std::size_t >(os.width());
@@ -507,4 +509,4 @@ namespace btree {
 
 }}  // namespaces
 
-#endif  // BOOST_STRING_BOX_HPP
+#endif  // BOOST_STRING_HOLDER_HPP

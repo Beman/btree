@@ -7,7 +7,7 @@
 
 ///$id code=
 #include <boost/btree/btree_map.hpp>
-#include <boost/btree/support/string_box.hpp>
+#include <boost/btree/support/string_holder.hpp>
 #include <iostream>
 #include <boost/detail/lightweight_main.hpp> 
 
@@ -16,7 +16,7 @@ using namespace boost::btree;
 
 int cpp_main(int, char *[])
 {
-  typedef btree_map<string_box<16>, string_box<16> > BT;
+  typedef btree_map<string_holder<16>, string_holder<16> > BT;
   BT bt("string_map.btr", flags::truncate);
 
 
