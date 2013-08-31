@@ -92,12 +92,7 @@ namespace boost
         std::size_t node_sz = default_node_size)  // node_sz ignored if existing file
         : btree_base<Key,btree_map_base<Key,T,Traits,Compare> >(p,
             flags::user_flags(flgs) | flags::unique, sig, comp, node_sz)
-      {
-        for (; begin != end; ++begin)
-        {
-          this->m_insert_unique(begin->key(), begin->mapped_value());
-        }
-      }
+        { insert(begin, end); }
 
      ~btree_map()
       {
@@ -137,12 +132,7 @@ namespace boost
       void insert(InputIterator begin, InputIterator end)
       { 
         for (; begin != end; ++begin) 
-        {
-           std::pair<const_iterator, bool> result(this->m_insert_unique(this->key(*begin)));
-          if (result.second)
-            std::memcpy(const_cast<T*>(&this->mapped(result.first->second)),
-              &this->mapped(*begin), sizeof(T));
-        }
+          insert(*begin);
       }
 
       iterator writable(const_iterator itr)  {return this->m_write_cast(itr);}

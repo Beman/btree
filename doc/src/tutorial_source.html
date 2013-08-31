@@ -129,12 +129,52 @@ upper_bound(3) is 5</pre>
   parameters, arguments, and functions are used only when 
   tuning for ultimate performance.</p>
   
+  <h2>Integer map first try</h2>
+  
+  <blockquote>
+    <pre>$include "int_map_first_try.cpp.html"</pre>
+  </blockquote>
+  
+  <p>Oops! The compile failed with the error message:</p>
+  
+  <blockquote>
+    <pre>error C2440: &#39;initializing&#39; : cannot convert from
+  &#39;const std::pair&lt;const Key,T&gt; *const &#39; to &#39;std::pair&lt;const Key,T&gt; *&#39;</pre>
+  </blockquote>
+  
+  <p>That&#39;s from trying to convert the <code>const_iterator</code> returned by
+  <code>begin()</code> to an <code>iterator</code>. With sets, <code>iterator</code> 
+  and <code>const_iterator</code> are both constant iterators, and may well be 
+  the same type, so are interchangeable. But with maps, const-ness must be 
+  observed.</p>
+  
+  <p><span style="background-color: #FFFF00">Add </span>
+  <span style="background-color: #FFFF00">faq</span><span style="background-color: #FFFF00"> 
+  entry why do functions return </span><span style="background-color: #FFFF00">
+  const_iterator</span><span style="background-color: #FFFF00"> instead of
+  </span><span style="background-color: #FFFF00">interator</span><span style="background-color: #FFFF00">? 
+  and link to it.</span></p>
+  
+  <p>Let&#39;s correct the code and try again...</p>
+  
+  <h2>Integer map</h2>
+  
+  <blockquote>
+    <pre>$include "int_map.cpp.html"</pre>
+  </blockquote>
+  <p>Here is the output:</p>
+  <blockquote>
+    <pre>1, 111
+2, 222
+3, 333</pre>
+  </blockquote>
+  
+  <h2>String set first try</h2>
+  
   <p>What you probably do want to learn about right away is how to cope with the 
   very stringent <a href="reference.html#Requirements-on-template-parameters">requirements</a> the library places on template parameter <code>Key</code> (and 
   <code>T</code>, for maps), since these requirements will cause endless problems if you 
   don&#39;t understand them. Read on...</p>
-  
-  <h2>String set first try</h2>
   
   <p>An obvious transformation of set1.cpp to handle <code>std::string</code> instead of
   <code>int</code> 
@@ -168,11 +208,13 @@ Key=std::string
   
   <h2>Small strings</h2>
   
-  <p>Many applications involve only small strings; some std::basic_string 
+  <p>Many applications involve only small strings; some <code>
+  <span style="font-weight: 400">std::basic_string</span></code> 
   implementations acknowledge this by employing a small-string optimization 
   under the covers. The class template <code><span style="font-weight: 400">
-  string_box</span></code> provides fixed length strings, with the maximum 
-  length supplied by a template parameter.</p>
+  string_box</span></code> provides a <code><span style="font-weight: 400">
+  std::string</span></code>-like interface, but with a maximum 
+  length supplied by a template parameter. </p>
   
   <blockquote>
     <pre>$include "string_set.cpp.html"</pre>
@@ -187,6 +229,9 @@ be merry
 drink
 eat</pre>
   </blockquote>
+  
+  <p><span style="background-color: #FFFF00">FAQ Where to draw line between 
+  small and large strings?</span></p>
   
   <h2>Longer strings</h2>
   
@@ -255,8 +300,22 @@ eat
   embedded nulls. The count is itself variable length, and will use however many 
   count bytes is required by the size of the string. The 0x80 bit will be set 
   for count bytes except the last (i.e. low-order).</p>
-  <h2>Maps</h2>
-  <p>To Be Supplied.</p>
+  <h2>Packing</h2>
+  <p>Class B-trees disk pages are only 75% full on average because the classic 
+  B-tree insertion algorithm splits a page in half when it overflows.&nbsp; This 
+  implementation supplies an optimization:</p>
+  <blockquote>
+  <p>If this and all prior insert operations are at the end of the tree and 
+  there have been no erase operations, then an insert that would overflow the 
+  current last page is done on a new (i.e empty) last page.</p>
+  </blockquote>
+  <p>For large, deep, trees this results in a major saving in both space and 
+  speed. Pages except the last are 100% full. The depth of the tree, which 
+  affects search times, is at an absolute minimum.</p>
+  <p>Here is how to pack an existing tree:</p>
+  <blockquote>
+    <pre>$include "pack_map.cpp.html"</pre>
+  </blockquote>
   <h2>UDT index set</h2>
   <blockquote>
     <pre>$include "udt_index_set.cpp.html"</pre>
@@ -268,7 +327,7 @@ eat
   <hr>
 
   <p>Revised 
-  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->30 August 2013<!--webbot bot="Timestamp" endspan i-checksum="31351" --></p>
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->31 August 2013<!--webbot bot="Timestamp" endspan i-checksum="31353" --></p>
 
   <p>© Copyright Beman Dawes, 2013</p>
 

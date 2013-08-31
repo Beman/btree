@@ -1,4 +1,4 @@
-//  example/string_index_map.cpp
+//  example/int_map.cpp 
 
 //  Copyright Beman Dawes 2013
 
@@ -6,8 +6,7 @@
 //  See http://www.boost.org/LICENSE_1_0.txt
 
 ///$id code=
-#include <boost/btree/btree_index_map.hpp>
-#include <boost/btree/support/string_view.hpp>
+#include <boost/btree/btree_map.hpp>
 #include <iostream>
 #include <boost/detail/lightweight_main.hpp> 
 
@@ -16,11 +15,15 @@ using namespace boost::btree;
 
 int cpp_main(int, char *[])
 {
-  typedef btree_index_map<string_view> BT;
-  BT bt("string_index_map", flags::truncate);
+  typedef btree_map<int, int> BT;
+  BT bt("int_map.btr", flags::truncate);
 
+  bt.emplace(2, 222);
+  bt.emplace(1, 111);
+  bt.emplace(3, 333);
 
-  for (BT::iterator itr = bt.begin(); itr != bt.end(); ++itr)
+  for (BT::iterator itr = bt.begin();   // Error!
+       itr != bt.end(); ++itr)
     cout << itr->first << ", " << itr->second << '\n';
 
   return 0;

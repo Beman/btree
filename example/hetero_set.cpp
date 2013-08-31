@@ -21,5 +21,7 @@ int cpp_main(int, char *[])
 
   for (BT::iterator itr = bt.begin(); itr != bt.end(); ++itr)
     cout << *itr << '\n';
+
+  return 0;
 }
 ///$endid

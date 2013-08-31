@@ -18,8 +18,14 @@ int cpp_main(int, char *[])
   typedef btree_map<int, int> BT;
   BT bt("int_map.btr", flags::truncate);
 
+  bt.emplace(2, 222);
+  bt.emplace(1, 111);
+  bt.emplace(3, 333);
 
-  for (BT::iterator itr = bt.begin(); itr != bt.end(); ++itr)
+  for (BT::const_iterator itr = bt.begin();   // note well: const_iterator
+       itr != bt.end(); ++itr)
     cout << itr->first << ", " << itr->second << '\n';
+
+  return 0;
 }
 ///$endid

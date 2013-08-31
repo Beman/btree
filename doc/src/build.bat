@@ -19,6 +19,9 @@ call htmlize hetero_set.cpp.html
 mmp int_map.cpp.extract int_map.cpp.html
 call htmlize int_map.cpp.html
 
+mmp int_map_first_try.cpp.extract int_map_first_try.cpp.html
+call htmlize int_map_first_try.cpp.html
+
 mmp int_set_read.cpp.extract int_set_read.cpp.html
 call htmlize int_set_read.cpp.html
 

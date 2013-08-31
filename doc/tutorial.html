@@ -188,12 +188,65 @@ upper_bound(3) is 5</pre>
   parameters, arguments, and functions are used only when 
   tuning for ultimate performance.</p>
   
+  <h2>Integer map first try</h2>
+  
+  <blockquote>
+    <pre>
+#include &lt;boost/btree/btree_map.hpp&gt;
+#include &lt;iostream&gt;
+#include &lt;boost/detail/lightweight_main.hpp&gt; 
+
+using std::cout;
+using namespace boost::btree;
+
+int cpp_main(int, char *[])
+{
+  typedef btree_map&lt;int, int&gt; BT;
+  BT bt(&quot;int_map.btr&quot;, flags::truncate);
+
+  bt.emplace(2, 222);
+  bt.emplace(1, 111);
+  bt.emplace(3, 333);
+
+  for (BT::iterator itr = bt.begin(); itr != bt.end(); ++itr)
+    cout &lt;&lt; itr-&gt;first &lt;&lt; &quot;, &quot; &lt;&lt; itr-&gt;second &lt;&lt; &#39;\n&#39;;
+}</pre>
+  </blockquote>
+  
+  <h2>Integer map</h2>
+  
+  <blockquote>
+    <pre>
+#include &lt;boost/btree/btree_map.hpp&gt;
+#include &lt;iostream&gt;
+#include &lt;boost/detail/lightweight_main.hpp&gt; 
+
+using std::cout;
+using namespace boost::btree;
+
+int cpp_main(int, char *[])
+{
+  typedef btree_map&lt;int, int&gt; BT;
+  BT bt(&quot;int_map.btr&quot;, flags::truncate);
+
+  bt.emplace(2, 222);
+  bt.emplace(1, 111);
+  bt.emplace(3, 333);
+
+  for (BT::const_iterator itr = bt.begin();   // note well: const_iterator
+       itr != bt.end(); ++itr)
+    cout &lt;&lt; itr-&gt;first &lt;&lt; &quot;, &quot; &lt;&lt; itr-&gt;second &lt;&lt; &#39;\n&#39;;
+
+  return 0;
+}</pre>
+  </blockquote>
+  
+  <h2>String set first try</h2>
+  
   <p>What you probably do want to learn about right away is how to cope with the 
   very stringent <a href="reference.html#Requirements-on-template-parameters">requirements</a> the library places on template parameter <code>Key</code> (and 
   <code>T</code>, for maps), since these requirements will cause endless problems if you 
   don&#39;t understand them. Read on...</p>
-  
-  <h2>String set first try</h2>
   
   <p>An obvious transformation of set1.cpp to handle <code>std::string</code> instead of
   <code>int</code> 
@@ -211,15 +264,15 @@ using namespace boost::btree;
 
 int cpp_main(int, char *[])
 {
-  typedef btree_set&lt;std::string&gt; set_type;
-  set_type set(&quot;string_set.btr&quot;, flags::truncate);
+  typedef btree_set&lt;std::string&gt; BT;
+  BT bt(&quot;string_set.btr&quot;, flags::truncate);
 
-  set.insert(&quot;eat&quot;);
-  set.insert(&quot;drink&quot;);
-  set.insert(&quot;be merry&quot;);
+  bt.insert(&quot;eat&quot;);
+  bt.insert(&quot;drink&quot;);
+  bt.insert(&quot;be merry&quot;);
 
-  for (set_type::iterator it = set.begin(); it != set.end(); ++it)
-    cout &lt;&lt; *it &lt;&lt; &#39;\n&#39;;
+  for (BT::iterator itr = bt.begin(); itr != bt.end(); ++itr)
+    cout &lt;&lt; *itr &lt;&lt; &#39;\n&#39;;
 
   return 0;    // required
 }
@@ -358,7 +411,7 @@ int cpp_main(int, char *[])
   for (BT::iterator itr = bt.begin(); itr != bt.end(); ++itr)
     cout &lt;&lt; *itr &lt;&lt; &#39;\n&#39;;
 
-  return 0;    // required
+  return 0;
 } </pre>
   </blockquote>
   
@@ -366,15 +419,16 @@ int cpp_main(int, char *[])
   <p>Here is the output:</p>
   
   <blockquote>
-    <pre>be merry
+    <pre>be exceptionally merry
+be merry
 drink
 eat
 </pre>
   </blockquote>
   <p>....And a dump of the flat file:</p>
   <blockquote>
-    <pre>00000000  <span style="background-color: #E8FFE8">03</span>65 6174 <span style="background-color: #E8FFE8">05</span>64 7269 6e6b <span style="background-color: #E8FFE8">08</span>62 6520 6d65 .eat.drink.be me
-00000010  7272 79                                 rry</pre>
+    <pre><span style="background-color: #FFFF00">00000000  0365 6174 0564 7269 6e6b 0862 6520 6d65 .</span><span style="background-color: #FFFF00">eat.drink.be</span><span style="background-color: #FFFF00"> me
+00000010  7272 79                                 </span><span style="background-color: #FFFF00">rry</span></pre>
   </blockquote>
   <p>Notice that each element begins with a count. That&#39;s more efficient than 
   null termination when processing long strings, and allows strings to contain 
@@ -387,6 +441,7 @@ eat
   <blockquote>
     <pre>
 #include &lt;boost/btree/btree_index_set.hpp&gt;
+#include &quot;udt.hpp&quot;
 #include &lt;boost/btree/support/string_view.hpp&gt;
 #include &lt;iostream&gt;
 #include &lt;boost/detail/lightweight_main.hpp&gt; 
@@ -396,12 +451,17 @@ using namespace boost::btree;
 
 int cpp_main(int, char *[])
 {
-  typedef btree_index_set&lt;udt&gt; BT;
-  BT bt(&quot;udt_3_index_set.idx1&quot;, &quot;udt_3_index_set.dat&quot;, flags::truncate);
+  typedef btree_index_set&lt;UDT&gt; BT;
+  BT bt(&quot;UDT_index_set&quot;, flags::truncate);
 
+  bt.insert(UDT(1, &quot;eat&quot;, &quot;comer&quot;));
+  bt.insert(UDT(2, &quot;drink&quot;, &quot;beber&quot;));
+  bt.insert(UDT(3, &quot;be merry&quot;, &quot;ser feliz&quot;));
 
   for (BT::iterator itr = bt.begin(); itr != bt.end(); ++itr)
     cout &lt;&lt; *itr &lt;&lt; &#39;\n&#39;;
+
+  return 0;    // required
 }</pre>
   </blockquote>
   <h2>UDT three index set</h2>
@@ -428,7 +488,7 @@ int cpp_main(int, char *[])
   <hr>
 
   <p>Revised 
-  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->30 August 2013<!--webbot bot="Timestamp" endspan i-checksum="31351" --></p>
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->31 August 2013<!--webbot bot="Timestamp" endspan i-checksum="31353" --></p>
 
   <p>© Copyright Beman Dawes, 2013</p>
 

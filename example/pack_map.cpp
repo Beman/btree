@@ -7,20 +7,22 @@
 
 ///$id code=
 #include <boost/btree/btree_map.hpp>
-#include <boost/btree/support/string_box.hpp>
 #include <iostream>
-#include <boost/detail/lightweight_main.hpp> 
+#include <boost/detail/lightweight_main.hpp>
+#include <boost/assert.hpp>
 
 using std::cout;
 using namespace boost::btree;
 
 int cpp_main(int, char *[])
 {
-  typedef btree_set<std::string> BT;
-  BT bt("pack_map.btr", flags::truncate);
+  typedef btree_map<int, int> BT;
 
+  BT old_bt("int_map.btr", flags::read_only);
+  BT new_bt(old_bt.begin(), old_bt.end(), "packed_int_map.btr", flags::truncate);
 
-  for (BT::iterator itr = bt.begin(); itr != bt.end(); ++itr)
-    cout << itr->first << ", " << itr->second << '\n';
+  BOOST_ASSERT(old_bt == new_bt);
+
+  return 0;
 }
 ///$endid

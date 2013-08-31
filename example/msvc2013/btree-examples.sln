@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Express 2013 for Windows Desktop
-VisualStudioVersion = 12.0.20617.1 PREVIEW
+VisualStudioVersion = 12.0.20623.1 VSUPREVIEW
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "int_set", "int_set\int_set.vcxproj", "{7DA3ADCF-7277-41A5-8533-0DF38A9E1DFF}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -40,6 +40,8 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "udt_index_set", "udt_index_set\udt_index_set.vcxproj", "{0EFC52E6-601F-4C59-B34A-6383C4764DF9}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "btree_dll", "btree_dll\btree_dll.vcxproj", "{461DEAAB-1CD8-4CDB-8158-04AF110B32A9}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "int_map_first_try", "int_map_first_try\int_map_first_try.vcxproj", "{AE192C4C-733D-440A-95B1-EA6253D05BF0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -110,6 +112,10 @@ Global
 		{461DEAAB-1CD8-4CDB-8158-04AF110B32A9}.Debug|Win32.Build.0 = Debug|Win32
 		{461DEAAB-1CD8-4CDB-8158-04AF110B32A9}.Release|Win32.ActiveCfg = Release|Win32
 		{461DEAAB-1CD8-4CDB-8158-04AF110B32A9}.Release|Win32.Build.0 = Release|Win32
+		{AE192C4C-733D-440A-95B1-EA6253D05BF0}.Debug|Win32.ActiveCfg = Debug|Win32
+		{AE192C4C-733D-440A-95B1-EA6253D05BF0}.Debug|Win32.Build.0 = Debug|Win32
+		{AE192C4C-733D-440A-95B1-EA6253D05BF0}.Release|Win32.ActiveCfg = Release|Win32
+		{AE192C4C-733D-440A-95B1-EA6253D05BF0}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
