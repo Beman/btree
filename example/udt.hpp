@@ -55,7 +55,7 @@ namespace boost
 
     public:
       typedef UDT                     reference;             // proxy
-      typedef endian::big_uint32un_t  index_position_type;   // big enough
+      typedef endian::big_uint32_t  index_position_type;   // big enough
 
       static std::size_t size(const UDT& x)
       {

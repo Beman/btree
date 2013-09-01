@@ -40,7 +40,7 @@ namespace btree
   public:
     typedef const T&  reference;
 
-    typedef endian::big_uint48un_t  index_position_type;  // position in the flat file
+    typedef endian::big_uint48_t  index_position_type;  // position in the flat file
 
     static std::size_t size(const T&)    {return sizeof(T);}
     static std::size_t size(const char*) {return sizeof(T);}
@@ -69,7 +69,7 @@ namespace btree
   public:
     typedef const char*  reference;
 
-    typedef endian::big_uint48un_t  index_position_type;  // position in the flat file
+    typedef endian::big_uint48_t  index_position_type;  // position in the flat file
 
     static std::size_t size(const char* x)   {BOOST_ASSERT(x); return std::strlen(x) + 1;}
 
@@ -93,7 +93,7 @@ namespace btree
 
   public:
     typedef boost::string_view         reference;
-    typedef endian::big_uint48un_t     index_position_type;  // position in the flat file
+    typedef endian::big_uint48_t     index_position_type;  // position in the flat file
 
     static std::size_t size(const boost::string_view& x)
     {

@@ -106,7 +106,7 @@ public:
   void  load_state();
   void  verify_restart();
   void  report_counts() const;
-  void  run_tests();
+  void  r_tests();
 
 };
 
@@ -723,7 +723,7 @@ public:
   //  run test cycles  -----------------------------------------------------------------//
 
   template <class Traits>
-  void tester<Traits>::run_tests()
+  void tester<Traits>::r_tests()
   {
 
     path_str = path_prefix + ".btr";
@@ -901,7 +901,7 @@ int cpp_main(int argc, char *argv[])
   cout.imbue(std::locale(std::locale(), new thousands_separator));
 
   tester<boost::btree::detail::set_index_string_view> testr;
-  testr.run_tests();
+  testr.r_tests();
 
   cout << "all test cycles complete" << endl;
 
