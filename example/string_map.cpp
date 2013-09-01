@@ -16,11 +16,15 @@ using namespace boost::btree;
 
 int cpp_main(int, char *[])
 {
-  typedef btree_map<string_holder<16>, string_holder<16> > BT;
+  typedef btree_map<string_holder<32>, string_holder<32> > BT;
   BT bt("string_map.btr", flags::truncate);
 
+  bt.emplace("eat", "comer");
+  bt.emplace("drink", "beber");
+  bt.emplace("be merry", "ser feliz");
+  bt.emplace("be exceptionally merry", "ser feliz excepcionalmente");
 
-  for (BT::iterator itr = bt.begin(); itr != bt.end(); ++itr)
+  for (BT::const_iterator itr = bt.begin(); itr != bt.end(); ++itr)
     cout << itr->first << ", " << itr->second << '\n';
 
   return 0;
