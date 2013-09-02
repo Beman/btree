@@ -33,7 +33,7 @@
     </tr>
   </table>
 
-  <h2>B-tree associative containers</h2>
+  <h2><a name="B-tree-assoc-cntrs">B-tree associative containers</a></h2>
 
   <p>B-tree associative containers provide fast retrieval of external data based on keys. 
   The external data may be resident on hard disks, floppy disks, memory cards, 
@@ -150,7 +150,7 @@
   <p>[<i>Note:</i> None of the standard library container or container-like 
   types meet these requirements. <i>--end note</i>]</p>
 
-  <h3>Iterators</h3>
+  <h3><a name="Iterators">Iterators</a></h3>
 
   <p>Iterators of associative containers are bidirectional iterators. For sets, 
   iterator types <code>iterator</code> and <code>const_iterator</code> are the 
@@ -165,20 +165,20 @@
   writable()</code> function that turns a <code>const_iterator</code> into an
   <code>iterator</code>.</p>
 
-  <h2><a name="Common-interface">Interface</a> and functionality</h2>
+  <h3><a name="Method-of-description">Method of description</a></h3>
 
   <p>All associative containers 
   share the same description. Material which is specific to particular container 
   types uses <i><b>bold italic font</b></i> to indicate the applicable type or 
   types.</p>
 
-  <h3><a name="Common synopsis">Synopsis</a></h3>
+  <h3><a name="Associative-container-synopsis">Synopsis</a></h3>
   <pre>namespace boost { namespace btree
 {
   template &lt;class Key,
             <i><b>class T,  // maps only</b></i>
-            class Traits = default_traits,
-            class Compare = btree::less&gt;
+            class Traits = <a href="#default_traits">default_traits</a>,
+            class Compare = <a href="#Function-object-less">btree::less</a>&gt;
   class <b><i>class-name    // see below</i></b>
   {
   public:
@@ -250,7 +250,7 @@
     // <a href="#btree_set-file-operations">file operations</a>
 
     <i><b>// trees:</b></i>
-        void open(const path_type&amp; pth,
+        void <a href="#open-trees">open</a>(const path_type&amp; pth,
           flags::bitmask flgs = flags::read_only, uint64_t sig = -1, 
           const Compare&amp; comp = Compare(), std::size_t node_sz = default_node_size);
  
@@ -387,7 +387,7 @@
   flags::bitmask flgs = flags::read_only,
   uint64_t sig = -1,  
   const Compare&amp; comp = Compare(),
-  std::size_t node_sz = default_node_size); </pre>
+  std::size_t node_sz = <a href="#default_node_size">default_node_size</a>); </pre>
   <blockquote>
     <p><i>Effects:</i> <code>open(p, flgs, sig, comp, node_sz)</code></p>
   </blockquote>
@@ -397,7 +397,7 @@
   flags::bitmask flgs = flags::read_only,
   uint64_t sig = -1,  
   const Compare&amp; comp = Compare(),
-  std::size_t node_sz = default_node_size); </pre>
+  std::size_t node_sz = <a href="#default_node_size">default_node_size</a>); </pre>
   <blockquote>
     <p><i>Effects:</i> <code>open(p, flgs, sig, comp, node_sz)</code></p>
   </blockquote>
@@ -412,11 +412,11 @@ catch (...) {}</pre>
   
   <h4><a name="btree_set-file-operations">File operations</a></h4>
   
-  <pre>void open(const boost::filesystem::path&amp; pth,
+  <pre>void <a name="open-trees">open</a>(const boost::filesystem::path&amp; pth,
   flags::bitmask flgs = flags::read_only,
   uint64_t sig = -1,  
   const Compare&amp; comp = Compare(),
-  std::size_t node_sz = default_node_size); </pre>
+  std::size_t node_sz = <a href="#default_node_size">default_node_size</a>); </pre>
   <blockquote>
     <p><i>Requires:</i> <code>is_open()</code> is <code>false</code>.<p><i>Postconditions:</i><blockquote>
       <blockquote>
@@ -468,53 +468,53 @@ catch (...) {}</pre>
     <p><i>Throws:</i> If the path <code>p</code> cannot be opened, or the type 
     or signature differ from when the file was originally created.</p>
   </blockquote>
-  <pre>void  flush();</pre>
+  <pre>void  <a name="flush">flush</a>();</pre>
   <blockquote>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Effects:</i> Any data that has been modified is written to the 
     external file.</p>
   </blockquote>
-  <pre>void  close();</pre>
+  <pre>void  <a name="close">close</a>();</pre>
   <blockquote>
     <p><i>Effects:</i> if <code>is_open()</code>, <code>flush()</code> and then 
     close the external file. Otherwise, no effect.</p>
     <p><i>Postconditions:</i> <code>is_open() == false</code></p>
   </blockquote>
   <h4><a name="btree_set-iterators">Iterators</a></h4>
-  <pre>const_iterator  begin() const;
-const_iterator  cbegin() const;</pre>
+  <pre>const_iterator  <a name="begin">begin</a>() const;
+const_iterator  <a name="cbegin">cbegin</a>() const;</pre>
   <blockquote>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Returns:</i> An iterator pointing to the first element in the 
     container.</p>
   </blockquote>
-  <pre>const_iterator  end() const;
-const_iterator  cend() const;</pre>
+  <pre>const_iterator  <a name="end">end</a>() const;
+const_iterator  <a name="cend">cend</a>() const;</pre>
   <blockquote>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Returns:</i> A past-the-end iterator that does not point to an element 
     in the container.</p>
   </blockquote>
-  <pre>const_reverse_iterator  rbegin() const;
-const_reverse_iterator  crbegin() const;  </pre>
+  <pre>const_reverse_iterator  <a name="rbegin">rbegin</a>() const;
+const_reverse_iterator  <a name="crbegin">crbegin</a>() const;  </pre>
   <blockquote>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Returns:</i> <code>std::reverse_iterator(end())</code>.</p>
   </blockquote>
-  <pre>const_reverse_iterator  rend() const;
-const_reverse_iterator  crend() const;</pre>
+  <pre>const_reverse_iterator  <a name="rend">rend</a>() const;
+const_reverse_iterator  <a name="crend">crend</a>() const;</pre>
   <blockquote>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Returns:</i> <code>std::reverse_iterator(begin())</code>.</p>
   </blockquote>
     <h4><a name="btree_set-observers">Observers</a></h4>
-  <pre>bool  is_open() const;</pre>
+  <pre>bool  <a name="is_open">is_open</a>() const;</pre>
   <blockquote>
     <p><i>Returns:</i> <code>true</code> if the <code>open</code> function has 
     been called and did not throw and exception, and the <code>close</code> 
     function has not been subsequently called. Otherwise, <code>false</code>.</p>
   </blockquote>
-  <pre>const filesystem::path&amp; path() const;</pre>
+  <pre>const filesystem::path&amp; <a name="path">path</a>() const;</pre>
   <blockquote>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Returns:</i> A copy of <code>pth</code> from the constructor or <code>
@@ -529,66 +529,66 @@ const_reverse_iterator  crend() const;</pre>
     adjusted to reflect possible presence of <code>unique</code> and <code>
     key_only</code> flags, and application of hints.</p>
   </blockquote>
-  <pre>const buffer_manager&amp;  manager() const;</pre>
+  <pre>const buffer_manager&amp;  <a name="manager">manager</a>() const;</pre>
   <blockquote>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Returns:</i> A reference to the <code>buffer_manager</code> object for 
     the container.</p>
   </blockquote>
-  <pre>const header_page&amp;  header() const;</pre>
+  <pre>const header_page&amp;  <a name="header">header</a>() const;</pre>
   <blockquote>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Returns:</i> A reference to the <code>header_page</code> object for 
     the container.</p>
   </blockquote>
-  <pre>key_compare  key_comp() const;</pre>
+  <pre>key_compare  <a name="key_comp">key_comp</a>() const;</pre>
   <blockquote>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Returns:</i> The comparison object from the constructor or <code>open</code> 
     function.</p>
   </blockquote>
-  <pre>value_compare  value_comp() const;</pre>
+  <pre>value_compare  <a name="value_comp">value_comp</a>() const;</pre>
   <blockquote>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Returns:</i> A <code>value_compare</code> object constructed from the 
     comparison object from the constructor or <code>open</code> function.</p>
   </blockquote>
-  <pre>bool  ok_to_pack() const;</pre>
+  <pre>bool  <a name="ok_to_pack">ok_to_pack</a>() const;</pre>
   <blockquote>
     <p><i>Returns:</i> <code>true</code> if all prior <code>insert</code> and
     <code>emplace</code> calls have been applied at <code>end()</code>, and 
     there have been no <code>erase</code> calls.</p>
   </blockquote>
     <h4><a name="btree_set-capacity">Capacity</a></h4>
-  <pre>bool  empty() const;</pre>
+  <pre>bool  <a name="empty">empty</a>() const;</pre>
   <blockquote>
     <p><i>Returns:</i> <code>!size()</code></p>
   </blockquote>
-  <pre>size_type  size() const;</pre>
+  <pre>size_type  <a name="size">size</a>() const;</pre>
   <blockquote>
     <p><i>Returns:</i> The number of elements in the container.</p>
   </blockquote>
-  <pre>size_type  max_size() const;</pre>
+  <pre>size_type  <a name="max_size">max_size</a>() const;</pre>
   <blockquote>
     <p><i>Returns:</i> <code>-1</code>.</p>
     <p>[<i>Note:</i> This function is effectively useless, and is 
     provided only because the standard library provides a similar useless 
     function! <i>-- end note</i>]</p>
   </blockquote>
-  <pre>std::size_t  node_size() const;</pre>
+  <pre>std::size_t  <a name="node_size">node_size</a>() const;</pre>
   <blockquote>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Returns:</i> The value of the <code>node_sz</code> argument to the
     <code>open</code> function at the time of original file creation.</p>
   </blockquote>
-  <pre>std::size_t  max_cache_size() const;</pre>
+  <pre>std::size_t  <a name="max_cache_size">max_cache_size</a>() const;</pre>
   <blockquote>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Returns:</i> The value of the <code>max</code> argument to the most 
     recent call to the <code>max_cache_size</code> function.</p>
   </blockquote>
     <h4><a name="btree_set-tuning">Tuning</a></h4>
-  <pre>void  max_cache_size(std::size_t max);  </pre>
+  <pre>void  <a name="max_cache_size-setter">max_cache_size</a>(std::size_t max);  </pre>
   <blockquote>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Effects:</i>&nbsp; Informs the implementation of the maximum number of 
@@ -596,13 +596,13 @@ const_reverse_iterator  crend() const;</pre>
     <p>[<i>Note:</i> More nodes may be cached if required to maintain the 
     validity of outstanding iterators. <i>-- end note</i>]</p>
   </blockquote>
-  <pre>void  max_cache_megabytes(std::size_t mb);</pre>
+  <pre>void  <a name="max_cache_megabytes">max_cache_megabytes</a>(std::size_t mb);</pre>
   <blockquote>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Effects:</i> <code>max_cache_size((mb*1048576)/node_size())</code><i>.</i></p>
   </blockquote>
     <h4><a name="btree_set-modifiers">Modifiers</a></h4>
-  <pre>std::pair&lt;const_iterator, bool&gt; emplace(const value_type&amp; x);<b><i>  // btree_set only</i></b></pre>
+  <pre>std::pair&lt;const_iterator, bool&gt; <a name="emplace">emplace</a>(const value_type&amp; x);<b><i>  // btree_set only</i></b></pre>
   <blockquote>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Effects:</i> Inserts <code>x</code> if and only if there is no element in the 
@@ -621,7 +621,7 @@ const_reverse_iterator  crend() const;</pre>
     <p><i>Returns:</i> An iterator pointing to the newly inserted element.</p>
   </blockquote>
   <pre>std::pair&lt;const_iterator, bool&gt;
-  emplace(const key_type&amp; k, const mapped_type&amp; m);<b><i>  // btree_map only</i></b></pre>
+  <a name="emplace-maps">emplace</a>(const key_type&amp; k, const mapped_type&amp; m);<b><i>  // btree_map only</i></b></pre>
   <blockquote>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Effects:</i> Inserts an element constructed from <code>k</code> and
@@ -640,7 +640,7 @@ const_reverse_iterator  crend() const;</pre>
     <code>m</code>.</p>
     <p><i>Returns:</i> An iterator pointing to the newly inserted element.</p>
   </blockquote>
-  <pre>std::pair&lt;const_iterator, bool&gt; insert(const value_type&amp; x);  <b><i>// btree_set and btree_map only</i></b></pre>
+  <pre>std::pair&lt;const_iterator, bool&gt; <a name="insert-unique">insert</a>(const value_type&amp; x);  <b><i>// btree_set and btree_map only</i></b></pre>
   <blockquote>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Effects:</i> Inserts <code>x</code> if and only if there is no 
@@ -650,7 +650,7 @@ const_reverse_iterator  crend() const;</pre>
     pair points to the element with key equivalent to the key of <code>value</code>.</p>
     <p><i>Returns:</i> The pair described in <i>Effects</i>.</p>
   </blockquote>
-  <pre>const_iterator insert(const value_type&amp; x);  <b><i>// btree_multiset and btree_multimap only</i></b></pre>
+  <pre>const_iterator <a name="inserteq">insert</a>(const value_type&amp; x);  <b><i>// btree_multiset and btree_multimap only</i></b></pre>
   <blockquote>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Effects:</i> Inserts <code>x</code>. If a range containing 
@@ -659,7 +659,7 @@ const_reverse_iterator  crend() const;</pre>
     <p><i>Returns:</i> An iterator pointing to the newly inserted element.</p>
   </blockquote>
   <pre>template &lt;class InputIterator&gt;
-  void insert(InputIterator begin, InputIterator end);</pre>
+  void <a name="insert-range">insert</a>(InputIterator begin, InputIterator end);</pre>
   <blockquote>
     <p><i>Requires:</i></p>
     <ul>
@@ -677,7 +677,7 @@ const_reverse_iterator  crend() const;</pre>
       <li><b><i>btree_multiset and btree_multimap:</i></b> Inserts each element from the range <code>[begin,end)</code>.</li>
     </ul>
   </blockquote>
-  <pre>const_iterator  erase(const_iterator position);</pre>
+  <pre>const_iterator  <a name="erase-pos">erase</a>(const_iterator position);</pre>
   <blockquote>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Returns:</i> Erases the element pointed to by <code>position</code>. 
@@ -685,14 +685,14 @@ const_reverse_iterator  crend() const;</pre>
     position</code> prior to the element being erased. If no such element 
     exists, returns <code>end()</code>.</p>
   </blockquote>
-  <pre>size_type  erase(const key_type&amp; k);</pre>
+  <pre>size_type  <a name="erase-key">erase</a>(const key_type&amp; k);</pre>
   <blockquote>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Effects:</i> If it exists, erases the element in the container with 
     key equivalent to <code>k</code>.</p>
     <p><i>Returns:</i>&nbsp; The number of elements erased.</p>
   </blockquote>
-  <pre>const_iterator  erase(const_iterator begin, const_iterator end);</pre>
+  <pre>const_iterator  <a name="erase-range">erase</a>(const_iterator begin, const_iterator end);</pre>
   <blockquote>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Effects:</i> Erases all the elements in the range <code>[begin,end)</code>.</p>
@@ -702,7 +702,7 @@ const_reverse_iterator  crend() const;</pre>
     is a valid iterator whereas end has been invalidated by the erase. <i>--end 
     note</i>]</p>
   </blockquote>
-  <pre>void  clear();</pre>
+  <pre>void  <a name="clear">clear</a>();</pre>
   <blockquote>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Postconditions:</i> <code>empty()</code> is <code>true</code>.</p>
@@ -711,7 +711,7 @@ const_reverse_iterator  crend() const;</pre>
     <p>Objects of types <code>K</code> and <code>Key</code> are required to be
     <code>key_comp()</code> comparable.<br>
 &nbsp;</p>
-  <pre>template &lt;class K&gt;
+  <pre><a name="find"></a>template &lt;class K&gt;
 const_iterator  find(const K&amp; k) const;
 const_iterator  find(const Key&amp; k) const;</pre>
   <blockquote>
@@ -720,14 +720,14 @@ const_iterator  find(const Key&amp; k) const;</pre>
     equivalent to <code>k</code>, or <code>end()</code> if no such element is 
     found.</p>
   </blockquote>
-  <pre>template &lt;class K&gt;
+  <pre><a name="count"></a>template &lt;class K&gt;
 size_type  count(const K&amp; k) const;
 size_type  count(const Key&amp; k) const;</pre>
   <blockquote>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Returns:</i> The number of elements with key equivalent to <code>k</code>.</p>
   </blockquote>
-  <pre>template &lt;class K&gt;
+  <pre><a name="lower_bound"></a>template &lt;class K&gt;
 const_iterator  lower_bound(const K&amp; k) const;
 const_iterator  lower_bound(const Key&amp; k) const;</pre>
   <blockquote>
@@ -736,7 +736,7 @@ const_iterator  lower_bound(const Key&amp; k) const;</pre>
     less than <code>k</code>, or <code>end()</code> if such an element is not 
     found.</p>
   </blockquote>
-  <pre>template &lt;class K&gt;
+  <pre><a name="upper_bound"></a>template &lt;class K&gt;
 const_iterator  upper_bound(const K&amp; k) const;
 const_iterator  upper_bound(const Key&amp; k) const;</pre>
   <blockquote>
@@ -745,7 +745,7 @@ const_iterator  upper_bound(const Key&amp; k) const;</pre>
     greater than <code>k</code>, or <code>end()</code> if such an element is not 
     found.</p>
   </blockquote>
-  <pre>template &lt;class K&gt;
+  <pre><a name="equal_range"></a>template &lt;class K&gt;
 const_iterator_range  equal_range(const K&amp; k) const;
 const_iterator_range  equal_range(const Key&amp; k) const;</pre>
   <blockquote>
@@ -754,14 +754,14 @@ const_iterator_range  equal_range(const Key&amp; k) const;</pre>
     upper_bound(k)</code>).</p>
   </blockquote>
 
-  <h2>Helpers</h2>
+  <h2><a name="Helpers">Helpers</a></h2>
 
   <h3>Header &lt;boost/btree/helpers.hpp&gt;Synopsis</h3>
 
   <p>The components in this header are included by the other boost/btree 
   headers. </p>
 
-  <div>
+  
 
   <pre>namespace boost { namespace btree
 {
@@ -769,7 +769,7 @@ const_iterator_range  equal_range(const Key&amp; k) const;</pre>
   static const uint16_t major_version = 0;  // version identification
   static const uint16_t minor_version = 1;
 
-  static const std::size_t default_node_size = 4096;  // determined by O/S page size
+  static const std::size_t <a name="default_node_size">default_node_size</a> = 4096;  // determined by O/S page size
 
   //  <a href="#Traits">Traits</a>
   struct big_endian_traits;
@@ -807,7 +807,7 @@ const_iterator_range  equal_range(const Key&amp; k) const;</pre>
   };
   
 }}  // namespaces</pre>
-  </div>
+  
   <h3><a name="Traits">Traits</a></h3>
   <p>Traits provide the types for management objects on B-tree disk nodes. Nodes 
   are usually 4096 bytes in length for current hard disk hardware, and every 
@@ -825,33 +825,33 @@ const_iterator_range  equal_range(const Key&amp; k) const;</pre>
   dumps are easier to read, files are portable, and none of the other traits 
   show any measurable effect on performance.</p>
 
-  <div>
+  
 
   <pre>namespace boost { namespace btree
 {
- struct big_endian_traits
+ struct <a name="big_endian_traits">big_endian_traits</a>
   {
-    typedef endian::big_uint32un_t  node_id_type;     // node ids are page numbers
+    typedef endian::big_uint32_t  node_id_type;     // node ids are page numbers
     typedef uint8_t                 node_level_type;  // level of node; 0 for leaf node.
-    typedef endian::big_uint24un_t  node_size_type;   // permits large node sizes
+    typedef endian::big_uint24_t  node_size_type;   // permits large node sizes
     static const BOOST_SCOPED_ENUM(endian::order) header_endianness
       = endian::order::big;
   };
   
-  struct little_endian_traits
+  struct <a name="little_endian_traits">little_endian_traits</a>
   {
-    typedef endian::little_uint32un_t  node_id_type;     // node ids are page numbers
+    typedef endian::little_uint32_t  node_id_type;     // node ids are page numbers
     typedef uint8_t                    node_level_type;  // level of node; 0 for leaf node.
-    typedef endian::little_uint24un_t  node_size_type;   // permits large node sizes
+    typedef endian::little_uint24_t  node_size_type;   // permits large node sizes
     static const BOOST_SCOPED_ENUM(endian::order) header_endianness
       = endian::order::little;
   };
     
-  struct native_endian_traits
+  struct <a name="native_endian_traits">native_endian_traits</a>
   {
-    typedef endian::native_uint32un_t  node_id_type;     // node ids are page numbers
-    typedef uint8_t                    node_level_type;  // level of node; 0 for leaf node.
-    typedef endian::native_uint24un_t  node_size_type;   // permits large node sizes
+    typedef endian::native_uint32_t  node_id_type;     // node ids are page numbers
+    typedef uint8_t                  node_level_type;  // level of node; 0 for leaf node.
+    typedef endian::native_uint24_t  node_size_type;   // permits large node sizes
     static const BOOST_SCOPED_ENUM(endian::order) header_endianness
   #   ifdef BOOST_BIG_ENDIAN
       = endian::order::big;
@@ -860,7 +860,7 @@ const_iterator_range  equal_range(const Key&amp; k) const;</pre>
   #   endif
   };
 
-  typedef big_endian_traits  default_traits;  // see rationale above
+  typedef <a href="#big_endian_traits">big_endian_traits</a>  <a name="default_traits">default_traits</a>;  // see rationale above
 
 }}  // namespaces </pre>
 
@@ -911,7 +911,7 @@ const_iterator_range  equal_range(const Key&amp; k) const;</pre>
   }  // namespace flags  
 }}  // namespaces</pre>
 
-  </div>
+  
 
   <h3><a name="Constants">Constants</a></h3>
 
@@ -944,7 +944,7 @@ const_iterator_range  equal_range(const Key&amp; k) const;</pre>
   <hr>
 
   <p>Revised 
-  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->29 August 2013<!--webbot bot="Timestamp" endspan i-checksum="31368" --></p>
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->02 September 2013<!--webbot bot="Timestamp" endspan i-checksum="39620" --></p>
 
   <p>© Copyright Beman Dawes, 2013</p>
 
