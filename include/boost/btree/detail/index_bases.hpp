@@ -21,9 +21,7 @@
 
   TODO:
 
-  *  Get map_example2 working. Depends on index_map.
-
-  *  Add emplace()
+  *  Does insert/emplace unique of an existing entry return the correct .first iterator?
 
   *  verify dereferencing the end iterator assert fires correctly.
 

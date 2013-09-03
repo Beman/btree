@@ -311,9 +311,6 @@
     // <a href="#btree_set-modifiers">modifiers</a>    
 
     std::pair&lt;const_iterator, bool&gt;
-                   <a href="#emplace">emplace</a>(const value_type&amp; x);  <i><b>// unique sets</b></i>
-    const_iterator <a href="#emplace">emplace</a>(const value_type&amp; x);  <i><b>// equivalent sets</b></i>
-    std::pair&lt;const_iterator, bool&gt;
                    <a href="#emplace">emplace</a>(const key_type&amp; k, const mapped_type&amp; x); <i><b>// unique maps</b></i>
     const_iterator <a href="#emplace">emplace</a>(const key_type&amp; k, const mapped_type&amp; x); <i><b>// equivalent </b></i><b><i>maps</i></b>
 
@@ -601,26 +598,8 @@ const_reverse_iterator  <a name="crend">crend</a>() const;</pre>
     <p><i>Effects:</i> <code>max_cache_size((mb*1048576)/node_size())</code><i>.</i></p>
   </blockquote>
     <h4><a name="btree_set-modifiers">Modifiers</a></h4>
-  <pre>std::pair&lt;const_iterator, bool&gt; <a name="emplace">emplace</a>(const value_type&amp; x);<b><i>  // btree_set only</i></b></pre>
-  <blockquote>
-    <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
-    <p><i>Effects:</i> Inserts <code>x</code> if and only if there is no element in the 
-    container with key equivalent to <code>x</code>. The bool component of the 
-    returned pair is true if and only if the insertion takes place, and the 
-    iterator component of the pair points to the element with key equivalent to 
-    the key of <code>x</code>.</p>
-    <p><i>Returns:</i> The pair described in <i>Effects</i>.</p>
-  </blockquote>
-  <pre>const_iterator emplace(const value_type&amp; x);  <b><i>// btree_multiset only</i></b></pre>
-  <blockquote>
-    <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
-    <p><i>Effects:</i> Inserts <code>x</code>. If a range containing elements 
-    equivalent to <code>x</code> exists, <code>x</code> is inserted at the end 
-    of that range.</p>
-    <p><i>Returns:</i> An iterator pointing to the newly inserted element.</p>
-  </blockquote>
   <pre>std::pair&lt;const_iterator, bool&gt;
-  <a name="emplace-maps">emplace</a>(const key_type&amp; k, const mapped_type&amp; m);<b><i>  // btree_map only</i></b></pre>
+  <a name="emplace-maps">emplace</a>(const key_type&amp; k, const mapped_type&amp; m);<b><i>  // unique maps</i></b></pre>
   <blockquote>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Effects:</i> Inserts an element constructed from <code>k</code> and
@@ -632,14 +611,14 @@ const_reverse_iterator  <a name="crend">crend</a>() const;</pre>
     <p><i>Returns:</i> The pair described in <i>Effects</i>.</p>
   </blockquote>
   <pre>std::pair&lt;const_iterator, bool&gt;
-  emplace(const key_type&amp; k, const mapped_type&amp; m);<b><i>  // btree_multimap only</i></b></pre>
+  emplace(const key_type&amp; k, const mapped_type&amp; m);<b><i>  // equivalent maps</i></b></pre>
   <blockquote>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Effects:</i> Inserts an element constructed from <code>k</code> and
     <code>m</code>.</p>
     <p><i>Returns:</i> An iterator pointing to the newly inserted element.</p>
   </blockquote>
-  <pre>std::pair&lt;const_iterator, bool&gt; <a name="insert-unique">insert</a>(const value_type&amp; x);  <b><i>// btree_set and btree_map only</i></b></pre>
+  <pre>std::pair&lt;const_iterator, bool&gt; <a name="insert-unique">insert</a>(const value_type&amp; x);  <b><i>// unique containers</i></b></pre>
   <blockquote>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Effects:</i> Inserts <code>x</code> if and only if there is no 
@@ -649,7 +628,7 @@ const_reverse_iterator  <a name="crend">crend</a>() const;</pre>
     pair points to the element with key equivalent to the key of <code>value</code>.</p>
     <p><i>Returns:</i> The pair described in <i>Effects</i>.</p>
   </blockquote>
-  <pre>const_iterator <a name="inserteq">insert</a>(const value_type&amp; x);  <b><i>// btree_multiset and btree_multimap only</i></b></pre>
+  <pre>const_iterator <a name="inserteq">insert</a>(const value_type&amp; x);  <b><i>// equivalent containers</i></b></pre>
   <blockquote>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Effects:</i> Inserts <code>x</code>. If a range containing 
@@ -943,7 +922,7 @@ const_iterator_range  equal_range(const Key&amp; k) const;</pre>
   <hr>
 
   <p>Revised 
-  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->02 September 2013<!--webbot bot="Timestamp" endspan i-checksum="39620" --></p>
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->03 September 2013<!--webbot bot="Timestamp" endspan i-checksum="39622" --></p>
 
   <p>© Copyright Beman Dawes, 2013</p>
 

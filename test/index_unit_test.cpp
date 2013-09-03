@@ -975,6 +975,13 @@ void  map_test()
     BOOST_TEST_EQ(idx.count(1), 1u);
     BOOST_TEST_EQ(idx.count(0), 1u);
 
+    idx.emplace(2, 9);
+    BOOST_TEST_EQ(idx.size(), 3u);
+    index_type::const_iterator find_itr = idx.find(2);
+    BOOST_TEST(find_itr != idx.end());
+    BOOST_TEST_EQ(find_itr->first, 2);
+    BOOST_TEST_EQ(find_itr->second, 9);
+
     for (index_type::const_iterator itr = idx.begin();
       itr != idx.end(); ++itr)
       cout << itr->first << "," << itr->second << std::endl;
@@ -998,6 +1005,17 @@ void  map_test()
     BOOST_TEST_EQ(idx.count(1), 2u);
     BOOST_TEST_EQ(idx.count(0), 1u);
 
+    idx.emplace(2, 9);
+    BOOST_TEST_EQ(idx.size(), 4u);
+    index_type::const_iterator find_itr = idx.find(2);
+    BOOST_TEST(find_itr != idx.end());
+    BOOST_TEST_EQ(find_itr->first, 2);
+    BOOST_TEST_EQ(find_itr->second, 9);
+
+    idx.emplace(1, 0);
+    BOOST_TEST_EQ(idx.size(), 5u);
+    BOOST_TEST_EQ(idx.count(1), 3u);
+
     for (index_type::const_iterator itr = idx.begin();
       itr != idx.end(); ++itr)
       cout << itr->first << "," << itr->second << std::endl;
@@ -1018,6 +1036,13 @@ void  map_test()
     BOOST_TEST_EQ(idx.size(), 2u);
     BOOST_TEST_EQ(idx.size(), 2u);
 
+    idx.emplace(string_view("wxyz"), string_view("zyxw"));
+    BOOST_TEST_EQ(idx.size(), 3u);
+    index_type::const_iterator find_itr = idx.find("wxyz");
+    BOOST_TEST(find_itr != idx.end());
+    BOOST_TEST_EQ(find_itr->first, "wxyz");
+    BOOST_TEST_EQ(find_itr->second, "zyxw");
+
     for (index_type::const_iterator itr = idx.begin();
       itr != idx.end(); ++itr)
       cout << itr->first << "," << itr->second << std::endl;
@@ -1036,6 +1061,17 @@ void  map_test()
     BOOST_TEST_EQ(idx.size(), 2u);
     idx.insert(make_pair(string_view("ab"), string_view("1")));
     BOOST_TEST_EQ(idx.size(), 3u);
+
+    idx.emplace(string_view("wxyz"), string_view("zyxw"));
+    BOOST_TEST_EQ(idx.size(), 4u);
+    index_type::const_iterator find_itr = idx.find("wxyz");
+    BOOST_TEST(find_itr != idx.end());
+    BOOST_TEST_EQ(find_itr->first, "wxyz");
+    BOOST_TEST_EQ(find_itr->second, "zyxw");
+
+    idx.emplace(string_view("wxyz"), string_view("foobar"));
+    BOOST_TEST_EQ(idx.size(), 5u);
+    BOOST_TEST_EQ(idx.count("wxyz"), 2u);
 
     for (index_type::const_iterator itr = idx.begin();
       itr != idx.end(); ++itr)
@@ -1095,8 +1131,6 @@ int cpp_main(int argc, char* argv[])
     return 1;
   }
 
-  map_test();
-
   instantiate_test();
   open_all_new_test();
   //open_new_index_test();
@@ -1109,6 +1143,7 @@ int cpp_main(int argc, char* argv[])
   two_index_test();
   two_index_iterator_test();
   c_string_test();
+  map_test();
   size_t_codec_test();  // do this before string_view, as string_view depends on it
   string_view_test();
   string_view_volume_test();

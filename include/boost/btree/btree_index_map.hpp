@@ -169,6 +169,26 @@ public:
     }
     return std::pair<const_iterator, bool>(const_iterator(), false);
   }
+
+  //  emplace(const Key&, const T&) special case not requiring c++0x support
+  std::pair<const_iterator, bool> emplace(const Key& key, const T& mapped_value)
+  {
+    BOOST_ASSERT((base::flags() & flags::read_only) == 0);
+    if (base::find(key) == base::end())
+    {
+      file_position pos = base::file()->file_size();
+      std::size_t key_sz = IndexTraits<Key>::size(key);
+      std::size_t mapped_sz = IndexTraits<T>::size(mapped_value);
+      base::file()->increment_file_size(key_sz + mapped_sz);
+      IndexTraits<Key>::build_flat_element(key,
+        base::file()->template data<char>() + pos, key_sz);
+      IndexTraits<T>::build_flat_element(mapped_value,
+        base::file()->template data<char>() + pos + key_sz, mapped_sz);
+      return insert_file_position(pos);
+    }
+    return std::pair<const_iterator, bool>(const_iterator(), false);
+  }
+
 };
 
 //--------------------------------------------------------------------------------------//
@@ -280,6 +300,21 @@ public:
   {
     BOOST_ASSERT((base::flags() & flags::read_only) == 0);
     return insert_file_position(push_back(value));
+  }
+
+  //  emplace(const Key&, const T&) special case not requiring c++0x support
+  const_iterator emplace(const Key& key, const T& mapped_value)
+  {
+    BOOST_ASSERT((base::flags() & flags::read_only) == 0);
+    file_position pos = base::file()->file_size();
+    std::size_t key_sz = IndexTraits<Key>::size(key);
+    std::size_t mapped_sz = IndexTraits<T>::size(mapped_value);
+    base::file()->increment_file_size(key_sz + mapped_sz);
+    IndexTraits<Key>::build_flat_element(key,
+      base::file()->template data<char>() + pos, key_sz);
+    IndexTraits<T>::build_flat_element(mapped_value,
+      base::file()->template data<char>() + pos + key_sz, mapped_sz);
+    return insert_file_position(pos);
   }
 };
 
