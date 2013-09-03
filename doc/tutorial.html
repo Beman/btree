@@ -32,8 +32,7 @@
       &nbsp;&nbsp; <a href="index.html">Library Home</a>
       &nbsp;&nbsp; <a href="reference.html">Reference</a>
       &nbsp;&nbsp; <a href="tutorial.html">Tutorial</a>
-      &nbsp;&nbsp; <a href="faq.html">FAQ</a> &nbsp;&nbsp; <a href=
-      "data_portability.html">Data Portability</a></td>
+      &nbsp;&nbsp; <a href="faq.html">FAQ</a></td>
     </tr>
   </table>
 
@@ -506,7 +505,7 @@ int cpp_main(int, char *[])
   return 0;
 }</pre>
   </blockquote>
-  <h2>Data portability</h2>
+  <h2><a name="Data-portability">Data portability</a></h2>
   <blockquote>
     <pre>
 #include &lt;boost/btree/btree_map.hpp&gt;
@@ -520,12 +519,12 @@ using namespace boost::endian;
 
 int cpp_main(int, char *[])
 {
-  typedef btree_map&lt;big_int56un_t, big_int24un_t&gt; BT;
+  typedef btree_map&lt;big_int56_t, big_int24_t&gt; BT;
   BT bt(&quot;endian_map.btr&quot;, flags::truncate);
 
-  bt.emplace(big_int56un_t(38759234875LL), big_int24un_t(1));
-  bt.emplace(big_int56un_t(82352345), big_int24un_t(2));
-  bt.emplace(big_int56un_t(1242423462), big_int24un_t(3));
+  bt.emplace(big_int56_t(38759234875LL), big_int24_t(1));
+  bt.emplace(big_int56_t(82352345), big_int24_t(2));
+  bt.emplace(big_int56_t(1242423462), big_int24_t(3));
 
   cout &lt;&lt; &quot;sizeof(BT::value_type) is &quot; &lt;&lt; sizeof(BT::value_type) &lt;&lt; &#39;\n&#39;;
 
@@ -650,7 +649,7 @@ find(2) found 2,222</pre>
   <hr>
 
   <p>Revised 
-  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->31 August 2013<!--webbot bot="Timestamp" endspan i-checksum="31353" --></p>
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->03 September 2013<!--webbot bot="Timestamp" endspan i-checksum="39622" --></p>
 
   <p>© Copyright Beman Dawes, 2013</p>
 

@@ -28,8 +28,7 @@
       &nbsp;&nbsp; <a href="index.html">Library Home</a>
       &nbsp;&nbsp; <a href="reference.html">Reference</a>
       &nbsp;&nbsp; <a href="tutorial.html">Tutorial</a>
-      &nbsp;&nbsp; <a href="faq.html">FAQ</a>
-      &nbsp;&nbsp; <a href="portability_guide.htm">Portability</a></td>
+      &nbsp;&nbsp; <a href="faq.html">FAQ</a></td>
     </tr>
   </table>
 
@@ -132,15 +131,15 @@
 
   <ul>
     <li>Be fixed-length, determinable by <code>sizeof</code>.</li>
-    <li dir="ltr">
+    <li>
 
-  <p dir="ltr">Still be valid after copy via <code>std::memcpy</code> to a 
+  <p>Still be valid after copy via <code>std::memcpy</code> to a 
   different memory location.</p>
 
     </li>
     <li>
 
-  <p dir="ltr">Not contain pointers or references, except in the case of 
+  <p>Not contain pointers or references, except in the case of 
   indexes, where pointers and references are allowed in ephemeral proxy classes 
   like <code>std::string_view</code>.</p>
 
@@ -265,91 +264,91 @@
           flags::bitmask flgs = flags::read_only, uint64_t sig = -1, 
           const Compare&amp; comp = Compare(), std::size_t node_sz = default_node_size);
  
-    void                    flush();
-    void                    close();
+    void                    <a href="#flush">flush</a>();
+    void                    <a href="#close">close</a>();
 
     // <a href="#btree_set-iterators">iterators</a>
-    const_iterator          begin() const;
-    const_iterator          end() const;
-    const_reverse_iterator  rbegin() const;     
-    const_reverse_iterator  rend() const;
-    const_iterator          cbegin() const;
-    const_iterator          cend() const;
-    const_reverse_iterator  crbegin() const;     
-    const_reverse_iterator  crend() const;
+    const_iterator          <a href="#begin">begin</a>() const;
+    const_iterator          <a href="#end">end</a>() const;
+    const_reverse_iterator  <a href="#rbegin">rbegin</a>() const;     
+    const_reverse_iterator  <a href="#rend">rend</a>() const;
+    const_iterator          <a href="#cbegin">cbegin</a>() const;
+    const_iterator          <a href="#cend">cend</a>() const;
+    const_reverse_iterator  <a href="#crbegin">crbegin</a>() const;     
+    const_reverse_iterator  <a href="#crend">crend</a>() const;
 
     // <a href="#btree_set-observers">observers</a>
-    bool                    is_open() const;
-    const filesystem::path&amp; path() const;
-    flags::bitmask          flags() const;
+    bool                    <a href="#is_open">is_open</a>() const;
+    const filesystem::path&amp; <a href="#path">path</a>() const;
+    flags::bitmask          <a href="#flags">flags</a>() const;
 
-    const buffer_manager&amp;   manager() const;
-    const header_page&amp;      header() const;
+    const buffer_manager&amp;   <a href="#manager">manager</a>() const;
+    const header_page&amp;      <a href="#header">header</a>() const;
 
-    key_compare             key_comp() const;
-    value_compare           value_comp() const;
-    bool                    ok_to_pack() const;
+    key_compare             <a href="#key_comp">key_comp</a>() const;
+    value_compare           <a href="#value_comp">value_comp</a>() const;
+    bool                    <a href="#ok_to_pack">ok_to_pack</a>() const;
 
     // <a href="#btree_set-capacity">capacity</a>
-    bool                    empty() const;
-    size_type               size() const;
-    size_type               max_size() const;
-    std::size_t             node_size() const;
-    std::size_t             max_cache_size() const;
+    bool                    <a href="#empty">empty</a>() const;
+    size_type               <a href="#size">size</a>() const;
+    size_type               <a href="#max_size">max_size</a>() const;
+    std::size_t             <a href="#node_size">node_size</a>() const;
+    std::size_t             <a href="#max_cache_size">max_cache_size</a>() const;
                            
     // <a href="#btree_set-tuning">tuning</a>             
-    void                    max_cache_size(std::size_t m);  // -1 indicates unlimited
-    void                    max_cache_megabytes(std::size_t mb);
+    void                    <a href="#max_cache_size">max_cache_size</a>(std::size_t m);  // -1 indicates unlimited
+    void                    <a href="#max_cache_megabytes">max_cache_megabytes</a>(std::size_t mb);
 
     // <b><i>indexes only
 
-    </i></b>file_ptr_type           file() const;
-    const filesystem::path&amp; file_path() const;
-    file_size_type          file_size() const;
-    file_size_type          file_reserve() const;
-    file_position           position(const_iterator itr) const;
+    </i></b>file_ptr_type           <a href="#file">file</a>() const;
+    const filesystem::path&amp; <a href="#file_path">file_path</a>() const;
+    file_size_type          <a href="#file_size">file_size</a>() const;
+    file_size_type          <a href="#file_reserve">file_reserve</a>() const;
+    file_position           <a href="#position">position</a>(const_iterator itr) const;
 
     // <a href="#btree_set-modifiers">modifiers</a>    
 
     std::pair&lt;const_iterator, bool&gt;
-                   emplace(const value_type&amp; x);  <i><b>// unique sets only</b></i>
-    const_iterator emplace(const value_type&amp; x);  <i><b>// equivalent sets only</b></i>
+                   <a href="#emplace">emplace</a>(const value_type&amp; x);  <i><b>// unique sets</b></i>
+    const_iterator <a href="#emplace">emplace</a>(const value_type&amp; x);  <i><b>// equivalent sets</b></i>
     std::pair&lt;const_iterator, bool&gt;
-                   emplace(const key_type&amp; k, const mapped_type&amp; x); <i><b>// unique maps only</b></i>
-    const_iterator emplace(const key_type&amp; k, const mapped_type&amp; x); <i><b>// equivalent sets only</b></i>
+                   <a href="#emplace">emplace</a>(const key_type&amp; k, const mapped_type&amp; x); <i><b>// unique maps</b></i>
+    const_iterator <a href="#emplace">emplace</a>(const key_type&amp; k, const mapped_type&amp; x); <i><b>// equivalent </b></i><b><i>maps</i></b>
 
     std::pair&lt;const_iterator, bool&gt;
-                   insert(const value_type&amp; x);  <i><b>// unique containers only</b></i>
-    const_iterator insert(const value_type&amp; x);  <i><b>// equivalent containers only</b></i>
+                   <a href="#insert">insert</a>(const value_type&amp; x);  <i><b>// unique containers</b></i>
+    const_iterator <a href="#insert">insert</a>(const value_type&amp; x);  <i><b>// equivalent containers</b></i>
 
     template &lt;class InputIterator&gt;
-      void                  insert(InputIterator begin, InputIterator end);
+      void                  <a href="#insert">insert</a>(InputIterator begin, InputIterator end);
 
-    const_iterator          erase(const_iterator position);
-    size_type               erase(const key_type&amp; k);
-    const_iterator          erase(const_iterator first, const_iterator last);
-    void                    clear();
+    const_iterator          <a href="#erase">erase</a>(const_iterator position);
+    size_type               <a href="#erase">erase</a>(const key_type&amp; k);
+    const_iterator          <a href="#erase">erase</a>(const_iterator first, const_iterator last);
+    void                    <a href="#clear">clear</a>();
 
     // <a href="#btree_set-operations">operations</a>
     template &lt;class K&gt;
-      const_iterator        find(const K&amp; k) const;
-    const_iterator          find(const key_type&amp; k) const;
+      const_iterator        <a href="#find">find</a>(const K&amp; k) const;
+    const_iterator          <a href="#find">find</a>(const key_type&amp; k) const;
 
     template &lt;class K&gt;
-      size_type             count(const K&amp; k) const;
-    size_type               count(const key_type&amp; k) const;
+      size_type             <a href="#count">count</a>(const K&amp; k) const;
+    size_type               <a href="#count">count</a>(const key_type&amp; k) const;
 
     template &lt;class K&gt;
-      const_iterator        lower_bound(const K&amp; k) const;
-    const_iterator          lower_bound(const key_type&amp; k) const;
+      const_iterator        <a href="#lower_bound">lower_bound</a>(const K&amp; k) const;
+    const_iterator          <a href="#lower_bound">lower_bound</a>(const key_type&amp; k) const;
 
     template &lt;class K&gt;
-      const_iterator        upper_bound(const K&amp; k) const;
-    const_iterator          upper_bound(const key_type&amp; k) const;
+      const_iterator        <a href="#upper_bound">upper_bound</a>(const K&amp; k) const;
+    const_iterator          <a href="#upper_bound">upper_bound</a>(const key_type&amp; k) const;
 
     template &lt;class K&gt;
-      std::pair&lt;const_iterator, const_iterator&gt;  equal_range(const K&amp; k) const;
-    std::pair&lt;const_iterator, const_iterator&gt;    equal_range(const key_type&amp; k) const;
+      std::pair&lt;const_iterator, const_iterator&gt;  <a href="#equal_range">equal_range</a>(const K&amp; k) const;
+    std::pair&lt;const_iterator, const_iterator&gt;    <a href="#equal_range">equal_range</a>(const key_type&amp; k) const;
   };
 
   // non-member functions

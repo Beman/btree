@@ -58,7 +58,5 @@ del tutorial.html 2>nul
 rem ' dir="ltr"' is an artifact of editing mistakes.
 chg tutorial_source.html " dir=\qltr\q" ""
 
-mmp tutorial_source.html tutorial.html
-type \bgd\util\crnl.txt
-
-call hoist
+mmp tutorial_source.html ..\tutorial.html
+..\tutorial.html
