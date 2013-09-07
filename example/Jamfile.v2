@@ -9,13 +9,41 @@ project
       <library>/boost/btree//boost_btree
       <library>/boost/filesystem//boost_filesystem
       <library>/boost/system//boost_system
+      <library>/boost/timer//boost_timer
+      <library>/boost/chrono//boost_chrono
       <toolset>msvc:<asynch-exceptions>on
     ;
-    
-exe set1 : set1.cpp : <link>static ;
-exe set_read_file : set_read_file.cpp : <link>static ;
-exe set2 : set2.cpp : <link>static ;
+
+exe bulk_load_map    : bulk_load_map.cpp    : <link>static ;
+exe endian_map       : endian_map.cpp       : <link>static ;
+exe hetero_set       : hetero_set.cpp       : <link>static ;
+exe int_map          : int_map.cpp          : <link>static ;
+exe int_set          : int_set.cpp          : <link>static ;
+exe int_set_read     : int_set_read.cpp     : <link>static ;
+exe pack_map         : pack_map.cpp         : <link>static ;
+exe string_index_map : string_index_map.cpp : <link>static ;
+exe string_index_set : string_index_set.cpp : <link>static ;
+exe string_map       : string_map.cpp       : <link>static ;
+exe string_set       : string_set.cpp       : <link>static ;
+exe tune_int_map     : tune_int_map.cpp     : <link>static <variant>release ;
+exe udt_3_index_set  : udt_3_index_set.cpp  : <link>static ;
+exe udt_index_set    : udt_index_set.cpp    : <link>static ;
+
 
 alias install : bin ;
-install bin : set1 set_read_file set2 ;
+install bin :
+   bulk_load_map
+   endian_map
+   hetero_set
+   int_map
+   int_set
+   int_set_read
+   pack_map
+   string_index_map
+   string_index_set
+   string_map
+   string_set
+   tune_int_map
+   udt_3_index_set
+   udt_index_set ;
 explicit install bin ;

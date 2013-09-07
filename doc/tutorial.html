@@ -36,11 +36,27 @@
     </tr>
   </table>
 
-   <h2>A simple set</h2>
+   <h2>Introduction</h2>
    
-   <p>The library provides associative containers that are resident on some form 
-   of random access external memory, such as a hard-disk, solid-state disk, or 
-   USB memory-stick.&nbsp; Here is an example, <a href="../example/set1.cpp">set1.cpp</a>:</p>
+   <p>This tutorial is focused on quickly getting you using the library. It 
+   assumes you are already familiar with the C++ standard library associative 
+   containers. It doesn&#39;t explain how a B-Tree works internally; for that see 
+   original
+   <a href="http://www.minet.uni-jena.de/dbis/lehre/ws2005/dbs1/Bayer_hist.pdf">
+   Bayer and McCreight</a> paper, which is unusually clear and one of the 
+   classic papers of computer science.</p>
+   
+   <p>The examples in this paper are generated from actual C++ code, which is 
+   available in the <a href="../example">example</a> directory.</p>
+   
+   <p>Please build these example programs yourself, give them a try, then make 
+   some modifications and experiment a bit on your own! See the
+   <a href="../README">README</a> file for the build setup.</p>
+   
+   <h2>A simple <a name="integer-set">integer set</a></h2>
+   
+   <p>The B-Tree equivalent of <code>hello_world.cpp</code> might be a simple 
+   set of integers. Here is an example [<a href="../example/int_set.cpp"><code>int_set.cpp</code></a>]:</p>
    
   <blockquote>
     <pre>
@@ -70,17 +86,18 @@ int main()
    <p>This should be familiar to users of the C++ standard library 
    associative container <code>std::set</code>. The only real difference, other 
    than header and class names, is the constructor call. Because the 
-   container is disk-resident, an argument supplies a path for the file to be 
+   container is disk-resident, an argument supplies a path for the file that 
+   will be 
    created. A second argument supplies <a href="reference.html#Flags">flags</a> 
-   that specify details for opening the file. </p>
+   that specify details of how the file should be opened. </p>
    
-   <p>Build and test set1.cpp like this (Windows):</p>
+   <p>Build and test <code>int_set.cpp</code> like this (Windows):</p>
    
   <blockquote>
     <pre>&gt;cd boost-root/libs/btree/example   <b><i>Works for both Windows and POSIX</i></b>
-&gt;b2 set1 install
+&gt;b2 int_set install
 <i>... build output elided ...</i>
-&gt;bin\set1         <i><b>                  On POSIX: bin/set1</b></i>
+&gt;bin\int_set         <i><b>               On POSIX: bin/set1</b></i>
 1
 3
 5
@@ -88,17 +105,19 @@ lower_bound(3) is 3
 upper_bound(3) is 5</pre>
   </blockquote>
   
-  <p>Go ahead and try this yourself! Once you have built and tested set1.cpp as 
+  <p>Go ahead and try this yourself! Once you have built and tested it as 
   is, try experimenting with some of the other functions already familiar to you 
   from <code>std::set</code>. Did they work as you expected? Hopefully your 
   answer was &quot;yes&quot;!</p>
   
-  <p>What is the point of using a <code>btree_set</code> instead of a <code>
-  std::set</code>? Let&#39;s look at another example...</p>
+  <p><b>Question:</b> What is the point of using a <code>btree_set</code> instead of a <code>
+  std::set</code>? <b>Answer:</b> Persistence on some form of random-access 
+  device. </p>
   
-  <h2>Reading from a B-tree file</h2>
+  <h2>Reading a B-tree file</h2>
   
-  <p>Here is the sample code for set_read_file.cpp, showing edits from set1.cpp:</p>
+  <p>Let&#39;s read the file that was created in the prior example. This is the 
+  first try [<a href="../example/int_set_read_first_try.cpp"><code>int_set_read_first_try.cpp</code></a>]:</p>
   
   <blockquote>
     <pre>
@@ -123,10 +142,10 @@ int main()
   
   </blockquote>
   
-  <p>Since the &quot;set1.btr&quot; file already exists, we let the constructor flags 
+  <p>Since the <code>&quot;int_set.btr&quot;</code> file already exists, we let the constructor flags 
   default to <code>flags::read_only</code> and don&#39;t redo the inserts.</p>
   <p>The first time this program ran, it crashed with one of those totally 
-  unhelpful Windows error messages. The code was changed to code to use 
+  unhelpful Windows error messages. So the code was changed to code to use 
   an exception reporting wrapper:</p>
   <blockquote>
     <pre>
@@ -153,19 +172,20 @@ int cpp_main(int, char *[])   // note the name and required formal parameters
 }
 </pre>
   </blockquote>
-  <p>That compiled and ran, with the wrapper reporting:</p>
+  <p>That compiled and ran, with the wrapper catching an exception and reporting:</p>
   <blockquote>
   <pre>ERROR  ERROR  ERROR  ERROR  ERROR  ERROR  ERROR  ERROR  ERROR  ERROR  ERROR
 
 ****************************** std::exception *****************************
-binary_file::open: The system cannot find the file specified: &quot;set1.btr&quot;
+binary_file::open: The system cannot find the file specified: &quot;int_set.btr&quot;
 ***************************************************************************
 </pre>
   </blockquote>
   <p><b>Important point:</b> B-trees are disk resident, so errors are a 
   commonplace. Your code should expect that exceptions will be thrown.</p>
   
-  <p>After fixing the problem of set1.btr being in a different directory, set_read_file.cpp 
+  <p>After fixing the problem of the test file being in a different directory, 
+  the program 
   ran fine:</p>
   
   <blockquote>
@@ -175,7 +195,7 @@ binary_file::open: The system cannot find the file specified: &quot;set1.btr&quo
 lower_bound(3) is 3
 upper_bound(3) is 5</pre>
   </blockquote>
-  <p>That brings us back to the original point; <b>B-tree are disk resident</b>, 
+  <p>That brings us back to the original point; <b>B-tree are externally resident</b>, 
   and that makes them very different animals from standard library associative 
   containers.</p>
   
@@ -237,7 +257,7 @@ int cpp_main(int, char *[])
   
   <p>Let&#39;s correct the code and try again...</p>
   
-  <h2>Integer map</h2>
+  <h2><a name="Integer-map">Integer map</a></h2>
   
   <blockquote>
     <pre>
@@ -388,10 +408,14 @@ eat</pre>
   "http://www.minet.uni-jena.de/dbis/lehre/ws2005/dbs1/Bayer_hist.pdf">
   Organization and Maintenance of Large Ordered Indexes</a></i>.</p>
   
-  <p>This is implemented as two files, a btree_set (or btree_multiset) 
-  file used as an index pointing into a random-access flat file which contains 
+  <p>The B-tree library provides classes that package the use of a B-tree as an 
+  index into a file.&nbsp; The headers are <code>&lt;boost/btree/btree_index_set.hpp&gt;</code> 
+  and <code>&lt;boost/btree/btree_index_map.hpp&gt;</code>. This is implemented as 
+  multiple files - one or more B-tree 
+  files used indexes pointing into a random-access flat file which contains 
   the actual data. Databases and other software often use a similar approach, 
-  but may hide the index file from end-user view. The benefits of this two file 
+  but may hide the index file from end-user view. The benefits of the two-layer 
+  multi-file 
   approach include:</p>
   
   <ul>
@@ -412,13 +436,13 @@ eat</pre>
   <ul>
     <li>A Boost implementation of the new standard library <code>
     <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3685.html">
-    string_view</a></code> class to act as the container&#39;s <code>
-    <span style="font-weight: 400">Key</span></code> type, so that the familiar
+    string_view</a></code> class to act as a <code>std::string</code> proxy, so that the familiar
     <code><span style="font-weight: 400">std::string</span></code> operations 
     are available to users.</li>
     <li>An adapter index traits class to copy data into and out of the 
     flat file.</li>
-    <li>Class btree_index_set to glue the pieces together into a 
+    <li>Classes <code>btree_index_set</code>, <code>btree_index_multiset</code>,
+    <code>btree_index_map</code>, and <code>btree_index_multimap</code> to glue the pieces together into a 
     seamless interface.</li>
 </ul>
   <p>Here is the final version of set2.cpp:</p>
@@ -462,27 +486,31 @@ eat
   </blockquote>
   <p>....And a dump of the flat file:</p>
   <blockquote>
-    <pre><span style="background-color: #FFFF00">00000000  0365 6174 0564 7269 6e6b 0862 6520 6d65 .</span><span style="background-color: #FFFF00">eat.drink.be</span><span style="background-color: #FFFF00"> me
-00000010  7272 79                                 </span><span style="background-color: #FFFF00">rry</span></pre>
+    <pre>00000000  <span style="background-color: #00FF00">03</span>65 6174 <span style="background-color: #00FF00">05</span>64 7269 6e6b <span style="background-color: #00FF00">08</span>62 6520 6d65 .eat.drink.be me
+00000010  7272 79<span style="background-color: #00FF00">16</span> 6265 2065 7863 6570 7469 6f6e rry.be exception
+00000020  616c 6c79 206d 6572 7279                ally merry</pre>
   </blockquote>
   <p>Notice that each element begins with a count. That&#39;s more efficient than 
   null termination when processing long strings, and allows strings to contain 
-  embedded nulls. The count is itself variable length, and will use however many 
-  count bytes is required by the size of the string. The 0x80 bit will be set 
-  for count bytes except the last (i.e. low-order).</p>
-  <h2>Packing</h2>
-  <p>Class B-trees disk pages are only 75% full on average because the classic 
-  B-tree insertion algorithm splits a page in half when it overflows.&nbsp; This 
+  embedded nulls. The count is itself variable length, big-endian, and will use 
+  as many 
+  count bytes are required by the size of the string. Null strings are permitted 
+  and are denoted by a count of 0. The 0x80 bit will be set 
+  for all count bytes except the last (i.e. low-order).</p>
+  <h2>Packing a B-tree</h2>
+  <p>B-trees disk pages are only 75% full on average because the classic 
+  B-tree insertion algorithm  splits a page into two pages when it overflows.&nbsp; This 
   implementation supplies an optimization:</p>
   <blockquote>
-  <p>If this and all prior insert operations are at the end of the tree and 
-  there have been no erase operations, then an insert that would overflow the 
-  current last page is done on a new (i.e empty) last page.</p>
+  <p>If an insert is at the end of the tree <b>and</b> all prior insert operations 
+  were at the end of the tree <b>and</b> 
+  there have been no erase operations, then if the insert would overflow the 
+  current last page, it is done on a new (i.e. empty) last page.</p>
   </blockquote>
   <p>For large, deep, trees this results in a major saving in both space and 
-  speed. Pages except the last are 100% full. The depth of the tree, which 
+  speed. All pages except the last one are 100% full. The depth of the tree, which 
   affects search times, is at an absolute minimum.</p>
-  <p>Here is how to pack an existing tree:</p>
+  <p>Here is how to pack an existing tree [<a href="../example/pack_map.cpp">pack_map.cpp</a>]:</p>
   <blockquote>
     <pre>
 #include &lt;boost/btree/btree_map.hpp&gt;
@@ -506,6 +534,30 @@ int cpp_main(int, char *[])
 }</pre>
   </blockquote>
   <h2><a name="Data-portability">Data portability</a></h2>
+  <p>Programs written using this library are portable to any computer 
+  system with external memory and a conforming C++03 (or later) compiler. But 
+  data is a different story. For example, the <a href="#Integer-map">integer map</a> 
+  example used a <code>btree_map&lt;int, int&gt;</code> container, but <code>int</code> 
+  may cause several data portability problems when data is moved to a different 
+  platform:</p>
+  <blockquote>
+    <ul>
+      <li>
+  <p>size of <code>int</code> might be 16-bits, 32-bits, or some other size.</li>
+    <li>
+  <p>The byte-ordering of <code>int</code> might be
+  <a href="http://en.wikipedia.org/wiki/Endianness">big endian or little endian</a>.</li>
+  <li>
+  <p>Even when the size and endianness are the same, alignment 
+  requirements may differ. For example, some compilers align a 64-bit <code>long 
+  long</code>&nbsp; to an 4-byte boundary for a 32-bit build, but to an 8-byte 
+  boundary for a 64-bit build..</li>
+</ul>
+</blockquote>
+  <p>The first concern can be handled by using one of the standard
+  <code>typedef</code>s, like <code>int32_t</code>.&nbsp; All of the concerns can 
+  be addressed by using one of the endian types from the companion
+  <a href="../../endian/index.html">Boost Endian Library</a>. Here&#39;s an example [<a href="../example/endian_map.cpp">endian_map.cpp</a>]:</p>
   <blockquote>
     <pre>
 #include &lt;boost/btree/btree_map.hpp&gt;
@@ -519,21 +571,29 @@ using namespace boost::endian;
 
 int cpp_main(int, char *[])
 {
-  typedef btree_map&lt;big_int56_t, big_int24_t&gt; BT;
+  typedef btree_map&lt;big_int56_t, big_int24_t&gt; BT;  // note the sizes!
   BT bt(&quot;endian_map.btr&quot;, flags::truncate);
 
-  bt.emplace(big_int56_t(38759234875LL), big_int24_t(1));
-  bt.emplace(big_int56_t(82352345), big_int24_t(2));
-  bt.emplace(big_int56_t(1242423462), big_int24_t(3));
+  bt.emplace(38759234875LL, 1);
+  bt.emplace(82352345, 2);
+  bt.emplace(1242423462, 3);
 
   cout &lt;&lt; &quot;sizeof(BT::value_type) is &quot; &lt;&lt; sizeof(BT::value_type) &lt;&lt; &#39;\n&#39;;
 
-  for (BT::const_iterator itr = bt.begin();   // note well: const_iterator
+  for (BT::const_iterator itr = bt.begin();
     itr != bt.end(); ++itr)
     cout &lt;&lt; itr-&gt;first &lt;&lt; &quot;, &quot; &lt;&lt; itr-&gt;second &lt;&lt; &#39;\n&#39;;
 
   return 0;
 }</pre>
+  </blockquote>
+    <p>The resulting data file will be portable to all common platforms, and to 
+    has a very high likelihood of being portable even to really strange legacy 
+    or research platforms.</p>
+  <blockquote>
+    <p><b>Aside:</b> Note the use of 7-byte integers for the key type and 3-byte 
+    integers for the mapped type. The endian library supports 1 through 8 byte 
+    integer sizes, signed and unsigned.</p>
   </blockquote>
   <h2>UDT index set</h2>
   <blockquote>
@@ -585,8 +645,8 @@ int cpp_main(int, char *[])
   return 0;
 }</pre>
   </blockquote>
-    <h2>Heterogeneous compares</h2>
-    <p>Consider the following code, noting that <code>find(2)</code> 
+    <h2><a name="Heterogeneous-compares">Heterogeneous compares</a></h2>
+    <p>Consider the following code; note that <code>find(2)</code> 
     has an argument type of <code>int</code>, not <code>UDT</code>, and that
     <code>UDT</code> does not supply a conversion from <code>int</code>.</p>
   <blockquote>
@@ -632,9 +692,9 @@ int cpp_main(int, char *[])
   return 0;
 }</pre>
   </blockquote>
-    <p>The B-tree associative container classes have member templates for the
+    <p>The B-tree associative container classes have member function templates for 
     <code>find</code>, <code>count</code>, <code>lower_bound</code>, <code>
-    upper_bound</code> , and <code>equal_range</code> functions. These allow 
+    upper_bound</code> , and <code>equal_range</code>. These allow 
     heterogeneous compares, if the <code>Key</code> type supports comparison for 
     the heterogeneous type (i.e <code>int</code> in this example).</p>
   <p>So, yes, the code does compile and run. The output is:</p>
@@ -649,7 +709,7 @@ find(2) found 2,222</pre>
   <hr>
 
   <p>Revised 
-  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->03 September 2013<!--webbot bot="Timestamp" endspan i-checksum="39622" --></p>
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->06 September 2013<!--webbot bot="Timestamp" endspan i-checksum="39628" --></p>
 
   <p>© Copyright Beman Dawes, 2013</p>
 

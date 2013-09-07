@@ -17,16 +17,16 @@ using namespace boost::endian;
 
 int cpp_main(int, char *[])
 {
-  typedef btree_map<big_int56_t, big_int24_t> BT;
+  typedef btree_map<big_int56_t, big_int24_t> BT;  // note the sizes!
   BT bt("endian_map.btr", flags::truncate);
 
-  bt.emplace(big_int56_t(38759234875LL), big_int24_t(1));
-  bt.emplace(big_int56_t(82352345), big_int24_t(2));
-  bt.emplace(big_int56_t(1242423462), big_int24_t(3));
+  bt.emplace(38759234875LL, 1);
+  bt.emplace(82352345, 2);
+  bt.emplace(1242423462, 3);
 
   cout << "sizeof(BT::value_type) is " << sizeof(BT::value_type) << '\n';
 
-  for (BT::const_iterator itr = bt.begin();   // note well: const_iterator
+  for (BT::const_iterator itr = bt.begin();
     itr != bt.end(); ++itr)
     cout << itr->first << ", " << itr->second << '\n';
 

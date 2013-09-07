@@ -43,6 +43,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "btree_dll", "btree_dll\btre
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "int_map_first_try", "int_map_first_try\int_map_first_try.vcxproj", "{AE192C4C-733D-440A-95B1-EA6253D05BF0}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tune_int_map", "tune_int_map\tune_int_map.vcxproj", "{C327AC77-4073-408E-90D3-9A9994D0E57F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -114,6 +116,10 @@ Global
 		{AE192C4C-733D-440A-95B1-EA6253D05BF0}.Debug|Win32.ActiveCfg = Debug|Win32
 		{AE192C4C-733D-440A-95B1-EA6253D05BF0}.Release|Win32.ActiveCfg = Release|Win32
 		{AE192C4C-733D-440A-95B1-EA6253D05BF0}.Release|Win32.Build.0 = Release|Win32
+		{C327AC77-4073-408E-90D3-9A9994D0E57F}.Debug|Win32.ActiveCfg = Debug|Win32
+		{C327AC77-4073-408E-90D3-9A9994D0E57F}.Debug|Win32.Build.0 = Debug|Win32
+		{C327AC77-4073-408E-90D3-9A9994D0E57F}.Release|Win32.ActiveCfg = Release|Win32
+		{C327AC77-4073-408E-90D3-9A9994D0E57F}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
