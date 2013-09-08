@@ -52,6 +52,9 @@ call htmlize udt_3_index_set.cpp.html
 mmp udt_index_set.cpp.extract udt_index_set.cpp.html
 call htmlize udt_index_set.cpp.html
 
+mmp tune_int_map.cpp.extract tune_int_map.cpp.html
+call htmlize tune_int_map.cpp.html
+
 echo Generating tutorial.html...
 del tutorial.html 2>nul
 

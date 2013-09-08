@@ -202,12 +202,16 @@ upper_bound(3) is 5</pre>
   <p>What about the additional template parameters, constructor arguments, 
   and member functions that are not present in <code>std::set</code>? You may have spotted 
   these if you looked at the
-  <a href="reference.html">reference documentation</a>. Don&#39;t worry about them 
-  for now; the defaults will get you started, and most of the unfamiliar 
-  parameters, arguments, and functions are used only when 
-  tuning for ultimate performance.</p>
+  <a href="reference.html">reference documentation</a> or headers. Don&#39;t worry 
+  about them for now; the defaults will get you started, and most of the 
+  unfamiliar parameters, arguments, and functions are used only when tuning for 
+  ultimate performance, and we will look at that later in the
+  <a href="#Tuning-hints">Tuning hints</a> section of this tutorial.</p>
   
   <h2>Integer map first try</h2>
+  
+  <p>Just as with the standard library associative containers, the B-tree 
+  library divides the world into sets and maps. Let&#39;s try a simple map:</p>
   
   <blockquote>
     <pre>
@@ -706,10 +710,126 @@ find(2) found 2,222</pre>
   </blockquote>
     <p>Incidentally, the C++14 standard library will support 
     heterogeneous comparison, too.</p>
+    <h2><a name="Tuning-hints">Tuning hints</a></h2>
+    <p>The B-tree library utilizes its own node cache in addition to the 
+    operating system page cache. Optimal tuning of the B-tree node cache is 
+    fairly complex and is determined by the exact usage scenario. To make it 
+    easier, the constructor and open flags accept a hint:</p>
+  <blockquote>
+    <blockquote>
+      <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111">
+        <tr>
+          <td><i><b>Hint</b></i></td>
+          <td><i><b>&nbsp;Meaning</b></i></td>
+        </tr>
+        <tr>
+          <td><code>least_memory</code></td>
+          <td>Cache only nodes required to support outstanding iterators.</td>
+        </tr>
+        <tr>
+          <td><code>low_memory</code></td>
+          <td>Cache nodes required to support outstanding iterators, plus a few 
+          more to improve performance.</td>
+        </tr>
+        <tr>
+          <td><code>balanced</code></td>
+          <td>Cache all branch nodes touched,&nbsp; plus a small fraction of 
+          leaf nodes. This is the default hint.</td>
+        </tr>
+        <tr>
+          <td><code>fast</code></td>
+          <td>Cache all branch nodes touched,&nbsp; plus a much larger fraction 
+          of leaf nodes.</td>
+        </tr>
+        <tr>
+          <td><code>fastest</code></td>
+          <td>Cache the entire tree.</td>
+        </tr>
+      </table>
+    </blockquote>
+    <pre>
+#include &lt;boost/btree/btree_map.hpp&gt;
+#include &lt;iostream&gt;
+#include &lt;boost/detail/lightweight_main.hpp&gt;
+#include &lt;boost/timer/timer.hpp&gt;
+#include &lt;cstdlib&gt;  // for rand()
+#include &lt;string&gt;
+
+using std::cout;
+using namespace boost::btree;
+
+int cpp_main(int argc, char *argv[])
+{
+  long n = 10000;
+  flags::bitmask hint = flags::fastest;
+
+  if (argc &gt; 1)
+    { n = std::atol(*++argv); --argc; }
+  if (argc &gt; 1)
+  {
+    std::string s(*++argv);
+    if (s == &quot;least_memory&quot;) hint = flags::least_memory;
+    else if (s == &quot;low_memory&quot;) hint = flags::low_memory;
+    else if (s == &quot;balanced&quot;) hint = flags::balanced;
+    else if (s == &quot;fast&quot;) hint = flags::fast;
+    else if (s == &quot;fastest&quot;) hint = flags::fastest;
+    else
+    {
+      cout &lt;&lt;
+        &quot;invoke: tune_int_map [#] least_memory|low_memory|balanced|fast|fastest\n&quot;
+        &quot;  where # is the number of elements to test\n&quot;
+        &quot;  example: tune_int_map 1000000 fast\n&quot;;
+      return 1;
+    }
+  }
+  
+  typedef btree_map&lt;int, int&gt; BT;
+  BT bt;                                                // unopened btree_map
+  bt.open(&quot;tune_int_map.btr&quot;, flags::truncate | hint);  // open it
+
+  cout &lt;&lt; &quot;test with &quot; &lt;&lt; n &lt;&lt; &quot; elements&quot; &lt;&lt; std::endl;
+  boost::timer::auto_cpu_timer t(2);
+
+  //  emplace n elements
+  for (int i = 1; i &lt;= n; ++i)
+    bt.emplace(std::rand(), i);
+
+  bt.close();  // include close() cost in timings
+  t.stop();
+  cout &lt;&lt; &quot;emplace() complete&quot;&lt;&lt; std::endl;
+  t.report();
+
+  std::srand(1);
+  t.start();
+  bt.open(&quot;tune_int_map.btr&quot;, hint);
+
+  //  find n elements
+  for (int i = 1; i &lt;= n; ++i)
+    bt.find(std::rand());
+
+  bt.close();
+  t.stop();
+  cout &lt;&lt; &quot;find() complete\n&quot;;
+  t.report();
+
+  return 0;
+}</pre>
+  </blockquote>
+    <h2><a name="Preloading">Preloading</a></h2>
+    <p>Since hard disks perform sequential reads much faster than random reads, 
+    overall performance may be much faster if on open an existing a B-tree is 
+    simple read from one end to the other to preload the operating system&#39;s disk 
+    cache. There&#39;s a flag to do just that:</p>
+  <blockquote>
+    <pre>my_tree.open(my_path, flags::fast | flags::preload);</pre>
+  </blockquote>
+  <p>Of course the open will be slower, and there will be little or no gain if 
+  the tree size is greater than available memory. You need to experiment to see 
+  if this option is a net gain for your application.</p>
   <hr>
 
   <p>Revised 
-  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->06 September 2013<!--webbot bot="Timestamp" endspan i-checksum="39628" --></p>
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->08 September 2013<!--webbot bot="Timestamp" endspan i-checksum="39632" --></p>
 
   <p>© Copyright Beman Dawes, 2013</p>
 

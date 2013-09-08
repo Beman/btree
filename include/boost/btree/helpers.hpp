@@ -112,7 +112,7 @@ namespace flags
     truncate       = 0x400,   // same as read_write except existing file truncated
 
     // bitmask options set by user; not present in header:
-    preload        = 0x1000, // existing file read to preload O/S file cache
+    preload        = 0x1000, // existing file read to preload O/S external memory cache
     cache_branches = 0x2000, // enable permanent cache of all branch pages touched;
                              // otherwise make branch pages available when use count
                              // becomes 0, just like leaf pages.
