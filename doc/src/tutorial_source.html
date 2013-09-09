@@ -454,8 +454,8 @@ find(2) found 2,222</pre>
     <h2><a name="Preloading">Preloading</a></h2>
     <p>Since hard disks perform sequential reads much faster than random reads, 
     overall performance may be much faster if on open an existing a B-tree is 
-    simple read from one end to the other to preload the operating system&#39;s disk 
-    cache. There&#39;s a flag to do just that:</p>
+    simply read from one end to the other to preload the operating system&#39;s 
+    external memory cache. There&#39;s a flag to do just that:</p>
   <blockquote>
     <pre>my_tree.open(my_path, flags::fast | flags::preload);</pre>
   </blockquote>
