@@ -300,8 +300,7 @@
     void                    <a href="#max_cache_size">max_cache_size</a>(std::size_t m);  // -1 indicates unlimited
     void                    <a href="#max_cache_megabytes">max_cache_megabytes</a>(std::size_t mb);
 
-    // <b><i>indexes only
-
+    // <a href="#Indexed-file-observers">indexed file observers</a> <b><i>              // indexes only
     </i></b>file_ptr_type           <a href="#file">file</a>() const;
     const filesystem::path&amp; <a href="#file_path">file_path</a>() const;
     file_size_type          <a href="#file_size">file_size</a>() const;
@@ -579,16 +578,16 @@ void open(const path_type&amp; pth, file_ptr_type file_ptr,
       </tr>
       <tr>
         <td width="50%">
-        <p><code>file_size() == file-&gt;size()</code></td>
+        <p><code>file_size() == file()-&gt;size()</code></td>
         <td width="50%">
-        <p><code>file_size() == file-&gt;size()</code></td>
+        <p><code>file_size() == file()-&gt;size()</code></td>
       </tr>
       <tr>
         <td width="50%">
-        <p><code>file_reserve() == file-&gt;reserve()</code> This is 
+        <p><code>file_reserve() == file()-&gt;reserve()</code> This is 
         the number of bytes reserved for new elements.</td>
         <td width="50%">
-        <p><code>file_reserve() == file-&gt;reserve()</code> This is 
+        <p><code>file_reserve() == file()-&gt;reserve()</code> This is 
         the number of bytes reserved for new elements.</td>
       </tr>
     </table>
@@ -752,6 +751,45 @@ const_reverse_iterator  <a name="crend">crend</a>() const;</pre>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Effects:</i> <code>max_cache_size((mb*1048576)/node_size())</code><i>.</i></p>
   </blockquote>
+
+    <h4><a name="Indexed-file-observers">Indexed file observers</a><i> - indexes 
+    only</i></h4>
+
+<pre>file_ptr_type <a name="file">file</a>() const;</pre>
+  <blockquote>
+    <p><i>Returns:</i> a <code>shared_ptr&lt;file_type&gt;</code> pointing to an <code>
+    <a href="../include/boost/btree/mmff.hpp">extendible_mapped_file</a></code>, which is a
+        <a href="http://en.wikipedia.org/wiki/Memory-mapped_file">memory-mapped 
+        file</a> based on Boost IO Streams class
+    <a href="../iostreams/doc/classes/mapped_file.html#mapped_file"><code>
+    mapped_file</code></a>.</p>
+  </blockquote>
+
+<pre>const filesystem::path& <a name="file_path">file_path</a>() const;</pre>
+  <blockquote>
+    <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
+    <p><i>Returns:</i> <code>file()-&gt;path()</code>.</p>
+  </blockquote>
+
+<pre>file_size_type <a name="file_size">file_size</a>() const;</pre>
+  <blockquote>
+    <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
+    <p><i>Returns:</i> <code>file()-&gt;size()</code>.</p>
+  </blockquote>
+
+<pre>file_size_type <a name="file_reserve">file_reserve</a>() const;</pre>
+  <blockquote>
+    <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
+    <p><i>Returns:</i> <code>file()-&gt;reserve()</code>.</p>
+  </blockquote>
+
+<pre>file_position <a name="position">position</a>(const_iterator itr) const;</pre>
+  <blockquote>
+    <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
+    <p><i>Returns:</i> The offset of the element pointed to by <code>itr</code> from the beginning of the flat file controlled 
+    by <code>file()</code>.</p>
+  </blockquote>
+  
     <h4><a name="btree_set-modifiers">Modifiers</a></h4>
   <pre>std::pair&lt;const_iterator, bool&gt;
   <a name="emplace-maps">emplace</a>(const key_type&amp; k, const mapped_type&amp; m);<b><i>  // unique maps</i></b></pre>
