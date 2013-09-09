@@ -254,12 +254,12 @@
           const Compare&amp; comp = Compare(), std::size_t node_sz = default_node_size);
  
     <i><b>// indexes:</b></i>
-        void open(const path_type&amp; index_pth,
+        void <a href="#open-index">open</a>(const path_type&amp; pth,
           const path_type&amp; file_pth,
           flags::bitmask flgs = flags::read_only, uint64_t sig = -1, 
           const Compare&amp; comp = Compare(), std::size_t node_sz = default_node_size);
  
-        void open(const path_type&amp; pth,
+        void <a href="#open-index">open</a>(const path_type&amp; pth,
           file_ptr_type file_ptr,
           flags::bitmask flgs = flags::read_only, uint64_t sig = -1, 
           const Compare&amp; comp = Compare(), std::size_t node_sz = default_node_size);
@@ -380,22 +380,18 @@
     <p><i>Postconditions:</i> <code>is_open()</code> is <code>false</code>.</p>
   </blockquote>
   <pre>explicit <b><i>class-name</i></b>(const boost::filesystem::path&amp; pth,
-  flags::bitmask flgs = flags::read_only,
-  uint64_t sig = -1,  
-  const Compare&amp; comp = Compare(),
-  std::size_t node_sz = <a href="#default_node_size">default_node_size</a>); </pre>
+  flags::bitmask flgs = flags::read_only, uint64_t sig = -1,  
+  const Compare&amp; comp = Compare(), std::size_t node_sz = <a href="#default_node_size">default_node_size</a>); </pre>
   <blockquote>
-    <p><i>Effects:</i> <code>open(p, flgs, sig, comp, node_sz)</code></p>
+    <p><i>Effects:</i> <code>open(pth, flgs, sig, comp, node_sz)</code></p>
   </blockquote>
   <pre>template &lt;class InputIterator&gt;
 <b><i>class-name</i></b>(InputIterator begin, InputIterator end,
   const boost::filesystem::path&amp; pth,
-  flags::bitmask flgs = flags::read_only,
-  uint64_t sig = -1,  
-  const Compare&amp; comp = Compare(),
-  std::size_t node_sz = <a href="#default_node_size">default_node_size</a>); </pre>
+  flags::bitmask flgs = flags::read_only, uint64_t sig = -1,  
+  const Compare&amp; comp = Compare(), std::size_t node_sz = <a href="#default_node_size">default_node_size</a>); </pre>
   <blockquote>
-    <p><i>Effects:</i> <code>open(p, flgs, sig, comp, node_sz)</code></p>
+    <p><i>Effects:</i> <code>open(pth, flgs, sig, comp, node_sz)</code></p>
   </blockquote>
   <pre>~<b><i>class-name</i></b>();</pre>
   <blockquote>
@@ -408,25 +404,23 @@ catch (...) {}</pre>
   
   <h4><a name="btree_set-file-operations">File operations</a></h4>
   
-  <pre>void <a name="open-trees">open</a>(const boost::filesystem::path&amp; pth,
-  flags::bitmask flgs = flags::read_only,
-  uint64_t sig = -1,  
-  const Compare&amp; comp = Compare(),
-  std::size_t node_sz = <a href="#default_node_size">default_node_size</a>); </pre>
+  <pre><i><b>// trees</b></i>
+void <a name="open-trees">open</a>(const boost::filesystem::path&amp; pth,
+  <a href="#Flags">flags::bitmask flgs</a> = flags::read_only, uint64_t sig = -1,  
+  const Compare&amp; comp = Compare(), std::size_t node_sz = <a href="#default_node_size">default_node_size</a>); </pre>
   <blockquote>
     <p><i>Requires:</i> <code>is_open()</code> is <code>false</code>.<p><i>Postconditions:</i><blockquote>
       <blockquote>
-        <blockquote>
     
-    <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111" width="550">
+    <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111">
       <tr>
         <td align="center" width="50%"><i><b>File <code>p</code> does not exist<br>
         or flgs &amp; flags::truncate</b></i></td>
         <td align="center" width="50%"><i><b>File <code>p</code> exists</b></i></td>
       </tr>
       <tr>
-        <td width="50%"><code>path() == p</code></td>
-        <td width="50%"><code>path() == p</code></td>
+        <td width="50%"><code>path() == pth</code></td>
+        <td width="50%"><code>path() == pth</code></td>
       </tr>
       <tr>
         <td width="50%"><code>is_open() == true</code></td>
@@ -450,20 +444,107 @@ catch (...) {}</pre>
       </tr>
       <tr>
         <td width="50%"><code>empty() == true</code></td>
-        <td width="50%">&nbsp;</td>
+        <td width="50%"><code>empty()</code> returns value of <code>empty()</code> 
+        the last time the file was closed.</td>
       </tr>
       <tr>
         <td width="50%"><code>size() == 0</code></td>
-        <td width="50%">&nbsp;</td>
+        <td width="50%"><code>size()</code> returns value of <code>size()</code> 
+        the last time the file was closed.</td>
       </tr>
     </table>
-        </blockquote>
       </blockquote>
     </blockquote>
     
     <p><i>Throws:</i> If the path <code>p</code> cannot be opened, or the type 
     or signature differ from when the file was originally created.</p>
   </blockquote>
+  
+    
+  <pre><i><b>// indexes</b></i>
+void <a name="open-index">open</a>(const path_type&amp; pth, const path_type&amp; file_pth,
+  <a href="#Flags">flags::bitmask flgs</a> = flags::read_only,  uint64_t sig = -1,  
+  const Compare&amp; comp = Compare(), std::size_t node_sz = <a href="#default_node_size">default_node_size</a>); 
+void open(const path_type&amp; pth, file_ptr_type file_ptr,
+  flags::bitmask flgs = flags::read_only, uint64_t sig = -1, 
+  const Compare&amp; comp = Compare(), std::size_t node_sz = default_node_size);
+</pre>
+  <blockquote>
+    <p><i>Requires:</i> <code>is_open()</code> is <code>false</code>.<p><i>Postconditions:</i><blockquote>
+      <blockquote>
+    
+    <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111">
+      <tr>
+        <td align="center" width="50%"><i><b>File <code>p</code> does not exist<br>
+        or flgs &amp; flags::truncate</b></i></td>
+        <td align="center"><i><b>File <code>p</code> exists</b></i></td>
+      </tr>
+      <tr>
+        <td width="50%"><code>path() == pth</code></td>
+        <td width="50%"><code>path() == pth</code></td>
+      </tr>
+      <tr>
+        <td width="50%"><code>is_open() == true</code></td>
+        <td width="50%">
+        <p><code>is_open() == true</code></td>
+      </tr>
+      <tr>
+        <td width="50%"><code>key_comp() == comp</code></td>
+        <td width="50%">
+        <p><code>key_comp() == comp</code></td>
+      </tr>
+      <tr>
+        <td width="50%"><code>value_comp() == comp</code></td>
+        <td width="50%">
+        <p><code>value_comp() == comp</code></td>
+      </tr>
+      <tr>
+        <td width="50%"><code>node_size() == node_sz</code></td>
+        <td width="50%">
+        <p dir="ltr"><code>node_size() == node_sz</code></td>
+      </tr>
+      <tr>
+        <td width="50%"><code>empty() == true</code></td>
+        <td width="50%"><code>empty()</code> returns value of <code>empty()</code> 
+        the last time the file was closed.</td>
+      </tr>
+      <tr>
+        <td width="50%"><code>size() == 0</code></td>
+        <td width="50%"><code>size()</code> returns value of <code>size()</code> 
+        the last time the file was closed.</td>
+      </tr>
+      <tr>
+        <td width="50%"><code>file()</code> returns a <code>shared_ptr&lt;file_type&gt;</code> 
+        pointing to an open <code>extendible_mapped_file</code>, which is a
+        <a href="http://en.wikipedia.org/wiki/Memory-mapped_file">memory-mapped 
+        file</a>.</td>
+        <td width="50%"><code>file()</code> returns a <code>shared_ptr&lt;file_type&gt;</code> 
+        pointing to an open <code>extendible_mapped_file</code>, which is a
+        <a href="http://en.wikipedia.org/wiki/Memory-mapped_file">memory-mapped 
+        file</a>.</td>
+      </tr>
+      <tr>
+        <td width="50%"><code>file_path() == file()-&gt;path()</code></td>
+        <td width="50%"><code>file_path() == file()-&gt;path()</code></td>
+      </tr>
+      <tr>
+        <td width="50%"><code>file_size() == file-&gt;size()</code></td>
+        <td width="50%"><code>file_size() == file-&gt;size()</code></td>
+      </tr>
+      <tr>
+        <td width="50%"><code>file_reserve() == file-&gt;reserve()</code> This is 
+        the number of bytes reserved for new elements.</td>
+        <td width="50%"><code>file_reserve() == file-&gt;reserve()</code> This is 
+        the number of bytes reserved for new elements.</td>
+      </tr>
+    </table>
+      </blockquote>
+    </blockquote>
+    
+    <p><i>Throws:</i> If the path <code>p</code> cannot be opened, or the type 
+    or signature differ from when the file was originally created.</p>
+  </blockquote>
+  
   <pre>void  <a name="flush">flush</a>();</pre>
   <blockquote>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
@@ -922,7 +1003,7 @@ const_iterator_range  equal_range(const Key&amp; k) const;</pre>
   <hr>
 
   <p>Revised 
-  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->03 September 2013<!--webbot bot="Timestamp" endspan i-checksum="39622" --></p>
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->09 September 2013<!--webbot bot="Timestamp" endspan i-checksum="39634" --></p>
 
   <p>© Copyright Beman Dawes, 2013</p>
 
