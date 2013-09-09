@@ -32,32 +32,23 @@
     </tr>
   </table>
 
+  <h2><a name="Table-of-contents">Table of contents</a></h2>
+
+  <p>&nbsp;</p>
+
   <h2><a name="B-tree-assoc-cntrs">B-tree associative containers</a></h2>
 
-  <p>B-tree associative containers provide fast retrieval of external data based on keys. 
-  The external data may be resident on hard disks, floppy disks, memory cards, 
-  USB-sticks, or any other form of random-access external memory.</p>
-  <ul>
-    <li>The 
-  library provides several kinds of  B-tree ordered associative containers: <code>btree_set</code>,
-  <code>btree_multiset</code>, <code>btree_map</code> and <code>btree_multimap</code>. 
-    These are collectively called <b><i>trees</i></b>, and are directly 
-    analogous to <code>std::set</code>, <code>std::multiset</code>, <code>
-    std::map</code>, and <code>std::multimap</code>.<br>
-&nbsp;</li>
-    <li>The library  provides several kinds of B-tree ordered associative containers 
-    that act as indexes to random-access files: <code>btree_index_set</code>,
-  <code>btree_index_multiset</code>, <code>btree_index_map</code>, and <code>btree_index_multimap</code>. These 
-    are collectively called <b><i>indexes</i></b>. The standard library analogy 
-    would be to use a standard library associative container of pointers to 
-    index a vector holding the actual data.</li>
-  </ul>
+  <h4><a name="Class-and-header-name-table">Class and header name table</a></h4>
   
   
 <table align="center" border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111">
   <tr>
+  <td align="center" colspan="2">
+  <b><i>Class and header names</i></b></td>
+  </tr>
+  <tr>
   <td align="center">
-  <i><b><a name="Class-name">Class name</a></b></i></td>
+  <i><b>Class name</b></i></td>
   <td align="center">
   <i><b>Header</b></i></td>
   </tr>
@@ -95,6 +86,26 @@
   </tr>
   </table>
 
+  <p>B-tree associative containers provide fast retrieval of external data based on keys. 
+  The external data may be resident on hard disks, floppy disks, memory cards, 
+  USB-sticks, or any other form of random-access external memory.</p>
+  <ul>
+    <li>The 
+  library provides several kinds of  B-tree ordered associative containers: <code>btree_set</code>,
+  <code>btree_multiset</code>, <code>btree_map</code> and <code>btree_multimap</code>. 
+    These are collectively called <b><i>trees</i></b>, and are directly 
+    analogous to <code>std::set</code>, <code>std::multiset</code>, <code>
+    std::map</code>, and <code>std::multimap</code>.<br>
+&nbsp;</li>
+    <li>The library  provides several kinds of B-tree ordered associative containers 
+    that act as indexes to random-access files: <code>btree_index_set</code>,
+  <code>btree_index_multiset</code>, <code>btree_index_map</code>, and <code>btree_index_multimap</code>. These 
+    are collectively called <b><i>indexes</i></b>. The standard library analogy 
+    would be to use a standard library associative container of pointers to 
+    index a vector holding the actual data.</li>
+  </ul>
+  
+  
   <p>Each associative container is parameterized on <code>Key</code> 
   and an ordering relation <code>Compare</code> that induces a strict weak 
   ordering on elements of <code>Key</code>. In addition, the associative 
@@ -372,7 +383,8 @@
 
 }}  // namespaces</pre>
 
-<h4><a name="btree_set-constructors-and-destructor">Construction and destruction</a> </h4>
+<h3><a name="btree_set-constructors-and-destructor">Construction and destruction</a> 
+  </h3>
 
   <pre>explicit <b><i>class-name</i></b>();</pre>
   <blockquote>
@@ -431,7 +443,7 @@ catch (...) {}</pre>
   </blockquote>
   </blockquote>
   
-  <h4><a name="btree_set-file-operations">File operations</a></h4>
+  <h3><a name="btree_set-file-operations">File operations</a></h3>
   
   <pre><i><b>// trees</b></i>
 void <a name="open-trees">open</a>(const boost::filesystem::path&amp; pth,
@@ -630,7 +642,7 @@ void open(const path_type&amp; base_path,
     close the external file. Otherwise, no effect.</p>
     <p><i>Postconditions:</i> <code>is_open() == false</code></p>
   </blockquote>
-  <h4><a name="btree_set-iterators">Iterators</a></h4>
+  <h3><a name="btree_set-iterators">Iterators</a></h3>
   <pre>const_iterator  <a name="begin">begin</a>() const;
 const_iterator  <a name="cbegin">cbegin</a>() const;</pre>
   <blockquote>
@@ -657,7 +669,7 @@ const_reverse_iterator  <a name="crend">crend</a>() const;</pre>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Returns:</i> <code>std::reverse_iterator(begin())</code>.</p>
   </blockquote>
-    <h4><a name="btree_set-observers">Observers</a></h4>
+    <h3><a name="btree_set-observers">Observers</a></h3>
   <pre>bool  <a name="is_open">is_open</a>() const;</pre>
   <blockquote>
     <p><i>Returns:</i> <code>true</code> if the <code>open</code> function has 
@@ -709,7 +721,7 @@ const_reverse_iterator  <a name="crend">crend</a>() const;</pre>
     <code>emplace</code> calls have been applied at <code>end()</code>, and 
     there have been no <code>erase</code> calls.</p>
   </blockquote>
-    <h4><a name="btree_set-capacity">Capacity</a></h4>
+    <h3><a name="btree_set-capacity">Capacity</a></h3>
   <pre>bool  <a name="empty">empty</a>() const;</pre>
   <blockquote>
     <p><i>Returns:</i> <code>!size()</code></p>
@@ -737,7 +749,7 @@ const_reverse_iterator  <a name="crend">crend</a>() const;</pre>
     <p><i>Returns:</i> The value of the <code>max</code> argument to the most 
     recent call to the <code>max_cache_size</code> function.</p>
   </blockquote>
-    <h4><a name="btree_set-tuning">Tuning</a></h4>
+    <h3><a name="btree_set-tuning">Tuning</a></h3>
   <pre>void  <a name="max_cache_size-setter">max_cache_size</a>(std::size_t max);  </pre>
   <blockquote>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
@@ -752,8 +764,8 @@ const_reverse_iterator  <a name="crend">crend</a>() const;</pre>
     <p><i>Effects:</i> <code>max_cache_size((mb*1048576)/node_size())</code><i>.</i></p>
   </blockquote>
 
-    <h4><a name="Indexed-file-observers">Indexed file observers</a><i> - indexes 
-    only</i></h4>
+    <h3><a name="Indexed-file-observers">Indexed file observers</a><i> - indexes 
+    only</i></h3>
 
 <pre>file_ptr_type <a name="file">file</a>() const;</pre>
   <blockquote>
@@ -790,7 +802,7 @@ const_reverse_iterator  <a name="crend">crend</a>() const;</pre>
     by <code>file()</code>.</p>
   </blockquote>
   
-    <h4><a name="btree_set-modifiers">Modifiers</a></h4>
+    <h3><a name="btree_set-modifiers">Modifiers</a></h3>
   <pre>std::pair&lt;const_iterator, bool&gt;
   <a name="emplace-maps">emplace</a>(const key_type&amp; k, const mapped_type&amp; m);<b><i>  // unique maps</i></b></pre>
   <blockquote>
@@ -878,7 +890,7 @@ const_reverse_iterator  <a name="crend">crend</a>() const;</pre>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Postconditions:</i> <code>empty()</code> is <code>true</code>.</p>
   </blockquote>
-    <h4><a name="btree_set-operations">Operations</a></h4>
+    <h3><a name="btree_set-operations">Operations</a></h3>
     <p>Objects of types <code>K</code> and <code>Key</code> are required to be
     <code>key_comp()</code> comparable.<br>
 &nbsp;</p>
@@ -927,7 +939,7 @@ const_iterator_range  equal_range(const Key&amp; k) const;</pre>
 
   <h2><a name="Helpers">Helpers</a></h2>
 
-  <h3>Header &lt;boost/btree/helpers.hpp&gt;Synopsis</h3>
+  <h3><a name="helpers-synopsis">Header &lt;boost/btree/helpers.hpp&gt;Synopsis</a></h3>
 
   <p>The components in this header are included by the other boost/btree 
   headers. </p>
