@@ -32,14 +32,13 @@ namespace btree
 
 template <class Key,    // requires memcpyable type without pointers or references
           class BtreeTraits = btree::default_traits,
-          class Compare = btree::less,
-          template<class> class IndexTraits = btree::default_index_traits>
+          class Compare = btree::less>
 class btree_index_set
-  : public index_base<index_set_base<Key,BtreeTraits,Compare,IndexTraits> >
+  : public index_base<index_set_base<Key,BtreeTraits,Compare> >
 {
 private:
   typedef typename
-    btree::index_base<index_set_base<Key,BtreeTraits,Compare,IndexTraits> >  base;
+    btree::index_base<index_set_base<Key,BtreeTraits,Compare> >  base;
 protected:
   typedef
     typename base::index_position_type   index_position_type;
@@ -174,14 +173,13 @@ public:
 
 template <class Key,    // requires memcpyable type without pointers or references
           class BtreeTraits = btree::default_traits,
-          class Compare = btree::less,
-          template<class> class IndexTraits = btree::default_index_traits>
+          class Compare = btree::less>
 class btree_index_multiset
-  : public index_base<index_multiset_base<Key,BtreeTraits,Compare,IndexTraits> >
+  : public index_base<index_multiset_base<Key,BtreeTraits,Compare> >
 {
 private:
   typedef typename
-    btree::index_base<index_multiset_base<Key,BtreeTraits,Compare,IndexTraits> >  base;
+    btree::index_base<index_multiset_base<Key,BtreeTraits,Compare> >  base;
 public:
   typedef Key                            key_type;
   typedef Key                            value_type;

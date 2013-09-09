@@ -53,7 +53,7 @@ namespace detail
 //                                class index_set_base                                  //
 //--------------------------------------------------------------------------------------//
 
-template <class Key, class BtreeTraits, class Compare, template<typename> class IndexTraits>
+template <class Key, class BtreeTraits, class Compare>
 class index_set_base
 {
 public:
@@ -73,7 +73,7 @@ public:
   //  of type Key. The latter occurs when the Key object returned is a proxy pointing to
   //  the actual data stored in the flat file; an example is string_view.
   typedef
-    typename IndexTraits<value_type>::reference  reference;                
+    typename index_reference<value_type>::type   reference;                
 
   typedef typename
     IndexTraits<Key>::index_position_type        index_position_type;  
@@ -102,7 +102,7 @@ protected:
 //                             class index_multiset_base                                //
 //--------------------------------------------------------------------------------------//
 
-template <class Key, class BtreeTraits, class Compare, template<class> class IndexTraits>
+template <class Key, class BtreeTraits, class Compare>
 class index_multiset_base
 {
 public:
@@ -148,8 +148,7 @@ protected:
 //                               class index_map_base                                   //
 //--------------------------------------------------------------------------------------//
 
-template <class Key, class T, class BtreeTraits, class Compare,
-  template<class> class IndexTraits>
+template <class Key, class T, class BtreeTraits, class Compare>
 class index_map_base
 {
 public:
@@ -221,8 +220,7 @@ protected:
 //                            class index_multimap_base                                 //
 //--------------------------------------------------------------------------------------//
 
-template <class Key, class T, class BtreeTraits, class Compare,
-  template<class> class IndexTraits>
+template <class Key, class T, class BtreeTraits, class Compare>
 class index_multimap_base
 {
 public:

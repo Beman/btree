@@ -33,14 +33,13 @@ namespace btree
 template <class Key,    // requires memcpyable type without pointers or references
           class T,      // requires memcpyable type without pointers or references
           class BtreeTraits = btree::default_traits,
-          class Compare = btree::less,
-          template<class> class IndexTraits = btree::default_index_traits>
+          class Compare = btree::less>
 class btree_index_map
-  : public index_base<index_map_base<Key,T,BtreeTraits,Compare,IndexTraits> >
+  : public index_base<index_map_base<Key,T,BtreeTraits,Compare> >
 {
 private:
   typedef typename
-    btree::index_base<index_map_base<Key,T,BtreeTraits,Compare,IndexTraits> >  base;
+    btree::index_base<index_map_base<Key,T,BtreeTraits,Compare> >  base;
   typedef
     typename base::index_position_type   index_position_type;
 public:
@@ -198,14 +197,13 @@ public:
 template <class Key,    // requires memcpyable type without pointers or references
           class T,      // requires memcpyable type without pointers or references
           class BtreeTraits = btree::default_traits,
-          class Compare = btree::less,
-          template<class> class IndexTraits = btree::default_index_traits>
+          class Compare = btree::less>
 class btree_index_multimap
-  : public index_base<index_multimap_base<Key,T,BtreeTraits,Compare,IndexTraits> >
+  : public index_base<index_multimap_base<Key,T,BtreeTraits,Compare> >
 {
 private:
   typedef typename
-    btree::index_base<index_multimap_base<Key,T,BtreeTraits,Compare,IndexTraits> >  base;
+    btree::index_base<index_multimap_base<Key,T,BtreeTraits,Compare> >  base;
   typedef
     typename base::index_position_type   index_position_type;
 public:

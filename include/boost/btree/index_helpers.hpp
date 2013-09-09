@@ -32,96 +32,180 @@ namespace btree
 //                                   index traits                                       //
 //--------------------------------------------------------------------------------------//
 
-//--------------  primary template; handles all fixed length data types  ---------------//
+//----------- default for all types, fixed or variable length  ----------//
 
   template <class T>
-  class default_index_traits
+  struct index_position
   {
-  public:
-    typedef const T&  reference;
+    typedef endian::big_uint48_t  type;    // position in the flat file
+  };
 
-    typedef endian::big_uint48_t  index_position_type;  // position in the flat file
+//--------------  defaults for all fixed length data types  ---------------//
 
-    static std::size_t size(const T&)    {return sizeof(T);}
-    static std::size_t size(const char*) {return sizeof(T);}
+  template <class T>
+  struct index_reference { typedef const T&  type; };
 
-    static void build_flat_element(const T& x, char* dest, std::size_t sz)
-    { 
-      BOOST_ASSERT(dest);
-      BOOST_ASSERT_MSG(sz == sizeof(T),
-        "btree index: size error; did you mean to uses a varaible-size type?");
-      std::memcpy(dest, reinterpret_cast<const char*>(&x), sz);
-    }
+  template <class T>
+  inline std::size_t index_reference_size(const T&)    {return sizeof(T);}
 
-    static reference  dereference(const char* x)
-    {
-      BOOST_ASSERT(x);
-      return *reinterpret_cast<const T*>(x);
-    }
+  template <class T>
+  inline std::size_t index_flat_size(const char*)      {return sizeof(T);}
+
+  template <class T>
+  inline void index_serialize(const T& x, char** flat, std::size_t sz)
+  { 
+    BOOST_ASSERT(flat);
+    BOOST_ASSERT(*flat);
+    BOOST_ASSERT_MSG(sz == sizeof(T),
+      "btree index_serialize: size error; did you mean to uses a varaible-size type?");
+    std::memcpy(*flat, reinterpret_cast<const char*>(&x), sz);
+    *flat += sz;
+  }
+
+  template <class T>
+  inline typename index_reference<T>::type index_deserialize(const char** flat)
+  {
+    BOOST_ASSERT(flat);
+    BOOST_ASSERT(*flat);
+    const char* p = *flat;
+    flat += sizeof(T);
+    return *reinterpret_cast<const T*>(p);
+  }
+
+
+
+  //template <class T>
+  //class default_index_traits
+  //{
+  //public:
+  //  typedef const T&  reference;
+
+  //  typedef endian::big_uint48_t  index_position_type;  // position in the flat file
+
+  //  static std::size_t size(const T&)    {return sizeof(T);}
+  //  static std::size_t size(const char*) {return sizeof(T);}
+
+  //  static void build_flat_element(const T& x, char* dest, std::size_t sz)
+  //  { 
+  //    BOOST_ASSERT(dest);
+  //    BOOST_ASSERT_MSG(sz == sizeof(T),
+  //      "btree index: size error; did you mean to uses a varaible-size type?");
+  //    std::memcpy(dest, reinterpret_cast<const char*>(&x), sz);
+  //  }
+
+  //  static reference  dereference(const char* x)
+  //  {
+  //    BOOST_ASSERT(x);
+  //    return *reinterpret_cast<const T*>(x);
+  //  }
     
-  };
+  //};
 
-  //----------  const char* specialization; null-terminated C-style strings  -----------//
+  ////----------  const char* specialization; null-terminated C-style strings  -----------//
+
+  //template <>
+  //class default_index_traits<const char*>
+  //{
+  //public:
+  //  typedef const char*  reference;
+
+  //  typedef endian::big_uint48_t  index_position_type;  // position in the flat file
+
+  //  static std::size_t size(const char* x)   {BOOST_ASSERT(x); return std::strlen(x) + 1;}
+
+  //  static void build_flat_element(const char* x, char* dest, std::size_t)
+  //  {
+  //    BOOST_ASSERT(x);
+  //    BOOST_ASSERT(dest);
+  //    std::strcpy(dest, x);
+  //  }
+
+  //  static reference dereference(const char* x)       {BOOST_ASSERT(x);
+  //                                                        return x;}
+  //};
+
+  //-----------------  string_view (i.e. C++ style string) traits  ------------------//
 
   template <>
-  class default_index_traits<const char*>
-  {
-  public:
-    typedef const char*  reference;
+  struct index_reference<boost::string_view>
+    { typedef const boost::string_view  type; };
 
-    typedef endian::big_uint48_t  index_position_type;  // position in the flat file
-
-    static std::size_t size(const char* x)   {BOOST_ASSERT(x); return std::strlen(x) + 1;}
-
-    static void build_flat_element(const char* x, char* dest, std::size_t)
-    {
-      BOOST_ASSERT(x);
-      BOOST_ASSERT(dest);
-      std::strcpy(dest, x);
-    }
-
-    static reference dereference(const char* x)       {BOOST_ASSERT(x);
-                                                          return x;}
-  };
-
-  //-----------------  string_view specialization; C++ style strings  ------------------//
-
-  template <>
-  class default_index_traits<boost::string_view>
+  inline std::size_t index_reference_size(const boost::string_view& sv)
   {
     typedef btree::support::size_t_codec codec;
+    return sv.size() + codec::encoded_size(sv.size());
+  }
 
-  public:
-    typedef boost::string_view         reference;
-    typedef endian::big_uint48_t     index_position_type;  // position in the flat file
+  inline std::size_t index_flat_size(const char* flat)
+  {
+    typedef btree::support::size_t_codec codec;
+    std::pair<std::size_t, std::size_t> dec = codec::decode(flat);
+    return dec.first + dec.second;
+  }
 
-    static std::size_t size(const boost::string_view& x)
-    {
-      return x.size() + codec::encoded_size(x.size());
-    }
+  inline void index_serialize(const boost::string_view& sv, char** flat, std::size_t sz)
+  { 
+    typedef btree::support::size_t_codec codec;
+    BOOST_ASSERT(flat);
+    BOOST_ASSERT(*flat);
+    BOOST_ASSERT(sz > sv.size()); // even a null string needs a byte to store size
+    std::size_t size_size = sz - sv.size();
+    codec::encode(sv.size(), *flat, size_size);  //TODO: encode should not be responsible
+                                                 // for the actual memcpy to *flat ?
+    *flat += size_size;
+    std::memcpy(*flat, sv.data(), sv.size());
+    *flat += sv.size();
+  }
 
-    static void build_flat_element(const boost::string_view& x, char* dest,
-      std::size_t sz)
-    {
-      BOOST_ASSERT(dest);
-      BOOST_ASSERT(sz > x.size()); // even a null string needs a byte to store size
+  inline index_reference<boost::string_view>::type index_deserialize(const char** flat)
+  {
+    typedef btree::support::size_t_codec codec;
+    BOOST_ASSERT(flat);
+    BOOST_ASSERT(*flat);
+    std::pair<std::size_t, std::size_t> dec = codec::decode(*flat);
+    *flat += dec.second;  // size of the size prefix
+    const char* p = *flat;
+    *flat += dec.first;   // size of the string
+    return boost::string_view(p, dec.first);
+  }
 
-      std::size_t size_size = sz - x.size();
-      codec::encode(x.size(), dest, size_size); 
-      std::memcpy(dest + size_size, x.data(), x.size());
-    }
 
-    static reference dereference(const char* x)
-    {
-      std::pair<std::size_t, std::size_t> dec = codec::decode(x);
-      return boost::string_view(x + dec.second, dec.first);
-    }
-    static std::size_t size(const char* x)
-    {
-      std::pair<std::size_t, std::size_t> dec = codec::decode(x);
-      return dec.first + dec.second;
-    }
-  };
+  //template <>
+  //class default_index_traits<boost::string_view>
+  //{
+  //  typedef btree::support::size_t_codec codec;
+
+  //public:
+  //  typedef boost::string_view         reference;
+  //  typedef endian::big_uint48_t     index_position_type;  // position in the flat file
+
+  //  static std::size_t size(const boost::string_view& x)
+  //  {
+  //    return x.size() + codec::encoded_size(x.size());
+  //  }
+
+  //  static void build_flat_element(const boost::string_view& x, char* dest,
+  //    std::size_t sz)
+  //  {
+  //    BOOST_ASSERT(dest);
+  //    BOOST_ASSERT(sz > x.size()); // even a null string needs a byte to store size
+
+  //    std::size_t size_size = sz - x.size();
+  //    codec::encode(x.size(), dest, size_size); 
+  //    std::memcpy(dest + size_size, x.data(), x.size());
+  //  }
+
+  //  static reference dereference(const char* x)
+  //  {
+  //    std::pair<std::size_t, std::size_t> dec = codec::decode(x);
+  //    return boost::string_view(x + dec.second, dec.first);
+  //  }
+  //  static std::size_t size(const char* x)
+  //  {
+  //    std::pair<std::size_t, std::size_t> dec = codec::decode(x);
+  //    return dec.first + dec.second;
+  //  }
+  //};
 
 }  // namespace btree
 }  // namespace boost
