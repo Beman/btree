@@ -12,7 +12,7 @@
   <table border="0" cellpadding="5" cellspacing="0" style=
   "border-collapse: collapse" bordercolor="#111111">
     <tr>
-      <td width="277"><a href="../../../../index.htm"><img src=
+      <td width="277"><a href="../../../index.htm"><img src=
       "../../../boost.png" alt="boost.png (6897 bytes)" align=
       "middle" width="300" height="86" border="0"></a></td>
 
@@ -72,8 +72,7 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#size">size</a><br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#max_size">max_size</a><br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#node_size">node_size</a><br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#max_cache_size">max_cache_size</a><br>
-&nbsp;</td>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#max_cache_size">max_cache_size</a></td>
       <td valign="top">&nbsp;&nbsp;&nbsp;<a href="#btree_set-tuning">Tuning</a><br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#max_cache_size-setter">max_cache_size</a><br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#max_cache_megabytes">max_cache_megabytes</a><br>
@@ -85,12 +84,16 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#file_reserve">file_reserve</a><br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#position">position</a><br>
       &nbsp;&nbsp;&nbsp;<a href="#btree_set-modifiers">Modifiers</a><br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#emplace-maps">emplace</a><br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#insert-unique">insert</a><br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#erase-pos">erase</a><br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#erase-key">erase</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#emplace">emplace</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#insert">insert</a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#erase">erase</a><br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#clear">clear</a><br>
       &nbsp;&nbsp;&nbsp;<a href="#btree_set-operations">Operations</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#find">find</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#count">count</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#lower_bound">lower_bound</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#upper_bound">upper_bound</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#equal_range">equal_range</a><br>
       <a href="#Helpers">Helpers</a><br>
       &nbsp;&nbsp;&nbsp;<a href="#helpers-synopsis">Header &lt;boost/btree/helpers.hpp&gt; Synopsis</a><br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#default_node_size">default_node_size</a><br>
@@ -108,6 +111,26 @@
 
   <h2><a name="B-tree-assoc-cntrs">B-tree associative containers</a></h2>
 
+  <p>B-tree associative containers provide fast retrieval of external data based on keys. 
+  The external data may be resident on hard disks, floppy disks, memory cards, 
+  USB-sticks, or any other form of random-access external memory.</p>
+  <ul>
+    <li>The 
+  library provides several kinds of  B-tree ordered associative containers: <code>btree_set</code>,
+  <code>btree_multiset</code>, <code>btree_map</code> and <code>btree_multimap</code>. 
+    These are collectively called <b><i>trees</i></b>, and are directly 
+    analogous to <code>std::set</code>, <code>std::multiset</code>, <code>
+    std::map</code>, and <code>std::multimap</code>.<br>
+&nbsp;</li>
+    <li>The library  provides several kinds of B-tree ordered associative containers 
+    that act as indexes to random-access files: <code>btree_index_set</code>,
+  <code>btree_index_multiset</code>, <code>btree_index_map</code>, and <code>btree_index_multimap</code>. These 
+    are collectively called <b><i>indexes</i></b>. The standard library analogy 
+    would be to use a standard library associative container of pointers to 
+    index a vector holding the actual data.</li>
+  </ul>
+  
+  
   <h4><a name="Class-and-header-name-table">Class and header name table</a></h4>
   
   
@@ -156,26 +179,6 @@
   </tr>
   </table>
 
-  <p>B-tree associative containers provide fast retrieval of external data based on keys. 
-  The external data may be resident on hard disks, floppy disks, memory cards, 
-  USB-sticks, or any other form of random-access external memory.</p>
-  <ul>
-    <li>The 
-  library provides several kinds of  B-tree ordered associative containers: <code>btree_set</code>,
-  <code>btree_multiset</code>, <code>btree_map</code> and <code>btree_multimap</code>. 
-    These are collectively called <b><i>trees</i></b>, and are directly 
-    analogous to <code>std::set</code>, <code>std::multiset</code>, <code>
-    std::map</code>, and <code>std::multimap</code>.<br>
-&nbsp;</li>
-    <li>The library  provides several kinds of B-tree ordered associative containers 
-    that act as indexes to random-access files: <code>btree_index_set</code>,
-  <code>btree_index_multiset</code>, <code>btree_index_map</code>, and <code>btree_index_multimap</code>. These 
-    are collectively called <b><i>indexes</i></b>. The standard library analogy 
-    would be to use a standard library associative container of pointers to 
-    index a vector holding the actual data.</li>
-  </ul>
-  
-  
   <p>Each associative container is parameterized on <code>Key</code> 
   and an ordering relation <code>Compare</code> that induces a strict weak 
   ordering on elements of <code>Key</code>. In addition, the associative 
@@ -259,7 +262,7 @@
             <i><b>class T,  // maps only</b></i>
             class Traits = <a href="#default_traits">default_traits</a>,
             class Compare = <a href="#Function-object-less">btree::less</a>&gt;
-  class <b><i><a href="#Class-name">class-name</a></i></b>
+  class <b><i><a href="#Class-and-header-name-table">class-name</a></i></b>
   {
   public:
     // types:
@@ -361,7 +364,7 @@
     // <a href="#btree_set-observers">observers</a>
     bool                    <a href="#is_open">is_open</a>() const;
     const filesystem::path&amp; <a href="#path">path</a>() const;
-    flags::bitmask          <a href="#flags">flags</a>() const;
+    flags::bitmask          <a href="#Flags">flags</a>() const;
 
     const buffer_manager&amp;   <a href="#manager">manager</a>() const;
     const header_page&amp;      <a href="#header">header</a>() const;
@@ -874,7 +877,7 @@ const_reverse_iterator  <a name="crend">crend</a>() const;</pre>
   
     <h3><a name="btree_set-modifiers">Modifiers</a></h3>
   <pre>std::pair&lt;const_iterator, bool&gt;
-  <a name="emplace-maps">emplace</a>(const key_type&amp; k, const mapped_type&amp; m);<b><i>  // unique maps</i></b></pre>
+  <a name="emplace">emplace</a>(const key_type&amp; k, const mapped_type&amp; m);<b><i>  // unique maps</i></b></pre>
   <blockquote>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Effects:</i> Inserts an element constructed from <code>k</code> and
@@ -893,7 +896,7 @@ const_reverse_iterator  <a name="crend">crend</a>() const;</pre>
     <code>m</code>.</p>
     <p><i>Returns:</i> An iterator pointing to the newly inserted element.</p>
   </blockquote>
-  <pre>std::pair&lt;const_iterator, bool&gt; <a name="insert-unique">insert</a>(const value_type&amp; x);  <b><i>// unique containers</i></b></pre>
+  <pre>std::pair&lt;const_iterator, bool&gt; <a name="insert">insert</a>(const value_type&amp; x);  <b><i>// unique containers</i></b></pre>
   <blockquote>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Effects:</i> Inserts <code>x</code> if and only if there is no 
@@ -930,7 +933,7 @@ const_reverse_iterator  <a name="crend">crend</a>() const;</pre>
       <li><b><i>btree_multiset and btree_multimap:</i></b> Inserts each element from the range <code>[begin,end)</code>.</li>
     </ul>
   </blockquote>
-  <pre>const_iterator  <a name="erase-pos">erase</a>(const_iterator position);</pre>
+  <pre>const_iterator  <a name="erase">erase</a>(const_iterator position);</pre>
   <blockquote>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Returns:</i> Erases the element pointed to by <code>position</code>. 
@@ -964,43 +967,48 @@ const_reverse_iterator  <a name="crend">crend</a>() const;</pre>
     <p>Objects of types <code>K</code> and <code>Key</code> are required to be
     <code>key_comp()</code> comparable.<br>
 &nbsp;</p>
-  <pre><a name="find"></a>template &lt;class K&gt;
-const_iterator  find(const K&amp; k) const;
-const_iterator  find(const Key&amp; k) const;</pre>
+  <pre>const_iterator  <a name="find">find</a>(const Key&amp; k) const;
+
+template &lt;class K&gt;
+  const_iterator  find(const K&amp; k) const;</pre>
   <blockquote>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Returns:</i> An iterator pointing to the first element with the key 
     equivalent to <code>k</code>, or <code>end()</code> if no such element is 
     found.</p>
   </blockquote>
-  <pre><a name="count"></a>template &lt;class K&gt;
-size_type  count(const K&amp; k) const;
-size_type  count(const Key&amp; k) const;</pre>
+  <pre>size_type  <a name="count">count</a>(const Key&amp; k) const;
+
+template &lt;class K&gt;
+  size_type  count(const K&amp; k) const;</pre>
   <blockquote>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Returns:</i> The number of elements with key equivalent to <code>k</code>.</p>
   </blockquote>
-  <pre><a name="lower_bound"></a>template &lt;class K&gt;
-const_iterator  lower_bound(const K&amp; k) const;
-const_iterator  lower_bound(const Key&amp; k) const;</pre>
+  <pre>const_iterator  <a name="lower_bound">lower_bound</a>(const Key&amp; k) const;
+
+template &lt;class K&gt;
+  const_iterator  lower_bound(const K&amp; k) const;</pre>
   <blockquote>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Returns:</i> An iterator pointing to the first element with key not 
     less than <code>k</code>, or <code>end()</code> if such an element is not 
     found.</p>
   </blockquote>
-  <pre><a name="upper_bound"></a>template &lt;class K&gt;
-const_iterator  upper_bound(const K&amp; k) const;
-const_iterator  upper_bound(const Key&amp; k) const;</pre>
+  <pre>const_iterator  <a name="upper_bound">upper_bound</a>(const Key&amp; k) const;
+
+template &lt;class K&gt;
+const_iterator  upper_bound(const K&amp; k) const;</pre>
   <blockquote>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Returns:</i> An iterator pointing to the first element with key 
     greater than <code>k</code>, or <code>end()</code> if such an element is not 
     found.</p>
   </blockquote>
-  <pre><a name="equal_range"></a>template &lt;class K&gt;
-const_iterator_range  equal_range(const K&amp; k) const;
-const_iterator_range  equal_range(const Key&amp; k) const;</pre>
+  <pre>const_iterator_range  <a name="equal_range">equal_range</a>(const Key&amp; k) const;
+
+template &lt;class K&gt;
+const_iterator_range  equal_range(const K&amp; k) const;</pre>
   <blockquote>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Returns:</i> Equivalent to <code>std::make_pair(lower_bound(k), 
