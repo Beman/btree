@@ -34,7 +34,77 @@
 
   <h2><a name="Table-of-contents">Table of contents</a></h2>
 
-  <p>&nbsp;</p>
+  <table border="0" cellpadding="0" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111">
+    <tr>
+      <td width="50%" valign="top"><a href="#B-tree-assoc-cntrs">B-tree 
+      associative containers</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#Class-and-header-name-table">Class and header name table</a><br>
+      &nbsp;&nbsp;&nbsp;<a href="#Requirements-on-template-parameters">Requirements on template 
+      parameters</a><br>
+      &nbsp;&nbsp;&nbsp;<a href="#Iterators">Iterators</a><br>
+      &nbsp;&nbsp;&nbsp;<a href="#Method-of-description">Method of description</a><br>
+      &nbsp;&nbsp;&nbsp;<a href="#Associative-container-synopsis">Synopsis</a><br>
+      &nbsp;&nbsp;&nbsp;<a href="#btree_set-constructors-and-destructor">Construction and 
+      destruction </a><br>
+      &nbsp;&nbsp;&nbsp;<a href="#btree_set-file-operations">File operations</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#open-trees">open</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#flush">flush</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#close">close</a><br>
+      &nbsp;&nbsp;&nbsp;<a href="#btree_set-iterators">Iterators</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#begin">begin</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#cbegin">cbegin</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#end">end</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#cend">cend</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#rbegin">rbegin</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#crbegin">crbegin</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#rend">rend</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#crend">crend</a><br>
+      &nbsp;&nbsp;&nbsp;<a href="#btree_set-observers">Observers</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#is_open">is_open</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#path">path</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#manager">manager</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#header">header</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#key_comp">key_comp</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#value_comp">value_comp</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#ok_to_pack">ok_to_pack</a><br>
+      &nbsp;&nbsp;&nbsp;<a href="#btree_set-capacity">Capacity</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#empty">empty</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#size">size</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#max_size">max_size</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#node_size">node_size</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#max_cache_size">max_cache_size</a><br>
+&nbsp;</td>
+      <td valign="top">&nbsp;&nbsp;&nbsp;<a href="#btree_set-tuning">Tuning</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#max_cache_size-setter">max_cache_size</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#max_cache_megabytes">max_cache_megabytes</a><br>
+      &nbsp;&nbsp;&nbsp;<a href="#Indexed-file-observers">Indexed file observers<i> - indexes 
+      only</i></a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#file">file</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#file_path">file_path</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#file_size">file_size</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#file_reserve">file_reserve</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#position">position</a><br>
+      &nbsp;&nbsp;&nbsp;<a href="#btree_set-modifiers">Modifiers</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#emplace-maps">emplace</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#insert-unique">insert</a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#erase-pos">erase</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#erase-key">erase</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#clear">clear</a><br>
+      &nbsp;&nbsp;&nbsp;<a href="#btree_set-operations">Operations</a><br>
+      <a href="#Helpers">Helpers</a><br>
+      &nbsp;&nbsp;&nbsp;<a href="#helpers-synopsis">Header &lt;boost/btree/helpers.hpp&gt; Synopsis</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#default_node_size">default_node_size</a><br>
+      &nbsp;&nbsp;&nbsp;<a href="#Traits">Traits</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#big_endian_traits">big_endian_traits</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#little_endian_traits">little_endian_traits</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#native_endian_traits">native_endian_traits</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#default_traits">default_traits</a><br>
+      &nbsp;&nbsp;&nbsp;<a href="#Flags">Flags</a><br>
+      &nbsp;&nbsp;&nbsp;<a href="#Constants">Constants</a><br>
+      &nbsp;&nbsp;&nbsp;<a href="#Hint-based-defaults">Hint based defaults</a><br>
+      &nbsp;&nbsp;&nbsp;<a href="#Function-object-less">Function object <code>btree::less</code></a></td>
+    </tr>
+  </table>
 
   <h2><a name="B-tree-assoc-cntrs">B-tree associative containers</a></h2>
 
