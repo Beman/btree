@@ -32,12 +32,18 @@
     </tr>
   </table>
 
+  <p><b><a name="why-const_iterator-returned"></a>Why do non-const functions 
+  return <code>const_iterator</code> instead of <code>iterator</code>?</b> The 
+  implementation needs to know when an element is modified so it can write the 
+  node back to the external file. If non-const <code>iterator</code> was 
+  returned, the implementation would have to assume that a write back was 
+  required even when none is actually need. That would be very inefficient.</p>
+
   <p><b>Why are there no <u>unordered</u> B-tree associative containers?</b> It 
-  wouldn&#39;t be a B-tree or any other kind of tree any more. A B-tree achieves its 
+  wouldn&#39;t be a B-tree  any more. A B-tree achieves its 
   speed by grouping many ordered elements on nodes, and that minimizes disk 
   access and maximizes the benefit of both hardware and software caches. A 
-  hashed approach would have particularly poor performance for traversals, while 
-  B-trees amortize the cost of traversal over the number of elements in a node.</p>
+  hashed approach would in effect just replace one ordering with another.</p>
   <p><b>What is the difference between a node and a page?</b> In computer 
   science, <i><a href="http://en.wikipedia.org/wiki/Node">node</a></i> is the 
   name for the basic unit used to build data structures. <i>
@@ -60,7 +66,7 @@
   <hr>
 
   <p>Revised 
-  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->03 September 2013<!--webbot bot="Timestamp" endspan i-checksum="39622" --></p>
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->10 September 2013<!--webbot bot="Timestamp" endspan i-checksum="39617" --></p>
 
   <p>© Copyright Beman Dawes, 2013</p>
 

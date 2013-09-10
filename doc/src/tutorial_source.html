@@ -36,7 +36,7 @@
     </tr>
   </table>
 
-   <h2>Introduction</h2>
+   <h2><a name="Introduction">Introduction</a></h2>
    
    <p>This tutorial is focused on quickly getting you using the library. It 
    assumes you are already familiar with the C++ standard library associative 
@@ -93,7 +93,7 @@ upper_bound(3) is 5</pre>
   std::set</code>? <b>Answer:</b> Persistence on some form of random-access 
   device. </p>
   
-  <h2>Reading a B-tree file</h2>
+  <h2><a name="Reading-a-B-tree-file">Reading a B-tree file</a></h2>
   
   <p>Let&#39;s read the file that was created in the prior example. This is the 
   first try [<a href="../example/int_set_read_first_try.cpp"><code>int_set_read_first_try.cpp</code></a>]:</p>
@@ -122,7 +122,8 @@ binary_file::open: The system cannot find the file specified: &quot;int_set.btr&
 ***************************************************************************
 </pre>
   </blockquote>
-  <p><b>Important point:</b> B-trees are disk resident, so errors are a 
+  <p><b>Important point:</b> B-trees are  resident on external files, so as with 
+  all I/O errors are a 
   commonplace. Your code should expect that exceptions will be thrown.</p>
   
   <p>After fixing the problem of the test file being in a different directory, 
@@ -136,9 +137,6 @@ binary_file::open: The system cannot find the file specified: &quot;int_set.btr&
 lower_bound(3) is 3
 upper_bound(3) is 5</pre>
   </blockquote>
-  <p>That brings us back to the original point; <b>B-tree are externally resident</b>, 
-  and that makes them very different animals from standard library associative 
-  containers.</p>
   
   <p>What about the additional template parameters, constructor arguments, 
   and member functions that are not present in <code>std::set</code>? You may have spotted 
@@ -149,10 +147,10 @@ upper_bound(3) is 5</pre>
   ultimate performance, and we will look at that later in the
   <a href="#Tuning-hints">Tuning hints</a> section of this tutorial.</p>
   
-  <h2>Integer map first try</h2>
+  <h2><a name="Integer-map-first-try">Integer map first try</a></h2>
   
   <p>Just as with the standard library associative containers, the B-tree 
-  library divides the world into sets and maps. Let&#39;s try a simple map:</p>
+  library divides the world into sets and maps. Let&#39;s try a simple map [<code><a href="../example/int_map_first_try.cpp">int_map_first_try.cpp</a></code>]:</p>
   
   <blockquote>
     <pre>$include "int_map_first_try.cpp.html"</pre>
@@ -171,37 +169,37 @@ upper_bound(3) is 5</pre>
   the same type, so are interchangeable. But with maps, const-ness must be 
   observed.</p>
   
-  <p><span style="background-color: #FFFF00">Add </span>
-  <span style="background-color: #FFFF00">faq</span><span style="background-color: #FFFF00"> 
-  entry why do functions return </span><span style="background-color: #FFFF00">
-  const_iterator</span><span style="background-color: #FFFF00"> instead of
-  </span><span style="background-color: #FFFF00">interator</span><span style="background-color: #FFFF00">? 
-  and link to it.</span></p>
+  <p>There is a <a href="faq.html#why-const_iterator-returned">FAQ</a> entry 
+  explaining why <code>const_iterator</code> is returned in places you are used 
+  to getting <code>iterator</code> returned.</p>
   
   <p>Let&#39;s correct the code and try again...</p>
   
   <h2><a name="Integer-map">Integer map</a></h2>
   
+  <p>Here is the corrected program [<code><a href="../example/int_map.cpp">int_map.cpp</a></code>]:</p>
+  
   <blockquote>
     <pre>$include "int_map.cpp.html"</pre>
   </blockquote>
-  <p>Here is the output:</p>
+  <p>OK, that works. Here is the output:</p>
   <blockquote>
     <pre>1, 111
 2, 222
 3, 333</pre>
   </blockquote>
   
-  <h2>String set first try</h2>
+  <h2><a name="String-set-first-try">String set first try</a></h2>
   
-  <p>What you probably do want to learn about right away is how to cope with the 
+  <p>It is important to learn about right away is how to cope with the 
   very stringent <a href="reference.html#Requirements-on-template-parameters">requirements</a> the library places on template parameter <code>Key</code> (and 
   <code>T</code>, for maps), since these requirements will cause endless problems if you 
   don&#39;t understand them. Read on...</p>
   
-  <p>An obvious transformation of set1.cpp to handle <code>std::string</code> instead of
+  <p dir="ltr">An obvious transformation of the <a href="#integer-set">Integer 
+  set</a> to handle <code>std::string</code> instead of
   <code>int</code> 
-  looks like example set2_1st_try.cpp:</p>
+  looks like this [<code><a href="../example/string_set_first_try.cpp">string_set_first_try.cpp</a></code>]:</p>
   
   <blockquote>
     <pre>$include "string_set_first_try.cpp.html"
@@ -226,18 +224,17 @@ Key=std::string
   does not conform to the
   <a href="reference.html#Requirements-on-template-parameters">requirement</a> 
   that <code>Key</code> be fixed-length, 
-  memcpyable, and not container pointers or references except in a proxy class. How can those 
+  memcpyable, and not contain pointers or references except in a proxy class. How can those 
   requirements be met? Read on...</span></p>
   
-  <h2>Small strings</h2>
+  <h2><a name="Small-strings">Small strings</a></h2>
   
-  <p>Many applications involve only small strings; some <code>
-  <span style="font-weight: 400">std::basic_string</span></code> 
-  implementations acknowledge this by employing a small-string optimization 
-  under the covers. The class template <code><span style="font-weight: 400">
+  <p>Many applications involve only small strings The class template <code><span style="font-weight: 400">
   string_holder</span></code> provides a <code><span style="font-weight: 400">
-  std::string</span></code>-like interface, but with a maximum 
-  length supplied by a template parameter. </p>
+  std::string</span></code>-like interface, but with a fixed maximum 
+  length supplied by a template parameter. That results in a fixed length type 
+  one byte longer than the maximum size. It meets all the B-tree parameter 
+  requirements. Here is a usage example [<code><a href="../example/string_set.cpp">string_set.cpp</a></code>]:</p>
   
   <blockquote>
     <pre>$include "string_set.cpp.html"</pre>
@@ -253,22 +250,22 @@ drink
 eat</pre>
   </blockquote>
   
-  <p><span style="background-color: #FFFF00">FAQ Where to draw line between 
-  small and large strings?</span></p>
+  <p>But what about true variable length strings? That will be our next example 
+  program, but first let&#39;s step back and look at the general problem..</p>
   
-  <h2>Longer strings</h2>
+  <h2><a name="Indexes">Indexes</a></h2>
   
   <p>Except when the elements are fixed-length and quite short relative to disk 
   page size, the best use of a B-tree is as an index into a random access file. 
-  That was described in the introduction of Bayer&#39;s original paper, <i><a href=
+  That was described in the introduction of Bayer&#39;s original B-tree paper, <i><a href=
   "http://www.minet.uni-jena.de/dbis/lehre/ws2005/dbs1/Bayer_hist.pdf">
   Organization and Maintenance of Large Ordered Indexes</a></i>.</p>
   
-  <p>The B-tree library provides classes that package the use of a B-tree as an 
-  index into a file.&nbsp; The headers are <code>&lt;boost/btree/btree_index_set.hpp&gt;</code> 
+  <p>The B-tree library provides classes that packages the use of a B-tree as an 
+  index into a separate flat file.&nbsp; The headers are <code>&lt;boost/btree/btree_index_set.hpp&gt;</code> 
   and <code>&lt;boost/btree/btree_index_map.hpp&gt;</code>. This is implemented as 
   multiple files - one or more B-tree 
-  files used indexes pointing into a random-access flat file which contains 
+  files used as indexes pointing into a random-access flat file which contains 
   the actual data. Databases and other software often use a similar approach, 
   but may hide the index file from end-user view. The benefits of the two-layer 
   multi-file 
@@ -295,13 +292,17 @@ eat</pre>
     string_view</a></code> class to act as a <code>std::string</code> proxy, so that the familiar
     <code><span style="font-weight: 400">std::string</span></code> operations 
     are available to users.</li>
-    <li>An adapter index traits class to copy data into and out of the 
+    <li>The adapters needed to semi-transparently create and access the data in the 
     flat file.</li>
     <li>Classes <code>btree_index_set</code>, <code>btree_index_multiset</code>,
     <code>btree_index_map</code>, and <code>btree_index_multimap</code> to glue the pieces together into a 
     seamless interface.</li>
 </ul>
-  <p>Here is the final version of set2.cpp:</p>
+  
+  <h2><a name="Variable-length-strings">Variable length strings</a></h2>
+  
+  <p>Here is an example of how this works for a set of potentially very large 
+  strings [<code><a href="../example/string_index_set.cpp">string_index_set.cpp</a></code>]:</p>
   
   <blockquote>
     <pre>$include "string_index_set.cpp.html"</pre>
@@ -330,7 +331,16 @@ eat
   count bytes are required by the size of the string. Null strings are permitted 
   and are denoted by a count of 0. The 0x80 bit will be set 
   for all count bytes except the last (i.e. low-order).</p>
-  <h2>Packing a B-tree</h2>
+  <h2><a name="User-defined-types">User defined types</a> (UDTs)</h2>
+  <p>Real-world applications will often involve user defined types (UDTs). </p>
+  <blockquote>
+    <pre>$include "udt_index_set.cpp.html"</pre>
+  </blockquote>
+  <h2>UDT three index set</h2>
+  <blockquote>
+    <pre>$include "udt_3_index_set.cpp.html"</pre>
+  </blockquote>
+  <h2><a name="Packing-a-B-tree">Packing a B-tree</a></h2>
   <p>B-trees disk pages are only 75% full on average because the classic 
   B-tree insertion algorithm  splits a page into two pages when it overflows.&nbsp; This 
   implementation supplies an optimization:</p>
@@ -348,7 +358,7 @@ eat
     <pre>$include "pack_map.cpp.html"</pre>
   </blockquote>
   <h2><a name="Data-portability">Data portability</a></h2>
-  <p>Programs written using this library are portable to any computer 
+  <p>Programs written using the B-tree library are portable to any computer 
   system with external memory and a conforming C++03 (or later) compiler. But 
   data is a different story. For example, the <a href="#Integer-map">integer map</a> 
   example used a <code>btree_map&lt;int, int&gt;</code> container, but <code>int</code> 
@@ -380,16 +390,8 @@ eat
     or research platforms.</p>
   <blockquote>
     <p><b>Aside:</b> Note the use of 7-byte integers for the key type and 3-byte 
-    integers for the mapped type. The endian library supports 1 through 8 byte 
-    integer sizes, signed and unsigned.</p>
-  </blockquote>
-  <h2>UDT index set</h2>
-  <blockquote>
-    <pre>$include "udt_index_set.cpp.html"</pre>
-  </blockquote>
-  <h2>UDT three index set</h2>
-  <blockquote>
-    <pre>$include "udt_3_index_set.cpp.html"</pre>
+    integers for the mapped type. The endian library supports integer1 1 through 8 bytes 
+    in size, both signed and unsigned.</p>
   </blockquote>
     <h2><a name="Heterogeneous-compares">Heterogeneous compares</a></h2>
     <p>Consider the following code; note that <code>find(2)</code> 
@@ -465,7 +467,7 @@ find(2) found 2,222</pre>
   <hr>
 
   <p>Revised 
-  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->08 September 2013<!--webbot bot="Timestamp" endspan i-checksum="39632" --></p>
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->10 September 2013<!--webbot bot="Timestamp" endspan i-checksum="39617" --></p>
 
   <p>© Copyright Beman Dawes, 2013</p>
 
