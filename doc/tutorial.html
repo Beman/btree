@@ -15,7 +15,7 @@
   <table border="0" cellpadding="5" cellspacing="0" style=
   "border-collapse: collapse" bordercolor="#111111">
     <tr>
-      <td width="277"><a href="../../../../index.htm"><img src=
+      <td width="277"><a href="../../../index.htm"><img src=
       "../../../boost.png" alt="boost.png (6897 bytes)" align=
       "middle" width="300" height="86" border="0"></a></td>
 
@@ -36,7 +36,7 @@
     </tr>
   </table>
 
-   <h2>Introduction</h2>
+   <h2><a name="Introduction">Introduction</a></h2>
    
    <p>This tutorial is focused on quickly getting you using the library. It 
    assumes you are already familiar with the C++ standard library associative 
@@ -52,6 +52,27 @@
    <p>Please build these example programs yourself, give them a try, then make 
    some modifications and experiment a bit on your own! See the
    <a href="../README">README</a> file for the build setup.</p>
+   
+   <p>The tutorial can be followed section-by-section, or you can skip around if 
+   that suits your learning style. Here are the sections:</p>
+   
+   <p>
+   <a href="#integer-set">A simple integer set</a><br>
+   <a href="#Reading-a-B-tree-file">Reading a B-tree file</a><br>
+   <a href="#Integer-map-first-try">Integer map first try</a><br>
+   <a href="#Integer-map">Integer map</a><br>
+   <a href="#String-set-first-try">String set first try</a><br>
+   <a href="#Small-strings">Small strings</a><br>
+   <a href="#Heterogeneous-compares">Heterogeneous compares</a><br>
+   <a href="#Indexes">Indexes</a><br>
+   <a href="#Variable-length-strings">Variable length strings</a><br>
+   <a href="#User-defined-types">User defined types (UDTs)</a><br>
+   <a href="#UDT-three-index-set">UDT three index set</a><br>
+   <a href="#Data-portability">Data portability</a><br>
+   <a href="#Packing-a-B-tree">Packing a B-tree</a><br>
+   <a href="#Tuning-hints">Tuning hints</a><br>
+   <a href="#Preloading">Preloading</a><br>
+  </p>
    
    <h2>A simple <a name="integer-set">integer set</a></h2>
    
@@ -114,7 +135,7 @@ upper_bound(3) is 5</pre>
   std::set</code>? <b>Answer:</b> Persistence on some form of random-access 
   device. </p>
   
-  <h2>Reading a B-tree file</h2>
+  <h2><a name="Reading-a-B-tree-file">Reading a B-tree file</a></h2>
   
   <p>Let&#39;s read the file that was created in the prior example. This is the 
   first try [<a href="../example/int_set_read_first_try.cpp"><code>int_set_read_first_try.cpp</code></a>]:</p>
@@ -181,7 +202,8 @@ binary_file::open: The system cannot find the file specified: &quot;int_set.btr&
 ***************************************************************************
 </pre>
   </blockquote>
-  <p><b>Important point:</b> B-trees are disk resident, so errors are a 
+  <p><b>Important point:</b> B-trees are  resident on external files, so as with 
+  all I/O errors are a 
   commonplace. Your code should expect that exceptions will be thrown.</p>
   
   <p>After fixing the problem of the test file being in a different directory, 
@@ -195,9 +217,6 @@ binary_file::open: The system cannot find the file specified: &quot;int_set.btr&
 lower_bound(3) is 3
 upper_bound(3) is 5</pre>
   </blockquote>
-  <p>That brings us back to the original point; <b>B-tree are externally resident</b>, 
-  and that makes them very different animals from standard library associative 
-  containers.</p>
   
   <p>What about the additional template parameters, constructor arguments, 
   and member functions that are not present in <code>std::set</code>? You may have spotted 
@@ -208,10 +227,10 @@ upper_bound(3) is 5</pre>
   ultimate performance, and we will look at that later in the
   <a href="#Tuning-hints">Tuning hints</a> section of this tutorial.</p>
   
-  <h2>Integer map first try</h2>
+  <h2><a name="Integer-map-first-try">Integer map first try</a></h2>
   
   <p>Just as with the standard library associative containers, the B-tree 
-  library divides the world into sets and maps. Let&#39;s try a simple map:</p>
+  library divides the world into sets and maps. Let&#39;s try a simple map [<code><a href="../example/int_map_first_try.cpp">int_map_first_try.cpp</a></code>]:</p>
   
   <blockquote>
     <pre>
@@ -252,16 +271,15 @@ int cpp_main(int, char *[])
   the same type, so are interchangeable. But with maps, const-ness must be 
   observed.</p>
   
-  <p><span style="background-color: #FFFF00">Add </span>
-  <span style="background-color: #FFFF00">faq</span><span style="background-color: #FFFF00"> 
-  entry why do functions return </span><span style="background-color: #FFFF00">
-  const_iterator</span><span style="background-color: #FFFF00"> instead of
-  </span><span style="background-color: #FFFF00">interator</span><span style="background-color: #FFFF00">? 
-  and link to it.</span></p>
+  <p>There is a <a href="faq.html#why-const_iterator-returned">FAQ</a> entry 
+  explaining why <code>const_iterator</code> is returned in places you are used 
+  to getting <code>iterator</code> returned.</p>
   
   <p>Let&#39;s correct the code and try again...</p>
   
   <h2><a name="Integer-map">Integer map</a></h2>
+  
+  <p>Here is the corrected program [<code><a href="../example/int_map.cpp">int_map.cpp</a></code>]:</p>
   
   <blockquote>
     <pre>
@@ -288,23 +306,24 @@ int cpp_main(int, char *[])
   return 0;
 }</pre>
   </blockquote>
-  <p>Here is the output:</p>
+  <p>OK, that works. Here is the output:</p>
   <blockquote>
     <pre>1, 111
 2, 222
 3, 333</pre>
   </blockquote>
   
-  <h2>String set first try</h2>
+  <h2><a name="String-set-first-try">String set first try</a></h2>
   
-  <p>What you probably do want to learn about right away is how to cope with the 
+  <p>It is important to learn about right away is how to cope with the 
   very stringent <a href="reference.html#Requirements-on-template-parameters">requirements</a> the library places on template parameter <code>Key</code> (and 
   <code>T</code>, for maps), since these requirements will cause endless problems if you 
   don&#39;t understand them. Read on...</p>
   
-  <p>An obvious transformation of set1.cpp to handle <code>std::string</code> instead of
+  <p>An obvious transformation of the <a href="#integer-set">Integer 
+  set</a> to handle <code>std::string</code> instead of
   <code>int</code> 
-  looks like example set2_1st_try.cpp:</p>
+  looks like this [<code><a href="../example/string_set_first_try.cpp">string_set_first_try.cpp</a></code>]:</p>
   
   <blockquote>
     <pre>
@@ -351,18 +370,17 @@ Key=std::string
   does not conform to the
   <a href="reference.html#Requirements-on-template-parameters">requirement</a> 
   that <code>Key</code> be fixed-length, 
-  memcpyable, and not container pointers or references except in a proxy class. How can those 
+  memcpyable, and not contain pointers or references except in a proxy class. How can those 
   requirements be met? Read on...</span></p>
   
-  <h2>Small strings</h2>
+  <h2><a name="Small-strings">Small strings</a></h2>
   
-  <p>Many applications involve only small strings; some <code>
-  <span style="font-weight: 400">std::basic_string</span></code> 
-  implementations acknowledge this by employing a small-string optimization 
-  under the covers. The class template <code><span style="font-weight: 400">
+  <p>Many applications involve only small strings The class template <code><span style="font-weight: 400">
   string_holder</span></code> provides a <code><span style="font-weight: 400">
-  std::string</span></code>-like interface, but with a maximum 
-  length supplied by a template parameter. </p>
+  std::string</span></code>-like interface, but with a fixed maximum 
+  length supplied by a template parameter. That results in a fixed length type 
+  one byte longer than the maximum size. It meets all the B-tree parameter 
+  requirements. Here is a usage example [<code><a href="../example/string_set.cpp">string_set.cpp</a></code>]:</p>
   
   <blockquote>
     <pre>
@@ -401,254 +419,9 @@ drink
 eat</pre>
   </blockquote>
   
-  <p><span style="background-color: #FFFF00">FAQ Where to draw line between 
-  small and large strings?</span></p>
+  <p>But what about true variable length strings? That will be our next example 
+  program, but first let&#39;s step back and look at the general problem..</p>
   
-  <h2>Longer strings</h2>
-  
-  <p>Except when the elements are fixed-length and quite short relative to disk 
-  page size, the best use of a B-tree is as an index into a random access file. 
-  That was described in the introduction of Bayer&#39;s original paper, <i><a href=
-  "http://www.minet.uni-jena.de/dbis/lehre/ws2005/dbs1/Bayer_hist.pdf">
-  Organization and Maintenance of Large Ordered Indexes</a></i>.</p>
-  
-  <p>The B-tree library provides classes that package the use of a B-tree as an 
-  index into a file.&nbsp; The headers are <code>&lt;boost/btree/btree_index_set.hpp&gt;</code> 
-  and <code>&lt;boost/btree/btree_index_map.hpp&gt;</code>. This is implemented as 
-  multiple files - one or more B-tree 
-  files used indexes pointing into a random-access flat file which contains 
-  the actual data. Databases and other software often use a similar approach, 
-  but may hide the index file from end-user view. The benefits of the two-layer 
-  multi-file 
-  approach include:</p>
-  
-  <ul>
-    <li>
-  <p>The elements in the flat file can be variable length.</li>
-  <li>
-  <p>The elements in the flat file can be far larger than would be 
-  practical for elements in a B-tree file.</li>
-  <li>
-  <p>Multiple B-tree index files can exist for a single flat file.</li>
-<li>
-  <p>Off-the-shelf or custom-written software can also access the flat 
-  file.</li>
-</ul>
-  <p>This two layer approach uses some additional components to create 
-  a seamless interface:</p>
-  
-  <ul>
-    <li>A Boost implementation of the new standard library <code>
-    <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3685.html">
-    string_view</a></code> class to act as a <code>std::string</code> proxy, so that the familiar
-    <code><span style="font-weight: 400">std::string</span></code> operations 
-    are available to users.</li>
-    <li>An adapter index traits class to copy data into and out of the 
-    flat file.</li>
-    <li>Classes <code>btree_index_set</code>, <code>btree_index_multiset</code>,
-    <code>btree_index_map</code>, and <code>btree_index_multimap</code> to glue the pieces together into a 
-    seamless interface.</li>
-</ul>
-  <p>Here is the final version of set2.cpp:</p>
-  
-  <blockquote>
-    <pre>
-#include &lt;boost/btree/btree_index_set.hpp&gt;
-#include &lt;boost/btree/support/string_view.hpp&gt;
-#include &lt;iostream&gt;
-#include &lt;boost/detail/lightweight_main.hpp&gt;
-
-using std::cout;
-using namespace boost::btree;
-
-int cpp_main(int, char *[])
-{
-  typedef btree_index_set&lt;boost::string_view&gt; BT;
-  BT bt(&quot;string_index_set&quot;, flags::truncate);   // creates .ndx and .dat files
-
-  bt.insert(&quot;eat&quot;);
-  bt.insert(&quot;drink&quot;);
-  bt.insert(&quot;be merry&quot;);
-  bt.insert(&quot;be exceptionally merry&quot;);
-
-  for (BT::iterator itr = bt.begin(); itr != bt.end(); ++itr)
-    cout &lt;&lt; *itr &lt;&lt; &#39;\n&#39;;
-
-  return 0;
-} </pre>
-  </blockquote>
-  
-  
-  <p>Here is the output:</p>
-  
-  <blockquote>
-    <pre>be exceptionally merry
-be merry
-drink
-eat
-</pre>
-  </blockquote>
-  <p>....And a dump of the flat file:</p>
-  <blockquote>
-    <pre>00000000  <span style="background-color: #00FF00">03</span>65 6174 <span style="background-color: #00FF00">05</span>64 7269 6e6b <span style="background-color: #00FF00">08</span>62 6520 6d65 .eat.drink.be me
-00000010  7272 79<span style="background-color: #00FF00">16</span> 6265 2065 7863 6570 7469 6f6e rry.be exception
-00000020  616c 6c79 206d 6572 7279                ally merry</pre>
-  </blockquote>
-  <p>Notice that each element begins with a count. That&#39;s more efficient than 
-  null termination when processing long strings, and allows strings to contain 
-  embedded nulls. The count is itself variable length, big-endian, and will use 
-  as many 
-  count bytes are required by the size of the string. Null strings are permitted 
-  and are denoted by a count of 0. The 0x80 bit will be set 
-  for all count bytes except the last (i.e. low-order).</p>
-  <h2>Packing a B-tree</h2>
-  <p>B-trees disk pages are only 75% full on average because the classic 
-  B-tree insertion algorithm  splits a page into two pages when it overflows.&nbsp; This 
-  implementation supplies an optimization:</p>
-  <blockquote>
-  <p>If an insert is at the end of the tree <b>and</b> all prior insert operations 
-  were at the end of the tree <b>and</b> 
-  there have been no erase operations, then if the insert would overflow the 
-  current last page, it is done on a new (i.e. empty) last page.</p>
-  </blockquote>
-  <p>For large, deep, trees this results in a major saving in both space and 
-  speed. All pages except the last one are 100% full. The depth of the tree, which 
-  affects search times, is at an absolute minimum.</p>
-  <p>Here is how to pack an existing tree [<a href="../example/pack_map.cpp">pack_map.cpp</a>]:</p>
-  <blockquote>
-    <pre>
-#include &lt;boost/btree/btree_map.hpp&gt;
-#include &lt;iostream&gt;
-#include &lt;boost/detail/lightweight_main.hpp&gt;
-#include &lt;boost/assert.hpp&gt;
-
-using std::cout;
-using namespace boost::btree;
-
-int cpp_main(int, char *[])
-{
-  typedef btree_map&lt;int, int&gt; BT;
-
-  BT old_bt(&quot;int_map.btr&quot;, flags::read_only);
-  BT new_bt(old_bt.begin(), old_bt.end(), &quot;packed_int_map.btr&quot;, flags::truncate);
-
-  BOOST_ASSERT(old_bt == new_bt);
-
-  return 0;
-}</pre>
-  </blockquote>
-  <h2><a name="Data-portability">Data portability</a></h2>
-  <p>Programs written using this library are portable to any computer 
-  system with external memory and a conforming C++03 (or later) compiler. But 
-  data is a different story. For example, the <a href="#Integer-map">integer map</a> 
-  example used a <code>btree_map&lt;int, int&gt;</code> container, but <code>int</code> 
-  may cause several data portability problems when data is moved to a different 
-  platform:</p>
-  <blockquote>
-    <ul>
-      <li>
-  <p>size of <code>int</code> might be 16-bits, 32-bits, or some other size.</li>
-    <li>
-  <p>The byte-ordering of <code>int</code> might be
-  <a href="http://en.wikipedia.org/wiki/Endianness">big endian or little endian</a>.</li>
-  <li>
-  <p>Even when the size and endianness are the same, alignment 
-  requirements may differ. For example, some compilers align a 64-bit <code>long 
-  long</code>&nbsp; to an 4-byte boundary for a 32-bit build, but to an 8-byte 
-  boundary for a 64-bit build..</li>
-</ul>
-</blockquote>
-  <p>The first concern can be handled by using one of the standard
-  <code>typedef</code>s, like <code>int32_t</code>.&nbsp; All of the concerns can 
-  be addressed by using one of the endian types from the companion
-  <a href="../../endian/index.html">Boost Endian Library</a>. Here&#39;s an example [<a href="../example/endian_map.cpp">endian_map.cpp</a>]:</p>
-  <blockquote>
-    <pre>
-#include &lt;boost/btree/btree_map.hpp&gt;
-#include &lt;boost/endian/types.hpp&gt;
-#include &lt;iostream&gt;
-#include &lt;boost/detail/lightweight_main.hpp&gt; 
-
-using std::cout;
-using namespace boost::btree;
-using namespace boost::endian;
-
-int cpp_main(int, char *[])
-{
-  typedef btree_map&lt;big_int56_t, big_int24_t&gt; BT;  // note the sizes!
-  BT bt(&quot;endian_map.btr&quot;, flags::truncate);
-
-  bt.emplace(38759234875LL, 1);
-  bt.emplace(82352345, 2);
-  bt.emplace(1242423462, 3);
-
-  cout &lt;&lt; &quot;sizeof(BT::value_type) is &quot; &lt;&lt; sizeof(BT::value_type) &lt;&lt; &#39;\n&#39;;
-
-  for (BT::const_iterator itr = bt.begin();
-    itr != bt.end(); ++itr)
-    cout &lt;&lt; itr-&gt;first &lt;&lt; &quot;, &quot; &lt;&lt; itr-&gt;second &lt;&lt; &#39;\n&#39;;
-
-  return 0;
-}</pre>
-  </blockquote>
-    <p>The resulting data file will be portable to all common platforms, and to 
-    has a very high likelihood of being portable even to really strange legacy 
-    or research platforms.</p>
-  <blockquote>
-    <p><b>Aside:</b> Note the use of 7-byte integers for the key type and 3-byte 
-    integers for the mapped type. The endian library supports 1 through 8 byte 
-    integer sizes, signed and unsigned.</p>
-  </blockquote>
-  <h2>UDT index set</h2>
-  <blockquote>
-    <pre>
-#include &lt;boost/btree/btree_index_set.hpp&gt;
-#include &quot;udt.hpp&quot;
-#include &lt;boost/btree/support/string_view.hpp&gt;
-#include &lt;iostream&gt;
-#include &lt;boost/detail/lightweight_main.hpp&gt; 
-
-using std::cout;
-using namespace boost::btree;
-
-int cpp_main(int, char *[])
-{
-  typedef btree_index_set&lt;UDT&gt; BT;
-  BT bt(&quot;UDT_index_set&quot;, flags::truncate);
-
-  bt.insert(UDT(1, &quot;eat&quot;, &quot;comer&quot;));
-  bt.insert(UDT(2, &quot;drink&quot;, &quot;beber&quot;));
-  bt.insert(UDT(3, &quot;be merry&quot;, &quot;ser feliz&quot;));
-
-  for (BT::iterator itr = bt.begin(); itr != bt.end(); ++itr)
-    cout &lt;&lt; *itr &lt;&lt; &#39;\n&#39;;
-
-  return 0;
-}</pre>
-  </blockquote>
-  <h2>UDT three index set</h2>
-  <blockquote>
-    <pre>
-#include &lt;boost/btree/btree_index_set.hpp&gt;
-#include &lt;boost/btree/support/string_view.hpp&gt;
-#include &lt;iostream&gt;
-#include &lt;boost/detail/lightweight_main.hpp&gt; 
-
-using std::cout;
-using namespace boost::btree;
-
-int cpp_main(int, char *[])
-{
-  typedef btree_index_set&lt;udt&gt; BT;
-  BT bt(&quot;udt_3_index_set.idx1&quot;, &quot;udt_3_index_set.dat&quot;, flags::truncate);
-
-
-  for (BT::iterator itr = bt.begin(); itr != bt.end(); ++itr)
-    cout &lt;&lt; *itr &lt;&lt; &#39;\n&#39;;
-
-  return 0;
-}</pre>
-  </blockquote>
     <h2><a name="Heterogeneous-compares">Heterogeneous compares</a></h2>
     <p>Consider the following code; note that <code>find(2)</code> 
     has an argument type of <code>int</code>, not <code>UDT</code>, and that
@@ -710,6 +483,449 @@ find(2) found 2,222</pre>
   </blockquote>
     <p>Incidentally, the C++14 standard library will support 
     heterogeneous comparison, too.</p>
+  
+  <h2><a name="Indexes">Indexes</a></h2>
+  
+  <p>Except when the elements are fixed-length and quite short relative to disk 
+  page size, the best use of a B-tree is as an index into a random access file. 
+  That was described in the introduction of Bayer&#39;s original B-tree paper, <i><a href=
+  "http://www.minet.uni-jena.de/dbis/lehre/ws2005/dbs1/Bayer_hist.pdf">
+  Organization and Maintenance of Large Ordered Indexes</a></i>.</p>
+  
+  <p>The B-tree library provides classes that packages the use of a B-tree as an 
+  index into a separate flat file.&nbsp; The headers are <code>&lt;boost/btree/btree_index_set.hpp&gt;</code> 
+  and <code>&lt;boost/btree/btree_index_map.hpp&gt;</code>. This is implemented as 
+  multiple files - one or more B-tree 
+  files used as indexes pointing into a random-access flat file which contains 
+  the actual data. Databases and other software often use a similar approach, 
+  but may hide the index file from end-user view. The benefits of the two-layer 
+  multi-file 
+  approach include:</p>
+  
+  <ul>
+    <li>
+  <p>The elements in the flat file can be variable length.</li>
+  <li>
+  <p>The elements in the flat file can be far larger than would be 
+  practical for elements in a B-tree file.</li>
+  <li>
+  <p>Multiple B-tree index files can exist for a single flat file.</li>
+<li>
+  <p>Off-the-shelf or custom-written software can also access the flat 
+  file.</li>
+</ul>
+  <p>This two layer approach uses some additional components to create 
+  a seamless interface:</p>
+  
+  <ul>
+    <li>A Boost implementation of the new standard library <code>
+    <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3685.html">
+    string_view</a></code> class to act as a <code>std::string</code> proxy, so that the familiar
+    <code><span style="font-weight: 400">std::string</span></code> operations 
+    are available to users.</li>
+    <li>The adapters needed to semi-transparently create and access the data in the 
+    flat file.</li>
+    <li>Classes <code>btree_index_set</code>, <code>btree_index_multiset</code>,
+    <code>btree_index_map</code>, and <code>btree_index_multimap</code> to glue the pieces together into a 
+    seamless interface.</li>
+</ul>
+  
+  <h2><a name="Variable-length-strings">Variable length strings</a></h2>
+  
+  <p>Here is an example of how this works for a set of potentially very large 
+  strings [<code><a href="../example/string_index_set.cpp">string_index_set.cpp</a></code>]:</p>
+  
+  <blockquote>
+    <pre>
+#include &lt;boost/btree/btree_index_set.hpp&gt;
+#include &lt;boost/btree/support/string_view.hpp&gt;
+#include &lt;iostream&gt;
+#include &lt;boost/detail/lightweight_main.hpp&gt;
+
+using std::cout;
+using namespace boost::btree;
+
+int cpp_main(int, char *[])
+{
+  typedef btree_index_set&lt;boost::string_view&gt; BT;
+  BT bt(&quot;string_index_set&quot;, flags::truncate);   // creates .ndx and .dat files
+
+  bt.insert(&quot;eat&quot;);
+  bt.insert(&quot;drink&quot;);
+  bt.insert(&quot;be merry&quot;);
+  bt.insert(&quot;be exceptionally merry&quot;);
+
+  for (BT::iterator itr = bt.begin(); itr != bt.end(); ++itr)
+    cout &lt;&lt; *itr &lt;&lt; &#39;\n&#39;;
+
+  return 0;
+} </pre>
+  </blockquote>
+  
+  
+  <p>Here is the output:</p>
+  
+  <blockquote>
+    <pre>be exceptionally merry
+be merry
+drink
+eat
+</pre>
+  </blockquote>
+  <p>....And a dump of the flat file:</p>
+  <blockquote>
+    <pre>00000000  <span style="background-color: #00FF00">03</span>65 6174 <span style="background-color: #00FF00">05</span>64 7269 6e6b <span style="background-color: #00FF00">08</span>62 6520 6d65 .eat.drink.be me
+00000010  7272 79<span style="background-color: #00FF00">16</span> 6265 2065 7863 6570 7469 6f6e rry.be exception
+00000020  616c 6c79 206d 6572 7279                ally merry</pre>
+  </blockquote>
+  <p>Notice that each element begins with a count. That&#39;s more efficient than 
+  null termination when processing long strings, and allows strings to contain 
+  embedded nulls. The count is itself variable length, big-endian, and will use 
+  as many 
+  count bytes are required by the size of the string. Null strings are permitted 
+  and are denoted by a count of 0. The 0x80 bit will be set 
+  for all count bytes except the last (i.e. low-order).</p>
+  <h2><a name="User-defined-types">User defined types</a> (UDTs)</h2>
+  <p>Real-world applications will often involve user defined types (UDTs).&nbsp;&nbsp; 
+  The first step is to put together a header [<code><a href="../example/udt.hpp">udt.hpp</a></code>]:</p>
+  <blockquote>
+    <pre>
+#ifndef BOOST_BTREE_UDT_EXAMPLE_HPP
+#define BOOST_BTREE_UDT_EXAMPLE_HPP
+
+#include &lt;boost/btree/support/string_view.hpp&gt;
+#include &lt;iosfwd&gt;
+
+using std::cout;
+using namespace boost::btree;
+using boost::string_view;
+
+//  The actual UDT  ----------------------------------------------------------//
+
+struct UDT
+{
+  typedef int id_type;
+  id_type      id;
+  string_view  english;
+  string_view  spanish;
+
+  UDT() {}
+  UDT(id_type n, string_view en, string_view sp)
+    : id(n), english(en), spanish(sp)
+  {}
+
+  bool operator &lt; (const UDT& rhs) const { return english &lt; rhs.english; }
+};
+
+//  stream inserter  ---------------------------------------------------------//
+
+inline std::ostream& operator&lt;&lt;(std::ostream& os, const UDT& x)
+{
+  os &lt;&lt; x.id &lt;&lt; &quot; \&quot;&quot; &lt;&lt; x.english &lt;&lt; &quot;\&quot; \&quot;&quot; &lt;&lt; x.spanish &lt;&lt; &quot;\&quot;&quot;;
+  return os;
+}
+
+//  function objects for different orderings  --------------------------------//
+
+struct id_ordering
+{
+  bool operator()(const UDT& x, const UDT& y) const
+    {return x.id &lt; y.id;}
+};
+
+struct spanish_ordering
+{
+  bool operator()(const UDT& x, const UDT& y) const
+    {return x.spanish &lt; y.spanish;}
+};
+
+//  specialization boost::btree::default_index_traits&lt;UDT&gt;  ------------------//
+
+namespace boost
+{
+  namespace btree
+  {
+
+    template &lt;&gt;
+    class default_index_traits&lt;UDT&gt;
+    {
+      typedef btree::support::size_t_codec codec;
+
+    public:
+      typedef UDT                     reference;             // proxy
+      typedef endian::big_uint32_t  index_position_type;   // big enough
+
+      static std::size_t size(const UDT& x)
+      {
+        return sizeof(x.id)
+          + default_index_traits&lt;boost::string_view&gt;::size(x.english)
+          + default_index_traits&lt;boost::string_view&gt;::size(x.spanish);
+      }
+
+      static void build_flat_element(const UDT& x, char* dest,
+        std::size_t)
+      {
+        BOOST_ASSERT(dest);
+        std::memcpy(dest, &x.id, sizeof(x.id));
+        dest += sizeof(x.id);
+        std::size_t sz
+          = default_index_traits&lt;boost::string_view&gt;::size(x.english);
+        default_index_traits&lt;boost::string_view&gt;::build_flat_element(
+          x.english, dest, sz);
+        dest += sz;
+        default_index_traits&lt;boost::string_view&gt;::build_flat_element(
+          x.spanish, dest,
+          default_index_traits&lt;boost::string_view&gt;::size(x.spanish));
+      }
+
+      static reference dereference(const char* x)
+      {
+        return UDT
+          (default_index_traits&lt;int&gt;::dereference(x),
+          default_index_traits&lt;boost::string_view&gt;::dereference(
+            x + sizeof(UDT::id_type)),
+          default_index_traits&lt;boost::string_view&gt;::dereference(
+            x + sizeof(UDT::id_type)
+            + default_index_traits&lt;boost::string_view&gt;::size(
+              x + sizeof(UDT::id_type))));
+      }
+      static std::size_t size(const char* x)
+      {
+        std::size_t sz = sizeof(UDT::id_type);
+        sz +=
+          default_index_traits&lt;boost::string_view&gt;::size(x + sz);  // english
+        sz +=
+          default_index_traits&lt;boost::string_view&gt;::size(x + sz);  // spanish
+        return sz;
+      }
+    };
+
+  }
+} // namespaces
+
+#endif</pre>
+  </blockquote>
+    <p>Ugh! The actual UDT is easy, but the index traits adapter is ugly. 
+    There&#39;s a branch already being worked on to simplify that.</p>
+    <p>So now let&#39;s build an index set of type UDT. The code looks like this [<code><a href="../example/udt_index_set.cpp">udt_index_set.cpp</a></code>]:</p>
+  <blockquote>
+    <pre>
+#include &lt;boost/btree/btree_index_set.hpp&gt;
+#include &quot;udt.hpp&quot;
+#include &lt;boost/btree/support/string_view.hpp&gt;
+#include &lt;iostream&gt;
+#include &lt;boost/detail/lightweight_main.hpp&gt; 
+
+using std::cout;
+using namespace boost::btree;
+
+int cpp_main(int, char *[])
+{
+  typedef btree_index_set&lt;UDT&gt; BT;
+  BT bt(&quot;UDT_index_set&quot;, flags::truncate);
+
+  bt.insert(UDT(1, &quot;eat&quot;, &quot;comer&quot;));
+  bt.insert(UDT(2, &quot;drink&quot;, &quot;beber&quot;));
+  bt.insert(UDT(3, &quot;be merry&quot;, &quot;ser feliz&quot;));
+
+  for (BT::iterator itr = bt.begin(); itr != bt.end(); ++itr)
+    cout &lt;&lt; *itr &lt;&lt; &#39;\n&#39;;
+
+  return 0;
+}</pre>
+  </blockquote>
+    <p>And the output is:</p>
+  <blockquote>
+    <pre>3 &quot;be merry&quot; &quot;ser feliz&quot;
+2 &quot;drink&quot; &quot;beber&quot;
+1 &quot;eat&quot; &quot;comer&quot;
+</pre>
+  </blockquote>
+  <h2><a name="UDT-three-index-set">UDT three index set</a></h2>
+  <blockquote>
+    <pre>
+#include &lt;boost/btree/btree_index_set.hpp&gt;
+#include &quot;udt.hpp&quot;
+#include &lt;boost/btree/support/string_view.hpp&gt;
+#include &lt;iostream&gt;
+#include &lt;boost/detail/lightweight_main.hpp&gt; 
+
+using std::cout;
+using namespace boost::btree;
+
+int cpp_main(int, char *[])
+{
+  typedef btree_index_set&lt;UDT&gt; IDX1;
+  typedef btree_index_set&lt;UDT, default_traits, id_ordering&gt; IDX2;
+  typedef btree_index_set&lt;UDT, default_traits, spanish_ordering&gt; IDX3;
+
+  IDX1 idx1(&quot;udt_3_index_set.idx1&quot;, &quot;udt_3_index_set.dat&quot;, flags::truncate);
+  IDX2 idx2(&quot;udt_3_index_set.idx2&quot;, idx1.file(), flags::truncate, -1,
+    id_ordering());
+  IDX3 idx3(&quot;udt_3_index_set.idx3&quot;, idx1.file(), flags::truncate, -1,
+    spanish_ordering());
+
+  IDX1::file_position pos;
+
+  pos = idx1.push_back(UDT(1, &quot;eat&quot;, &quot;comer&quot;));
+  idx1.insert_file_position(pos);
+  idx2.insert_file_position(pos);
+  idx3.insert_file_position(pos);
+
+  pos = idx1.push_back(UDT(2, &quot;drink&quot;, &quot;beber&quot;));
+  idx1.insert_file_position(pos);
+  idx2.insert_file_position(pos);
+  idx3.insert_file_position(pos);
+
+  pos = idx1.push_back(UDT(3, &quot;be merry&quot;, &quot;ser feliz&quot;));
+  idx1.insert_file_position(pos);
+  idx2.insert_file_position(pos);
+  idx3.insert_file_position(pos);
+
+  cout &lt;&lt; &quot;\ninx1 - English ordering:\n\n&quot;;
+  for (IDX1::iterator itr = idx1.begin(); itr != idx1.end(); ++itr)
+    cout &lt;&lt; &quot;    &quot; &lt;&lt; *itr &lt;&lt; &#39;\n&#39;;
+
+  cout &lt;&lt; &quot;\ninx2 - ID ordering:\n\n&quot;;
+  for (IDX2::iterator itr = idx2.begin(); itr != idx2.end(); ++itr)
+    cout &lt;&lt; &quot;    &quot; &lt;&lt; *itr &lt;&lt; &#39;\n&#39;;
+
+  cout &lt;&lt; &quot;\ninx3 - Spanish ordering:\n\n&quot;;
+  for (IDX3::iterator itr = idx3.begin(); itr != idx3.end(); ++itr)
+    cout &lt;&lt; &quot;    &quot; &lt;&lt; *itr &lt;&lt; &#39;\n&#39;;
+
+  return 0;
+}</pre>
+  </blockquote>
+    <p>Here is the output:</p>
+  <blockquote>
+    <pre>inx1 - English ordering:
+
+    3 &quot;be merry&quot; &quot;ser feliz&quot;
+    2 &quot;drink&quot; &quot;beber&quot;
+    1 &quot;eat&quot; &quot;comer&quot;
+
+inx2 - ID ordering:
+
+    1 &quot;eat&quot; &quot;comer&quot;
+    2 &quot;drink&quot; &quot;beber&quot;
+    3 &quot;be merry&quot; &quot;ser feliz&quot;
+
+inx3 - Spanish ordering:
+
+    2 &quot;drink&quot; &quot;beber&quot;
+    1 &quot;eat&quot; &quot;comer&quot;
+    3 &quot;be merry&quot; &quot;ser feliz&quot;</pre>
+  </blockquote>
+    <p>And here is a dump of the <code>udt_3_index_set.dat</code> flat file:</p>
+  <blockquote>
+    <pre>00000000  <span style="background-color: #00FF00">0100 0000</span> 0365 6174 0563 6f6d 6572 <span style="background-color: #00FF00">0200</span> .....eat.comer..
+00000010  <span style="background-color: #00FF00">0000</span> 0564 7269 6e6b 0562 6562 6572 <span style="background-color: #00FF00">0300</span> ...drink.beber..
+00000020  <span style="background-color: #00FF00">0000</span> 0862 6520 6d65 7272 7909 7365 7220 ...be merry.ser
+00000030  6665 6c69 7a                            feliz</pre>
+  </blockquote>
+    <p>This was run on a little-endian machine where <code>sizeof(int)</code> is 
+    four. Thus the <code>int</code> at the beginning of each element (in green, 
+    above) is a problem - this file <b>would not be portable</b> to a big-endian 
+    machine; </p>
+  <h2><a name="Data-portability">Data portability</a></h2>
+  <p>Programs written using the B-tree library are portable to any computer 
+  system with external memory and a conforming C++03 (or later) compiler. But 
+  data is a different story. For example, the <a href="#Integer-map">integer map</a> 
+  example used a <code>btree_map&lt;int, int&gt;</code> container, but <code>int</code> 
+  may cause several data portability problems when data is moved to a different 
+  platform:</p>
+  <blockquote>
+    <ul>
+      <li>
+  <p>size of <code>int</code> might be 16-bits, 32-bits, or some other size.</li>
+    <li>
+  <p>The byte-ordering of <code>int</code> might be
+  <a href="http://en.wikipedia.org/wiki/Endianness">big endian or little endian</a>.</li>
+  <li>
+  <p>Even when the size and endianness are the same, alignment 
+  requirements may differ. For example, some compilers align a 64-bit <code>long 
+  long</code>&nbsp; to an 4-byte boundary for a 32-bit build, but to an 8-byte 
+  boundary for a 64-bit build..</li>
+</ul>
+</blockquote>
+  <p>The first concern can be handled by using one of the standard
+  <code>typedef</code>s, like <code>int32_t</code>.&nbsp; All of the concerns can 
+  be addressed by using one of the endian types from the companion
+  <a href="../../endian/index.html">Boost Endian Library</a>. Here&#39;s an example [<a href="../example/endian_map.cpp">endian_map.cpp</a>]:</p>
+  <blockquote>
+    <pre>
+#include &lt;boost/btree/btree_map.hpp&gt;
+#include &lt;boost/endian/types.hpp&gt;
+#include &lt;iostream&gt;
+#include &lt;boost/detail/lightweight_main.hpp&gt; 
+
+using std::cout;
+using namespace boost::btree;
+using namespace boost::endian;
+
+int cpp_main(int, char *[])
+{
+  typedef btree_map&lt;big_int56_t, big_int24_t&gt; BT;  // note the sizes!
+  BT bt(&quot;endian_map.btr&quot;, flags::truncate);
+
+  bt.emplace(38759234875LL, 1);
+  bt.emplace(82352345, 2);
+  bt.emplace(1242423462, 3);
+
+  cout &lt;&lt; &quot;sizeof(BT::value_type) is &quot; &lt;&lt; sizeof(BT::value_type) &lt;&lt; &#39;\n&#39;;
+
+  for (BT::const_iterator itr = bt.begin();
+    itr != bt.end(); ++itr)
+    cout &lt;&lt; itr-&gt;first &lt;&lt; &quot;, &quot; &lt;&lt; itr-&gt;second &lt;&lt; &#39;\n&#39;;
+
+  return 0;
+}</pre>
+  </blockquote>
+    <p>The resulting data file will be portable to all common platforms, and to 
+    has a very high likelihood of being portable even to really strange legacy 
+    or research platforms.</p>
+  <blockquote>
+    <p><b>Aside:</b> Note the use of 7-byte integers for the key type and 3-byte 
+    integers for the mapped type. The endian library supports integer1 1 through 8 bytes 
+    in size, both signed and unsigned.</p>
+  </blockquote>
+  <h2><a name="Packing-a-B-tree">Packing a B-tree</a></h2>
+  <p>B-trees disk pages are only 75% full on average because the classic 
+  B-tree insertion algorithm  splits a page into two pages when it overflows.&nbsp; This 
+  implementation supplies an optimization:</p>
+  <blockquote>
+  <p>If an insert is at the end of the tree <b>and</b> all prior insert operations 
+  were at the end of the tree <b>and</b> 
+  there have been no erase operations, then if the insert would overflow the 
+  current last page, it is done on a new (i.e. empty) last page.</p>
+  </blockquote>
+  <p>For large, deep, trees this results in a major saving in both space and 
+  speed. All pages except the last one are 100% full. The depth of the tree, which 
+  affects search times, is at an absolute minimum.</p>
+  <p>Here is how to pack an existing tree [<a href="../example/pack_map.cpp">pack_map.cpp</a>]:</p>
+  <blockquote>
+    <pre>
+#include &lt;boost/btree/btree_map.hpp&gt;
+#include &lt;iostream&gt;
+#include &lt;boost/detail/lightweight_main.hpp&gt;
+#include &lt;boost/assert.hpp&gt;
+
+using std::cout;
+using namespace boost::btree;
+
+int cpp_main(int, char *[])
+{
+  typedef btree_map&lt;int, int&gt; BT;
+
+  BT old_bt(&quot;int_map.btr&quot;, flags::read_only);
+  BT new_bt(old_bt.begin(), old_bt.end(), &quot;packed_int_map.btr&quot;, flags::truncate);
+
+  BOOST_ASSERT(old_bt == new_bt);
+
+  return 0;
+}</pre>
+  </blockquote>
     <h2><a name="Tuning-hints">Tuning hints</a></h2>
     <p>The B-tree library utilizes its own node cache in addition to the 
     operating system page cache. Optimal tuning of the B-tree node cache is 
@@ -747,6 +963,10 @@ find(2) found 2,222</pre>
         </tr>
       </table>
     </blockquote>
+  </blockquote>
+    <p>To see what the effect of these is on actual timings, we need to somewhat 
+    more complex test program [<code><a href="../example/tune_int_map.cpp">tune_int_map.cpp</a></code>]:</p>
+  <blockquote>
     <pre>
 #include &lt;boost/btree/btree_map.hpp&gt;
 #include &lt;iostream&gt;
@@ -815,11 +1035,52 @@ int cpp_main(int argc, char *argv[])
   return 0;
 }</pre>
   </blockquote>
+    <p>Here are the results from a series of test runs:</p>
+  <blockquote>
+    <pre>D:\temp&gt;tune_int_map 10000000 fastest
+test with 10000000 elements
+emplace() complete
+ 1.57s wall, 1.56s user + 0.00s system = 1.56s CPU (99.7%)
+find() complete
+ 1.48s wall, 1.48s user + 0.00s system = 1.48s CPU (99.9%)
+
+D:\temp&gt;tune_int_map 10000000 fast
+test with 10000000 elements
+emplace() complete
+ 1.57s wall, 1.56s user + 0.00s system = 1.56s CPU (99.6%)
+find() complete
+ 1.49s wall, 1.48s user + 0.00s system = 1.48s CPU (99.4%)
+
+D:\temp&gt;tune_int_map 10000000 balanced
+test with 10000000 elements
+emplace() complete
+ 1.58s wall, 1.58s user + 0.00s system = 1.58s CPU (99.9%)
+find() complete
+ 1.49s wall, 1.50s user + 0.00s system = 1.50s CPU (100.3%)
+
+D:\temp&gt;tune_int_map 10000000 low_memory
+test with 10000000 elements
+emplace() complete
+ 12.11s wall, 4.45s user + 7.64s system = 12.09s CPU (99.8%)
+find() complete
+ 12.02s wall, 4.62s user + 7.39s system = 12.01s CPU (99.9%)
+
+D:\temp&gt;tune_int_map 10000000 least_memory
+test with 10000000 elements
+emplace() complete
+ 16.32s wall, 5.12s user + 11.17s system = 16.29s CPU (99.8%)
+find() complete
+ 15.99s wall, 5.02s user + 10.95s system = 15.97s CPU (99.9%)</pre>
+  </blockquote>
+    <p>This was run on a modern desktop system with buckets of memory, so we 
+    don&#39;t see a lot of difference until the last two runs where memory use is 
+    restricted. 10 million elements isn&#39;t really enough test cases either. Give 
+    this a try with your hardware to see what results you get.</p>
     <h2><a name="Preloading">Preloading</a></h2>
     <p>Since hard disks perform sequential reads much faster than random reads, 
     overall performance may be much faster if on open an existing a B-tree is 
-    simple read from one end to the other to preload the operating system&#39;s disk 
-    cache. There&#39;s a flag to do just that:</p>
+    simply read from one end to the other to preload the operating system&#39;s 
+    external memory cache. There&#39;s a flag to do just that:</p>
   <blockquote>
     <pre>my_tree.open(my_path, flags::fast | flags::preload);</pre>
   </blockquote>
@@ -829,7 +1090,7 @@ int cpp_main(int argc, char *argv[])
   <hr>
 
   <p>Revised 
-  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->08 September 2013<!--webbot bot="Timestamp" endspan i-checksum="39632" --></p>
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->10 September 2013<!--webbot bot="Timestamp" endspan i-checksum="39617" --></p>
 
   <p>© Copyright Beman Dawes, 2013</p>
 

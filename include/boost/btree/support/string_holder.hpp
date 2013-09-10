@@ -78,13 +78,13 @@ namespace btree {
         typedef const_reverse_iterator reverse_iterator;
         typedef std::size_t size_type;
         typedef std::ptrdiff_t difference_type;
-        static BOOST_CONSTEXPR_OR_CONST size_type npos = size_type(-1);
+        static /*BOOST_CONSTEXPR_OR_CONST*/ const size_type npos = size_type(-1);
 
         // construct/copy
-        BOOST_CONSTEXPR string_holder ()
+        /*BOOST_CONSTEXPR*/ string_holder ()
             : len_(0) {}
 
-        BOOST_CONSTEXPR string_holder (const string_holder &rhs) {
+        /*BOOST_CONSTEXPR*/ string_holder (const string_holder &rhs) {
             std::memcpy(&rep_, &rhs.rep_, rhs.len_);
             len_ = rhs.len_;
             }
@@ -115,7 +115,7 @@ namespace btree {
             }
 
 
-        BOOST_CONSTEXPR string_holder(const charT* str, size_type len) {
+        /*BOOST_CONSTEXPR*/ string_holder(const charT* str, size_type len) {
             if (len > MaxLen)
               len = MaxLen;
             std::memcpy(rep_, str, len);
@@ -134,23 +134,23 @@ namespace btree {
             }
 
         // iterators
-        BOOST_CONSTEXPR const_iterator   begin() const { return rep_; }
-        BOOST_CONSTEXPR const_iterator  cbegin() const { return rep_; }
-        BOOST_CONSTEXPR const_iterator     end() const { return rep_ + len_; }
-        BOOST_CONSTEXPR const_iterator    cend() const { return rep_ + len_; }
+        /*BOOST_CONSTEXPR*/ const_iterator   begin() const { return rep_; }
+        /*BOOST_CONSTEXPR*/ const_iterator  cbegin() const { return rep_; }
+        /*BOOST_CONSTEXPR*/ const_iterator     end() const { return rep_ + len_; }
+        /*BOOST_CONSTEXPR*/ const_iterator    cend() const { return rep_ + len_; }
                 const_reverse_iterator  rbegin() const { return const_reverse_iterator (end()); }
                 const_reverse_iterator crbegin() const { return const_reverse_iterator (end()); }
                 const_reverse_iterator    rend() const { return const_reverse_iterator (begin()); }
                 const_reverse_iterator   crend() const { return const_reverse_iterator (begin()); }
 
         // capacity
-        BOOST_CONSTEXPR size_type size()     const { return len_; }
-        BOOST_CONSTEXPR size_type length()   const { return len_; }
-        BOOST_CONSTEXPR size_type max_size() const { return MaxLen; }
-        BOOST_CONSTEXPR bool empty()         const { return len_ == 0; }
+        /*BOOST_CONSTEXPR*/ size_type size()     const { return len_; }
+        /*BOOST_CONSTEXPR*/ size_type length()   const { return len_; }
+        /*BOOST_CONSTEXPR*/ size_type max_size() const { return MaxLen; }
+        /*BOOST_CONSTEXPR*/ bool empty()         const { return len_ == 0; }
 
         // element access
-        BOOST_CONSTEXPR const charT& operator[](size_type pos) const { return rep_[pos]; }
+        /*BOOST_CONSTEXPR*/ const charT& operator[](size_type pos) const { return rep_[pos]; }
                               charT& operator[](size_type pos)       { return rep_[pos]; }
 
         const charT& at(size_t pos) const {
@@ -159,9 +159,9 @@ namespace btree {
             return rep_[pos];
             }
 
-        BOOST_CONSTEXPR const charT& front() const { return rep_[0]; }
-        BOOST_CONSTEXPR const charT& back()  const { return rep_[len_-1]; }
-        BOOST_CONSTEXPR const charT* data()  const { return rep_; }
+        /*BOOST_CONSTEXPR*/ const charT& front() const { return rep_[0]; }
+        /*BOOST_CONSTEXPR*/ const charT& back()  const { return rep_[len_-1]; }
+        /*BOOST_CONSTEXPR*/ const charT* data()  const { return rep_; }
 
         // modifiers
         void clear() { len_ = 0; }

@@ -12,7 +12,7 @@
   <table border="0" cellpadding="5" cellspacing="0" style=
   "border-collapse: collapse" bordercolor="#111111">
     <tr>
-      <td width="277"><a href="../../../../index.htm"><img src=
+      <td width="277"><a href="../../../index.htm"><img src=
       "../../../boost.png" alt="boost.png (6897 bytes)" align=
       "middle" width="300" height="86" border="0"></a></td>
 
@@ -29,6 +29,83 @@
       &nbsp;&nbsp; <a href="reference.html">Reference</a>
       &nbsp;&nbsp; <a href="tutorial.html">Tutorial</a>
       &nbsp;&nbsp; <a href="faq.html">FAQ</a></td>
+    </tr>
+  </table>
+
+  <h2><a name="Table-of-contents">Table of contents</a></h2>
+
+  <table border="0" cellpadding="0" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111">
+    <tr>
+      <td width="50%" valign="top"><a href="#B-tree-assoc-cntrs">B-tree 
+      associative containers</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#Class-and-header-name-table">Class and header name table</a><br>
+      &nbsp;&nbsp;&nbsp;<a href="#Requirements-on-template-parameters">Requirements on template 
+      parameters</a><br>
+      &nbsp;&nbsp;&nbsp;<a href="#Iterators">Iterators</a><br>
+      &nbsp;&nbsp;&nbsp;<a href="#Method-of-description">Method of description</a><br>
+      &nbsp;&nbsp;&nbsp;<a href="#Associative-container-synopsis">Synopsis</a><br>
+      &nbsp;&nbsp;&nbsp;<a href="#btree_set-constructors-and-destructor">Construction and 
+      destruction </a><br>
+      &nbsp;&nbsp;&nbsp;<a href="#btree_set-file-operations">File operations</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#open-trees">open</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#flush">flush</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#close">close</a><br>
+      &nbsp;&nbsp;&nbsp;<a href="#btree_set-iterators">Iterators</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#begin">begin</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#cbegin">cbegin</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#end">end</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#cend">cend</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#rbegin">rbegin</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#crbegin">crbegin</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#rend">rend</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#crend">crend</a><br>
+      &nbsp;&nbsp;&nbsp;<a href="#btree_set-observers">Observers</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#is_open">is_open</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#path">path</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#manager">manager</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#header">header</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#key_comp">key_comp</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#value_comp">value_comp</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#ok_to_pack">ok_to_pack</a><br>
+      &nbsp;&nbsp;&nbsp;<a href="#btree_set-capacity">Capacity</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#empty">empty</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#size">size</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#max_size">max_size</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#node_size">node_size</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#max_cache_size">max_cache_size</a></td>
+      <td valign="top">&nbsp;&nbsp;&nbsp;<a href="#btree_set-tuning">Tuning</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#max_cache_size-setter">max_cache_size</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#max_cache_megabytes">max_cache_megabytes</a><br>
+      &nbsp;&nbsp;&nbsp;<a href="#Indexed-file-observers">Indexed file observers<i> - indexes 
+      only</i></a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#file">file</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#file_path">file_path</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#file_size">file_size</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#file_reserve">file_reserve</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#position">position</a><br>
+      &nbsp;&nbsp;&nbsp;<a href="#btree_set-modifiers">Modifiers</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#emplace">emplace</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#insert">insert</a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#erase">erase</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#clear">clear</a><br>
+      &nbsp;&nbsp;&nbsp;<a href="#btree_set-operations">Operations</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#find">find</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#count">count</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#lower_bound">lower_bound</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#upper_bound">upper_bound</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#equal_range">equal_range</a><br>
+      <a href="#Helpers">Helpers</a><br>
+      &nbsp;&nbsp;&nbsp;<a href="#helpers-synopsis">Header &lt;boost/btree/helpers.hpp&gt; Synopsis</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#default_node_size">default_node_size</a><br>
+      &nbsp;&nbsp;&nbsp;<a href="#Traits">Traits</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#big_endian_traits">big_endian_traits</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#little_endian_traits">little_endian_traits</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#native_endian_traits">native_endian_traits</a><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#default_traits">default_traits</a><br>
+      &nbsp;&nbsp;&nbsp;<a href="#Flags">Flags</a><br>
+      &nbsp;&nbsp;&nbsp;<a href="#Constants">Constants</a><br>
+      &nbsp;&nbsp;&nbsp;<a href="#Hint-based-defaults">Hint based defaults</a><br>
+      &nbsp;&nbsp;&nbsp;<a href="#Function-object-less">Function object <code>btree::less</code></a></td>
     </tr>
   </table>
 
@@ -54,10 +131,17 @@
   </ul>
   
   
+  <h4><a name="Class-and-header-name-table">Class and header name table</a></h4>
+  
+  
 <table align="center" border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111">
   <tr>
+  <td align="center" colspan="2">
+  <b><i>Class and header names</i></b></td>
+  </tr>
+  <tr>
   <td align="center">
-  <i><b>Class</b></i></td>
+  <i><b>Class name</b></i></td>
   <td align="center">
   <i><b>Header</b></i></td>
   </tr>
@@ -178,7 +262,7 @@
             <i><b>class T,  // maps only</b></i>
             class Traits = <a href="#default_traits">default_traits</a>,
             class Compare = <a href="#Function-object-less">btree::less</a>&gt;
-  class <b><i>class-name    // see below</i></b>
+  class <b><i><a href="#Class-and-header-name-table">class-name</a></i></b>
   {
   public:
     // types:
@@ -234,13 +318,15 @@
           const Compare&amp; comp = Compare(), std::size_t node_sz = default_node_size);
 
     <b><i>// indexes:</i></b> 
-        <b><i>class-name</i></b>(const path_type&amp; index_pth,
-          const path_type&amp; file_pth,
+        <b><i>class-name</i></b>(const path_type&amp; pth, const path_type&amp; file_pth,
           flags::bitmask flgs = flags::read_only, uint64_t sig = -1,
           const Compare&amp; comp = Compare(), std::size_t node_sz = default_node_size); 
 
-        <b><i>class-name</i></b>(const path_type&amp; index_pth,
-          file_ptr_type file_ptr,
+        <b><i>class-name</i></b>(const path_type&amp; pth, file_ptr_type file_ptr,
+          flags::bitmask flgs = flags::read_only, uint64_t sig = -1,
+          const Compare&amp; comp = Compare(), std::size_t node_sz = default_node_size); 
+
+        <b><i>class-name</i></b>(const path_type&amp; base_path,
           flags::bitmask flgs = flags::read_only, uint64_t sig = -1,
           const Compare&amp; comp = Compare(), std::size_t node_sz = default_node_size); 
 
@@ -254,13 +340,11 @@
           const Compare&amp; comp = Compare(), std::size_t node_sz = default_node_size);
  
     <i><b>// indexes:</b></i>
-        void open(const path_type&amp; index_pth,
-          const path_type&amp; file_pth,
+        void <a href="#open-index">open</a>(const path_type&amp; pth, const path_type&amp; file_pth,
           flags::bitmask flgs = flags::read_only, uint64_t sig = -1, 
           const Compare&amp; comp = Compare(), std::size_t node_sz = default_node_size);
  
-        void open(const path_type&amp; pth,
-          file_ptr_type file_ptr,
+        void <a href="#open-index">open</a>(const path_type&amp; pth, file_ptr_type file_ptr,
           flags::bitmask flgs = flags::read_only, uint64_t sig = -1, 
           const Compare&amp; comp = Compare(), std::size_t node_sz = default_node_size);
  
@@ -280,7 +364,7 @@
     // <a href="#btree_set-observers">observers</a>
     bool                    <a href="#is_open">is_open</a>() const;
     const filesystem::path&amp; <a href="#path">path</a>() const;
-    flags::bitmask          <a href="#flags">flags</a>() const;
+    flags::bitmask          <a href="#Flags">flags</a>() const;
 
     const buffer_manager&amp;   <a href="#manager">manager</a>() const;
     const header_page&amp;      <a href="#header">header</a>() const;
@@ -300,8 +384,7 @@
     void                    <a href="#max_cache_size">max_cache_size</a>(std::size_t m);  // -1 indicates unlimited
     void                    <a href="#max_cache_megabytes">max_cache_megabytes</a>(std::size_t mb);
 
-    // <b><i>indexes only
-
+    // <a href="#Indexed-file-observers">indexed file observers</a> <b><i>              // indexes only
     </i></b>file_ptr_type           <a href="#file">file</a>() const;
     const filesystem::path&amp; <a href="#file_path">file_path</a>() const;
     file_size_type          <a href="#file_size">file_size</a>() const;
@@ -373,29 +456,56 @@
 
 }}  // namespaces</pre>
 
-<h4><a name="btree_set-constructors-and-destructor">Construction and destruction</a> </h4>
+<h3><a name="btree_set-constructors-and-destructor">Construction and destruction</a> 
+  </h3>
 
   <pre>explicit <b><i>class-name</i></b>();</pre>
   <blockquote>
     <p><i>Postconditions:</i> <code>is_open()</code> is <code>false</code>.</p>
   </blockquote>
-  <pre>explicit <b><i>class-name</i></b>(const boost::filesystem::path&amp; pth,
-  flags::bitmask flgs = flags::read_only,
-  uint64_t sig = -1,  
-  const Compare&amp; comp = Compare(),
-  std::size_t node_sz = <a href="#default_node_size">default_node_size</a>); </pre>
+  <pre><i><b>// trees</b></i>
+explicit <b><i>class-name</i></b>(const boost::filesystem::path&amp; pth,
+  flags::bitmask flgs = flags::read_only, uint64_t sig = -1,  
+  const Compare&amp; comp = Compare(), std::size_t node_sz = <a href="#default_node_size">default_node_size</a>); </pre>
   <blockquote>
-    <p><i>Effects:</i> <code>open(p, flgs, sig, comp, node_sz)</code></p>
+    <p><i>Effects:</i> <code>open(pth, flgs, sig, comp, node_sz);</code></p>
+    <p><i>Postconditions:</i> See open.</p>
   </blockquote>
-  <pre>template &lt;class InputIterator&gt;
+  <pre><i><b>// trees</b></i>
+template &lt;class InputIterator&gt;
 <b><i>class-name</i></b>(InputIterator begin, InputIterator end,
   const boost::filesystem::path&amp; pth,
-  flags::bitmask flgs = flags::read_only,
-  uint64_t sig = -1,  
-  const Compare&amp; comp = Compare(),
-  std::size_t node_sz = <a href="#default_node_size">default_node_size</a>); </pre>
+  flags::bitmask flgs = flags::read_only, uint64_t sig = -1,  
+  const Compare&amp; comp = Compare(), std::size_t node_sz = <a href="#default_node_size">default_node_size</a>); </pre>
   <blockquote>
-    <p><i>Effects:</i> <code>open(p, flgs, sig, comp, node_sz)</code></p>
+    <p><i>Effects:</i> <code>open(pth, flgs, sig, comp, node_sz);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; insert(begin, end);</code></p>
+    <p><i>Postconditions:</i> See <code><a href="#open-trees">open</a></code> 
+    for the post-conditions prior to the <code>insert</code>.</p>
+  </blockquote>
+ <pre><i><b>// indexes</b></i>
+<b><i>class-name</i></b>(const path_type&amp; pth, const path_type&amp; file_pth,
+  flags::bitmask flgs = flags::read_only, uint64_t sig = -1,
+  const Compare&amp; comp = Compare(), std::size_t node_sz = default_node_size);</pre>
+  <blockquote>
+    <p><i>Effects:</i> <code>open(pth, file_path, flgs, sig, comp, node_sz);</code></p>
+    <p><i>Postconditions:</i> See <code><a href="#open-index">open</a></code>.</p>
+  </blockquote>
+ <pre><i><b>// indexes</b></i>
+<b><i>class-name</i></b>(const path_type&amp; pth, file_ptr_type file_ptr,
+  flags::bitmask flgs = flags::read_only, uint64_t sig = -1,
+  const Compare&amp; comp = Compare(), std::size_t node_sz = default_node_size); </pre>
+  <blockquote>
+    <p><i>Effects:</i> <code>open(pth, file_ptr, flgs, sig, comp, node_sz);</code></p>
+    <p><i>Postconditions:</i> See <code><a href="#open-index">open</a></code>.</p>
+  </blockquote>
+ <pre><i><b>// indexes</b></i>
+<b><i>class-name</i></b>(const path_type&amp; base_path,
+  flags::bitmask flgs = flags::read_only, uint64_t sig = -1,
+  const Compare&amp; comp = Compare(), std::size_t node_sz = default_node_size); </pre>
+  <blockquote>
+    <p><i>Effects:</i> <code>open(base_path, flgs, sig, comp, node_sz);</code></p>
+    <p><i>Postconditions:</i> See <code><a href="#open-index">open</a></code>.</p>
   </blockquote>
   <pre>~<b><i>class-name</i></b>();</pre>
   <blockquote>
@@ -406,27 +516,25 @@ catch (...) {}</pre>
   </blockquote>
   </blockquote>
   
-  <h4><a name="btree_set-file-operations">File operations</a></h4>
+  <h3><a name="btree_set-file-operations">File operations</a></h3>
   
-  <pre>void <a name="open-trees">open</a>(const boost::filesystem::path&amp; pth,
-  flags::bitmask flgs = flags::read_only,
-  uint64_t sig = -1,  
-  const Compare&amp; comp = Compare(),
-  std::size_t node_sz = <a href="#default_node_size">default_node_size</a>); </pre>
+  <pre><i><b>// trees</b></i>
+void <a name="open-trees">open</a>(const boost::filesystem::path&amp; pth,
+  <a href="#Flags">flags::bitmask flgs</a> = flags::read_only, uint64_t sig = -1,  
+  const Compare&amp; comp = Compare(), std::size_t node_sz = <a href="#default_node_size">default_node_size</a>); </pre>
   <blockquote>
     <p><i>Requires:</i> <code>is_open()</code> is <code>false</code>.<p><i>Postconditions:</i><blockquote>
       <blockquote>
-        <blockquote>
     
-    <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111" width="550">
+    <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111">
       <tr>
         <td align="center" width="50%"><i><b>File <code>p</code> does not exist<br>
         or flgs &amp; flags::truncate</b></i></td>
         <td align="center" width="50%"><i><b>File <code>p</code> exists</b></i></td>
       </tr>
       <tr>
-        <td width="50%"><code>path() == p</code></td>
-        <td width="50%"><code>path() == p</code></td>
+        <td width="50%"><code>path() == pth</code></td>
+        <td width="50%"><code>path() == pth</code></td>
       </tr>
       <tr>
         <td width="50%"><code>is_open() == true</code></td>
@@ -450,20 +558,151 @@ catch (...) {}</pre>
       </tr>
       <tr>
         <td width="50%"><code>empty() == true</code></td>
-        <td width="50%">&nbsp;</td>
+        <td width="50%"><code>empty()</code> returns value of <code>empty()</code> 
+        the last time the file was closed.</td>
       </tr>
       <tr>
         <td width="50%"><code>size() == 0</code></td>
-        <td width="50%">&nbsp;</td>
+        <td width="50%"><code>size()</code> returns value of <code>size()</code> 
+        the last time the file was closed.</td>
       </tr>
     </table>
-        </blockquote>
       </blockquote>
     </blockquote>
     
     <p><i>Throws:</i> If the path <code>p</code> cannot be opened, or the type 
     or signature differ from when the file was originally created.</p>
   </blockquote>
+  
+    
+  <div>
+  
+    
+  <pre><i><b>// indexes</b></i>
+void <a name="open-index">open</a>(const path_type&amp; pth, const path_type&amp; file_pth,
+  <a href="#Flags">flags::bitmask flgs</a> = flags::read_only,  uint64_t sig = -1,  
+  const Compare&amp; comp = Compare(), std::size_t node_sz = <a href="#default_node_size">default_node_size</a>); 
+void open(const path_type&amp; pth, file_ptr_type file_ptr,
+  flags::bitmask flgs = flags::read_only, uint64_t sig = -1, 
+  const Compare&amp; comp = Compare(), std::size_t node_sz = default_node_size);
+</pre>
+  </div>
+  <blockquote>
+    <p><i>Requires:</i> <code>is_open()</code> is <code>false</code>.<p><i>Postconditions:</i><blockquote>
+      <blockquote>
+    
+    <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111">
+      <tr>
+        <td align="center" width="50%">
+        <p><i><b>File <code>p</code> does not exist<br>
+        or flgs &amp; flags::truncate</b></i></td>
+        <td align="center">
+        <p><i><b>File <code>p</code> exists</b></i></td>
+      </tr>
+      <tr>
+        <td width="50%">
+        <p><code>path() == pth</code></td>
+        <td width="50%">
+        <p><code>path() == pth</code></td>
+      </tr>
+      <tr>
+        <td width="50%">
+        <p><code>is_open() == true</code></td>
+        <td width="50%">
+        <p><code>is_open() == true</code></td>
+      </tr>
+      <tr>
+        <td width="50%">
+        <p><code>key_comp() == comp</code></td>
+        <td width="50%">
+        <p><code>key_comp() == comp</code></td>
+      </tr>
+      <tr>
+        <td width="50%">
+        <p><code>value_comp() == comp</code></td>
+        <td width="50%">
+        <p><code>value_comp() == comp</code></td>
+      </tr>
+      <tr>
+        <td width="50%">
+        <p><code>node_size() == node_sz</code></td>
+        <td width="50%">
+        <p><code>node_size() == node_sz</code></td>
+      </tr>
+      <tr>
+        <td width="50%">
+        <p><code>empty() == true</code></td>
+        <td width="50%">
+        <p><code>empty()</code> returns value of <code>empty()</code> 
+        the last time the file was closed.</td>
+      </tr>
+      <tr>
+        <td width="50%">
+        <p><code>size() == 0</code></td>
+        <td width="50%">
+        <p><code>size()</code> returns value of <code>size()</code> 
+        the last time the file was closed.</td>
+      </tr>
+      <tr>
+        <td width="50%">
+        <p><code>file()</code> returns a <code>shared_ptr&lt;file_type&gt;</code> 
+        pointing to an open <code>extendible_mapped_file</code>, which is a
+        <a href="http://en.wikipedia.org/wiki/Memory-mapped_file">memory-mapped 
+        file</a>.</td>
+        <td width="50%">
+        <p><code>file()</code> returns a <code>shared_ptr&lt;file_type&gt;</code> 
+        pointing to an open <code>extendible_mapped_file</code>, which is a
+        <a href="http://en.wikipedia.org/wiki/Memory-mapped_file">memory-mapped 
+        file</a>.</td>
+      </tr>
+      <tr>
+        <td width="50%">
+        <p><code>file_path() == file()-&gt;path()</code></td>
+        <td width="50%">
+        <p><code>file_path() == file()-&gt;path()</code></td>
+      </tr>
+      <tr>
+        <td width="50%">
+        <p><code>file_size() == file()-&gt;size()</code></td>
+        <td width="50%">
+        <p><code>file_size() == file()-&gt;size()</code></td>
+      </tr>
+      <tr>
+        <td width="50%">
+        <p><code>file_reserve() == file()-&gt;reserve()</code> This is 
+        the number of bytes reserved for new elements.</td>
+        <td width="50%">
+        <p><code>file_reserve() == file()-&gt;reserve()</code> This is 
+        the number of bytes reserved for new elements.</td>
+      </tr>
+    </table>
+      </blockquote>
+    </blockquote>
+    
+    <p><i>Throws:</i> If the path <code>p</code> cannot be opened, or the type 
+    or signature differ from when the file was originally created.</p>
+  </blockquote>
+  
+
+  
+    
+  <pre><i><b>// indexes</b></i>
+void open(const path_type&amp; base_path,
+  <a href="#Flags">flags::bitmask flgs</a> = flags::read_only,  uint64_t sig = -1,  
+  const Compare&amp; comp = Compare(), std::size_t node_sz = <a href="#default_node_size">default_node_size</a>); 
+</pre>
+  
+  <blockquote>
+    <p><i>Requires:</i> <code>is_open()</code> is <code>false</code>.<p><i>
+    Effects:</i><blockquote>
+      <p><code>path_type index_pth(base_path);<br>
+      index_pth += &quot;.ndx&quot;;<br>
+      path_type file_pth(base_path);<br>
+      file_pth += &quot;.dat&quot;;<br>
+      open(index_pth, file_pth, flgs, sig, comp, node_sz);</code></blockquote>
+    <p><i>Throws:</i> See <a href="#open-index">open</a>.</p>
+  </blockquote>
+  
   <pre>void  <a name="flush">flush</a>();</pre>
   <blockquote>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
@@ -476,7 +715,7 @@ catch (...) {}</pre>
     close the external file. Otherwise, no effect.</p>
     <p><i>Postconditions:</i> <code>is_open() == false</code></p>
   </blockquote>
-  <h4><a name="btree_set-iterators">Iterators</a></h4>
+  <h3><a name="btree_set-iterators">Iterators</a></h3>
   <pre>const_iterator  <a name="begin">begin</a>() const;
 const_iterator  <a name="cbegin">cbegin</a>() const;</pre>
   <blockquote>
@@ -503,7 +742,7 @@ const_reverse_iterator  <a name="crend">crend</a>() const;</pre>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Returns:</i> <code>std::reverse_iterator(begin())</code>.</p>
   </blockquote>
-    <h4><a name="btree_set-observers">Observers</a></h4>
+    <h3><a name="btree_set-observers">Observers</a></h3>
   <pre>bool  <a name="is_open">is_open</a>() const;</pre>
   <blockquote>
     <p><i>Returns:</i> <code>true</code> if the <code>open</code> function has 
@@ -555,7 +794,7 @@ const_reverse_iterator  <a name="crend">crend</a>() const;</pre>
     <code>emplace</code> calls have been applied at <code>end()</code>, and 
     there have been no <code>erase</code> calls.</p>
   </blockquote>
-    <h4><a name="btree_set-capacity">Capacity</a></h4>
+    <h3><a name="btree_set-capacity">Capacity</a></h3>
   <pre>bool  <a name="empty">empty</a>() const;</pre>
   <blockquote>
     <p><i>Returns:</i> <code>!size()</code></p>
@@ -583,7 +822,7 @@ const_reverse_iterator  <a name="crend">crend</a>() const;</pre>
     <p><i>Returns:</i> The value of the <code>max</code> argument to the most 
     recent call to the <code>max_cache_size</code> function.</p>
   </blockquote>
-    <h4><a name="btree_set-tuning">Tuning</a></h4>
+    <h3><a name="btree_set-tuning">Tuning</a></h3>
   <pre>void  <a name="max_cache_size-setter">max_cache_size</a>(std::size_t max);  </pre>
   <blockquote>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
@@ -597,9 +836,48 @@ const_reverse_iterator  <a name="crend">crend</a>() const;</pre>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Effects:</i> <code>max_cache_size((mb*1048576)/node_size())</code><i>.</i></p>
   </blockquote>
-    <h4><a name="btree_set-modifiers">Modifiers</a></h4>
+
+    <h3><a name="Indexed-file-observers">Indexed file observers</a><i> - indexes 
+    only</i></h3>
+
+<pre>file_ptr_type <a name="file">file</a>() const;</pre>
+  <blockquote>
+    <p><i>Returns:</i> a <code>shared_ptr&lt;file_type&gt;</code> pointing to an <code>
+    <a href="../include/boost/btree/mmff.hpp">extendible_mapped_file</a></code>, which is a
+        <a href="http://en.wikipedia.org/wiki/Memory-mapped_file">memory-mapped 
+        file</a> based on Boost IO Streams class
+    <a href="../iostreams/doc/classes/mapped_file.html#mapped_file"><code>
+    mapped_file</code></a>.</p>
+  </blockquote>
+
+<pre>const filesystem::path& <a name="file_path">file_path</a>() const;</pre>
+  <blockquote>
+    <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
+    <p><i>Returns:</i> <code>file()-&gt;path()</code>.</p>
+  </blockquote>
+
+<pre>file_size_type <a name="file_size">file_size</a>() const;</pre>
+  <blockquote>
+    <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
+    <p><i>Returns:</i> <code>file()-&gt;size()</code>.</p>
+  </blockquote>
+
+<pre>file_size_type <a name="file_reserve">file_reserve</a>() const;</pre>
+  <blockquote>
+    <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
+    <p><i>Returns:</i> <code>file()-&gt;reserve()</code>.</p>
+  </blockquote>
+
+<pre>file_position <a name="position">position</a>(const_iterator itr) const;</pre>
+  <blockquote>
+    <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
+    <p><i>Returns:</i> The offset of the element pointed to by <code>itr</code> from the beginning of the flat file controlled 
+    by <code>file()</code>.</p>
+  </blockquote>
+  
+    <h3><a name="btree_set-modifiers">Modifiers</a></h3>
   <pre>std::pair&lt;const_iterator, bool&gt;
-  <a name="emplace-maps">emplace</a>(const key_type&amp; k, const mapped_type&amp; m);<b><i>  // unique maps</i></b></pre>
+  <a name="emplace">emplace</a>(const key_type&amp; k, const mapped_type&amp; m);<b><i>  // unique maps</i></b></pre>
   <blockquote>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Effects:</i> Inserts an element constructed from <code>k</code> and
@@ -618,7 +896,7 @@ const_reverse_iterator  <a name="crend">crend</a>() const;</pre>
     <code>m</code>.</p>
     <p><i>Returns:</i> An iterator pointing to the newly inserted element.</p>
   </blockquote>
-  <pre>std::pair&lt;const_iterator, bool&gt; <a name="insert-unique">insert</a>(const value_type&amp; x);  <b><i>// unique containers</i></b></pre>
+  <pre>std::pair&lt;const_iterator, bool&gt; <a name="insert">insert</a>(const value_type&amp; x);  <b><i>// unique containers</i></b></pre>
   <blockquote>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Effects:</i> Inserts <code>x</code> if and only if there is no 
@@ -655,7 +933,7 @@ const_reverse_iterator  <a name="crend">crend</a>() const;</pre>
       <li><b><i>btree_multiset and btree_multimap:</i></b> Inserts each element from the range <code>[begin,end)</code>.</li>
     </ul>
   </blockquote>
-  <pre>const_iterator  <a name="erase-pos">erase</a>(const_iterator position);</pre>
+  <pre>const_iterator  <a name="erase">erase</a>(const_iterator position);</pre>
   <blockquote>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Returns:</i> Erases the element pointed to by <code>position</code>. 
@@ -685,47 +963,52 @@ const_reverse_iterator  <a name="crend">crend</a>() const;</pre>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Postconditions:</i> <code>empty()</code> is <code>true</code>.</p>
   </blockquote>
-    <h4><a name="btree_set-operations">Operations</a></h4>
+    <h3><a name="btree_set-operations">Operations</a></h3>
     <p>Objects of types <code>K</code> and <code>Key</code> are required to be
     <code>key_comp()</code> comparable.<br>
 &nbsp;</p>
-  <pre><a name="find"></a>template &lt;class K&gt;
-const_iterator  find(const K&amp; k) const;
-const_iterator  find(const Key&amp; k) const;</pre>
+  <pre>const_iterator  <a name="find">find</a>(const Key&amp; k) const;
+
+template &lt;class K&gt;
+  const_iterator  find(const K&amp; k) const;</pre>
   <blockquote>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Returns:</i> An iterator pointing to the first element with the key 
     equivalent to <code>k</code>, or <code>end()</code> if no such element is 
     found.</p>
   </blockquote>
-  <pre><a name="count"></a>template &lt;class K&gt;
-size_type  count(const K&amp; k) const;
-size_type  count(const Key&amp; k) const;</pre>
+  <pre>size_type  <a name="count">count</a>(const Key&amp; k) const;
+
+template &lt;class K&gt;
+  size_type  count(const K&amp; k) const;</pre>
   <blockquote>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Returns:</i> The number of elements with key equivalent to <code>k</code>.</p>
   </blockquote>
-  <pre><a name="lower_bound"></a>template &lt;class K&gt;
-const_iterator  lower_bound(const K&amp; k) const;
-const_iterator  lower_bound(const Key&amp; k) const;</pre>
+  <pre>const_iterator  <a name="lower_bound">lower_bound</a>(const Key&amp; k) const;
+
+template &lt;class K&gt;
+  const_iterator  lower_bound(const K&amp; k) const;</pre>
   <blockquote>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Returns:</i> An iterator pointing to the first element with key not 
     less than <code>k</code>, or <code>end()</code> if such an element is not 
     found.</p>
   </blockquote>
-  <pre><a name="upper_bound"></a>template &lt;class K&gt;
-const_iterator  upper_bound(const K&amp; k) const;
-const_iterator  upper_bound(const Key&amp; k) const;</pre>
+  <pre>const_iterator  <a name="upper_bound">upper_bound</a>(const Key&amp; k) const;
+
+template &lt;class K&gt;
+const_iterator  upper_bound(const K&amp; k) const;</pre>
   <blockquote>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Returns:</i> An iterator pointing to the first element with key 
     greater than <code>k</code>, or <code>end()</code> if such an element is not 
     found.</p>
   </blockquote>
-  <pre><a name="equal_range"></a>template &lt;class K&gt;
-const_iterator_range  equal_range(const K&amp; k) const;
-const_iterator_range  equal_range(const Key&amp; k) const;</pre>
+  <pre>const_iterator_range  <a name="equal_range">equal_range</a>(const Key&amp; k) const;
+
+template &lt;class K&gt;
+const_iterator_range  equal_range(const K&amp; k) const;</pre>
   <blockquote>
     <p><i>Requires:</i> <code>is_open()</code> is <code>true</code>.</p>
     <p><i>Returns:</i> Equivalent to <code>std::make_pair(lower_bound(k), 
@@ -734,7 +1017,7 @@ const_iterator_range  equal_range(const Key&amp; k) const;</pre>
 
   <h2><a name="Helpers">Helpers</a></h2>
 
-  <h3>Header &lt;boost/btree/helpers.hpp&gt;Synopsis</h3>
+  <h3><a name="helpers-synopsis">Header &lt;boost/btree/helpers.hpp&gt;Synopsis</a></h3>
 
   <p>The components in this header are included by the other boost/btree 
   headers. </p>
@@ -922,7 +1205,7 @@ const_iterator_range  equal_range(const Key&amp; k) const;</pre>
   <hr>
 
   <p>Revised 
-  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->03 September 2013<!--webbot bot="Timestamp" endspan i-checksum="39622" --></p>
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->09 September 2013<!--webbot bot="Timestamp" endspan i-checksum="39634" --></p>
 
   <p>© Copyright Beman Dawes, 2013</p>
 
