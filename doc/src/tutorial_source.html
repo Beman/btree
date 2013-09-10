@@ -196,7 +196,7 @@ upper_bound(3) is 5</pre>
   <code>T</code>, for maps), since these requirements will cause endless problems if you 
   don&#39;t understand them. Read on...</p>
   
-  <p dir="ltr">An obvious transformation of the <a href="#integer-set">Integer 
+  <p>An obvious transformation of the <a href="#integer-set">Integer 
   set</a> to handle <code>std::string</code> instead of
   <code>int</code> 
   looks like this [<code><a href="../example/string_set_first_try.cpp">string_set_first_try.cpp</a></code>]:</p>
@@ -252,6 +252,28 @@ eat</pre>
   
   <p>But what about true variable length strings? That will be our next example 
   program, but first let&#39;s step back and look at the general problem..</p>
+  
+    <h2><a name="Heterogeneous-compares">Heterogeneous compares</a></h2>
+    <p>Consider the following code; note that <code>find(2)</code> 
+    has an argument type of <code>int</code>, not <code>UDT</code>, and that
+    <code>UDT</code> does not supply a conversion from <code>int</code>.</p>
+  <blockquote>
+    <pre>$include "hetero_set.cpp.html"</pre>
+  </blockquote>
+    <p>The B-tree associative container classes have member function templates for 
+    <code>find</code>, <code>count</code>, <code>lower_bound</code>, <code>
+    upper_bound</code> , and <code>equal_range</code>. These allow 
+    heterogeneous compares, if the <code>Key</code> type supports comparison for 
+    the heterogeneous type (i.e <code>int</code> in this example).</p>
+  <p>So, yes, the code does compile and run. The output is:</p>
+  <blockquote>
+    <pre>1,111
+2,222
+3,333
+find(2) found 2,222</pre>
+  </blockquote>
+    <p>Incidentally, the C++14 standard library will support 
+    heterogeneous comparison, too.</p>
   
   <h2><a name="Indexes">Indexes</a></h2>
   
@@ -332,31 +354,59 @@ eat
   and are denoted by a count of 0. The 0x80 bit will be set 
   for all count bytes except the last (i.e. low-order).</p>
   <h2><a name="User-defined-types">User defined types</a> (UDTs)</h2>
-  <p>Real-world applications will often involve user defined types (UDTs). </p>
+  <p>Real-world applications will often involve user defined types (UDTs).&nbsp;&nbsp; 
+  The first step is to put together a header [<code><a href="../example/udt.hpp">udt.hpp</a></code>]:</p>
+  <blockquote>
+    <pre>$include "udt.hpp.html"</pre>
+  </blockquote>
+    <p>Ugh! The actual UDT is easy, but the index traits adapter is ugly. 
+    There&#39;s a branch already being worked on to simplify that.</p>
+    <p>So now let&#39;s build an index set of type UDT. The code looks like this [<code><a href="../example/udt_index_set.cpp">udt_index_set.cpp</a></code>]:</p>
   <blockquote>
     <pre>$include "udt_index_set.cpp.html"</pre>
   </blockquote>
-  <h2>UDT three index set</h2>
+    <p>And the output is:</p>
+  <blockquote>
+    <pre>3 &quot;be merry&quot; &quot;ser feliz&quot;
+2 &quot;drink&quot; &quot;beber&quot;
+1 &quot;eat&quot; &quot;comer&quot;
+</pre>
+  </blockquote>
+  <h2><a name="UDT-three-index-set">UDT three index set</a></h2>
   <blockquote>
     <pre>$include "udt_3_index_set.cpp.html"</pre>
   </blockquote>
-  <h2><a name="Packing-a-B-tree">Packing a B-tree</a></h2>
-  <p>B-trees disk pages are only 75% full on average because the classic 
-  B-tree insertion algorithm  splits a page into two pages when it overflows.&nbsp; This 
-  implementation supplies an optimization:</p>
+    <p>Here is the output:</p>
   <blockquote>
-  <p>If an insert is at the end of the tree <b>and</b> all prior insert operations 
-  were at the end of the tree <b>and</b> 
-  there have been no erase operations, then if the insert would overflow the 
-  current last page, it is done on a new (i.e. empty) last page.</p>
+    <pre>inx1 - English ordering:
+
+    3 &quot;be merry&quot; &quot;ser feliz&quot;
+    2 &quot;drink&quot; &quot;beber&quot;
+    1 &quot;eat&quot; &quot;comer&quot;
+
+inx2 - ID ordering:
+
+    1 &quot;eat&quot; &quot;comer&quot;
+    2 &quot;drink&quot; &quot;beber&quot;
+    3 &quot;be merry&quot; &quot;ser feliz&quot;
+
+inx3 - Spanish ordering:
+
+    2 &quot;drink&quot; &quot;beber&quot;
+    1 &quot;eat&quot; &quot;comer&quot;
+    3 &quot;be merry&quot; &quot;ser feliz&quot;</pre>
   </blockquote>
-  <p>For large, deep, trees this results in a major saving in both space and 
-  speed. All pages except the last one are 100% full. The depth of the tree, which 
-  affects search times, is at an absolute minimum.</p>
-  <p>Here is how to pack an existing tree [<a href="../example/pack_map.cpp">pack_map.cpp</a>]:</p>
+    <p>And here is a dump of the <code>udt_3_index_set.dat</code> flat file:</p>
   <blockquote>
-    <pre>$include "pack_map.cpp.html"</pre>
+    <pre>00000000  <span style="background-color: #00FF00">0100 0000</span> 0365 6174 0563 6f6d 6572 <span style="background-color: #00FF00">0200</span> .....eat.comer..
+00000010  <span style="background-color: #00FF00">0000</span> 0564 7269 6e6b 0562 6562 6572 <span style="background-color: #00FF00">0300</span> ...drink.beber..
+00000020  <span style="background-color: #00FF00">0000</span> 0862 6520 6d65 7272 7909 7365 7220 ...be merry.ser
+00000030  6665 6c69 7a                            feliz</pre>
   </blockquote>
+    <p>This was run on a little-endian machine where <code>sizeof(int)</code> is 
+    four. Thus the <code>int</code> at the beginning of each element (in green, 
+    above) is a problem - this file <b>would not be portable</b> to a big-endian 
+    machine; </p>
   <h2><a name="Data-portability">Data portability</a></h2>
   <p>Programs written using the B-tree library are portable to any computer 
   system with external memory and a conforming C++03 (or later) compiler. But 
@@ -393,27 +443,23 @@ eat
     integers for the mapped type. The endian library supports integer1 1 through 8 bytes 
     in size, both signed and unsigned.</p>
   </blockquote>
-    <h2><a name="Heterogeneous-compares">Heterogeneous compares</a></h2>
-    <p>Consider the following code; note that <code>find(2)</code> 
-    has an argument type of <code>int</code>, not <code>UDT</code>, and that
-    <code>UDT</code> does not supply a conversion from <code>int</code>.</p>
+  <h2><a name="Packing-a-B-tree">Packing a B-tree</a></h2>
+  <p>B-trees disk pages are only 75% full on average because the classic 
+  B-tree insertion algorithm  splits a page into two pages when it overflows.&nbsp; This 
+  implementation supplies an optimization:</p>
   <blockquote>
-    <pre>$include "hetero_set.cpp.html"</pre>
+  <p>If an insert is at the end of the tree <b>and</b> all prior insert operations 
+  were at the end of the tree <b>and</b> 
+  there have been no erase operations, then if the insert would overflow the 
+  current last page, it is done on a new (i.e. empty) last page.</p>
   </blockquote>
-    <p>The B-tree associative container classes have member function templates for 
-    <code>find</code>, <code>count</code>, <code>lower_bound</code>, <code>
-    upper_bound</code> , and <code>equal_range</code>. These allow 
-    heterogeneous compares, if the <code>Key</code> type supports comparison for 
-    the heterogeneous type (i.e <code>int</code> in this example).</p>
-  <p>So, yes, the code does compile and run. The output is:</p>
+  <p>For large, deep, trees this results in a major saving in both space and 
+  speed. All pages except the last one are 100% full. The depth of the tree, which 
+  affects search times, is at an absolute minimum.</p>
+  <p>Here is how to pack an existing tree [<a href="../example/pack_map.cpp">pack_map.cpp</a>]:</p>
   <blockquote>
-    <pre>1,111
-2,222
-3,333
-find(2) found 2,222</pre>
+    <pre>$include "pack_map.cpp.html"</pre>
   </blockquote>
-    <p>Incidentally, the C++14 standard library will support 
-    heterogeneous comparison, too.</p>
     <h2><a name="Tuning-hints">Tuning hints</a></h2>
     <p>The B-tree library utilizes its own node cache in addition to the 
     operating system page cache. Optimal tuning of the B-tree node cache is 
@@ -451,8 +497,53 @@ find(2) found 2,222</pre>
         </tr>
       </table>
     </blockquote>
+  </blockquote>
+    <p>To see what the effect of these is on actual timings, we need to somewhat 
+    more complex test program [<code><a href="../example/tune_int_map.cpp">tune_int_map.cpp</a></code>]:</p>
+  <blockquote>
     <pre>$include "tune_int_map.cpp.html"</pre>
   </blockquote>
+    <p>Here are the results from a series of test runs:</p>
+  <blockquote>
+    <pre>D:\temp&gt;tune_int_map 10000000 fastest
+test with 10000000 elements
+emplace() complete
+ 1.57s wall, 1.56s user + 0.00s system = 1.56s CPU (99.7%)
+find() complete
+ 1.48s wall, 1.48s user + 0.00s system = 1.48s CPU (99.9%)
+
+D:\temp&gt;tune_int_map 10000000 fast
+test with 10000000 elements
+emplace() complete
+ 1.57s wall, 1.56s user + 0.00s system = 1.56s CPU (99.6%)
+find() complete
+ 1.49s wall, 1.48s user + 0.00s system = 1.48s CPU (99.4%)
+
+D:\temp&gt;tune_int_map 10000000 balanced
+test with 10000000 elements
+emplace() complete
+ 1.58s wall, 1.58s user + 0.00s system = 1.58s CPU (99.9%)
+find() complete
+ 1.49s wall, 1.50s user + 0.00s system = 1.50s CPU (100.3%)
+
+D:\temp&gt;tune_int_map 10000000 low_memory
+test with 10000000 elements
+emplace() complete
+ 12.11s wall, 4.45s user + 7.64s system = 12.09s CPU (99.8%)
+find() complete
+ 12.02s wall, 4.62s user + 7.39s system = 12.01s CPU (99.9%)
+
+D:\temp&gt;tune_int_map 10000000 least_memory
+test with 10000000 elements
+emplace() complete
+ 16.32s wall, 5.12s user + 11.17s system = 16.29s CPU (99.8%)
+find() complete
+ 15.99s wall, 5.02s user + 10.95s system = 15.97s CPU (99.9%)</pre>
+  </blockquote>
+    <p>This was run on a modern desktop system with buckets of memory, so we 
+    don&#39;t see a lot of difference until the last two runs where memory use is 
+    restricted. 10 million elements isn&#39;t really enough test cases either. Give 
+    this a try with your hardware to see what results you get.</p>
     <h2><a name="Preloading">Preloading</a></h2>
     <p>Since hard disks perform sequential reads much faster than random reads, 
     overall performance may be much faster if on open an existing a B-tree is 

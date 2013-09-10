@@ -33,7 +33,7 @@ struct UDT
   bool operator < (const UDT& rhs) const { return english < rhs.english; }
 };
 
-//  Stream inserter  ---------------------------------------------------------//
+//  stream inserter  ---------------------------------------------------------//
 
 inline std::ostream& operator<<(std::ostream& os, const UDT& x)
 {
@@ -41,7 +41,21 @@ inline std::ostream& operator<<(std::ostream& os, const UDT& x)
   return os;
 }
 
-//  Specialization boost::btree::default_index_traits<UDT>  ------------------//
+//  function objects for different orderings  --------------------------------//
+
+struct id_ordering
+{
+  bool operator()(const UDT& x, const UDT& y) const
+    {return x.id < y.id;}
+};
+
+struct spanish_ordering
+{
+  bool operator()(const UDT& x, const UDT& y) const
+    {return x.spanish < y.spanish;}
+};
+
+//  specialization boost::btree::default_index_traits<UDT>  ------------------//
 
 namespace boost
 {
