@@ -203,9 +203,11 @@ public:
 protected:
   static reference dereference(const char* p)
   {
-    return reference(
-       index_deserialize<key_type>(&p),
-       index_deserialize<mapped_type>(&p));
+    typename index_reference<key_type>::type first
+      = index_deserialize<key_type>(&p);
+    typename index_reference<mapped_type>::type second
+      = index_deserialize<mapped_type>(&p);
+    return reference(first, second);
   }
 };
 
@@ -266,9 +268,11 @@ public:
 protected:
   static reference dereference(const char* p)
   {
-    return reference(
-       index_deserialize<key_type>(&p),
-       index_deserialize<mapped_type>(&p));
+    typename index_reference<key_type>::type first
+      = index_deserialize<key_type>(&p);
+    typename index_reference<mapped_type>::type second
+      = index_deserialize<mapped_type>(&p);
+    return reference(first, second);
   }
 };
 

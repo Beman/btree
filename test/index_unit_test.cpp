@@ -444,96 +444,96 @@ void  two_index_iterator_test()
   cout << "     two_index_iterator_test complete" << endl;
 }
 
-//-------------------------------------  c_string_test  ----------------------------------------//
-
-struct c_str_less
-{
-  bool operator()(const char* x, const char* y) const
-  {
-    return std::strcmp(x, y) < 0;
-  }
-};
-
-
-void  c_string_test()
-{
-  cout << "  c_string_test..." << endl;
-
-  typedef btree::btree_index_set<const char*, btree::default_traits, c_str_less> index;
-  index idx(idx1_path, file_path.string() + ".c_string", btree::flags::truncate);
-
-  const char* s1 = "aa";
-  const char* s2 = "ccc";
-  const char* s3 = "b";
-  const char* s4 = "";
-
-  std::pair<index::const_iterator, bool> result;
-
-  result = idx.insert(s1);
-  BOOST_TEST(result.second);
-  BOOST_TEST(std::strcmp(*result.first, s1) == 0);
-  result = idx.insert(s2);
-  BOOST_TEST(result.second);
-  BOOST_TEST(std::strcmp(*result.first, s2) == 0);
-  result = idx.insert(s3);
-  BOOST_TEST(result.second);
-  BOOST_TEST(std::strcmp(*result.first, s3) == 0);
-  result = idx.insert(s4);
-  BOOST_TEST(result.second);
-  BOOST_TEST(std::strcmp(*result.first, s4) == 0);
- 
-  BOOST_TEST(idx.size() == 4u);
-
-  index::iterator itr = idx.begin();
-  index::iterator end = idx.end();
-
-  BOOST_TEST(itr != end);
-  const char* s = *itr;
-  BOOST_TEST(std::strcmp(s, s4) == 0);
-
-  ++itr;
-  BOOST_TEST(itr != end);
-  s = *itr;
-  BOOST_TEST(std::strcmp(s, s1) == 0);
-
-  ++itr;
-  BOOST_TEST(itr != end);
-  s = *itr;
-  BOOST_TEST(std::strcmp(s, s3) == 0);
-
-  ++itr;
-  BOOST_TEST(itr != end);
-  s = *itr;
-  BOOST_TEST(std::strcmp(s, s2) == 0);
- 
-  ++itr;
-  BOOST_TEST(itr == end);
-
-  BOOST_TEST(idx.find(s1) != idx.end());
-  BOOST_TEST(std::strcmp(*idx.find(s1), s1) == 0);
-  BOOST_TEST(idx.find(s2) != idx.end());
-  BOOST_TEST(std::strcmp(*idx.find(s2), s2) == 0);
-  BOOST_TEST(idx.find(s3) != idx.end());
-  BOOST_TEST(std::strcmp(*idx.find(s3), s3) == 0);
-  BOOST_TEST(idx.find(s4) != idx.end());
-  BOOST_TEST(std::strcmp(*idx.find(s4), s4) == 0);
-
-  BOOST_TEST(idx.find("ccc") != idx.end());
-  BOOST_TEST(std::strcmp(*idx.find("ccc"), s2) == 0);
-
-  result = idx.insert(s1);
-  BOOST_TEST(!result.second);
-  result = idx.insert(s2);
-  BOOST_TEST(!result.second);
-  result = idx.insert(s3);
-  BOOST_TEST(!result.second);
-  result = idx.insert(s4);
-  BOOST_TEST(!result.second);
- 
-  BOOST_TEST(idx.size() == 4u);
-
-  cout << "     c_string_test complete" << endl;
-}
+////-------------------------------------  c_string_test  ----------------------------------------//
+//
+//struct c_str_less
+//{
+//  bool operator()(const char* x, const char* y) const
+//  {
+//    return std::strcmp(x, y) < 0;
+//  }
+//};
+//
+//
+//void  c_string_test()
+//{
+//  cout << "  c_string_test..." << endl;
+//
+//  typedef btree::btree_index_set<const char*, btree::default_traits, c_str_less> index;
+//  index idx(idx1_path, file_path.string() + ".c_string", btree::flags::truncate);
+//
+//  const char* s1 = "aa";
+//  const char* s2 = "ccc";
+//  const char* s3 = "b";
+//  const char* s4 = "";
+//
+//  std::pair<index::const_iterator, bool> result;
+//
+//  result = idx.insert(s1);
+//  BOOST_TEST(result.second);
+//  BOOST_TEST(std::strcmp(*result.first, s1) == 0);
+//  result = idx.insert(s2);
+//  BOOST_TEST(result.second);
+//  BOOST_TEST(std::strcmp(*result.first, s2) == 0);
+//  result = idx.insert(s3);
+//  BOOST_TEST(result.second);
+//  BOOST_TEST(std::strcmp(*result.first, s3) == 0);
+//  result = idx.insert(s4);
+//  BOOST_TEST(result.second);
+//  BOOST_TEST(std::strcmp(*result.first, s4) == 0);
+// 
+//  BOOST_TEST(idx.size() == 4u);
+//
+//  index::iterator itr = idx.begin();
+//  index::iterator end = idx.end();
+//
+//  BOOST_TEST(itr != end);
+//  const char* s = *itr;
+//  BOOST_TEST(std::strcmp(s, s4) == 0);
+//
+//  ++itr;
+//  BOOST_TEST(itr != end);
+//  s = *itr;
+//  BOOST_TEST(std::strcmp(s, s1) == 0);
+//
+//  ++itr;
+//  BOOST_TEST(itr != end);
+//  s = *itr;
+//  BOOST_TEST(std::strcmp(s, s3) == 0);
+//
+//  ++itr;
+//  BOOST_TEST(itr != end);
+//  s = *itr;
+//  BOOST_TEST(std::strcmp(s, s2) == 0);
+// 
+//  ++itr;
+//  BOOST_TEST(itr == end);
+//
+//  BOOST_TEST(idx.find(s1) != idx.end());
+//  BOOST_TEST(std::strcmp(*idx.find(s1), s1) == 0);
+//  BOOST_TEST(idx.find(s2) != idx.end());
+//  BOOST_TEST(std::strcmp(*idx.find(s2), s2) == 0);
+//  BOOST_TEST(idx.find(s3) != idx.end());
+//  BOOST_TEST(std::strcmp(*idx.find(s3), s3) == 0);
+//  BOOST_TEST(idx.find(s4) != idx.end());
+//  BOOST_TEST(std::strcmp(*idx.find(s4), s4) == 0);
+//
+//  BOOST_TEST(idx.find("ccc") != idx.end());
+//  BOOST_TEST(std::strcmp(*idx.find("ccc"), s2) == 0);
+//
+//  result = idx.insert(s1);
+//  BOOST_TEST(!result.second);
+//  result = idx.insert(s2);
+//  BOOST_TEST(!result.second);
+//  result = idx.insert(s3);
+//  BOOST_TEST(!result.second);
+//  result = idx.insert(s4);
+//  BOOST_TEST(!result.second);
+// 
+//  BOOST_TEST(idx.size() == 4u);
+//
+//  cout << "     c_string_test complete" << endl;
+//}
 
 //--------------------------------- string_view_test  ----------------------------------//
 
@@ -699,8 +699,9 @@ void  string_view_volume_test()
   std::string prior;
   for (auto itr = idx.begin(); itr != idx.end(); ++itr)
   {
-//    cout << '"' << *itr << "\"\n";
     s.assign(itr->data(), itr->size());
+    cout << "size() is " << s.size() << endl;
+    cout << '"' << s << '"' << endl;
     BOOST_TEST(itr == idx.begin() || s > prior);
     prior = s;
   }
@@ -964,9 +965,15 @@ void  map_test()
     index_type idx 
       ("map_test.ndx", "map_test.dat", btree::flags::truncate, -1, btree::less(), 128);
 
+    index_type::const_iterator find_itr;
     idx.insert(make_pair<int, long>(1,2));
     BOOST_TEST_EQ(idx.size(), 1u);
+    find_itr = idx.find(1);
+    BOOST_TEST(find_itr != idx.end());
+    BOOST_TEST_EQ(find_itr->first, 1);
+    BOOST_TEST_EQ(find_itr->second, 2);
     BOOST_TEST_EQ(idx.count(1), 1u);
+
     idx.insert(make_pair<int, long>(1,4));
     BOOST_TEST_EQ(idx.size(), 1u);
     BOOST_TEST_EQ(idx.count(1), 1u);
@@ -977,7 +984,7 @@ void  map_test()
 
     idx.emplace(2, 9);
     BOOST_TEST_EQ(idx.size(), 3u);
-    index_type::const_iterator find_itr = idx.find(2);
+    find_itr = idx.find(2);
     BOOST_TEST(find_itr != idx.end());
     BOOST_TEST_EQ(find_itr->first, 2);
     BOOST_TEST_EQ(find_itr->second, 9);
@@ -1142,7 +1149,7 @@ int cpp_main(int argc, char* argv[])
   heterogeneous_key_test();
   two_index_test();
   two_index_iterator_test();
-  c_string_test();
+  //c_string_test();
   map_test();
   size_t_codec_test();  // do this before string_view, as string_view depends on it
   string_view_test();

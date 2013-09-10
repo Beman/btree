@@ -62,7 +62,7 @@ namespace btree
     BOOST_ASSERT(flat);
     BOOST_ASSERT(*flat);
     const char* p = *flat;
-    flat += sizeof(T);
+    *flat += sizeof(T);
     return *reinterpret_cast<const T*>(p);
   }
 
