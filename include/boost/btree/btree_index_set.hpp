@@ -135,10 +135,10 @@ public:
   // Effects: unconditional push_back into file(); index unaffected
   {
     file_position pos = base::file()->file_size();
-    std::size_t element_sz = IndexTraits<Key>::size(x);
-    base::file()->increment_file_size(element_sz);
-    IndexTraits<Key>::build_flat_element(x, base::file()->template data<char>() + pos,
-      element_sz);
+    std::size_t element_sz = index_serialize_size<Key>(x);
+    base::file()->increment_file_size(element_sz);  // will resize if needed
+    char* p = base::file()->template data<char>() + pos;
+    index_serialize<Key>(x, &p, element_sz);
     return pos;
   }
 
@@ -251,10 +251,10 @@ public:
   // Effects: unconditional push_back into file(); index unaffected
   {
     file_position pos = base::file()->file_size();
-    std::size_t element_sz = IndexTraits<Key>::size(x);
-    base::file()->increment_file_size(element_sz);
-    IndexTraits<Key>::build_flat_element(x, base::file()->template data<char>() + pos,
-      element_sz);
+    std::size_t element_sz = index_serialize_size<Key>(x);
+    base::file()->increment_file_size(element_sz);  // will resize if needed
+    char* p = base::file()->template data<char>() + pos;
+    index_serialize<Key>(x, &p, element_sz);
     return pos;
   }
 

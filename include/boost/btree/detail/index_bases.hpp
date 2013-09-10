@@ -28,10 +28,8 @@
   *  sets, maps, missing close(). Might need an argument that says what to close. The index?
      the flat file? Both?
 
-  *  Rename in index_helpers.hpp to index_traits.hpp?
-
   *  Shouldn't there be a file_reserve setter?
-  *  file_eserve setter should round up to memory map page size boundary.
+  *  file_reserve setter should round up to memory map page size boundary.
   *  Open should call the file_reserve setter.
 
   *  Abstract away the difference between index_set_base and index_multiset_base,
@@ -45,7 +43,7 @@ namespace btree
 {
 namespace detail
 {
-  template <class T, class Pos, class Compare, class KeyTraits>
+  template <class T, class Pos, class Compare>
     class indirect_compare;
 }
 
@@ -67,20 +65,17 @@ public:
   typedef typename BtreeTraits::node_id_type     node_id_type;
   typedef typename BtreeTraits::node_size_type   node_size_type;
   typedef typename BtreeTraits::node_level_type  node_level_type;
+  typedef typename BtreeTraits::index_position_type  index_position_type;
 
   //  reference is the type returned from dereferencing an iterator, so may be a Key&
   //  or a Key value. The former occurs when the actual data stored in the flat file is
   //  of type Key. The latter occurs when the Key object returned is a proxy pointing to
   //  the actual data stored in the flat file; an example is string_view.
-  typedef
-    typename index_reference<value_type>::type   reference;                
-
-  typedef typename
-    IndexTraits<Key>::index_position_type        index_position_type;  
+  typedef 
+    typename index_reference<value_type>::type  reference;
 
   typedef detail::indirect_compare<key_type,
-    index_position_type, compare_type,
-    IndexTraits<Key> >                           index_compare_type;
+    index_position_type, compare_type>           index_compare_type;
 
   //  the following is the only difference between index_set_base and index_multiset_base
   typedef typename
@@ -95,7 +90,9 @@ public:
 
 protected:
   static reference dereference(const char* p)
-    {return IndexTraits<value_type>::dereference(p);}
+  {
+    return index_deserialize<value_type>(&p);
+  }
 };
 
 //--------------------------------------------------------------------------------------//
@@ -117,17 +114,14 @@ public:
   typedef typename BtreeTraits::node_id_type     node_id_type;
   typedef typename BtreeTraits::node_size_type   node_size_type;
   typedef typename BtreeTraits::node_level_type  node_level_type;
+  typedef typename BtreeTraits::index_position_type  index_position_type;
 
   //  Comment for index_set_base::reference also applies here
   typedef
-    typename IndexTraits<value_type>::reference  reference;                
-
-  typedef typename
-    IndexTraits<Key>::index_position_type        index_position_type;
+    typename index_reference<value_type>::type   reference;
 
   typedef detail::indirect_compare<key_type,
-    index_position_type, compare_type,
-    IndexTraits<Key> >                           index_compare_type;
+    index_position_type, compare_type>           index_compare_type;
 
   //  the following is the only difference between index_set_base and index_multiset_base
   typedef typename
@@ -141,7 +135,10 @@ public:
     {return v;}
 
 protected:
-  static reference dereference(const char* p)  {return IndexTraits<value_type>::dereference(p);}
+  static reference dereference(const char* p)
+  {
+    return index_deserialize<value_type>(&p);
+  }
 };
 
 //--------------------------------------------------------------------------------------//
@@ -155,29 +152,26 @@ public:
   typedef Key                                    key_type;
   typedef T                                      mapped_type;
   typedef std::pair<
-    const typename IndexTraits<Key>::reference,
-    typename IndexTraits<T>::reference>          value_type;
+    const typename index_reference<Key>::type,
+    typename index_reference<T>::type>           value_type;
   typedef value_type                             iterator_value_type;
   typedef Compare                                compare_type;
   typedef BtreeTraits                            btree_traits;
   typedef typename BtreeTraits::node_id_type     node_id_type;
   typedef typename BtreeTraits::node_size_type   node_size_type;
   typedef typename BtreeTraits::node_level_type  node_level_type;
+  typedef typename BtreeTraits::index_position_type  index_position_type;
 
   //  reference is the type returned from dereferencing an iterator; it is currently
   //  always of type value_type, NOT value_type&. This is because the value_type object
   //  returned is a proxy whose first member will be of type Key& or Key, and whose
   //  second member will be of type T& or T. Whether the member type is a reference or
-  //  value type is determined by IndexTraits<Key>::reference and
-  //  IndexTraits<T>::reference respectively. 
+  //  value type is determined by index_reference<Key>::type and index_reference<T>::type
+  //  respectively. 
   typedef value_type                             reference;                
 
-  typedef typename
-    IndexTraits<Key>::index_position_type        index_position_type;  
-
   typedef detail::indirect_compare<key_type,
-    index_position_type, compare_type,
-    IndexTraits<Key> >                           index_compare_type;
+    index_position_type, compare_type>           index_compare_type;
 
   //  the following is the only difference between index_map_base and index_multimap_base
   typedef typename
@@ -210,9 +204,8 @@ protected:
   static reference dereference(const char* p)
   {
     return reference(
-       IndexTraits<key_type>::dereference(p),
-       IndexTraits<mapped_type>::dereference(p
-         + IndexTraits<key_type>::size(p)));
+       index_deserialize<key_type>(&p),
+       index_deserialize<mapped_type>(&p));
   }
 };
 
@@ -227,24 +220,21 @@ public:
   typedef Key                                    key_type;
   typedef T                                      mapped_type;
   typedef std::pair<
-    const typename IndexTraits<Key>::reference,
-    typename IndexTraits<T>::reference>          value_type;
+    const typename index_reference<Key>::type,
+    typename index_reference<T>::type>           value_type;
   typedef value_type                             iterator_value_type;
   typedef Compare                                compare_type;
   typedef BtreeTraits                            btree_traits;
   typedef typename BtreeTraits::node_id_type     node_id_type;
   typedef typename BtreeTraits::node_size_type   node_size_type;
   typedef typename BtreeTraits::node_level_type  node_level_type;
+  typedef typename BtreeTraits::index_position_type  index_position_type;
 
   //  Comment for index_map_base::reference also applies here
   typedef value_type                             reference;                
 
-  typedef typename
-    IndexTraits<Key>::index_position_type        index_position_type;  
-
   typedef detail::indirect_compare<key_type,
-    index_position_type, compare_type,
-    IndexTraits<Key> >                           index_compare_type;
+    index_position_type, compare_type>           index_compare_type;
 
   //  the following is the only difference between index_map_base and index_multimap_base
   typedef typename
@@ -277,9 +267,8 @@ protected:
   static reference dereference(const char* p)
   {
     return reference(
-       IndexTraits<key_type>::dereference(p),
-       IndexTraits<mapped_type>::dereference(p
-         + IndexTraits<key_type>::size(p)));
+       index_deserialize<key_type>(&p),
+       index_deserialize<mapped_type>(&p));
   }
 };
 
@@ -547,10 +536,10 @@ public:
 namespace detail
 {
   // TODO: Pos needs to be a distinct type so no ambiguity arises if Key and
-  // file_position happen to be the same type. Or else use the heterogenous type
+  // index_position_type happen to be the same type. Or else use the heterogenous type
   // approach now used in the std library
 
-  template <class Key, class Pos, class Compare, class KeyTraits>
+  template <class Key, class Pos, class Compare>
   class indirect_compare
   {
     Compare                        m_comp;
@@ -564,34 +553,37 @@ namespace detail
 
     bool operator()(const Key& lhs, Pos rhs) const
     {
-      return m_comp(lhs,
-        KeyTraits::dereference(m_file->const_data<char>()
-          + static_cast<std::size_t>(rhs)));
+      const char* rhsp = m_file->const_data<char>()
+          + static_cast<std::size_t>(rhs);
+      return m_comp(lhs, index_deserialize<Key>(&rhsp));
     }
     template <class K>
     bool operator()(const K& lhs, Pos rhs) const
     {
-      return m_comp(lhs,
-        KeyTraits::dereference(m_file->const_data<char>()
-          + static_cast<std::size_t>(rhs)));
+      const char* rhsp = m_file->const_data<char>()
+          + static_cast<std::size_t>(rhs);
+      return m_comp(lhs, index_deserialize<Key>(&rhsp));
     }
     bool operator()(Pos lhs, const Key& rhs) const
     {
-      return m_comp(KeyTraits::dereference(m_file->const_data<char>()
-        + static_cast<std::size_t>(lhs)), rhs);
+      const char* lhsp = m_file->const_data<char>()
+          + static_cast<std::size_t>(lhs);
+      return m_comp(index_deserialize<Key>(&lhsp), rhs);
     }
     template <class K>
     bool operator()(Pos lhs, const K& rhs) const
     {
-      return m_comp(KeyTraits::dereference(m_file->const_data<char>()
-        + static_cast<std::size_t>(lhs)), rhs);
+      const char* lhsp = m_file->const_data<char>()
+          + static_cast<std::size_t>(lhs);
+      return m_comp(index_deserialize<Key>(&lhsp), rhs);
     }
     bool operator()(Pos lhs, Pos rhs) const
     {
-      return m_comp(KeyTraits::dereference(m_file->const_data<char>()
-          + static_cast<std::size_t>(lhs)),
-        KeyTraits::dereference(m_file->const_data<char>()
-          + static_cast<std::size_t>(rhs)));
+      const char* lhsp = m_file->const_data<char>()
+          + static_cast<std::size_t>(lhs);
+      const char* rhsp = m_file->const_data<char>()
+          + static_cast<std::size_t>(rhs);
+      return m_comp(index_deserialize<Key>(&lhsp), index_deserialize<Key>(&rhsp));
     }
 
   };
