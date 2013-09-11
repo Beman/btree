@@ -77,9 +77,9 @@ namespace btree
     std::size_t size_sz = codec::encoded_size(sv.size());
     flat_file_type::position_type pos = file.file_size();
     file.increment_file_size(size_sz + sv.size());  // will resize if needed
-    codec::encode(sv.size(), file.template data<char>() + pos, size_sz);
+    codec::encode(sv.size(), file.data<char>() + pos, size_sz);
     pos += size_sz;
-    std::memcpy(file.template data<char>() + pos, sv.data(), sv.size());
+    std::memcpy(file.data<char>() + pos, sv.data(), sv.size());
   }
 
   template <>
