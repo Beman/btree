@@ -1,0 +1,22 @@
+/*
+
+  © Copyright Beman Dawes, 2007
+
+  Distributed under the Boost Software License, Version 1.0.
+  See www.boost.org/LICENSE_1_0.txt
+  
+*/
+
+body  {
+        font-family: sans-serif;
+        width : 52em;
+        margin: auto;
+      }
+      
+
+pre   { padding: .5em; background-color: #D7EEFF }
+
+ins   { background-color: #E8FFE8; text-decoration: none; }
+del   { background-color: #FFD7D7 }
+
+/*** end ***/

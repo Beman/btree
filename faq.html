@@ -1,0 +1,78 @@
+<html>
+
+<head>
+<meta name="GENERATOR" content="Microsoft FrontPage 5.0">
+<meta name="ProgId" content="FrontPage.Editor.Document">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>B-tree FAQ</title>
+<link rel="stylesheet" type="text/css" href="minimal.css">
+</head>
+
+<body>
+  <table border="0" cellpadding="5" cellspacing="0" style=
+  "border-collapse: collapse" bordercolor="#111111">
+    <tr>
+      <td width="277"><a href="../../../index.htm"><img src=
+      "../../../boost.png" alt="boost.png (6897 bytes)" align=
+      "middle" width="300" height="86" border="0"></a></td>
+
+      <td align="middle"><font size="7">B-Tree Library FAQ</font></td>
+    </tr>
+  </table>
+
+  <table border="0" cellpadding="5" cellspacing="0" style=
+  "border-collapse: collapse" bordercolor="#111111" bgcolor=
+  "#D7EEFF" width="100%">
+    <tr>
+      <td><a href="../../../index.htm">Boost Home</a>
+      &nbsp;&nbsp; <a href="index.html">Library Home</a>
+      &nbsp;&nbsp; <a href="reference.html">Reference</a>
+      &nbsp;&nbsp; <a href="tutorial.html">Tutorial</a>
+      &nbsp;&nbsp; <a href="faq.html">FAQ</a></td>
+    </tr>
+  </table>
+
+  <p><b><a name="why-const_iterator-returned"></a>Why do non-const functions 
+  return <code>const_iterator</code> instead of <code>iterator</code>?</b> The 
+  implementation needs to know when an element is modified so it can write the 
+  node back to the external file. If non-const <code>iterator</code> was 
+  returned, the implementation would have to assume that a write back was 
+  required even when none is actually need. That would be very inefficient.</p>
+
+  <p><b>Why are there no <u>unordered</u> B-tree associative containers?</b> It 
+  wouldn&#39;t be a B-tree  any more. A B-tree achieves its 
+  speed by grouping many ordered elements on nodes, and that minimizes disk 
+  access and maximizes the benefit of both hardware and software caches. A 
+  hashed approach would in effect just replace one ordering with another.</p>
+  <p><b>What is the difference between a node and a page?</b> In computer 
+  science, <i><a href="http://en.wikipedia.org/wiki/Node">node</a></i> is the 
+  name for the basic unit used to build data structures. <i>
+  <a href="http://en.wikipedia.org/wiki/Page_(computer_memory)">Page</a></i> is 
+  the name for the smallest unit of data for transfers between main memory and 
+  any other auxiliary store, such as a
+  <a href="http://en.wikipedia.org/wiki/Hard_disk_drive" title="Hard disk drive">
+  hard disk drive</a>. In a B-tree, performance is often optimal if node size is 
+  the same as (or a small multiple of) the system&#39;s page size.</p>
+
+  <p><b>How to make B-tree files portable between big and little endian systems?</b> 
+  Use endian data types. See the <a href="tutorial.html#Data-portability">
+  tutorial</a> for an example.</p>
+
+  <p><b>Where does the idea of an <a name="index-idea">index</a> come from?</b> 
+  Bayer and McCreight&#39;s original 1970 Boeing Labs paper:</p>
+
+  <p><img border="0" src="bayer_index.png" width="672" height="320"></p>
+
+  <hr>
+
+  <p>Revised 
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->10 September 2013<!--webbot bot="Timestamp" endspan i-checksum="39617" --></p>
+
+  <p>© Copyright Beman Dawes, 2013</p>
+
+  <p>Distributed under the Boost Software License, Version 1.0. See
+  <a href=
+  "http://www.boost.org/LICENSE_1_0.txt">www.boost.org/LICENSE_1_0.txt</a></p>
+</body>
+
+</html>

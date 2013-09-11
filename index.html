@@ -1,80 +1,275 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<html>
 <head>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+  <meta name="generator" content=
+  "Microsoft FrontPage 5.0">
+  <meta name="GENERATOR" content="Microsoft FrontPage 5.0">
+  <meta name="ProgId" content="FrontPage.Editor.Document">
+  <meta http-equiv="Content-Type" content=
+  "text/html; charset=utf-8">
 
-	<title>Beman/Boost-Btree @ GitHub</title>
-	
-	<style type="text/css">
-		body {
-  		margin-top: 1.0em;
-  		background-color: #1dd484;
-		  font-family: "Helvetica,Arial,FreeSans";
-  		color: #ffffff;
-    }
-    #container {
-      margin: 0 auto;
-      width: 700px;
-    }
-		h1 { font-size: 3.8em; color: #e22b7b; margin-bottom: 3px; }
-		h1 .small { font-size: 0.4em; }
-		h1 a { text-decoration: none }
-		h2 { font-size: 1.5em; color: #e22b7b; }
-    h3 { text-align: center; color: #e22b7b; }
-    a { color: #e22b7b; }
-    .description { font-size: 1.2em; margin-bottom: 30px; margin-top: 30px; font-style: italic;}
-    .download { float: right; }
-		pre { background: #000; color: #fff; padding: 15px;}
-    hr { border: 0; width: 80%; border-bottom: 1px solid #aaa}
-    .footer { text-align:center; padding-top:30px; font-style: italic; }
-	</style>
-	
+  <title>B-Tree Home</title>
+  <link rel="stylesheet" type="text/css" href="minimal.css">
 </head>
 
 <body>
-  <a href="http://github.com/Beman/Boost-Btree"><img style="position: absolute; top: 0; right: 0; border: 0;" src="http://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub" /></a>
+  <table border="0" cellpadding="5" cellspacing="0" style=
+  "border-collapse: collapse" bordercolor="#111111">
+    <tr>
+      <td width="277"><a href="../../../index.htm"><img src=
+      "../../../boost.png" alt="boost.png (6897 bytes)" align=
+      "middle" width="300" height="86" border="0"></a></td>
 
-  <div id="container">
+      <td align="middle"><font size="7">Proposed B-Tree Library</font></td>
+    </tr>
+  </table>
 
-    <div class="download">
-      <a href="http://github.com/Beman/Boost-Btree/zipball/master">
-        <img border="0" width="90" src="http://github.com/images/modules/download/zip.png"></a>
-      <a href="http://github.com/Beman/Boost-Btree/tarball/master">
-        <img border="0" width="90" src="http://github.com/images/modules/download/tar.png"></a>
-    </div>
+  <table border="0" cellpadding="5" cellspacing="0" style=
+  "border-collapse: collapse" bordercolor="#111111" bgcolor=
+  "#D7EEFF" width="100%">
+    <tr>
+      <td><a href="../../../index.htm">Boost Home</a>
+      &nbsp;&nbsp; <a href="index.html">Library Home</a>
+      &nbsp;&nbsp; <a href="reference.html">Reference</a>
+      &nbsp;&nbsp; <a href="tutorial.html">Tutorial</a>
+      &nbsp;&nbsp; <a href="faq.html">FAQ</a></td>
+    </tr>
+  </table>
 
-    <h1><a href="http://github.com/Beman/Boost-Btree">Boost-Btree</a>
-      <span class="small">by <a href="http://github.com/Beman">Beman</a></span></h1>
+  <div align="center">
+    <center>
+  <p></p>
+  <table border="1" cellpadding="10" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111">
+    <tr>
+      <td>
+      <p align="center">
+      <img border="0" src="../../../doc/html/images/warning.png" width="24" height="24"> 
+      Warning: The implementation is at a beta stage.<p align="center">
+      <b>The library should only be used by those willing to assume the  risks of  beta software.</b></td>
+    </tr>
+  </table>
 
-    <div class="description">
-      Proposed B-tree library for Boost.org
-    </div>
-
-    <p>This is a placeholder</p><h2>Authors</h2>
-<p>Beman (bdawes@acm.org)<br/>Beman Dawes (beman.dawes@gmail.com)<br/><br/>      </p>
-<h2>Contact</h2>
-<p>Beman Dawes (bdawes@acm.org)<br/>      </p>
-
-
-    <h2>Download</h2>
-    <p>
-      You can download this project in either
-      <a href="http://github.com/Beman/Boost-Btree/zipball/master">zip</a> or
-      <a href="http://github.com/Beman/Boost-Btree/tarball/master">tar</a> formats.
-    </p>
-    <p>You can also clone the project with <a href="http://git-scm.com">Git</a>
-      by running:
-      <pre>$ git clone git://github.com/Beman/Boost-Btree</pre>
-    </p>
-
-    <div class="footer">
-      get the source code on GitHub : <a href="http://github.com/Beman/Boost-Btree">Beman/Boost-Btree</a>
-    </div>
-
+    </center>
   </div>
 
-  
+  <h2>Introduction</h2>
+
+  <p>The proposed Boost B-tree library provides associative
+  containers that are resident on some form of random access external memory, 
+  such as a hard-disk, solid-state disk, or USB memory-stick.. B-trees perform well on hardware ranging
+  from ancient floppy disk drives up to humongous hard-drive arrays. B-trees are the technology behind 
+  many or even most high-performance disk file-systems and 
+  disk-resident databases.</p>
+
+  <table border="1" cellpadding="10" cellspacing="0" style=
+  "border-collapse: collapse" bordercolor="#111111" width="100%">
+    <tr>
+      <td width="100%">
+        <p align="center"><b><font size="3">The B in "B-tree" does
+        not stand for "Binary"</font></b></p>
+
+        <p>The origin of "B-tree" has never been explained by the
+        authors [<a href=
+        "http://en.wikipedia.org/wiki/Rudolf_Bayer" title=
+        "Rudolf Bayer">Rudolf Bayer</a> and 
+        <a href="http://en.wikipedia.org/wiki/Edward_M._McCreight">Edward McCreight</a>]. As
+        we shall see, "balanced," "broad," or "bushy" might apply.
+        Others suggest that the "B" stands for Boeing [their employer]. Because of
+        his contributions, however, it seems appropriate to think
+        of B-trees as "Bayer"-trees.</p>
+
+        <p align="right">Douglas Comer, <i>
+        <a href="http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.96.6637">The Ubiquitous B-Tree</a></i>,
+        Computing Surveys, Vol. 11, No. 2, June 1979</p>
+      </td>
+    </tr>
+  </table>
+
+  <h2>Library Characteristics</h2>
+
+  <ul>
+    <li>The interface and behavior is similar, but not identical, to the C++
+    Standard Library's <code>map</code>, <code>multimap</code>, <code>set</code>, 
+    and <code>multiset</code>. Differences include:<br>
+&nbsp;<ul>
+      <li>Types supplied by the <code>Key</code> and
+        <code>T</code> template parameters must be copyable via
+      <code>std::memcpy</code> and must not contain pointers or references.</li>
+      <li>Interfaces traffic in <code>const_iterator</code>. Maps provide a
+      <code>writable()</code> function that turns a const_iterator into an 
+      iterator.</li>
+      <li><code>insert()</code>,&nbsp; <code>emplace()</code>, and <code>erase()</code>
+        invalidate iterators.</li>
+      <li>No <code>operator[]</code> or <code>at</code> functions supplied. 
+      Returning references to data that can be swapped out even by const 
+      functions is too dangerous.<br>
+&nbsp;</li>
+    </ul>
+    </li>
+    <li>Additional classes provide <a href="faq.html#index-idea">indexes</a> 
+    into a flat file.<br>
+&nbsp;<ul>
+    <li>Variable length data can be accommodated. Strings are supported via the 
+    new standard library TS <code>string_view</code> class which provides the 
+    familiar <code>std::string</code> interface. A version of the TS <code>
+    string_view</code> class is provided, so things like <code>
+    my_map.emplace(&quot;FWIW&quot;, &quot;For what its worth&quot;);</code> work out of the box.</li>
+    <li>Very large data elements are not a problem. Because B-trees are most 
+    efficient when value types are very small relative to the hardware's natural 
+    page size (4096 for most current hard disks), a pure B-tree slows 
+    dramatically if given value types even a few hundred bytes in length, let 
+    alone much larger sizes. Using a B-tree as an index into a flat file that 
+    actually contains the data has long been the preferred solution.</li>
+    <li>A single flat file can be indexed by as many indexes as desired. Thus a 
+    customer record can be indexed by account-number, name, and so forth.&nbsp;&nbsp; <br>
+&nbsp;</li>
+  </ul>
+
+    </li>
+    <li>Runtime options allow performance tuning:<br>
+&nbsp;<ul>
+    <li>Page size allows hardware specific tuning at file creation time.</li>
+    <li>Cache size allows control over speed versus program memory tradeoff.</li>
+    <li>Preload option allows control over speed versus operating system disk cache 
+    memory tradeoff.</li>
+    <li>Hints ease task of performance tuning.<br>
+&nbsp;</li>
+  </ul>
+
+    </li>
+    <li>Traits allow users to specify internal types:<br>
+&nbsp;<ul>
+      <li>Endian types are used by default to ensure portable files. Prepackaged big, little, 
+      and native endian traits are supplied.</li>
+      <li>User defined traits can be supplied to support specific needs.<br>
+&nbsp;</li>
+    </ul>
+    </li>
+    <li>The specific B-tree form used is the B<sup>+</sup> tree. Modifications to the classic B<sup>+</sup> tree
+    include: <br>
+&nbsp;<ul>
+      <li>New-node-on-full (i.e. lazy) rather than split-on-full for ordered inserts. 
+      Benefits include ability to pack a B-Tree for 100% disk and memory space 
+      utilization and, as a result, faster operation. </li>
+      <li>Free-at-empty (i.e. lazy) rather than rebalancing
+        erases. See the Sen/Tarjan
+      <a href="http://www.cs.princeton.edu/~sssix/papers/b-trees.pdf">paper</a> 
+      for discussion of rationale.<br>
+&nbsp;</li>
+    </ul>
+    </li>
+    <li>The disk file includes meta information about the
+      tree, including user supplied information.<br>
+&nbsp;</li>
+    <li>Currently implemented in C++03. Tests pass in recent versions of GCC on 
+    Linux, OS X, and Windows, VC++ on Windows, and Clang on OS X. </li>
+  </ul>
+
+  <h2>Coming Soon</h2>
+
+  <ul>
+    <li>A bulk load option that generates packed trees. Fastest way to load 
+    large datasets.</li>
+  </ul>
+
+  <h2>Wish List</h2>
+
+  <ul>
+    <li>Utility functionality such as <code>btpack</code>,
+    <code>btinfo</code>, and <code>btrecover</code> to meet
+    administrative needs.<br>
+&nbsp;</li>
+    <li>Concurrent use by other processes is a 
+    high priority for the future.<br>
+&nbsp;</li>
+    <li>Multiple B-trees in one file. Requested by Cory Nelson. Possible design: 
+    Initial btree_map in the file is an index of its children. Key: name, Data: 
+    page id of the child's header page. Recursion allowed; the header page 
+    pointed could itself be an index header. Current interface might gain 
+    additional constructor and open() overload taking a ref to the parent index 
+    and the desired name.<br>
+&nbsp;</li>
+    <li>Memory mapped file based B-tree. Requested by Cory Nelson &quot;for small 
+    B-trees or large address spaces&quot;. The flat files indexed by the index 
+    classes already use memory mapped files.<br>
+&nbsp;</li>
+    <li>C++11 features.</li>
+  </ul>
+
+  <h2>History of the library</h2>
+
+  <p>A PL/1 language B-tree library was developed by the author about 1982. It 
+  was redone in C in 1984, and has been in continuous use in industrial 
+  applications since then. It was based on a single cursor model rather than an 
+  iterator model. Although the Boost library is a new design and is implemented 
+  with all new code, the predecessor library provided the experience that taught 
+  me about B-trees in general, and the specifics of what is needed and what 
+  isn't.</p>
+
+  <h2>Designs paths not taken</h2>
+
+  <p>Based on prior experience including actual implementation and use, several 
+  features described in the literature are not included:</p>
+
+  <ul>
+    <li><b>Key prefix compression.</b> All the keys on a page may have the same 
+    value for their initial bytes. Particularly on branches, this prefix could 
+    be stored only once, saving space and allowing more entries per page, and in 
+    turn that could speed searches. The added complexity is considerable, and 
+    the increased computational burden tends to result in slower rather than 
+    faster operations. Might be worth considering in the future for variable 
+    length keys only; they already have to provide some of the needed machinery. 
+    The C predecessor library abandoned this approach early on because it didn't 
+    actually speed up applications in practice.<br>
+&nbsp;</li>
+    <li><b>Key computation on branch pages.</b> The keys stored on branch pages need 
+    not be full length, as long as the ordering is maintained. Thus for a branch 
+    key separating pointers to pages with last key &quot;ALPHA&quot; and first key &quot;BETA&quot;, 
+    respectively, it is sufficient to store &quot;B&quot; as the branch key rather than 
+    &quot;BETA&quot;. Although the C predecessor library still uses computed branch keys 
+    if keys are variable length, it has been a source of hard to track down 
+    bugs, and doesn't support deletion properly to this day.<br>
+&nbsp;</li>
+    <li><b>Bidirectional page sequence list.</b> Adds page space overhead and 
+    insert/erase program complexity. Doing an inverted tree walk to the prior or next 
+    page during traversal is simple and effective.</li>
+  </ul>
+
+  <h2>Bibliography</h2>
+
+  <p>Rudolf Bayer and Edward M. McCreight, <i><a href=
+  "http://www.minet.uni-jena.de/dbis/lehre/ws2005/dbs1/Bayer_hist.pdf">
+  Organization and Maintenance of Large Ordered Indexes</a></i>,
+  Acta Informatica, 1:173-189, 1972. The original publication is
+  still a good starting point to understand the B-tree.</p>
+
+  <p>Douglas Comer, <i>
+  <a href="http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.96.6637&rep=rep1&type=pdf">
+  The
+  Ubiquitous B-Tree</a></i>, ACM Computing Surveys, Vol. 11, No. 2,
+  June, 1979. Covers many variations and implementation techniques,
+  with their trade-offs.</p>
+
+  <p>Siddhartha Sen and Robert E. Tarjan, <i><a href=
+  "http://www.cs.princeton.edu/~sssix/papers/b-trees.pdf">Deletion
+  Without Rebalancing in Multiway Search Trees</a></i>, Proc. 20th
+  International Symposium on Algorithms and Computation (ISAAC),
+  December 2009<i>.</i> Explanation of why free-at-empty is better than 
+  rebalancing.</p>
+
+  <h2 dir="ltr">Acknowledgements</h2>
+
+  <p dir="ltr">Zach Laine provided several enhancements and bug fixes. Support 
+  for turning the prototype implementation into a finished library was provided 
+  by the Naval Postgraduate School, Monterey, California.</p>
+  <hr>
+
+  <p>Revised 
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->03 September 2013<!--webbot bot="Timestamp" endspan i-checksum="39622" --></p>
+
+  <p>© Copyright Beman Dawes, 2010, 2013</p>
+
+  <p>Distributed under the Boost Software License, Version 1.0. See
+  <a href=
+  "http://www.boost.org/LICENSE_1_0.txt">www.boost.org/LICENSE_1_0.txt</a></p>
 </body>
 </html>
