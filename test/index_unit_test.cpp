@@ -700,8 +700,8 @@ void  string_view_volume_test()
   for (auto itr = idx.begin(); itr != idx.end(); ++itr)
   {
     s.assign(itr->data(), itr->size());
-    cout << "size() is " << s.size() << endl;
-    cout << '"' << s << '"' << endl;
+    //cout << "size() is " << s.size() << endl;
+    //cout << '"' << s << '"' << endl;
     BOOST_TEST(itr == idx.begin() || s > prior);
     prior = s;
   }

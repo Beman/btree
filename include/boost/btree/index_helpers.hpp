@@ -102,7 +102,9 @@ namespace btree
     *flat += sv.size();
   }
 
-  inline index_reference<boost::string_view>::type index_deserialize(const char** flat)
+  template <>
+  inline index_reference<boost::string_view>::type
+    index_deserialize<boost::string_view>(const char** flat)
   {
     typedef btree::support::size_t_codec codec;
     BOOST_ASSERT(flat);

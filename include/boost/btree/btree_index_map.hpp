@@ -135,12 +135,12 @@ public:
   // Effects: unconditional push_back into file(); index unaffected
   {
     file_position pos = base::file()->file_size();
-    std::size_t key_sz = index_serialize_size<Key>(x.first);
-    std::size_t mapped_sz = index_serialize_size<T>(x.second);
+    std::size_t key_sz = index_serialize_size(x.first);
+    std::size_t mapped_sz = index_serialize_size(x.second);
     base::file()->increment_file_size(key_sz + mapped_sz);  // will resize if needed
     char* p = base::file()->template data<char>() + pos;
-    index_serialize<Key>(x.first, &p, key_sz);
-    index_serialize<T>(x.second, &p, mapped_sz);
+    index_serialize(x.first, &p, key_sz);
+    index_serialize(x.second, &p, mapped_sz);
     return pos;
   }
 
@@ -175,12 +175,12 @@ public:
     if (base::find(key) == base::end())
     {
       file_position pos = base::file()->file_size();
-      std::size_t key_sz = index_serialize_size<Key>(key);
-      std::size_t mapped_sz = index_serialize_size<T>(mapped_value);
+      std::size_t key_sz = index_serialize_size(key);
+      std::size_t mapped_sz = index_serialize_size(mapped_value);
       base::file()->increment_file_size(key_sz + mapped_sz);  // will resize if needed
       char* p = base::file()->template data<char>() + pos;
-      index_serialize<Key>(key, &p, key_sz);
-      index_serialize<T>(mapped_value, &p, mapped_sz);
+      index_serialize(key, &p, key_sz);
+      index_serialize(mapped_value, &p, mapped_sz);
       return insert_file_position(pos);
     }
     return std::pair<const_iterator, bool>(const_iterator(), false);
@@ -274,12 +274,12 @@ public:
   // Effects: unconditional push_back into file(); index unaffected
   {
     file_position pos = base::file()->file_size();
-    std::size_t key_sz = index_serialize_size<Key>(x.first);
-    std::size_t mapped_sz = index_serialize_size<T>(x.second);
+    std::size_t key_sz = index_serialize_size(x.first);
+    std::size_t mapped_sz = index_serialize_size(x.second);
     base::file()->increment_file_size(key_sz + mapped_sz);  // will resize if needed
     char* p = base::file()->template data<char>() + pos;
-    index_serialize<Key>(x.first, &p, key_sz);
-    index_serialize<T>(x.second, &p, mapped_sz);
+    index_serialize(x.first, &p, key_sz);
+    index_serialize(x.second, &p, mapped_sz);
     return pos;
   }
 
@@ -302,12 +302,12 @@ public:
   {
     BOOST_ASSERT((base::flags() & flags::read_only) == 0);
     file_position pos = base::file()->file_size();
-    std::size_t key_sz = index_serialize_size<Key>(key);
-    std::size_t mapped_sz = index_serialize_size<T>(mapped_value);
+    std::size_t key_sz = index_serialize_size(key);
+    std::size_t mapped_sz = index_serialize_size(mapped_value);
     base::file()->increment_file_size(key_sz + mapped_sz);  // will resize if needed
     char* p = base::file()->template data<char>() + pos;
-    index_serialize<Key>(key, &p, key_sz);
-    index_serialize<T>(mapped_value, &p, mapped_sz);
+    index_serialize(key, &p, key_sz);
+    index_serialize(mapped_value, &p, mapped_sz);
     return insert_file_position(pos);
   }
 };
