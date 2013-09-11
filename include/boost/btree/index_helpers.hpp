@@ -74,7 +74,9 @@ namespace btree
     { typedef const boost::string_view  type; };
 
   // given the proxy, return size required to serialize, including any overhead bytes
-  inline std::size_t index_serialize_size(const boost::string_view& sv)
+  template <>
+  inline std::size_t
+    index_serialize_size<boost::string_view>(const boost::string_view& sv)
   {
     typedef btree::support::size_t_codec codec;
     return sv.size() + codec::encoded_size(sv.size());
@@ -88,7 +90,10 @@ namespace btree
   //  return dec.first + dec.second;
   //}
 
-  inline void index_serialize(const boost::string_view& sv, char** flat, std::size_t sz)
+  template <>
+  inline void
+    index_serialize<boost::string_view>(const boost::string_view& sv,
+      char** flat, std::size_t sz)
   { 
     typedef btree::support::size_t_codec codec;
     BOOST_ASSERT(flat);
