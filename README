@@ -1,45 +1,61 @@
 B-tree library for eventual proposal to Boost
 
-THIS IS AN EXPERIMENTAL LIBRARY STILL UNDER DEVELOPMENT.
-IT IS NOT SUITABLE FOR PRODUCTION WORK.
+THIS IS AN BETA LIBRARY STILL UNDER DEVELOPMENT.
+IT IS SHOULD ONLY BE USED BY THOSE WILLING TO TAKE THE RISKS
+INHERENT WITH BETA LEVEL SOFTWARE.
 
 To experiment with the library, various other boost libraries must be
-available. Here is one way to create such a setup:
+available. Below is one way to create such a setup.
+
+Note: If you don't want use SSL to connect to GitHub,
+replace "git@github.com:" with "https://github.com/". 
+
+Note: Install Subversion, Git, and a C++ compiler first if you haven't
+already done so.  Be sure there is a "user-config.jam" file in your
+home directory and it is set up for your compiler (or compilers).
 
 Windows:
-  cd where-you-want-trunk-ex-to-go
+  cd where-you-want-stuff-to-go
   svn export http://svn.boost.org/svn/boost/trunk boost-trunk trunk-ex
   cd trunk-ex\libs
+  git clone git@github.com:Beman/endian.git endian
   git clone git@github.com:Beman/Boost-Btree.git btree
   cd ..\boost
+  mklink /d endian ..\libs\btree\include\boost\endian
   mklink /d btree ..\libs\btree\include\boost\btree
   
 POSIX-like systems:
-  cd where-you-want-trunk-ex-to-go
+  sudo apt-get install libbz2-dev
+  cd where-you-want-stuff-to-go
   svn export http://svn.boost.org/svn/boost/trunk boost-trunk trunk-ex
   cd trunk-ex/libs
+  git clone git@github.com:Beman/endian.git endian
   git clone git@github.com:Beman/Boost-Btree.git btree
   cd ../boost
+  ln -s ../libs/endian/include/boost/endian endian
   ln -s ../libs/btree/include/boost/btree btree
   
 As a confidence test, the following should build b2, build various
-libraries and then run the btree regression tests.
+libraries and then run the btree regression tests, which should all
+report "**passed**".
 
 Windows:
-  cd trunk-ex-parent
   cd trunk-ex
-  bootstrap
+  .\bootstrap
   .\b2
   cd libs\btree\test
   ..\..\..\b2
 
 POSIX-like systems:
-  cd trunk-ex-parent
   cd trunk-ex
   ./bootstrap.sh
   ./b2
   cd libs/btree/test
   ../../../b2
+  
+----------------------------------------------------------------------
+
+Notes for using Visual Studio  
 
 A Windows Visual Studio solution is included:  btree\test\msvc2012\btree.sln
 Be sure to do the following setup before starting Visual Studio.
