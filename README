@@ -19,7 +19,7 @@ Windows:
   svn export http://svn.boost.org/svn/boost/trunk boost-trunk trunk-ex
   cd trunk-ex\libs
   git clone git@github.com:Beman/endian.git endian
-  git clone git@github.com:Beman/Boost-Btree.git btree
+  git clone git@github.com:Beman/btree.git btree
   cd ..\boost
   mklink /d endian ..\libs\btree\include\boost\endian
   mklink /d btree ..\libs\btree\include\boost\btree
@@ -30,7 +30,7 @@ POSIX-like systems:
   svn export http://svn.boost.org/svn/boost/trunk boost-trunk trunk-ex
   cd trunk-ex/libs
   git clone git@github.com:Beman/endian.git endian
-  git clone git@github.com:Beman/Boost-Btree.git btree
+  git clone git@github.com:Beman/btree.git btree
   cd ../boost
   ln -s ../libs/endian/include/boost/endian endian
   ln -s ../libs/btree/include/boost/btree btree
