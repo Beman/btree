@@ -380,9 +380,16 @@ eat
   <blockquote>
     <pre>$include "udt.hpp.html"</pre>
   </blockquote>
-    <p>Ugh! The actual UDT is easy, but the index traits adapter is ugly. 
-    There&#39;s a branch already being worked on to simplify that.</p>
-    <p>So now let&#39;s build an index set of type UDT. The code looks like this [<code><a href="../example/udt_index_set.cpp">udt_index_set.cpp</a></code>]:</p>
+    <p>A couple of things are worth point out:</p>
+    <ul>
+      <li>The &quot;<code>// specializations to support btree indexes</code>&quot; section 
+      tells the B-tree index how to serialize and de-serialize type <code>UDT</code> 
+      in the flat file.</li>
+      <li>The &quot;<code>// function objects for different orderings</code>&quot; section 
+      is used only in the <a href="#UDT-three-index-set">UDT three index set</a> 
+      example so can be ignore for now.</li>
+  </ul>
+    <p>So now let&#39;s build an index set of type <code>UDT</code>. The code looks like this [<code><a href="../example/udt_index_set.cpp">udt_index_set.cpp</a></code>]:</p>
   <blockquote>
     <pre>$include "udt_index_set.cpp.html"</pre>
   </blockquote>
@@ -394,6 +401,10 @@ eat
 </pre>
   </blockquote>
   <h2><a name="UDT-three-index-set">UDT three index set</a></h2>
+  <p>One of the advantages of separating the index file from the flat file is 
+  that you can have multiple index files. This example [<code><a href="../example/udt_3_index_set.cpp">udt_3_index_set.cpp</a></code>] 
+  creates three indexes so that we can access using the ID, English, or Spanish 
+  elements as the key.</p>
   <blockquote>
     <pre>$include "udt_3_index_set.cpp.html"</pre>
   </blockquote>
@@ -579,7 +590,7 @@ find() complete
   <hr>
 
   <p>Revised 
-  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->10 September 2013<!--webbot bot="Timestamp" endspan i-checksum="39617" --></p>
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->11 September 2013<!--webbot bot="Timestamp" endspan i-checksum="39619" --></p>
 
   <p>© Copyright Beman Dawes, 2013</p>
 

@@ -9,6 +9,7 @@
 #ifndef BOOST_BTREE_UDT_EXAMPLE_HPP
 #define BOOST_BTREE_UDT_EXAMPLE_HPP
 
+#include <boost/btree/index_helpers.hpp>
 #include <boost/btree/support/string_view.hpp>
 #include <iosfwd>
 
@@ -21,6 +22,7 @@ using boost::string_view;
 struct UDT
 {
   typedef int id_type;
+
   id_type      id;
   string_view  english;
   string_view  spanish;
@@ -55,69 +57,32 @@ struct spanish_ordering
     {return x.spanish < y.spanish;}
 };
 
-//  specialization boost::btree::default_index_traits<UDT>  ------------------//
+//  specializations to support btree indexes  --------------------------------//
 
 namespace boost
 {
-  namespace btree
+namespace btree
+{
+  template <> struct index_reference<UDT> { typedef const UDT type; };
+
+  template <>
+  inline void index_serialize<UDT>(const UDT& udt, flat_file_type& file)
   {
-
-    template <>
-    class default_index_traits<UDT>
-    {
-      typedef btree::support::size_t_codec codec;
-
-    public:
-      typedef UDT                     reference;             // proxy
-      typedef endian::big_uint32_t  index_position_type;   // big enough
-
-      static std::size_t size(const UDT& x)
-      {
-        return sizeof(x.id)
-          + default_index_traits<boost::string_view>::size(x.english)
-          + default_index_traits<boost::string_view>::size(x.spanish);
-      }
-
-      static void build_flat_element(const UDT& x, char* dest,
-        std::size_t)
-      {
-        BOOST_ASSERT(dest);
-        std::memcpy(dest, &x.id, sizeof(x.id));
-        dest += sizeof(x.id);
-        std::size_t sz
-          = default_index_traits<boost::string_view>::size(x.english);
-        default_index_traits<boost::string_view>::build_flat_element(
-          x.english, dest, sz);
-        dest += sz;
-        default_index_traits<boost::string_view>::build_flat_element(
-          x.spanish, dest,
-          default_index_traits<boost::string_view>::size(x.spanish));
-      }
-
-      static reference dereference(const char* x)
-      {
-        return UDT
-          (default_index_traits<int>::dereference(x),
-          default_index_traits<boost::string_view>::dereference(
-            x + sizeof(UDT::id_type)),
-          default_index_traits<boost::string_view>::dereference(
-            x + sizeof(UDT::id_type)
-            + default_index_traits<boost::string_view>::size(
-              x + sizeof(UDT::id_type))));
-      }
-      static std::size_t size(const char* x)
-      {
-        std::size_t sz = sizeof(UDT::id_type);
-        sz +=
-          default_index_traits<boost::string_view>::size(x + sz);  // english
-        sz +=
-          default_index_traits<boost::string_view>::size(x + sz);  // spanish
-        return sz;
-      }
-    };
-
+    index_serialize(udt.id, file);
+    index_serialize(udt.english, file);
+    index_serialize(udt.spanish, file);
   }
-} // namespaces
+
+  template <>
+  inline index_reference<UDT>::type index_deserialize<UDT>(const char** flat)
+  {
+    UDT udt;
+    udt.id = index_deserialize<UDT::id_type>(flat);
+    udt.english = index_deserialize<boost::string_view>(flat);
+    udt.spanish = index_deserialize<boost::string_view>(flat);
+    return udt;
+  }
+}} // namespaces
 
 #endif
 ///$endid

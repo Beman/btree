@@ -17,9 +17,9 @@
 
 #include <boost/btree/detail/config.hpp>
 #include <boost/btree/helpers.hpp>
-#include <boost/utility/string_ref.hpp>
 #include <boost/btree/support/size_t_codec.hpp>
 #include <boost/btree/support/string_view.hpp>
+#include <boost/btree/mmff.hpp>
 #include <boost/assert.hpp>
 #include <cstring>
 
@@ -28,32 +28,29 @@ namespace boost
 namespace btree
 {
 
+  typedef boost::btree::extendible_mapped_file  flat_file_type;
+
 //--------------------------------------------------------------------------------------//
 //                                   index traits                                       //
 //--------------------------------------------------------------------------------------//
+
+//  index_serialize should be customized for variable length UDTs by specialization
+//  rather than by overload to eliminate the silent  error of a user writing 
+//  index_serialize<MyType>(...) by mistake and getting the primary template instead
+//  of a MyType specialization.
 
 //------------------  defaults for all fixed length data types  ------------------------//
 
   template <class T>
   struct index_reference { typedef const T&  type; };
 
-  // given the proxy, return size required to serialize, including any overhead bytes
   template <class T>
-  inline std::size_t index_serialize_size(const T&)     {return sizeof(T);}
-
-  //// given pointer to flat file, return size of element, including any overhead bytes
-  //template <class T>
-  //inline std::size_t index_flat_size(const char*)  {return sizeof(T);} 
-
-  template <class T>
-  inline void index_serialize(const T& x, char** flat, std::size_t sz)
+  inline void index_serialize(const T& x, flat_file_type& file)
   { 
-    BOOST_ASSERT(flat);
-    BOOST_ASSERT(*flat);
-    BOOST_ASSERT_MSG(sz == sizeof(T),
-      "btree index_serialize: size error; did you mean to uses a varaible-size type?");
-    std::memcpy(*flat, reinterpret_cast<const char*>(&x), sz);
-    *flat += sz;
+    flat_file_type::position_type pos = file.file_size();
+    file.increment_file_size(sizeof(T));  // will resize if needed
+    std::memcpy(file.template data<char>() + pos,
+      reinterpret_cast<const char*>(&x), sizeof(T));
   }
 
   template <class T>
@@ -66,45 +63,23 @@ namespace btree
     return *reinterpret_cast<const T*>(p);
   }
 
-
   //------------------  string_view (i.e. C++ style string) traits  --------------------//
 
   template <>
   struct index_reference<boost::string_view>
     { typedef const boost::string_view  type; };
 
-  // given the proxy, return size required to serialize, including any overhead bytes
   template <>
-  inline std::size_t
-    index_serialize_size<boost::string_view>(const boost::string_view& sv)
-  {
-    typedef btree::support::size_t_codec codec;
-    return sv.size() + codec::encoded_size(sv.size());
-  }
-
-  //// given pointer to flat file, return size of element, including any overhead bytes
-  //inline std::size_t index_flat_size(const char* flat)
-  //{
-  //  typedef btree::support::size_t_codec codec;
-  //  std::pair<std::size_t, std::size_t> dec = codec::decode(flat);
-  //  return dec.first + dec.second;
-  //}
-
-  template <>
-  inline void
-    index_serialize<boost::string_view>(const boost::string_view& sv,
-      char** flat, std::size_t sz)
+  inline void index_serialize<boost::string_view>(const boost::string_view& sv,
+    flat_file_type& file)
   { 
     typedef btree::support::size_t_codec codec;
-    BOOST_ASSERT(flat);
-    BOOST_ASSERT(*flat);
-    BOOST_ASSERT(sz > sv.size()); // even a null string needs a byte to store size
-    std::size_t size_size = sz - sv.size();
-    codec::encode(sv.size(), *flat, size_size);  //TODO: encode should not be responsible
-                                                 // for the actual memcpy to *flat ?
-    *flat += size_size;
-    std::memcpy(*flat, sv.data(), sv.size());
-    *flat += sv.size();
+    std::size_t size_sz = codec::encoded_size(sv.size());
+    flat_file_type::position_type pos = file.file_size();
+    file.increment_file_size(size_sz + sv.size());  // will resize if needed
+    codec::encode(sv.size(), file.template data<char>() + pos, size_sz);
+    pos += size_sz;
+    std::memcpy(file.template data<char>() + pos, sv.data(), sv.size());
   }
 
   template <>

@@ -593,6 +593,7 @@ eat
 #ifndef BOOST_BTREE_UDT_EXAMPLE_HPP
 #define BOOST_BTREE_UDT_EXAMPLE_HPP
 
+#include &lt;boost/btree/index_helpers.hpp&gt;
 #include &lt;boost/btree/support/string_view.hpp&gt;
 #include &lt;iosfwd&gt;
 
@@ -605,6 +606,7 @@ using boost::string_view;
 struct UDT
 {
   typedef int id_type;
+
   id_type      id;
   string_view  english;
   string_view  spanish;
@@ -639,75 +641,45 @@ struct spanish_ordering
     {return x.spanish &lt; y.spanish;}
 };
 
-//  specialization boost::btree::default_index_traits&lt;UDT&gt;  ------------------//
+//  specializations to support btree indexes  --------------------------------//
 
 namespace boost
 {
-  namespace btree
+namespace btree
+{
+  template &lt;&gt; struct index_reference&lt;UDT&gt; { typedef const UDT type; };
+
+  template &lt;&gt;
+  inline void index_serialize&lt;UDT&gt;(const UDT& udt, flat_file_type& file)
   {
-
-    template &lt;&gt;
-    class default_index_traits&lt;UDT&gt;
-    {
-      typedef btree::support::size_t_codec codec;
-
-    public:
-      typedef UDT                     reference;             // proxy
-      typedef endian::big_uint32_t  index_position_type;   // big enough
-
-      static std::size_t size(const UDT& x)
-      {
-        return sizeof(x.id)
-          + default_index_traits&lt;boost::string_view&gt;::size(x.english)
-          + default_index_traits&lt;boost::string_view&gt;::size(x.spanish);
-      }
-
-      static void build_flat_element(const UDT& x, char* dest,
-        std::size_t)
-      {
-        BOOST_ASSERT(dest);
-        std::memcpy(dest, &x.id, sizeof(x.id));
-        dest += sizeof(x.id);
-        std::size_t sz
-          = default_index_traits&lt;boost::string_view&gt;::size(x.english);
-        default_index_traits&lt;boost::string_view&gt;::build_flat_element(
-          x.english, dest, sz);
-        dest += sz;
-        default_index_traits&lt;boost::string_view&gt;::build_flat_element(
-          x.spanish, dest,
-          default_index_traits&lt;boost::string_view&gt;::size(x.spanish));
-      }
-
-      static reference dereference(const char* x)
-      {
-        return UDT
-          (default_index_traits&lt;int&gt;::dereference(x),
-          default_index_traits&lt;boost::string_view&gt;::dereference(
-            x + sizeof(UDT::id_type)),
-          default_index_traits&lt;boost::string_view&gt;::dereference(
-            x + sizeof(UDT::id_type)
-            + default_index_traits&lt;boost::string_view&gt;::size(
-              x + sizeof(UDT::id_type))));
-      }
-      static std::size_t size(const char* x)
-      {
-        std::size_t sz = sizeof(UDT::id_type);
-        sz +=
-          default_index_traits&lt;boost::string_view&gt;::size(x + sz);  // english
-        sz +=
-          default_index_traits&lt;boost::string_view&gt;::size(x + sz);  // spanish
-        return sz;
-      }
-    };
-
+    index_serialize(udt.id, file);
+    index_serialize(udt.english, file);
+    index_serialize(udt.spanish, file);
   }
-} // namespaces
+
+  template &lt;&gt;
+  inline index_reference&lt;UDT&gt;::type index_deserialize&lt;UDT&gt;(const char** flat)
+  {
+    UDT udt;
+    udt.id = index_deserialize&lt;UDT::id_type&gt;(flat);
+    udt.english = index_deserialize&lt;boost::string_view&gt;(flat);
+    udt.spanish = index_deserialize&lt;boost::string_view&gt;(flat);
+    return udt;
+  }
+}} // namespaces
 
 #endif</pre>
   </blockquote>
-    <p>Ugh! The actual UDT is easy, but the index traits adapter is ugly. 
-    There&#39;s a branch already being worked on to simplify that.</p>
-    <p>So now let&#39;s build an index set of type UDT. The code looks like this [<code><a href="../example/udt_index_set.cpp">udt_index_set.cpp</a></code>]:</p>
+    <p>A couple of things are worth point out:</p>
+    <ul>
+      <li>The &quot;<code>// specializations to support btree indexes</code>&quot; section 
+      tells the B-tree index how to serialize and de-serialize type <code>UDT</code> 
+      in the flat file.</li>
+      <li>The &quot;<code>// function objects for different orderings</code>&quot; section 
+      is used only in the <a href="#UDT-three-index-set">UDT three index set</a> 
+      example so can be ignore for now.</li>
+  </ul>
+    <p>So now let&#39;s build an index set of type <code>UDT</code>. The code looks like this [<code><a href="../example/udt_index_set.cpp">udt_index_set.cpp</a></code>]:</p>
   <blockquote>
     <pre>
 #include &lt;boost/btree/btree_index_set.hpp&gt;
@@ -742,6 +714,10 @@ int cpp_main(int, char *[])
 </pre>
   </blockquote>
   <h2><a name="UDT-three-index-set">UDT three index set</a></h2>
+  <p>One of the advantages of separating the index file from the flat file is 
+  that you can have multiple index files. This example [<code><a href="../example/udt_3_index_set.cpp">udt_3_index_set.cpp</a></code>] 
+  creates three indexes so that we can access using the ID, English, or Spanish 
+  elements as the key.</p>
   <blockquote>
     <pre>
 #include &lt;boost/btree/btree_index_set.hpp&gt;
@@ -1090,7 +1066,7 @@ find() complete
   <hr>
 
   <p>Revised 
-  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->10 September 2013<!--webbot bot="Timestamp" endspan i-checksum="39617" --></p>
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B %Y" startspan -->11 September 2013<!--webbot bot="Timestamp" endspan i-checksum="39619" --></p>
 
   <p>© Copyright Beman Dawes, 2013</p>
 

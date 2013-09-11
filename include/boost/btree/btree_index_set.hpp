@@ -135,10 +135,7 @@ public:
   // Effects: unconditional push_back into file(); index unaffected
   {
     file_position pos = base::file()->file_size();
-    std::size_t element_sz = index_serialize_size(x);
-    base::file()->increment_file_size(element_sz);  // will resize if needed
-    char* p = base::file()->template data<char>() + pos;
-    index_serialize(x, &p, element_sz);
+    index_serialize(x, *base::file());
     return pos;
   }
 
@@ -251,10 +248,7 @@ public:
   // Effects: unconditional push_back into file(); index unaffected
   {
     file_position pos = base::file()->file_size();
-    std::size_t element_sz = index_serialize_size(x);
-    base::file()->increment_file_size(element_sz);  // will resize if needed
-    char* p = base::file()->template data<char>() + pos;
-    index_serialize(x, &p, element_sz);
+    index_serialize(x, *base::file());
     return pos;
   }
 
