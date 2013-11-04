@@ -169,30 +169,54 @@ void  iterator_test()
   typedef btree::btree_index_set<stuff> index_type;
   index_type idx(idx1_path, file_path);
 
-  index_type::iterator itr = idx.begin();
-  index_type::iterator end = idx.end();
+  {
+    index_type::iterator itr = idx.begin();
+    index_type::iterator end = idx.end();
 
-  //*end;
+    //*end;
 
-  BOOST_TEST(itr != end);
-  stuff s = *itr;
-  BOOST_TEST_EQ(s.x, 1);
-  BOOST_TEST_EQ(s.y, 3);
+    BOOST_TEST(itr != end);
+    stuff s = *itr;
+    BOOST_TEST_EQ(s.x, 1);
+    BOOST_TEST_EQ(s.y, 3);
 
-  ++itr;
-  BOOST_TEST(itr != end);
-  s = *itr;
-  BOOST_TEST_EQ(s.x, 2);
-  BOOST_TEST_EQ(s.y, 2);
+    ++itr;
+    BOOST_TEST(itr != end);
+    s = *itr;
+    BOOST_TEST_EQ(s.x, 2);
+    BOOST_TEST_EQ(s.y, 2);
 
-  ++itr;
-  BOOST_TEST(itr != end);
-  s = *itr;
-  BOOST_TEST_EQ(s.x, 3);
-  BOOST_TEST_EQ(s.y, 1);
+    ++itr;
+    BOOST_TEST(itr != end);
+    s = *itr;
+    BOOST_TEST_EQ(s.x, 3);
+    BOOST_TEST_EQ(s.y, 1);
 
-  ++itr;
-  BOOST_TEST(itr == end);
+    ++itr;
+    BOOST_TEST(itr == end);
+  }
+
+  {
+    index_type::const_reverse_iterator itr = idx.crbegin();
+    index_type::const_reverse_iterator end = idx.crend();
+
+    BOOST_TEST(itr != end);
+    BOOST_TEST_EQ(itr->x, 3);
+    BOOST_TEST_EQ(itr->y, 1);
+
+    ++itr;
+    BOOST_TEST(itr != end);
+    BOOST_TEST_EQ(itr->x, 2);
+    BOOST_TEST_EQ(itr->y, 2);
+
+    ++itr;
+    BOOST_TEST(itr != end);
+    BOOST_TEST_EQ(itr->x, 1);
+    BOOST_TEST_EQ(itr->y, 3);
+
+    ++itr;
+    BOOST_TEST(itr == end);
+  }
 
   cout << "     iterator_test complete" << endl;
 }

@@ -1548,6 +1548,27 @@ void  relational_non_member_functions_test()
   cout << "     relational_non_member_functions_test complete" << endl;
 }
 
+//----------------------------  reverse_iterator_test  ---------------------------------//
+
+void  reverse_iterator_test()
+{
+  cout << "  reverse_iterator_test..." << endl;
+
+  typedef btree::btree_set<fat> bt_set;
+
+  bt_set set("bt_set2.btr", btree::flags::truncate);
+
+  for (int i = 0; i < 5; ++i)
+    set.insert(fat(i));
+
+  bt_set::reverse_iterator it = set.crbegin();
+  bt_set::reverse_iterator end_it = set.crend();
+  for (int i = 4; it != end_it; ++it, --i)
+    BOOST_TEST_EQ(it->x, i);
+
+  cout << "     reverse_iterator_test complete" << endl;
+}
+
 //-------------------------------------  _test  ----------------------------------------//
 
 void  _test()
@@ -1610,6 +1631,7 @@ int cpp_main(int argc, char* argv[])
   small_variable_map();
   //alignment();
   iterator_unit_test();
+  reverse_iterator_test();
   insert_and_erase_test();
   insert_non_unique();
   find_and_bounds();
