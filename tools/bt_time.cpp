@@ -22,6 +22,8 @@
 #include <string>
 #include <map>
 #include <set>
+#include <unordered_map>
+#include <unordered_set>
 #include <cstring>
 #include <cstdlib>  // for atoll() or Microsoft equivalent
 #include <cctype>   // for isdigit()
@@ -105,7 +107,8 @@ namespace
     uniform_int<int64_t>  m_dist;
     variate_generator<mt19937_64&, uniform_int<int64_t> >  m_key;
   public:
-    typedef std::map<int64_t, int64_t>  stl_type;
+    typedef std::map<int64_t, int64_t>            std_assoc_type;
+    typedef std::unordered_map<int64_t, int64_t>  std_unordered_assoc_type;
 
     map_64_64_generator(int64_t n) : m_dist(0, n-1), m_key(m_rng, m_dist) {}
 
@@ -115,7 +118,7 @@ namespace
       value(int64_t mapped_value)          {return std::make_pair(m_key(), mapped_value);}
 
     static int64_t stl_key(const std::pair<const int64_t, int64_t>& vt) {return vt.first;}
-    static stl_type::value_type
+    static std_assoc_type::value_type
       stl_value(const std::pair<const int64_t, int64_t>& vt) {return vt;}
   };
 
@@ -125,7 +128,8 @@ namespace
     uniform_int<int64_t>  m_dist;
     variate_generator<mt19937_64&, uniform_int<int64_t> >  m_key;
   public:
-    typedef std::set<int64_t>  stl_type;
+    typedef std::set<int64_t>            std_assoc_type;
+    typedef std::unordered_set<int64_t>  std_unordered_assoc_type;
 
     set_64_generator(int64_t n) : m_dist(0, n-1), m_key(m_rng, m_dist) {}
 
@@ -134,7 +138,7 @@ namespace
     int64_t  value(int64_t)                {return m_key();}
 
     static int64_t stl_key(int64_t vt)                 {return vt;}
-    static stl_type::value_type stl_value(int64_t vt)  {return vt;}
+    static std_assoc_type::value_type stl_value(int64_t vt)  {return vt;}
   };
 
   class set_index_64_generator
@@ -143,7 +147,8 @@ namespace
     uniform_int<int64_t>  m_dist;
     variate_generator<mt19937_64&, uniform_int<int64_t> >  m_key;
   public:
-    typedef std::set<int64_t>  stl_type;
+    typedef std::set<int64_t>            std_assoc_type;
+    typedef std::unordered_set<int64_t>  std_unordered_assoc_type;
 
     set_index_64_generator(int64_t n) : m_dist(0, n-1), m_key(m_rng, m_dist) {}
 
@@ -152,7 +157,7 @@ namespace
     int64_t  value(int64_t)                {return m_key();}
 
     static int64_t stl_key(int64_t vt)                 {return vt;}
-    static stl_type::value_type stl_value(int64_t vt)  {return vt;}
+    static std_assoc_type::value_type stl_value(int64_t vt)  {return vt;}
   };
 
   class set_index_string_view_generator
@@ -160,7 +165,8 @@ namespace
     boost::random_string m_rsg;
     std::string m_string;
   public:
-    typedef std::set<std::string>  stl_type;
+    typedef std::set<std::string>            std_assoc_type;
+    typedef std::unordered_set<std::string>  std_unordered_assoc_type;
 
     set_index_string_view_generator(int64_t) 
       : m_rsg(min_string_len, max_string_len) {}
@@ -175,381 +181,392 @@ namespace
 
     static std::string stl_key(const boost::string_view& vt)
                                            {return std::string(vt.data(), vt.size());}
-    static stl_type::value_type stl_value(const boost::string_view& vt)
+    static std_assoc_type::value_type stl_value(const boost::string_view& vt)
                                            {return std::string(vt.data(), vt.size());}
   };
 
   //------------------------------------------------------------------------------------//
-  //                                  test harness                                      //
+  //                                stl test harness                                    //
   //------------------------------------------------------------------------------------//
 
-  template <class BT, class Generator>
-  void test()
+  template <class BT, class Generator, class Container>
+  void stl_test(bool seq_check)
   {
     timer::auto_cpu_timer t(3);
     Generator generator(n); 
+
+    Container stl;
+
+    cout << "\ninserting " << n << " stl elements..." << endl;
+    generator.seed(seed);
+    timer::cpu_times this_tm;
+    t.start();
+    for (int64_t i = 1; i <= n; ++i)
     {
-      btree::flags::bitmask flgs =
-        do_create ? btree::flags::truncate
-                  : btree::flags::read_write;
-     flgs |= common_flags;
-     if (!do_create && do_preload)
-        flgs |= btree::flags::preload;
-
-      cout << "\nopening " << path << endl;
-      t.start();
-      BT bt(path, flgs, -1, btree::less(), node_sz);
-      t.stop();
-      t.report();
-
-      bt.max_cache_size(cache_sz);
-
-      if (do_insert)
-      {
-        cout << "\ninserting " << n << " btree elements..." << endl;
-        generator.seed(seed);
-        t.start();
-        timer::cpu_times then = t.elapsed();
-        for (int64_t i = 1; i <= n; ++i)
-        {
-          if (lg && i % lg == 0)
-            log(t, then, i, bt);
-          bt.insert(generator.value(i));
-        }
-        bt.flush();
-        t.stop();
-        insert_tm = t.elapsed();
-        t.report();
-        cout << endl;
-        if (header_info)
-          cout << bt;
-        if (buffer_stats)
-          cout << bt.manager();
-      }
-
-      if (do_pack)
-      {
-        cout << "\npacking btree..." << endl;
-        bt.manager().clear_statistics();
-        bt.close();
-        fs::remove(path_old);
-        fs::rename(path, path_old);
-        t.start();
-        BT bt_old(path_old);
-        bt_old.max_cache_size(cache_sz);
-        BT bt_new(path, btree::flags::truncate, -1, btree::less(), node_sz);
-        bt_new.max_cache_size(cache_sz);
-        for (typename BT::const_iterator it = bt_old.begin(); it != bt_old.end(); ++it)
-        {
-          bt_new.insert(*it);
-        }
-        bt_new.flush();
-        cout << "  bt_old.size() " << bt_old.size() << std::endl;
-        cout << "  bt_new.size() " << bt_new.size() << std::endl;
-        BOOST_ASSERT(bt_new.size() == bt_old.size());
-        t.report();
-        cout << endl;
-        cout << path_old << " file size: " << fs::file_size(path_old) << '\n';
-        if (header_info)
-          cout << bt_old;
-        if (buffer_stats)
-          cout << bt_old.manager();
-        cout << endl;
-        cout << path << "     file size: " << fs::file_size(path) << '\n';
-        if (header_info)
-          cout << bt_new;
-        if (buffer_stats)
-          cout << bt_new.manager();
-        bt_old.close();
-        bt_new.close();
-        bt.open(path, btree::flags::read_write | common_flags);
-        bt.max_cache_size(cache_sz);
-      }
-
-      if (do_find)
-      {
-        cout << "\nfinding " << n << " btree elements..." << endl;
-        bt.manager().clear_statistics();
-        generator.seed(seed);
-        typename BT::const_iterator itr;
-        typename BT::key_type k;
-        t.start();
-        timer::cpu_times then = t.elapsed();
-        for (int64_t i = 1; i <= n; ++i)
-        {
-          if (lg && i % lg == 0)
-            log(t, then, i, bt);
-          k = generator.key();
-          itr = bt.find(k);
-#       if !defined(NDEBUG)
-          if (itr == bt.end())
-            throw std::runtime_error("btree find() returned end()");
-          if (bt.key(*itr) != k)
-            throw std::runtime_error("btree find() returned wrong iterator");
-#       endif 
-        }
-        t.stop();
-        find_tm = t.elapsed(); 
-        t.report();
-        cout << endl;
-        if (header_info)
-          cout << bt;
-        if (buffer_stats)
-          cout << bt.manager();
-      }
-
-      if (do_iterate)
-      {
-        cout << "\niterating over " << bt.size() << " btree elements..." << endl;
-        bt.manager().clear_statistics();
-        uint64_t count = 0;
-        typename BT::key_type prior_key = typename BT::key_type();
-        t.start();
-        for (typename BT::const_iterator itr = bt.begin();
-          itr != bt.end();
-          ++itr)
-        {
-          ++count;
-          if (bt.key(*itr) < prior_key)
-            throw std::runtime_error("btree iteration sequence error");
-          prior_key = bt.key(*itr);
-        }
-        t.stop();
-        iterate_tm = t.elapsed();
-        t.report();
-        cout << endl;
-        if (header_info)
-          cout << bt;
-        if (buffer_stats)
-          cout << bt.manager();
-        if (count != bt.size())
-          throw std::runtime_error("btree iteration count error");
-      }
-
-      if (verbose)
-      {
-        bt.flush();
-        cout << '\n' << bt << endl;
-      }
-
-      if (do_erase)
-      {
-        cout << "\nerasing " << n << " btree elements..." << endl;
-        bt.manager().clear_statistics();
-        generator.seed(seed);
-        t.start();
-        timer::cpu_times then = t.elapsed();
-        for (int64_t i = 1; i <= n; ++i)
-        {
-          if (lg && i % lg == 0)
-            log(t, then, i, bt);
-          //int64_t k = key();
-          //if (i >= n - 5)
-          //{
-          //  std::cout << i << ' ' << k << ' ' << bt.size() << std::endl;
-          //  std::cout << "erase(k) returns " << bt.erase(k) << std::endl;
-          //  std::cout << "and size() returns " << bt.size() << std::endl;
-          //}
-          //else
-          //  bt.erase(k);
-          bt.erase(generator.key());
-        }
-        t.stop();
-        bt.flush();
-        erase_tm = t.elapsed();
-        t.report();
-        cout << endl;
-        if (header_info)
-          cout << bt;
-        if (buffer_stats)
-          cout << bt.manager();
-      }
-
-      cout << "B-tree timing complete" << endl;
-
-      if (verbose)
-      {
-        bt.flush();
-        cout << '\n' << bt << endl;
-      }
-
-      bt.close();
+      stl.insert(Generator::stl_value(generator.value(i)));
     }
-
-    typedef typename Generator::stl_type  stl_type;
-    stl_type stl;
-
-    if (stl_tests)
+    t.stop();
+    this_tm = t.elapsed();
+    t.report();
+    if (html)
     {
-      cout << "\ninserting " << n << " stl elements..." << endl;
-      generator.seed(seed);
-      timer::cpu_times this_tm;
-      t.start();
-      for (int64_t i = 1; i <= n; ++i)
-      {
-       stl.insert(Generator::stl_value(generator.value(i)));
-      }
-      t.stop();
-      this_tm = t.elapsed();
-      t.report();
-      if (html)
-      {
-        cerr << "<tr>\n  <td><code>" << command_args << "</code></td>\n";  
-        cerr.setf(std::ios_base::fixed, std::ios_base::floatfield);
-        cerr.precision(places);
-        if (this_tm.wall)
-        {
-          double ratio = (insert_tm.wall * 1.0) / this_tm.wall;
-          if (ratio < 1.0)
-            cerr << "  <td align=\"right\" bgcolor=\"#99FF66\">" 
-                 << insert_tm.wall / sec << " sec<br>"
-                 << ratio << " ratio</td>\n";
-          else
-            cerr << "  <td align=\"right\">" 
-                 << insert_tm.wall / sec << " sec<br>"
-                 << ratio << " ratio</td>\n";
-        }
-        else
-          cerr << "  <td align=\"right\">N/A</td>\n";
-      }
+      cerr << "<tr>\n  <td><code>" << command_args << "</code></td>\n";  
+      cerr.setf(std::ios_base::fixed, std::ios_base::floatfield);
+      cerr.precision(places);
       if (this_tm.wall)
-        cout << "  ratio of btree to stl wall clock time: "
-             << (insert_tm.wall * 1.0) / this_tm.wall << '\n';
-      if (verbose && this_tm.system + this_tm.user)
-        cout << "  ratio of btree to stl cpu time: "
-             << ((insert_tm.system + insert_tm.user) * 1.0)
-                / (this_tm.system + this_tm.user) << '\n';
+      {
+        double ratio = (insert_tm.wall * 1.0) / this_tm.wall;
+        if (ratio < 1.0)
+          cerr << "  <td align=\"right\" bgcolor=\"#99FF66\">" 
+                << insert_tm.wall / sec << " sec<br>"
+                << ratio << " ratio</td>\n";
+        else
+          cerr << "  <td align=\"right\">" 
+                << insert_tm.wall / sec << " sec<br>"
+                << ratio << " ratio</td>\n";
+      }
+      else
+        cerr << "  <td align=\"right\">N/A</td>\n";
+    }
+    if (this_tm.wall)
+      cout << "  ratio of btree to stl wall clock time: "
+            << (insert_tm.wall * 1.0) / this_tm.wall << '\n';
+    if (verbose && this_tm.system + this_tm.user)
+      cout << "  ratio of btree to stl cpu time: "
+            << ((insert_tm.system + insert_tm.user) * 1.0)
+              / (this_tm.system + this_tm.user) << '\n';
 
-      cout << "\nfinding " << n << " stl elements..." << endl;
-      typename stl_type::const_iterator itr;
-      typename stl_type::key_type k;
+    cout << "\nfinding " << n << " stl elements..." << endl;
+    typename Container::const_iterator itr;
+    typename Container::key_type k;
+    generator.seed(seed);
+    t.start();
+    for (int64_t i = 1; i <= n; ++i)
+    {
+      if (lg && i % lg == 0)
+        std::cout << i << std::endl; 
+        k = Generator::stl_key(generator.value(i));
+        itr = stl.find(k);
+#       if !defined(NDEBUG)
+        if (itr == stl.end())
+          throw std::runtime_error("stl find() returned end()");
+        if (Generator::stl_key(*itr) != k)
+          throw std::runtime_error("stl find() returned wrong iterator");
+#       endif
+    }
+    t.stop();
+    this_tm = t.elapsed();
+    t.report();
+    if (html)
+    {
+      if (this_tm.wall)
+      {
+        double ratio = (find_tm.wall * 1.0) / this_tm.wall;
+        if (ratio < 1.0)
+          cerr << "  <td align=\"right\" bgcolor=\"#99FF66\">" 
+                << find_tm.wall / sec << " sec<br>"
+                << ratio << " ratio</td>\n";
+        else
+          cerr << "  <td align=\"right\">" 
+                << find_tm.wall / sec << " sec<br>"
+                << ratio << " ratio</td>\n";
+      }
+      else
+        cerr << "  <td align=\"right\">N/A</td>\n";
+    }
+    if (this_tm.wall)
+      cout << "  ratio of btree to stl wall clock time: "
+            << (find_tm.wall * 1.0) / this_tm.wall << '\n';
+    if (verbose && this_tm.system + this_tm.user)
+      cout << "  ratio of btree to stl cpu time: "
+            << ((find_tm.system + find_tm.user) * 1.0)
+              / (this_tm.system + this_tm.user) << '\n';
+
+    cout << "\niterating over " << stl.size() << " stl elements..." << endl;
+    uint64_t count = 0;
+    typename Container::key_type prior_key;
+    t.start();
+    for (typename Container::const_iterator itr = stl.begin();
+      itr != stl.end();
+      ++itr)
+    {
+      ++count;
+      if (seq_check && itr != stl.begin() && Generator::stl_key(*itr) <= prior_key)
+        throw std::runtime_error("stl iteration sequence error");
+      prior_key = Generator::stl_key(*itr);
+    }
+    t.stop();
+    this_tm = t.elapsed();
+    t.report();
+    if (html)
+    {
+      if (this_tm.wall)
+      {
+        double ratio = (iterate_tm.wall * 1.0) / this_tm.wall;
+        if (ratio < 1.0)
+          cerr << "  <td align=\"right\" bgcolor=\"#99FF66\">" 
+                << iterate_tm.wall / sec << " sec<br>"
+                << ratio << " ratio</td>\n";
+        else
+          cerr << "  <td align=\"right\">" 
+                << iterate_tm.wall / sec << " sec<br>"
+                << ratio << " ratio</td>\n";
+      }
+      else
+        cerr << "  <td align=\"right\">N/A</td>\n";
+    }
+    if (this_tm.wall)
+      cout << "  ratio of btree to stl wall clock time: "
+            << (iterate_tm.wall * 1.0) / this_tm.wall << '\n';
+    if (verbose && this_tm.system + this_tm.user)
+      cout << "  ratio of btree to stl cpu time: "
+            << ((iterate_tm.system + iterate_tm.user) * 1.0)
+              / (this_tm.system + this_tm.user) << '\n';
+    if (count != stl.size())
+      throw std::runtime_error("stl iteration count error");
+
+    cout << "\nerasing " << n << " std::map elements..." << endl;
+    generator.seed(seed);
+    t.start();
+    for (int64_t i = 1; i <= n; ++i)
+    {
+      if (lg && i % lg == 0)
+        std::cout << i << std::endl; 
+      stl.erase(Generator::stl_key(generator.value(i)));
+    }
+    t.stop();
+    this_tm = t.elapsed();
+    t.report();
+    if (html)
+    {
+      if (this_tm.wall)
+      {
+        double ratio = (erase_tm.wall * 1.0) / this_tm.wall;
+        if (ratio < 1.0)
+          cerr << "  <td align=\"right\" bgcolor=\"#99FF66\">" 
+                << erase_tm.wall / sec << " sec<br>"
+                << ratio << " ratio</td>\n</tr>\n";
+        else
+          cerr << "  <td align=\"right\">" 
+                << erase_tm.wall / sec << " sec<br>"
+                << ratio << " ratio</td>\n</tr>\n";
+      }
+      else
+        cerr << "  <td align=\"right\">N/A</td>\n</tr>  <td align=\"right\">N/A</td>\n</tr>\n";
+    }
+    if (this_tm.wall)
+      cout << "  ratio of btree to stl wall clock time: "
+            << (erase_tm.wall * 1.0) / this_tm.wall << '\n';
+    if (verbose && this_tm.system + this_tm.user)
+      cout << "  ratio of btree to stl cpu time: "
+            << ((erase_tm.system + erase_tm.user) * 1.0)
+              / (this_tm.system + this_tm.user) << '\n';
+    cout << "STL timing complete" << endl;
+  }
+
+  //------------------------------------------------------------------------------------//
+  //                               btree test harness                                   //
+  //------------------------------------------------------------------------------------//
+
+  template <class BT, class Generator>
+  void btree_test()
+  {
+    timer::auto_cpu_timer t(3);
+    Generator generator(n); 
+    btree::flags::bitmask flgs =
+      do_create ? btree::flags::truncate
+                : btree::flags::read_write;
+    flgs |= common_flags;
+    if (!do_create && do_preload)
+      flgs |= btree::flags::preload;
+
+    cout << "\nopening " << path << endl;
+    t.start();
+    BT bt(path, flgs, -1, btree::less(), node_sz);
+    t.stop();
+    t.report();
+
+    bt.max_cache_size(cache_sz);
+
+    if (do_insert)
+    {
+      cout << "\ninserting " << n << " btree elements..." << endl;
       generator.seed(seed);
       t.start();
+      timer::cpu_times then = t.elapsed();
       for (int64_t i = 1; i <= n; ++i)
       {
         if (lg && i % lg == 0)
-          std::cout << i << std::endl; 
-          k = Generator::stl_key(generator.value(i));
-          itr = stl.find(k);
+          log(t, then, i, bt);
+        bt.insert(generator.value(i));
+      }
+      bt.flush();
+      t.stop();
+      insert_tm = t.elapsed();
+      t.report();
+      cout << endl;
+      if (header_info)
+        cout << bt;
+      if (buffer_stats)
+        cout << bt.manager();
+    }
+
+    if (do_pack)
+    {
+      cout << "\npacking btree..." << endl;
+      bt.manager().clear_statistics();
+      bt.close();
+      fs::remove(path_old);
+      fs::rename(path, path_old);
+      t.start();
+      BT bt_old(path_old);
+      bt_old.max_cache_size(cache_sz);
+      BT bt_new(path, btree::flags::truncate, -1, btree::less(), node_sz);
+      bt_new.max_cache_size(cache_sz);
+      for (typename BT::const_iterator it = bt_old.begin(); it != bt_old.end(); ++it)
+      {
+        bt_new.insert(*it);
+      }
+      bt_new.flush();
+      cout << "  bt_old.size() " << bt_old.size() << std::endl;
+      cout << "  bt_new.size() " << bt_new.size() << std::endl;
+      BOOST_ASSERT(bt_new.size() == bt_old.size());
+      t.report();
+      cout << endl;
+      cout << path_old << " file size: " << fs::file_size(path_old) << '\n';
+      if (header_info)
+        cout << bt_old;
+      if (buffer_stats)
+        cout << bt_old.manager();
+      cout << endl;
+      cout << path << "     file size: " << fs::file_size(path) << '\n';
+      if (header_info)
+        cout << bt_new;
+      if (buffer_stats)
+        cout << bt_new.manager();
+      bt_old.close();
+      bt_new.close();
+      bt.open(path, btree::flags::read_write | common_flags);
+      bt.max_cache_size(cache_sz);
+    }
+
+    if (do_find)
+    {
+      cout << "\nfinding " << n << " btree elements..." << endl;
+      bt.manager().clear_statistics();
+      generator.seed(seed);
+      typename BT::const_iterator itr;
+      typename BT::key_type k;
+      t.start();
+      timer::cpu_times then = t.elapsed();
+      for (int64_t i = 1; i <= n; ++i)
+      {
+        if (lg && i % lg == 0)
+          log(t, then, i, bt);
+        k = generator.key();
+        itr = bt.find(k);
 #       if !defined(NDEBUG)
-          if (itr == stl.end())
-            throw std::runtime_error("stl find() returned end()");
-          if (Generator::stl_key(*itr) != k)
-            throw std::runtime_error("stl find() returned wrong iterator");
-#       endif
+        if (itr == bt.end())
+          throw std::runtime_error("btree find() returned end()");
+        if (bt.key(*itr) != k)
+          throw std::runtime_error("btree find() returned wrong iterator");
+#       endif 
       }
       t.stop();
-      this_tm = t.elapsed();
+      find_tm = t.elapsed(); 
       t.report();
-      if (html)
-      {
-        if (this_tm.wall)
-        {
-          double ratio = (find_tm.wall * 1.0) / this_tm.wall;
-          if (ratio < 1.0)
-            cerr << "  <td align=\"right\" bgcolor=\"#99FF66\">" 
-                 << find_tm.wall / sec << " sec<br>"
-                 << ratio << " ratio</td>\n";
-          else
-            cerr << "  <td align=\"right\">" 
-                 << find_tm.wall / sec << " sec<br>"
-                 << ratio << " ratio</td>\n";
-        }
-        else
-          cerr << "  <td align=\"right\">N/A</td>\n";
-      }
-      if (this_tm.wall)
-        cout << "  ratio of btree to stl wall clock time: "
-             << (find_tm.wall * 1.0) / this_tm.wall << '\n';
-      if (verbose && this_tm.system + this_tm.user)
-        cout << "  ratio of btree to stl cpu time: "
-             << ((find_tm.system + find_tm.user) * 1.0)
-                / (this_tm.system + this_tm.user) << '\n';
+      cout << endl;
+      if (header_info)
+        cout << bt;
+      if (buffer_stats)
+        cout << bt.manager();
+    }
 
-      cout << "\niterating over " << stl.size() << " stl elements..." << endl;
+    if (do_iterate)
+    {
+      cout << "\niterating over " << bt.size() << " btree elements..." << endl;
+      bt.manager().clear_statistics();
       uint64_t count = 0;
-      typename stl_type::key_type prior_key;
+      typename BT::key_type prior_key = typename BT::key_type();
       t.start();
-      for (typename stl_type::const_iterator itr = stl.begin();
-        itr != stl.end();
+      for (typename BT::const_iterator itr = bt.begin();
+        itr != bt.end();
         ++itr)
       {
         ++count;
-        if (itr != stl.begin() && Generator::stl_key(*itr) <= prior_key)
-          throw std::runtime_error("stl iteration sequence error");
-        prior_key = Generator::stl_key(*itr);
+        if (bt.key(*itr) < prior_key)
+          throw std::runtime_error("btree iteration sequence error");
+        prior_key = bt.key(*itr);
       }
       t.stop();
-      this_tm = t.elapsed();
+      iterate_tm = t.elapsed();
       t.report();
-      if (html)
-      {
-        if (this_tm.wall)
-        {
-          double ratio = (iterate_tm.wall * 1.0) / this_tm.wall;
-          if (ratio < 1.0)
-            cerr << "  <td align=\"right\" bgcolor=\"#99FF66\">" 
-                 << iterate_tm.wall / sec << " sec<br>"
-                 << ratio << " ratio</td>\n";
-          else
-            cerr << "  <td align=\"right\">" 
-                 << iterate_tm.wall / sec << " sec<br>"
-                 << ratio << " ratio</td>\n";
-        }
-        else
-          cerr << "  <td align=\"right\">N/A</td>\n";
-      }
-      if (this_tm.wall)
-        cout << "  ratio of btree to stl wall clock time: "
-             << (iterate_tm.wall * 1.0) / this_tm.wall << '\n';
-      if (verbose && this_tm.system + this_tm.user)
-        cout << "  ratio of btree to stl cpu time: "
-             << ((iterate_tm.system + iterate_tm.user) * 1.0)
-                / (this_tm.system + this_tm.user) << '\n';
-      if (count != stl.size())
-        throw std::runtime_error("stl iteration count error");
+      cout << endl;
+      if (header_info)
+        cout << bt;
+      if (buffer_stats)
+        cout << bt.manager();
+      if (count != bt.size())
+        throw std::runtime_error("btree iteration count error");
+    }
 
-      cout << "\nerasing " << n << " std::map elements..." << endl;
+    if (verbose)
+    {
+      bt.flush();
+      cout << '\n' << bt << endl;
+    }
+
+    if (do_erase)
+    {
+      cout << "\nerasing " << n << " btree elements..." << endl;
+      bt.manager().clear_statistics();
       generator.seed(seed);
       t.start();
+      timer::cpu_times then = t.elapsed();
       for (int64_t i = 1; i <= n; ++i)
       {
         if (lg && i % lg == 0)
-          std::cout << i << std::endl; 
-        stl.erase(Generator::stl_key(generator.value(i)));
+          log(t, then, i, bt);
+        //int64_t k = key();
+        //if (i >= n - 5)
+        //{
+        //  std::cout << i << ' ' << k << ' ' << bt.size() << std::endl;
+        //  std::cout << "erase(k) returns " << bt.erase(k) << std::endl;
+        //  std::cout << "and size() returns " << bt.size() << std::endl;
+        //}
+        //else
+        //  bt.erase(k);
+        bt.erase(generator.key());
       }
       t.stop();
-      this_tm = t.elapsed();
+      bt.flush();
+      erase_tm = t.elapsed();
       t.report();
-      if (html)
-      {
-        if (this_tm.wall)
-        {
-          double ratio = (erase_tm.wall * 1.0) / this_tm.wall;
-          if (ratio < 1.0)
-            cerr << "  <td align=\"right\" bgcolor=\"#99FF66\">" 
-                 << erase_tm.wall / sec << " sec<br>"
-                 << ratio << " ratio</td>\n</tr>\n";
-          else
-            cerr << "  <td align=\"right\">" 
-                 << erase_tm.wall / sec << " sec<br>"
-                 << ratio << " ratio</td>\n</tr>\n";
-        }
-        else
-          cerr << "  <td align=\"right\">N/A</td>\n</tr>  <td align=\"right\">N/A</td>\n</tr>\n";
-      }
-      if (this_tm.wall)
-        cout << "  ratio of btree to stl wall clock time: "
-             << (erase_tm.wall * 1.0) / this_tm.wall << '\n';
-      if (verbose && this_tm.system + this_tm.user)
-        cout << "  ratio of btree to stl cpu time: "
-             << ((erase_tm.system + erase_tm.user) * 1.0)
-                / (this_tm.system + this_tm.user) << '\n';
-      cout << "STL timing complete" << endl;
+      cout << endl;
+      if (header_info)
+        cout << bt;
+      if (buffer_stats)
+        cout << bt.manager();
     }
-  }
 
-}
+    cout << "B-tree timing complete" << endl;
+
+    if (verbose)
+    {
+      bt.flush();
+      cout << '\n' << bt << endl;
+    }
+
+    bt.close();
+
+    if (stl_tests)
+    {
+      stl_test<BT, Generator, typename Generator::std_assoc_type>(true);
+      stl_test<BT, Generator, typename Generator::std_unordered_assoc_type>(false);
+    }
+
+  }
+}  // unnamed namespace
 
 //-------------------------------------- main()  ---------------------------------------//
 
@@ -654,7 +671,7 @@ int cpp_main(int argc, char * argv[])
       "   -class=btree_map|btree_set|btree_index_set|btree_index_set-string_view;\n"
       "                default -class=btree_map\n"
       "   -seed=#      Seed for random number generator; default -seed1\n"
-      "   -node-size=# Node size (>=128); default -node-size"
+      "   -node-size=# Node size (>=128); default -node-size="
                           << btree::default_node_size << "\n"
       "                   Small node sizes are useful for stress testing\n"
       "   -cache-size=#  Maximum # nodes cached; default is to let -hint determine\n"
@@ -695,19 +712,19 @@ int cpp_main(int argc, char * argv[])
   if (bt_class == "btree_set")
   {
     cout << "and class btree_set" << endl;
-    test< btree::btree_set<int64_t>, set_64_generator >();
+    btree_test< btree::btree_set<int64_t>, set_64_generator >();
     return 0;
   }
   else if (bt_class == "btree_index_set")
   {
     cout << "and class btree_index_set" << endl;
-    test< btree::btree_index_set<int64_t>, set_index_64_generator >();
+    btree_test< btree::btree_index_set<int64_t>, set_index_64_generator >();
     return 0;
   }
   else if (bt_class == "btree_index_set-string_view")
   {
     cout << "and class btree_index_set<boost::string_view>" << endl;
-    test< btree::btree_index_set<boost::string_view>, set_index_string_view_generator >();
+    btree_test< btree::btree_index_set<boost::string_view>, set_index_string_view_generator >();
     return 0;
   }
   else if (bt_class == "btree_map")
@@ -716,17 +733,17 @@ int cpp_main(int argc, char * argv[])
     {
     case endian::order::big:
       cout << "and big endian traits\n";
-      test< btree::btree_map<int64_t, int64_t, btree::big_endian_traits>,
+      btree_test< btree::btree_map<int64_t, int64_t, btree::big_endian_traits>,
         map_64_64_generator>();
       break;
     case endian::order::little:
       cout << "and little endian traits\n";
-      test< btree::btree_map<int64_t, int64_t, btree::little_endian_traits>,
+      btree_test< btree::btree_map<int64_t, int64_t, btree::little_endian_traits>,
         map_64_64_generator >();
       break;
     case endian::order::native:
       cout << "and native endian traits\n";
-      test< btree::btree_map<int64_t, int64_t, btree::native_endian_traits>,
+      btree_test< btree::btree_map<int64_t, int64_t, btree::native_endian_traits>,
         map_64_64_generator >();
       break;
     }
