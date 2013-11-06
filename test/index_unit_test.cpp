@@ -633,6 +633,11 @@ void  string_view_test()
   ++itr;
   BOOST_TEST(itr == end);
 
+  // operator-> is currently failing, apparently whenever the index_helpers.hpp
+  // index_reference specialization type member is not a reference type. 
+  //index::const_reverse_iterator ritr = idx.crbegin();
+  //BOOST_TEST_EQ(ritr->size(), 3);  // sv2, "ccc"
+
   BOOST_TEST(idx.find(s1) != idx.end());
   BOOST_TEST_EQ(*idx.find(s1), s1);
   BOOST_TEST(idx.find(sv1) != idx.end());
@@ -1179,6 +1184,35 @@ int cpp_main(int argc, char* argv[])
   string_view_test();
   string_view_volume_test();
   string_view_multiset_test();
+
+  typedef btree::btree_index_set<stuff> btree_by_key_t;
+
+  btree_by_key_t btree_by_key("bi_data.idx1", "bi_data.dat", btree::flags::truncate);
+
+  btree_by_key_t::file_position pos;
+
+  pos = btree_by_key.push_back(stuff(1, 111));
+  btree_by_key.insert_file_position(pos);
+
+  pos = btree_by_key.push_back(stuff(2, 222));
+  btree_by_key.insert_file_position(pos);
+
+  pos = btree_by_key.push_back(stuff(3, 333));
+  btree_by_key.insert_file_position(pos);
+
+  pos = btree_by_key.push_back(stuff(0, 0));
+  btree_by_key.insert_file_position(pos);
+
+  // reverse iterator test
+  // forward lookup using reverse iterator
+  cout << "reverse iterator by key:\n";
+  for (btree_by_key_t::reverse_iterator rit = btree_by_key.rbegin();
+       rit != btree_by_key.rend(); ++rit)
+  {
+    cout << "    " << rit->x << " " << rit->y << "\n";
+  }
+
+
   cout << "all tests complete" << endl;
 
   return boost::report_errors();

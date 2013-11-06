@@ -12,7 +12,7 @@
 
 #include <boost/btree/helpers.hpp>
 #include <boost/shared_ptr.hpp>
-#include <boost/btree/mmff.hpp>
+#include <boost/btree/mmff.hpp>                                         
 #include <boost/btree/btree_set.hpp>
 #include <boost/iterator/iterator_facade.hpp>
 #include <boost/assert.hpp>
@@ -20,6 +20,11 @@
 /*
 
   TODO:
+
+  *  Bug: index_unit_test.cpp string_view_test(), see commented out code beginning at:
+     // operator-> is currently failing, apparently whenever the index_helpers.hpp
+     // index_reference specialization type member is not a reference type. 
+     // ... test case ...
 
   *  Does insert/emplace unique of an existing entry return the correct .first iterator?
 
@@ -410,18 +415,20 @@ public:
 
   // iterators
 
-  const_iterator begin() const  {return const_iterator(m_index_btree.begin(), file());}
-  const_iterator end() const    {return const_iterator(m_index_btree.end(), file());}
+  const_iterator    begin() const           {return const_iterator(m_index_btree.begin(),
+                                              file());}
+  const_iterator    end() const             {return const_iterator(m_index_btree.end(),
+                                              file());}
   const_reverse_iterator
-                     rbegin() const         { return reverse_iterator(cend()); }     
+                    rbegin() const          {return const_reverse_iterator(cend());}     
   const_reverse_iterator
-                     rend() const           { return reverse_iterator(cbegin()); }
-  const_iterator     cbegin() const         { return begin(); }
-  const_iterator     cend() const           { return end(); }
+                    rend() const            {return const_reverse_iterator(cbegin());}
+  const_iterator    cbegin() const          {return begin();}
+  const_iterator    cend() const            {return end();}
   const_reverse_iterator
-                     crbegin() const        { return reverse_iterator(cend()); }     
+                    crbegin() const         {return const_reverse_iterator(cend());}     
   const_reverse_iterator                    
-                     crend() const          { return reverse_iterator(cbegin()); }
+                    crend() const           {return const_reverse_iterator(cbegin());}
 
   // observers
   bool              is_open() const         {BOOST_ASSERT(!m_index_btree.is_open()
