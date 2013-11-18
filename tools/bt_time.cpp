@@ -44,7 +44,7 @@ using std::string;
 
 namespace
 {
-  string command_args;
+  string command_options;
   int64_t n;        // number of test cases
   string bt_class ("btree_map");
   int64_t seed = 1; // random number generator seed
@@ -72,11 +72,13 @@ namespace
   string path_old("bt_time.btree.old");
   BOOST_SCOPED_ENUM(endian::order) whichaway = endian::order::big;
   
-
+  //  retain times for first (i.e. B-tree) tests
+  bool btree_times = true;
   timer::cpu_times insert_tm;
   timer::cpu_times find_tm;
   timer::cpu_times iterate_tm;
   timer::cpu_times erase_tm;
+
   const double sec = 1000000000.0;
 
   struct thousands_separator : std::numpunct<char>
@@ -243,14 +245,18 @@ namespace
   //------------------------------------------------------------------------------------//
 
   template <class Generator, class Container, class Operations>
-  void test(options opts)
+  void test(const string& desc)
   {
     timer::auto_cpu_timer t(3);
-    timer::cpu_times this_tm;
     Generator generator(n); 
     Container container;
-
     Operations ops;
+
+    if (html)
+    {
+      cerr << "<tr>\n  <td>" << desc << "</td>\n";  
+    }
+
     ops.open(container);
 
     //  insert
@@ -270,6 +276,8 @@ namespace
       }
       t.stop();
       this_tm = t.elapsed();
+      if (btree_times)
+        insert_tm = this_tm;
       t.report();
       cout << endl;
       //if (!(opts & options::stl) && header_info)
@@ -278,31 +286,23 @@ namespace
       //  cout << container.manager();
       if (html)
       {
-        cerr << "<tr>\n  <td><code>" << command_args << "</code></td>\n";  
         cerr.setf(std::ios_base::fixed, std::ios_base::floatfield);
         cerr.precision(places);
         if (this_tm.wall)
         {
           double ratio = (insert_tm.wall * 1.0) / this_tm.wall;
-          if (ratio < 1.0)
+          if (ratio > 1.0)
             cerr << "  <td align=\"right\" bgcolor=\"#99FF66\">" 
-                  << insert_tm.wall / sec << " sec<br>"
+                  << this_tm.wall / sec << " sec&nbsp;&nbsp; <br>"
                   << ratio << " ratio</td>\n";
           else
             cerr << "  <td align=\"right\">" 
-                  << insert_tm.wall / sec << " sec<br>"
+                  << this_tm.wall / sec << " sec&nbsp;&nbsp; <br>"
                   << ratio << " ratio</td>\n";
         }
         else
           cerr << "  <td align=\"right\">N/A</td>\n";
       }
-      if (this_tm.wall)
-        cout << "  ratio of btree to container wall clock time: "
-              << (insert_tm.wall * 1.0) / this_tm.wall << '\n';
-      if (verbose && this_tm.system + this_tm.user)
-        cout << "  ratio of btree to container cpu time: "
-              << ((insert_tm.system + insert_tm.user) * 1.0)
-                / (this_tm.system + this_tm.user) << '\n';
     }
 
   //  //  pack
@@ -359,7 +359,7 @@ namespace
       {
           k = Generator::stl_key(generator.value(i));
         //if (!(opts & options::stl) && lg && i % lg == 0)
-          std::cout << i << " key: " << k << std::endl; 
+        //  std::cout << i << " key: " << k << std::endl; 
           itr = container.find(k);
   #       if !defined(NDEBUG)
           if (itr == container.end())
@@ -369,7 +369,9 @@ namespace
   #       endif
       }
       t.stop();
-      this_tm = t.elapsed();
+      timer::cpu_times this_tm = t.elapsed();
+      if (btree_times)
+        find_tm = this_tm;
       t.report();
       cout << endl;
       //if (!(opts & options::stl) && header_info)
@@ -381,25 +383,18 @@ namespace
         if (this_tm.wall)
         {
           double ratio = (find_tm.wall * 1.0) / this_tm.wall;
-          if (ratio < 1.0)
+          if (ratio > 1.0)
             cerr << "  <td align=\"right\" bgcolor=\"#99FF66\">" 
-                  << find_tm.wall / sec << " sec<br>"
+                  << this_tm.wall / sec << " sec&nbsp;&nbsp; <br>"
                   << ratio << " ratio</td>\n";
           else
             cerr << "  <td align=\"right\">" 
-                  << find_tm.wall / sec << " sec<br>"
+                  << this_tm.wall / sec << " sec&nbsp;&nbsp; <br>"
                   << ratio << " ratio</td>\n";
         }
         else
           cerr << "  <td align=\"right\">N/A</td>\n";
       }
-      if (this_tm.wall)
-        cout << "  ratio of btree to container wall clock time: "
-              << (find_tm.wall * 1.0) / this_tm.wall << '\n';
-      if (verbose && this_tm.system + this_tm.user)
-        cout << "  ratio of btree to container cpu time: "
-              << ((find_tm.system + find_tm.user) * 1.0)
-                / (this_tm.system + this_tm.user) << '\n';
     }
 
     //  iterate
@@ -408,7 +403,7 @@ namespace
     {
       cout << "\niterating over " << container.size() << " container elements..." << endl;
       uint64_t count = 0;
-      typename Container::key_type prior_key;
+      //typename Container::key_type prior_key;
       t.start();
       for (typename Container::const_iterator itr = container.begin();
         itr != container.end();
@@ -420,7 +415,9 @@ namespace
         //prior_key = Generator::stl_key(*itr);
       }
       t.stop();
-      this_tm = t.elapsed();
+      timer::cpu_times this_tm = t.elapsed();
+      if (btree_times)
+        iterate_tm = this_tm;
       t.report();
       cout << endl;
       //if (!(opts & options::stl) && header_info)
@@ -432,25 +429,18 @@ namespace
         if (this_tm.wall)
         {
           double ratio = (iterate_tm.wall * 1.0) / this_tm.wall;
-          if (ratio < 1.0)
+          if (ratio > 1.0)
             cerr << "  <td align=\"right\" bgcolor=\"#99FF66\">" 
-                  << iterate_tm.wall / sec << " sec<br>"
+                  << this_tm.wall / sec << " sec&nbsp;&nbsp; <br>"
                   << ratio << " ratio</td>\n";
           else
             cerr << "  <td align=\"right\">" 
-                  << iterate_tm.wall / sec << " sec<br>"
+                  << this_tm.wall / sec << " sec&nbsp;&nbsp; <br>"
                   << ratio << " ratio</td>\n";
         }
         else
           cerr << "  <td align=\"right\">N/A</td>\n";
       }
-      if (this_tm.wall)
-        cout << "  ratio of btree to container wall clock time: "
-              << (iterate_tm.wall * 1.0) / this_tm.wall << '\n';
-      if (verbose && this_tm.system + this_tm.user)
-        cout << "  ratio of btree to container cpu time: "
-              << ((iterate_tm.system + iterate_tm.user) * 1.0)
-                / (this_tm.system + this_tm.user) << '\n';
       if (count != container.size())
         throw std::runtime_error("container iteration count error");
     }
@@ -470,12 +460,14 @@ namespace
       t.start();
       for (int64_t i = 1; i <= n; ++i)
       {
-        if (!(opts & options::stl) && lg && i % lg == 0)
-          std::cout << i << std::endl; 
+        //if (!(opts & options::stl) && lg && i % lg == 0)
+        //  std::cout << i << std::endl; 
         container.erase(Generator::stl_key(generator.value(i)));
       }
       t.stop();
-      this_tm = t.elapsed();
+      timer::cpu_times this_tm = t.elapsed();
+      if (btree_times)
+        erase_tm = this_tm;
       t.report();
       cout << endl;
       //if (!(opts & options::stl) && header_info)
@@ -487,44 +479,52 @@ namespace
         if (this_tm.wall)
         {
           double ratio = (erase_tm.wall * 1.0) / this_tm.wall;
-          if (ratio < 1.0)
+          if (ratio > 1.0)
             cerr << "  <td align=\"right\" bgcolor=\"#99FF66\">" 
-                  << erase_tm.wall / sec << " sec<br>"
+                  << this_tm.wall / sec << " sec&nbsp;&nbsp; <br>"
                   << ratio << " ratio</td>\n</tr>\n";
           else
             cerr << "  <td align=\"right\">" 
-                  << erase_tm.wall / sec << " sec<br>"
+                  << this_tm.wall / sec << " sec&nbsp;&nbsp; <br>"
                   << ratio << " ratio</td>\n</tr>\n";
         }
         else
           cerr << "  <td align=\"right\">N/A</td>\n</tr>  <td align=\"right\">N/A</td>\n</tr>\n";
       }
-      if (this_tm.wall)
-        cout << "  ratio of btree to container wall clock time: "
-              << (erase_tm.wall * 1.0) / this_tm.wall << '\n';
-      if (verbose && this_tm.system + this_tm.user)
-        cout << "  ratio of btree to container cpu time: "
-              << ((erase_tm.system + erase_tm.user) * 1.0)
-                / (this_tm.system + this_tm.user) << '\n';
     }
+
     cout << "  timing complete" << endl;
+    btree_times = false;
   }
 
   template <class Generator>
   void run_tests()
   {
+    if (html)
+    {
+      cerr << "<h3>" << n
+           << " " << command_options << "</h3>\n"
+         "<table border=\"1\" style=\"border-collapse: collapse\" "
+         "bordercolor=\"#111111\" cellpadding=\"5\">\n"
+         "<tr><td><b><i>Container type</i></b></td></td><td><b><i>Insert</i></b></td>"
+         "<td><b><i>Find</i></b></td><td><b><i>Iterate</i></b></td><td><b><i>Erase</i></b></td></tr>\n";
+    }
+
     test<Generator, typename Generator::btree_type,
-      bt_operations<Generator, typename Generator::btree_type> >(options::ordered);
+      bt_operations<Generator, typename Generator::btree_type> >("B-tree");
     
     if (stl_tests)
     {
       test<Generator, typename Generator::std_assoc_type,
         stl_operations<Generator, typename Generator::std_assoc_type> >
-          (static_cast<options>(options::stl | options::ordered));
+          ("STL Ordered Assoc");
       test<Generator, typename Generator::std_unordered_assoc_type,
         stl_operations<Generator, typename Generator::std_unordered_assoc_type> >
-          (options::stl);
+          ("STL Unordered Assoc");
     }
+
+    if (html)
+      cerr << "</table>\n";
   }
 
 }  // unnamed namespace
@@ -533,14 +533,14 @@ namespace
 
 int cpp_main(int argc, char * argv[]) 
 {
-  for (int a = 0; a < argc; ++a)
+  for (int a = 2; a < argc; ++a)
   {
-    command_args += argv[a];
+    command_options += argv[a];
     if (a != argc-1)
-      command_args += ' ';
+      command_options += ' ';
   }
 
-  cout << command_args << '\n';;
+  cout << command_options << '\n';;
 
   if (argc >=2)
     n = BOOST_BTREE_ATOLL(argv[1]);
@@ -631,7 +631,7 @@ int cpp_main(int argc, char * argv[])
       "   path         Specifies the test file path; default test.btree\n"
       "   -class=btree_map|btree_set|btree_index_set|btree_index_set-string_view;\n"
       "                default -class=btree_map\n"
-      "   -seed=#      Seed for random number generator; default -seed1\n"
+      "   -seed=#      Seed for random number generator; default -seed=1\n"
       "   -node-size=# Node size (>=128); default -node-size="
                           << btree::default_node_size << "\n"
       "                   Small node sizes are useful for stress testing\n"
@@ -649,7 +649,7 @@ int cpp_main(int argc, char * argv[])
       "                      default is to let -hint determine branch caching\n"
       "   -pack        Pack tree after insert test\n"
       "   -v           Verbose output statistics\n"
-      "   -stl         Also run the tests against std::map\n"
+      "   -stl         Also run the tests against STL containers\n"
       "   -preload     Read entire file to preload operating system disk cache;\n"
       "                  only applicable if -nocreate option present\n"
       "   -hint=least-memory|low-memory|balanced|fast|fastest \n"
@@ -666,9 +666,22 @@ int cpp_main(int argc, char * argv[])
     cache_sz = btree::max_cache_default(common_flags, 0);
 
   cout.imbue(std::locale(std::locale(), new thousands_separator));
+  cerr.imbue(std::locale(std::locale(), new thousands_separator));
+
   cout << "sizeof(bree::header_page) is " << sizeof(btree::header_page) << '\n'
        << "starting tests with node size " << node_sz
        << ", maximum cache nodes " << cache_sz << ",\n";
+
+  if (html)
+  {
+    cerr <<
+      "<html>\n<head>\n<meta http-equiv=\"Content-Type\" content=\"text/html;"
+      "charset=utf-8\">\n<title>B-tree timings</title>\n</head>\n\n<body>\n\n"
+      "<h1>B-tree versus STL Container Timings</h1>"
+      "<p>Times are wall clock seconds. \"ratio\" is the ratio of the time for the "
+      "container being tested to the B-tree time for the same operation. "
+      "Higher is better.</p>\n";
+  }
 
   if (bt_class == "btree_set")
   {
@@ -719,6 +732,11 @@ int cpp_main(int argc, char * argv[])
   {
     cout << "Error, unknown class: -class=" << bt_class << endl;
     return 1;
+  }
+
+  if (html)
+  {
+    cerr << "\n</body>\n\n</html>\n";
   }
 
   return 0;
