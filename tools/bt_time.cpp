@@ -51,6 +51,7 @@ namespace
   int64_t lg = 0;   // if != 0, log every lg iterations
   std::size_t cache_sz = -2;
   std::size_t node_sz = btree::default_node_size;
+  float max_load_factor = 0.75;  // for STL unordered container
   char thou_separator = ',';
   int min_string_len = 0;
   int max_string_len = 512;
@@ -201,9 +202,31 @@ namespace
   //----------------------  test harness helper function objects  ----------------------//
 
   template <class Generator, class Container>
-  struct stl_operations
+  struct stl_ordered_operations
   {
-    void open(Container&) const {}
+    void open(Container&) const
+    {
+      cout << "\nSTL ordered tests...\n";
+    }
+
+    void insert(Container& container, Generator& generator, int64_t i)
+    {
+      container.insert(Generator::stl_value(generator.value(i)));
+    }
+
+   };
+
+  template <class Generator, class Container>
+  struct stl_unordered_operations
+  {
+    void open(Container& cntr) const
+    {
+      cout << "\nSTL unordered tests...\n";
+      cntr.max_load_factor(max_load_factor);
+      cntr.reserve(n);
+      cout << "  bucket count " << cntr.bucket_count()
+           << ", max load factor " << cntr.max_load_factor() << "\n";
+    }
 
     void insert(Container& container, Generator& generator, int64_t i)
     {
@@ -217,6 +240,7 @@ namespace
   {
     void open(Container& bt) const
     {
+      cout << "\nB-tree tests...\n";
       btree::flags::bitmask flgs =
         do_create ? btree::flags::truncate
                   : btree::flags::read_write;
@@ -224,7 +248,6 @@ namespace
       if (!do_create && do_preload)
         flgs |= btree::flags::preload;
 
-      cout << "\nopening " << path << endl;
      // t.start();
       bt.open(path, flgs, -1, btree::less(), node_sz);
       //t.stop();
@@ -516,10 +539,10 @@ namespace
     if (stl_tests)
     {
       test<Generator, typename Generator::std_assoc_type,
-        stl_operations<Generator, typename Generator::std_assoc_type> >
+        stl_ordered_operations<Generator, typename Generator::std_assoc_type> >
           ("STL Ordered Assoc");
       test<Generator, typename Generator::std_unordered_assoc_type,
-        stl_operations<Generator, typename Generator::std_unordered_assoc_type> >
+        stl_unordered_operations<Generator, typename Generator::std_unordered_assoc_type> >
           ("STL Unordered Assoc");
     }
 
@@ -585,6 +608,9 @@ int cpp_main(int argc, char * argv[])
       else if ( memcmp( argv[2]+1, "cache-sz=", 9 )==0
           && (std::isdigit(*(argv[2]+10)) || *(argv[2]+10) == '-') )
         cache_sz = atoi( argv[2]+10 );
+      else if ( memcmp( argv[2]+1, "max-load-factor=", 16 )==0
+          && std::isdigit(*(argv[2]+17)) )
+        max_load_factor = static_cast<float>(atof( argv[2]+17 ));
       else if ( memcmp( argv[2]+1, "log=", 4 )==0 && std::isdigit(*(argv[2]+5)) )
         lg = BOOST_BTREE_ATOLL( argv[2]+5 );
       else if ( strcmp( argv[2]+1, "pack" )==0 )
@@ -638,6 +664,8 @@ int cpp_main(int argc, char * argv[])
       "   -cache-size=#  Maximum # nodes cached; default is to let -hint determine\n"
       "                  cache size\n"
       "   -log=#       Log progress every # actions; default is to not log\n"
+      "   -max-load-factor=#.# Maximum load factor for STL unordered container;"
+      "                   default -max-load-factor=" << max_load_factor << "\n"
       "   -sep=[punct] cout thousands separator; space if punct omitted, default -sep,\n"
       "   -nocreate    No create; use file from prior -xe run\n"
       "   -noinsert    No insert test; forces -nocreate and doesn't do inserts\n"
