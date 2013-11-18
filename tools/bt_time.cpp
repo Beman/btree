@@ -214,6 +214,8 @@ namespace
       container.insert(Generator::stl_value(generator.value(i)));
     }
 
+    void pack(Container&) const {}
+
    };
 
   template <class Generator, class Container>
@@ -232,6 +234,8 @@ namespace
     {
       container.insert(Generator::stl_value(generator.value(i)));
     }
+
+    void pack(Container&) const {}
 
    };
 
@@ -261,6 +265,44 @@ namespace
       container.insert(generator.value(i));
     }
 
+    void pack(Container& container) const
+    {
+      timer::auto_cpu_timer t(3);
+      cout << "\npacking btree..." << endl;
+      container.close();
+      fs::remove(path_old);
+      fs::rename(path, path_old);
+      t.start();
+      Container bt_old(path_old);
+      bt_old.max_cache_size(cache_sz);
+      Container bt_new(path, btree::flags::truncate, -1, btree::less(), node_sz);
+      bt_new.max_cache_size(cache_sz);
+      for (typename Container::const_iterator it = bt_old.begin(); it != bt_old.end(); ++it)
+      {
+        bt_new.insert(*it);
+      }
+      bt_new.flush();
+      cout << "  bt_old.size() " << bt_old.size() << std::endl;
+      cout << "  bt_new.size() " << bt_new.size() << std::endl;
+      BOOST_ASSERT(bt_new.size() == bt_old.size());
+      t.report();
+      cout << endl;
+      cout << path_old << " file size: " << fs::file_size(path_old) << '\n';
+      if (header_info)
+        cout << bt_old;
+      if (buffer_stats)
+        cout << bt_old.manager();
+      cout << endl;
+      cout << path << "     file size: " << fs::file_size(path) << '\n';
+      if (header_info)
+        cout << bt_new;
+      if (buffer_stats)
+        cout << bt_new.manager();
+      bt_old.close();
+      bt_new.close();
+      container.open(path, btree::flags::read_write | common_flags);
+      container.max_cache_size(cache_sz);
+    }
   };
 
   //------------------------------------------------------------------------------------//
@@ -328,46 +370,10 @@ namespace
       }
     }
 
-  //  //  pack
+    //  pack
 
-  //  if (do_pack)
-  //  {
-  //    cout << "\npacking btree..." << endl;
-  //    container.manager().clear_statistics();
-  //    container.close();
-  //    fs::remove(path_old);
-  //    fs::rename(path, path_old);
-  //    t.start();
-  //    BT bt_old(path_old);
-  //    bt_old.max_cache_size(cache_sz);
-  //    BT bt_new(path, btree::flags::truncate, -1, btree::less(), node_sz);
-  //    bt_new.max_cache_size(cache_sz);
-  //    for (typename BT::const_iterator it = bt_old.begin(); it != bt_old.end(); ++it)
-  //    {
-  //      bt_new.insert(*it);
-  //    }
-  //    bt_new.flush();
-  //    cout << "  bt_old.size() " << bt_old.size() << std::endl;
-  //    cout << "  bt_new.size() " << bt_new.size() << std::endl;
-  //    BOOST_ASSERT(bt_new.size() == bt_old.size());
-  //    t.report();
-  //    cout << endl;
-  //    cout << path_old << " file size: " << fs::file_size(path_old) << '\n';
-  //    if (!(opts & options::stl) && header_info)
-  //      cout << bt_old;
-  //    if (!(opts & options::stl) && buffer_stats)
-  //      cout << bt_old.manager();
-  //    cout << endl;
-  //    cout << path << "     file size: " << fs::file_size(path) << '\n';
-  //    if (!(opts & options::stl) && header_info)
-  //      cout << bt_new;
-  //    if (!(opts & options::stl) && buffer_stats)
-  //      cout << bt_new.manager();
-  //    bt_old.close();
-  //    bt_new.close();
-  //    container.open(path, btree::flags::read_write | common_flags);
-  //    container.max_cache_size(cache_sz);
-  //  }
+    if (do_pack)
+      ops.pack(container);
 
     //  find
 
