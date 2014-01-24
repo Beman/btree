@@ -670,7 +670,7 @@ int cpp_main(int argc, char * argv[])
       "   -cache-size=#  Maximum # nodes cached; default is to let -hint determine\n"
       "                  cache size\n"
       "   -log=#       Log progress every # actions; default is to not log\n"
-      "   -max-load-factor=#.# Maximum load factor for STL unordered container;"
+      "   -max-load-factor=#.# Maximum load factor for STL unordered container;\n"
       "                   default -max-load-factor=" << max_load_factor << "\n"
       "   -sep=[punct] cout thousands separator; space if punct omitted, default -sep,\n"
       "   -nocreate    No create; use file from prior -xe run\n"
